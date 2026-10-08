@@ -1,0 +1,14 @@
+# Project place file
+/Miners Dreams.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+sourcemap.json
+Packages/
+ServerPackages/
+wally.lock
+backups/
+modelos/
+VALIDACAO_FORNALHA.md
