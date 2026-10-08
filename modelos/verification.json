@@ -1,0 +1,16 @@
+{
+  "conveyorAnchoredPartCount": 6,
+  "conveyorEndZ": 11.5,
+  "conveyorSurfaceY": 1.25,
+  "furnaceAllPartsAnchored": true,
+  "furnacePartCount": 33,
+  "instanceCount": 131,
+  "oreEntranceClearanceChecked": true,
+  "physicsSimulationExecuted": false,
+  "pointLightPresent": true,
+  "rereadSuccessful": true,
+  "scripts": 0,
+  "sensorPrepared": true,
+  "trayStartZ": 11.5,
+  "traySurfaceY": 1.25
+}

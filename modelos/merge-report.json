@@ -1,0 +1,95 @@
+{
+  "originalSha256": "4e6d9c0c9cb13ea41e878d0ea4fce30fc81c6d9b6c2f439b2845c25200141b0d",
+  "modifiedSha256": "60cec7546983e4ff5aaff93bb1d51af44ee721ae835a1d03eaa2bc8873bc2790",
+  "originalInstanceCount": 96,
+  "addedInstanceCount": 35,
+  "finalInstanceCount": 131,
+  "unchangedRawChunks": 1231,
+  "checkedExistingValuesInExtendedClasses": 948,
+  "originalParentsPreserved": true,
+  "unrelatedPropertiesPreservedByteForByte": true,
+  "anchoredConveyorParts": [
+    {
+      "name": "Correia",
+      "ref": 17,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    },
+    {
+      "name": "Estrutura",
+      "ref": 18,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    },
+    {
+      "name": "GuiaEsquerda",
+      "ref": 19,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    },
+    {
+      "name": "GuiaDireita",
+      "ref": 20,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    },
+    {
+      "name": "PeDireito",
+      "ref": 21,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    },
+    {
+      "name": "PeEsquerdo",
+      "ref": 22,
+      "property": "Anchored",
+      "from": false,
+      "to": true
+    }
+  ],
+  "addedModel": "FornalhaBasica",
+  "addedRefMap": {
+    "0": 96,
+    "1": 97,
+    "2": 98,
+    "3": 99,
+    "4": 100,
+    "5": 101,
+    "6": 102,
+    "7": 103,
+    "8": 104,
+    "9": 105,
+    "10": 106,
+    "11": 107,
+    "12": 108,
+    "13": 109,
+    "14": 110,
+    "15": 111,
+    "16": 112,
+    "17": 113,
+    "18": 114,
+    "19": 115,
+    "20": 116,
+    "21": 117,
+    "22": 118,
+    "23": 119,
+    "24": 120,
+    "25": 121,
+    "26": 122,
+    "27": 123,
+    "28": 124,
+    "29": 125,
+    "30": 126,
+    "31": 127,
+    "32": 128,
+    "33": 129,
+    "34": 130,
+    "-1": -1
+  },
+  "studioRuntimeTested": false
+}
