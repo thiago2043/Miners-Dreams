@@ -1,4 +1,12 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Networker = require(ReplicatedStorage.Packages.Networker)
+local Players = game:GetService("Players")
+local ControladorConstrucao = require(script.ControladorConstrucao)
+local InterfaceJogo = require(script.InterfaceJogo)
 
-type Networker = Networker.Client
+local construcao = ControladorConstrucao.new(Players.LocalPlayer)
+local interface = InterfaceJogo.new(Players.LocalPlayer)
+construcao:Iniciar()
+
+script.Destroying:Connect(function()
+	construcao:Destruir()
+	interface:Destruir()
+end)
