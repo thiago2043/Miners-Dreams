@@ -7,6 +7,21 @@
       "Shared": {
         "$path": "src/shared"
       },
+      "ModelosMaquinas": {
+        "$className": "Folder",
+        "MineradoraBasica": {
+          "$path": "modelos/rojo/MineradoraBasica.rbxm"
+        },
+        "EsteiraBasica": {
+          "$path": "modelos/rojo/EsteiraBasica.rbxm"
+        },
+        "FornalhaBasica": {
+          "$path": "modelos/rojo/FornalhaBasica.rbxm"
+        },
+        "ModificadorBasico": {
+          "$path": "modelos/rojo/ModificadorBasico.rbxm"
+        }
+      },
       "Packages":{
         "$path": "Packages"
       },
@@ -44,15 +59,6 @@
       },
       "SpawnLocation": {
         "$path": "modelos/rojo/SpawnLocation.rbxm"
-      },
-      "MineradoraBasica": {
-        "$path": "modelos/rojo/MineradoraBasica.rbxm"
-      },
-      "EsteiraBasica": {
-        "$path": "modelos/rojo/EsteiraBasica.rbxm"
-      },
-      "FornalhaBasica": {
-        "$path": "modelos/rojo/FornalhaBasica.rbxm"
       }
     },
     "Lighting": {

@@ -1,19 +1,29 @@
+-- Funcoes puras de grade, limites e raios, compartilhadas quando necessario; nao compram, salvam nem criam
+-- objetos no mundo.
 local VolumeConstrucao = require(script.Parent.VolumeConstrucao)
 local Geometria = {}
 
 Geometria.Passo = VolumeConstrucao.Passo
 Geometria.Tolerancia = VolumeConstrucao.Tolerancia
 
+-- O canto superior do piso vira (0,0,0), permitindo validar a grade no referencial local do terreno.
+-- Recebe a Part do piso e devolve um CFrame no canto superior da plot. As posicoes de construcao passam a ser
+-- medidas desse canto, mesmo quando o piso esta deslocado ou girado no mundo.
 function Geometria.Origem(piso)
 	return piso.CFrame * CFrame.new(
 		-piso.Size.X / 2, piso.Size.Y / 2, -piso.Size.Z / 2
 	)
 end
 
+-- Recebe origem e direcao de um raio no referencial da plot, tamanho do piso e alcance. Devolve o ponto, a
+-- normal interna e a distancia da parede lateral de saida mais proxima, ou nil quando o raio nao encontra uma
+-- parede valida.
 function Geometria.ParedeDoTerreno(inicio, direcao, tamanhoPiso, alcance)
 	local ponto, normal, distancia
 	local erro = Geometria.Tolerancia
 
+	-- As bordas laterais sao planos X/Z; nao ha teto virtual. Resolver inicio+direcao*t=limite encontra a
+	-- distancia ate cada parede candidata.
 	for _, eixo in { "X", "Z" } do
 		local componente = direcao[eixo]
 		if math.abs(componente) < erro then continue end
@@ -41,7 +51,11 @@ end
 
 Geometria.CalcularVolume = VolumeConstrucao.CalcularVolume
 
+-- Devolve os cantos minimo e maximo da ocupacao no referencial da plot. Usa os atributos salvos da construcao
+-- quando existem; caso contrario, calcula uma caixa que comporta o visual e a arredonda para a grade.
 function Geometria.VolumeDoModelo(modelo, origem)
+	-- As caixas salvas expressam o espaco reservado em blocos. Dar prioridade a elas permite apontar para a
+	-- reserva completa mesmo que o visual seja menor.
 	local minimoSalvo = modelo:GetAttribute("VolumeMinimo")
 	local ocupadoSalvo = modelo:GetAttribute("VolumeOcupado")
 	if typeof(minimoSalvo) == "Vector3" and typeof(ocupadoSalvo) == "Vector3" then
@@ -53,6 +67,8 @@ function Geometria.VolumeDoModelo(modelo, origem)
 		return nil
 	end
 
+	-- Converte a caixa mundial para a plot e calcula suas extremidades. floor no minimo e ceil no maximo
+	-- garantem que a reserva envolva o visual inteiro.
 	local caixaLocal = origem:ToObjectSpace(caixa)
 	local extensao = Geometria.CalcularVolume(caixaLocal, dimensoes)
 	local minimo = caixaLocal.Position - extensao
@@ -68,6 +84,85 @@ function Geometria.VolumeDoModelo(modelo, origem)
 		math.ceil(maximo.Y / passo - erro) * passo,
 		math.ceil(maximo.Z / passo - erro) * passo
 	)
+end
+
+-- Converte a normal atingida no eixo dominante da grade, evitando encaixes levemente inclinados.
+-- Recebe uma normal de superficie e devolve apenas seu eixo X, Y ou Z dominante com o mesmo sinal. Esse vetor
+-- decide a face usada para encaixar uma peca ao lado de outra.
+function Geometria.EixoDaFace(normal)
+	local x, y, z = math.abs(normal.X), math.abs(normal.Y), math.abs(normal.Z)
+
+	if x >= y and x >= z then
+		return Vector3.new(math.sign(normal.X), 0, 0)
+	elseif y >= z then
+		return Vector3.new(0, math.sign(normal.Y), 0)
+	else
+		return Vector3.new(0, 0, math.sign(normal.Z))
+	end
+end
+
+-- O sinal da face decide de qual lado comeca o volume, para encostar sem entrar no objeto apontado.
+-- Calcula o inicio do volume ocupado em um eixo, a partir do ponto apontado, da normal da face e do
+-- comprimento da peca. Nas faces encosta pelo lado correto; nos demais eixos centraliza e arredonda para a
+-- grade.
+function Geometria.EncaixarEixo(coordenada, normal, comprimento)
+	if normal > 0 then
+		return math.ceil(coordenada / Geometria.Passo - Geometria.Tolerancia) * Geometria.Passo
+	elseif normal < 0 then
+		return math.floor(coordenada / Geometria.Passo + Geometria.Tolerancia) * Geometria.Passo
+			- comprimento
+	end
+
+	return math.round((coordenada - comprimento / 2) / Geometria.Passo) * Geometria.Passo
+end
+
+-- Converte o canto minimo e o tamanho ocupado, locais a plot, em um CFrame mundial no centro da caixa.
+-- Consultas de sobreposicao e hitboxes usam o centro, enquanto os registros guardam o canto.
+function Geometria.CFrameDoVolume(origem, minimo, ocupado)
+	return origem * CFrame.new(minimo + ocupado / 2)
+end
+
+-- Intersecta o raio com os intervalos da caixa em seus tres eixos locais; aceita apenas o trecho dentro do alcance.
+-- Recebe um raio mundial e uma caixa orientada, e procura a intersecao dentro do alcance. Devolve o ponto no
+-- referencial da caixa e a distancia ao longo do raio, ou nil se os intervalos dos tres eixos nao se cruzam.
+function Geometria.PontoNaCaixa(raio, cframe, tamanhoCaixa, alcance)
+	local inicio = cframe:PointToObjectSpace(raio.Origin)
+	local direcao = cframe:VectorToObjectSpace(raio.Direction)
+	local metade = tamanhoCaixa / 2
+	-- Cada eixo limita o trecho do raio que fica dentro da caixa. entrada guarda o maior inicio desses trechos
+	-- e saida o menor fim; entrada>saida significa que nao ha intersecao.
+	local entrada, saida = -math.huge, math.huge
+
+	for _, eixo in { "X", "Y", "Z" } do
+		local p, d, limite = inicio[eixo], direcao[eixo], metade[eixo]
+
+		-- Um raio paralelo a essas faces nao cruza o intervalo nesse eixo. Se ja esta fora dele, nao pode atingir a
+		-- caixa; se esta dentro, os outros eixos decidem.
+		if math.abs(d) < Geometria.Tolerancia then
+			if p < -limite or p > limite then
+				return nil
+			end
+		else
+			local a = (-limite - p) / d
+			local b = (limite - p) / d
+
+			entrada = math.max(entrada, math.min(a, b))
+			saida = math.min(saida, math.max(a, b))
+
+			if entrada > saida then
+				return nil
+			end
+		end
+	end
+
+	-- Se o raio comeca dentro da caixa, entrada fica atras da origem e usa-se a saida. A distancia tambem
+	-- precisa estar a frente da camera e dentro do alcance.
+	local distancia = entrada >= 0 and entrada or saida
+	if distancia < 0 or distancia > alcance then
+		return nil
+	end
+
+	return inicio + direcao * distancia, distancia
 end
 
 return Geometria

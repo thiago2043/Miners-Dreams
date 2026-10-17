@@ -1,10 +1,16 @@
+-- Possui a plot, seu dono e o spawn; atribuir/liberar controla o acesso do jogador e a limpeza dos objetos
+-- desse terreno.
 local Terreno = {}
 Terreno.__index = Terreno
 
+-- Recebe identificador, CFrame do piso e pasta pai. Cria uma plot vazia com piso, spawn desativado e pastas
+-- Maquinas/Minerios, e devolve o objeto que controla sua atribuicao.
 function Terreno.new(id, cframe, pastaTerrenos)
 	local modelo = Instance.new("Model")
 	modelo.Name = "Terreno_" .. id
 
+	-- TerrenoId identifica a plot e DonoUserId=0 indica disponibilidade. Esses atributos ficam no Model para
+	-- servidor e cliente conferirem a propriedade.
 	modelo:SetAttribute("TerrenoId", id)
 	modelo:SetAttribute("DonoUserId", 0)
 	modelo:SetAttribute("DonoNome", "")
@@ -18,6 +24,8 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	piso.Color = Color3.fromRGB(110, 110, 110)
 	piso.Parent = modelo
 
+	-- O spawn comeca desativado porque ainda nao ha dono. Seu CFrame e relativo ao piso; a atribuicao define
+	-- RespawnLocation para o jogador correto.
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "Spawn"
 	spawn.Size = Vector3.new(6, 1, 6)
@@ -28,6 +36,8 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	spawn.Enabled = false
 	spawn.Parent = modelo
 
+	-- As pastas separam as construcoes persistentes dos minerios temporarios. Criar uma plot nao coloca
+	-- maquinas: o kit inicial fica no inventario do perfil.
 	for _, nome in { "Maquinas", "Minerios" } do
 		local pasta = Instance.new("Folder")
 		pasta.Name = nome
@@ -40,41 +50,20 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	return setmetatable({ _modelo = modelo }, Terreno)
 end
 
+-- Devolve true quando nao ha jogador associado e DonoUserId continua igual a zero. As duas verificacoes evitam
+-- considerar livre uma plot cujo estado local ou publicado ainda indica ocupacao.
 function Terreno:EstaLivre()
 	return self._jogador == nil and self._modelo:GetAttribute("DonoUserId") == 0
 end
 
-function Terreno:Atribuir(jogador, modelosIniciais, origem)
+-- Tenta entregar uma plot livre ao jogador, publicando os atributos de dono e TerrenoId. Ativa seu spawn e
+-- define RespawnLocation; devolve false se a plot ja estava ocupada.
+function Terreno:Atribuir(jogador)
 	if not self:EstaLivre() then return false end
 	self._jogador = jogador
 	self._modelo:SetAttribute("DonoUserId", jogador.UserId)
 	self._modelo:SetAttribute("DonoNome", jogador.Name)
 	jogador:SetAttribute("TerrenoId", self._modelo:GetAttribute("TerrenoId"))
-	local destinoDaFabrica = self._modelo.Piso.CFrame
-		* CFrame.new(0, self._modelo.Piso.Size.Y / 2, 0)
-
-	for _, modelo in modelosIniciais do
-		local maquina = modelo:Clone()
-
-		maquina:SetAttribute("DonoUserId", jogador.UserId)
-		maquina:SetAttribute(
-			"TerrenoId",
-			self._modelo:GetAttribute("TerrenoId")
-		)
-
-		for _, parte in maquina:GetDescendants() do
-			if parte:IsA("BasePart") then
-				parte.Anchored = true
-			end
-		end
-
-		local posicaoRelativa = origem:ToObjectSpace(
-			modelo:GetPivot()
-		)
-
-		maquina:PivotTo(destinoDaFabrica * posicaoRelativa)
-		maquina.Parent = self._modelo.Maquinas
-	end
 
 	self._modelo.Piso.Color = Color3.fromRGB(80, 150, 100)
 	self._modelo.Spawn.Enabled = true
@@ -83,6 +72,8 @@ function Terreno:Atribuir(jogador, modelosIniciais, origem)
 	return true
 end
 
+-- Aguarda por ate dez segundos a raiz do personagem e o move para cima do spawn. Antes de mover, confere
+-- novamente dono e Character, pois eles podem ter mudado durante a espera.
 function Terreno:PosicionarPersonagem(personagem)
 	local jogador = self._jogador
 	if not jogador then return end
@@ -92,12 +83,16 @@ function Terreno:PosicionarPersonagem(personagem)
 	end
 end
 
+-- Desassocia o jogador, remove a ligacao com o spawn e apaga maquinas/minerios dessa plot. Restaura atributos
+-- e cor para que o mesmo terreno possa ser atribuido a outra pessoa.
 function Terreno:Liberar()
 	local jogador = self._jogador
 	if not jogador then return end
 	self._jogador = nil
 	jogador.RespawnLocation = nil
 	jogador:SetAttribute("TerrenoId", nil)
+	-- Libera apenas os objetos desta plot para reutilizar o espaco. O progresso persistido pertence ao perfil,
+	-- que e tratado pelos servicos de dados e construcao.
 	self._modelo.Maquinas:ClearAllChildren()
 	self._modelo.Minerios:ClearAllChildren()
 	self._modelo.Spawn.Enabled = false

@@ -1,0 +1,26 @@
+local carregar = require("./suporte/carregador")({}, {})
+local Ficha = carregar("src/client/FichaMaquina")
+local Catalogo = carregar("src/shared/CatalogoMaquinas")
+local Personalizacao = carregar("src/shared/PersonalizacaoMaquina")
+
+local mineradora = Ficha.Descrever(Catalogo.MineradoraBasica)
+for _, trecho in { "Valor por minério: 10", "Intervalo de geração: 2 s", "1 × 1 × 1 studs", "Duração do minério: 10 s" } do
+	assert(mineradora:find(trecho, 1, true), trecho)
+end
+assert(Ficha.Descrever(Catalogo.EsteiraBasica) == "Transporte: 6 studs/s")
+local modificador = Ficha.Descrever(Catalogo.ModificadorBasico)
+assert(modificador:find("Transporte: 6 studs/s", 1, true) and modificador:find("Modificação: valor ×2", 1, true))
+assert(modificador:find("uma vez por minério nesta peça", 1, true))
+assert(Ficha.Descrever(Catalogo.FornalhaBasica):find("Venda: valor ×1", 1, true))
+
+local variante = Personalizacao.new({ Configuracao = { Componentes = { { Velocidade = 12.5 } } } })
+assert(Ficha.Descrever(variante:ObterDefinicao(Catalogo.EsteiraBasica)) == "Transporte: 12,5 studs/s")
+assert(Catalogo.EsteiraBasica.Componentes[1].Velocidade == 6)
+local gigante = "1" .. string.rep("0", 100)
+local especial = Personalizacao.new({ Configuracao = { Componentes = { { Minerio = { Valor = gigante } } } } })
+assert(Ficha.Descrever(especial:ObterDefinicao(Catalogo.MineradoraBasica)):find(gigante, 1, true))
+assert(Ficha.Descrever({ Componentes = { { Tipo = "Vendedor", Multiplicador = "3", Bonus = "25" } } }):find("valor ×3 + 25", 1, true))
+assert(Ficha.Descrever({ Componentes = { { Tipo = "Modificador" } } }):find("valor ×1", 1, true))
+assert(Ficha.Descrever({}):find("não possui comportamentos", 1, true))
+assert(Ficha.Descrever({ Componentes = { { Tipo = "NovoComportamento" } } }):find("sem ficha disponível", 1, true))
+print("PASS: ficha dos quatro tipos, combinacoes, variantes, bonus, decimais e valores grandes sem conversao para number.")

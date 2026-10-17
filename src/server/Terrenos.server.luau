@@ -1,6 +1,7 @@
+-- Cria as plots vazias e acompanha entrada/saida de jogadores; a restauracao aguarda os dados sem bloquear a
+-- criacao dos terrenos.
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Construcao = require(ServerScriptService:WaitForChild("Construcao"))
 local Terreno = require(script.Parent.Terreno)
 
 local baseplate = workspace:WaitForChild("Baseplate")
@@ -15,34 +16,28 @@ pastaTerrenos.Name = "Terrenos"
 pastaTerrenos.Parent = workspace
 
 local quantidadeTerrenos = Players.MaxPlayers
+-- A raiz quadrada arredondada para cima distribui as plots em linhas e colunas. O espacamento de 80 studs
+-- deixa separacao entre pisos de 64 studs.
 local colunas = math.ceil(math.sqrt(quantidadeTerrenos))
 local distanciaEntreTerrenos = 80
 
 local alturaChao = baseplate.Position.Y + baseplate.Size.Y / 2
 
-local modelosIniciais = {
-	workspace:WaitForChild("MineradoraBasica"),
-	workspace:WaitForChild("EsteiraBasica"),
-	workspace:WaitForChild("FornalhaBasica"),
-}
-
-local correiaOriginal = modelosIniciais[2]:WaitForChild("Correia")
-
-local origemDaFabrica = CFrame.new(
-	correiaOriginal.Position.X,
-	alturaChao,
-	correiaOriginal.Position.Z
-)
-
 local terrenos = {}
 local terrenoPorJogador = {}
 
+-- Procura a primeira plot disponivel para um jogador ainda presente e sem terreno. Agenda a restauracao
+-- separadamente para nao bloquear a atribuicao e posiciona o personagem que ja existir.
 local function atribuirTerreno(jogador)
 	if jogador.Parent ~= Players or terrenoPorJogador[jogador] then return end
 	for _, terreno in terrenos do
-		if terreno:Atribuir(jogador, modelosIniciais, origemDaFabrica) then
+		if terreno:Atribuir(jogador) then
 			terrenoPorJogador[jogador] = terreno
-			Construcao.Restaurar(jogador)
+			-- A espera pelos recursos da construcao nao deve impedir a criacao e atribuicao das plots.
+			task.spawn(function()
+				local Construcao = require(ServerScriptService:WaitForChild("Construcao"))
+				if terrenoPorJogador[jogador] == terreno then Construcao.Restaurar(jogador) end
+			end)
 			if jogador.Character then
 				local personagem = jogador.Character
 				task.spawn(function() terreno:PosicionarPersonagem(personagem) end)
@@ -53,6 +48,8 @@ local function atribuirTerreno(jogador)
 	warn("Nenhum terreno disponível para " .. jogador.Name)
 end
 
+-- Consulta o terreno associado ao jogador que saiu, remove essa associacao e pede a liberacao da plot. Nao faz
+-- nada quando ele nao chegou a receber um terreno.
 local function liberarTerreno(jogador)
 	local terreno = terrenoPorJogador[jogador]
 	if not terreno then return end
@@ -60,6 +57,8 @@ local function liberarTerreno(jogador)
 	terreno:Liberar()
 end
 
+-- Converte cada id em coluna pelo resto da divisao e linha pela divisao inteira. O deslocamento centraliza
+-- as colunas e coloca os pisos sobre a Baseplate.
 for id = 1, quantidadeTerrenos do
 	local coluna = (id - 1) % colunas
 	local linha = math.floor((id - 1) / colunas)
@@ -68,6 +67,8 @@ for id = 1, quantidadeTerrenos do
 	table.insert(terrenos, Terreno.new(id, CFrame.new(x, alturaChao + 0.5, z), pastaTerrenos))
 end
 
+-- Conecta entradas futuras e, abaixo, atribui plots aos jogadores ja presentes. A guarda dentro de
+-- atribuirTerreno evita entregar duas plots ao mesmo jogador.
 Players.PlayerAdded:Connect(atribuirTerreno)
 Players.PlayerRemoving:Connect(liberarTerreno)
 

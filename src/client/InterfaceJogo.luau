@@ -1,91 +1,65 @@
+-- Monta o HUD e duas instancias de PainelPecas; alteracoes dos atributos replicados atualizam os valores
+-- mostrados.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Networker = require(ReplicatedStorage.Packages.Networker)
-local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
-local Botao = require(script.Parent.Botao)
+local PainelPecas = require(script.Parent.PainelPecas)
+local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 
 local InterfaceJogo = {}
 InterfaceJogo.__index = InterfaceJogo
 
-function InterfaceJogo.new(jogador)
-	local self = setmetatable({ _jogador = jogador, _conexoes = {}, _destruida = false }, InterfaceJogo)
-	local playerGui = jogador:WaitForChild("PlayerGui")
+-- Cria o ScreenGui do jogador, o saldo, as instrucoes e duas instancias de PainelPecas que compartilham a
+-- conexao da loja. Liga os atributos replicados e a navegacao as atualizacoes da interface.
+function InterfaceJogo.new(jogador, construcao)
+	local self = setmetatable({ _jogador = jogador, _construcao = construcao, _conexoes = {}, _paineis = {} }, InterfaceJogo)
+	-- ScreenGui e o recipiente desenhado na tela. ResetOnSpawn=false conserva essa interface quando o
+	-- personagem renasce, evitando perder os paineis pelo respawn.
 	self._interface = Instance.new("ScreenGui")
-	self._interface.Name = "InterfaceJogo"
-	self._interface.ResetOnSpawn = false
-
-	self._textoDinheiro = Instance.new("TextLabel")
-	self._textoDinheiro.Name = "Dinheiro"
-	self._textoDinheiro.AnchorPoint = Vector2.new(0.5, 0)
-	self._textoDinheiro.Position = UDim2.new(0.5, 0, 0, 16)
-	self._textoDinheiro.Size = UDim2.new(0, 260, 0, 48)
-	self._textoDinheiro.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	self._textoDinheiro.BorderSizePixel = 0
-	self._textoDinheiro.Font = Enum.Font.SourceSansBold
-	self._textoDinheiro.TextColor3 = Color3.fromRGB(255, 255, 255)
+	self._interface.Name, self._interface.ResetOnSpawn = "InterfaceJogo", false
+	self._interface.Parent = jogador:WaitForChild("PlayerGui")
+	self._textoDinheiro = self:_CriarTexto("Dinheiro", UDim2.new(0.5, 0, 0, 16), UDim2.fromOffset(260, 48), Vector2.new(0.5, 0))
 	self._textoDinheiro.TextScaled = true
-	self._textoDinheiro.Parent = self._interface
-
-	local limiteTexto = Instance.new("UITextSizeConstraint")
-	limiteTexto.MinTextSize = 12
-	limiteTexto.MaxTextSize = 24
-	limiteTexto.Parent = self._textoDinheiro
-
-	table.insert(self._conexoes, self._jogador:GetAttributeChangedSignal("Dinheiro"):Connect(function()
-		self:AtualizarDinheiro()
-	end))
-	self:AtualizarDinheiro()
-
-	self._interface.Parent = playerGui
-
-	self._redeLoja = Networker.client.new("Loja", {})
-
-	self._painelLoja = Instance.new("Frame")
-	self._painelLoja.Name = "Loja"
-	self._painelLoja.AnchorPoint = Vector2.new(1, 0.5)
-	self._painelLoja.Position = UDim2.new(1, -16, 0.5, 0)
-	self._painelLoja.Size = UDim2.new(0, 280, 0, 160)
-	self._painelLoja.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	self._painelLoja.BorderSizePixel = 0
-	self._painelLoja.Parent = self._interface
-
-	self._textoQuantidade = self:_CriarTextoLoja("Quantidade", 10, 32)
-	self._textoResposta = self:_CriarTextoLoja("Resposta", 102, 48)
-	self._textoResposta.Text = ""
-
-	self._botaoCompra = Botao.new(self._painelLoja, "Comprar", function()
-		self:ComprarSelecionada()
-	end)
-	self._botaoComprar = self._botaoCompra:ObterInstancia()
-	self._botaoComprar.Name = "Comprar"
-	self._botaoComprar.Position = UDim2.new(0, 12, 0, 50)
-	self._botaoComprar.Size = UDim2.new(1, -24, 0, 44)
-	self._botaoComprar.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-	self._botaoComprar.BorderSizePixel = 0
-	self._botaoComprar.Font = Enum.Font.SourceSansBold
-	self._botaoComprar.TextColor3 = Color3.fromRGB(255, 255, 255)
-	self._botaoComprar.TextSize = 18
-	self._botaoComprar.TextWrapped = true
-	self._botaoComprar.Parent = self._painelLoja
-
-	self._comprando = false
-
-	for maquinaId in CatalogoMaquinas do
-		table.insert(self._conexoes, self._jogador:GetAttributeChangedSignal("Inventario_" .. maquinaId):Connect(function()
-			self:AtualizarInventario()
-		end))
+	local limite = Instance.new("UITextSizeConstraint")
+	limite.MinTextSize, limite.MaxTextSize, limite.Parent = 12, 24, self._textoDinheiro
+	self._textoModo = self:_CriarTexto("ModoAtual", UDim2.new(0.5, 0, 1, -12), UDim2.new(0.9, 0, 0, 64), Vector2.new(0.5, 1))
+	self._textoModo.BackgroundTransparency = 0.15
+	-- Os dois paineis compartilham o canal de pedidos, mas cada um conserva selecao e resposta proprias. A
+	-- interface nao cria outra regra de compra.
+	local rede = Networker.client.new("Loja", {})
+	for _, aba in { "Inventario", "Loja" } do
+		self._paineis[aba] = PainelPecas.new(self._interface, aba, jogador, construcao, rede)
 	end
-	table.insert(self._conexoes, self._jogador:GetAttributeChangedSignal("MaquinaSelecionada"):Connect(function()
-		self._textoResposta.Text = ""
-		self:AtualizarInventario()
-	end))
-
+	-- Os atributos chegam replicados do servidor. Os sinais atualizam o HUD quando os dados mudam, dispensando
+	-- uma consulta repetida a cada quadro.
+	table.insert(self._conexoes, jogador:GetAttributeChangedSignal("Dinheiro"):Connect(function() self:AtualizarDinheiro() end))
+	for id in Catalogo do
+		for _, prefixo in { "Inventario_", "ConfiguracaoInventario_" } do
+			table.insert(self._conexoes, jogador:GetAttributeChangedSignal(prefixo .. id):Connect(function() self:AtualizarInventario() end))
+		end
+	end
+	table.insert(self._conexoes, construcao.Navegacao.Alterado:Connect(function() self:AtualizarInventario() end))
+	-- Faz a primeira leitura agora, pois os atributos podem ter chegado antes de os ouvintes serem conectados.
+	-- Depois disso, os eventos mantem a tela atualizada.
+	self:AtualizarDinheiro()
 	self:AtualizarInventario()
 	return self
 end
 
+-- Recebe nome, posicao, tamanho e ponto de ancora e devolve um TextLabel no ScreenGui. Centraliza o estilo dos
+-- textos gerais do HUD, sem criar regras de compra ou construcao.
+function InterfaceJogo:_CriarTexto(nome, posicao, tamanho, ancora)
+	local texto = Instance.new("TextLabel")
+	texto.Name, texto.Position, texto.Size, texto.AnchorPoint = nome, posicao, tamanho, ancora
+	texto.BackgroundColor3, texto.BorderSizePixel = Color3.fromRGB(25, 25, 25), 0
+	texto.Font, texto.TextColor3, texto.TextSize = Enum.Font.SourceSansBold, Color3.fromRGB(255, 255, 255), 18
+	texto.TextWrapped, texto.Parent = true, self._interface
+	return texto
+end
+
+-- Le o atributo Dinheiro publicado no jogador e atualiza o texto do HUD. Diferencia carregamento, texto
+-- decimal valido e dado indisponivel; nao calcula nem altera o saldo do servidor.
 function InterfaceJogo:AtualizarDinheiro()
 	local dinheiro = self._jogador:GetAttribute("Dinheiro")
-
 	if dinheiro == nil then
 		self._textoDinheiro.Text = "Dinheiro: carregando..."
 	elseif type(dinheiro) ~= "string" or not dinheiro:match("^[0-9]+$") then
@@ -95,88 +69,50 @@ function InterfaceJogo:AtualizarDinheiro()
 	end
 end
 
-function InterfaceJogo:_MaquinaAtual()
-	local maquinaId = self._jogador:GetAttribute("MaquinaSelecionada") or "MineradoraBasica"
-	return maquinaId, CatalogoMaquinas[maquinaId]
-end
-
+-- Solicita a cada painel que releia estoque e selecao, e depois atualiza as instrucoes. E chamada pelos
+-- eventos de atributos e de navegacao, em vez de reconstruir a interface a cada quadro.
 function InterfaceJogo:AtualizarInventario()
-	local maquinaId, item = self:_MaquinaAtual()
-	if not item then
-		self._textoQuantidade.Text = "Selecao indisponivel"
-		self._botaoComprar.Text = "Selecione uma maquina"
-		self._botaoCompra:DefinirDisponivel(false)
-		return
-	end
-
-	local quantidade = self._jogador:GetAttribute("Inventario_" .. maquinaId)
-	local pronto = type(quantidade) == "number"
-		and quantidade >= 0
-		and quantidade % 1 == 0
-
-	if quantidade == nil then
-		self._textoQuantidade.Text = "Inventario: carregando..."
-	elseif not pronto then
-		self._textoQuantidade.Text = "Inventario indisponivel"
-	else
-		self._textoQuantidade.Text = "No inventario: " .. quantidade
-	end
-
-	self._botaoCompra:DefinirDisponivel(pronto and not self._comprando)
-	self._botaoComprar.Text = self._comprando
-		and "Comprando..."
-		or "Comprar " .. item.Nome .. ": " .. item.Preco
-end
-
-function InterfaceJogo:ComprarSelecionada()
-	if self._destruida or self._comprando or not self._botaoComprar.Active then
-		return
-	end
-
-	local maquinaId, item = self:_MaquinaAtual()
-	if not item then return end
-
-	self._comprando = true
-	self._textoResposta.Text = ""
-	self:AtualizarInventario()
-
-	local comunicou, sucesso, mensagem = pcall(function()
-		return self._redeLoja:fetch("Comprar", maquinaId)
-	end)
-
 	if self._destruida then return end
-	self._comprando = false
+	for _, painel in self._paineis do painel:Atualizar() end
+	self:AtualizarEstado()
+end
 
-	if not comunicou then
-		self._textoResposta.Text = "Nao foi possivel confirmar a compra."
-	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
-		self._textoResposta.Text = "Resposta invalida da loja."
+-- Troca as instrucoes do rodape conforme colocacao, rotacao, recolhimento ou copia. O estoque e o preco
+-- mostrados sao informativos; a autorizacao da operacao continua no servidor.
+function InterfaceJogo:AtualizarEstado()
+	if self._destruida then return end
+	local estado = self._construcao.Navegacao:Atual()
+	if estado == "Reposicionamento" or (estado == "Rotacao" and self._construcao.Navegacao:Contem("Reposicionamento")) then
+		local item = Catalogo[self._jogador:GetAttribute("MaquinaSelecionada")]
+		self._textoModo.Text = "Mover: " .. (item and item.Nome or "Peça") .. " | Sem custo\n"
+			.. (estado == "Rotacao" and "R + arraste: girar 90° | Q: sair da rotação"
+				or "Clique: confirmar | R: girar | T: altura | Q: cancelar movimento | M: sair")
+	elseif estado == "Movimentacao" then
+		self._textoModo.Text = "Clique em uma peça do seu terreno para mover.\nM ou Q: sair | E: inventário | F: loja"
+	elseif estado == "Colocacao" or estado == "Rotacao" then
+		local id = self._jogador:GetAttribute("MaquinaSelecionada")
+		local item = Catalogo[id]
+		self._textoModo.Text = (item and item.Nome or "Peça") .. " | Estoque: " .. tostring(self._jogador:GetAttribute("Inventario_" .. tostring(id)) or "...")
+			.. " | Compra se necessário: " .. (item and item.Preco or "...") .. "\n"
+			.. (estado == "Rotacao" and "R + arraste: girar 90° | Q: sair da rotação"
+				or "Clique: colocar | R: girar | T: altura | Q: cancelar colocação | E: inventário | F: loja | X: recolher")
+	elseif estado == "Recolhimento" then
+		self._textoModo.Text = "Clique em peças do seu terreno para recolher.\nX ou Q: sair | E: inventário | F: loja"
+	elseif estado == "Copiando" then
+		self._textoModo.Text = "Obtendo a configuração da peça...\nQ: cancelar a seleção da cópia"
 	else
-		self._textoResposta.Text = mensagem
+		self._textoModo.Text = "E: inventário | F: loja | M: mover | X: recolher | Botão do meio: copiar | Q: voltar"
 	end
-
-	self:AtualizarInventario()
 end
 
-function InterfaceJogo:_CriarTextoLoja(nome, y, altura)
-	local texto = Instance.new("TextLabel")
-	texto.Name = nome
-	texto.Position = UDim2.new(0, 12, 0, y)
-	texto.Size = UDim2.new(1, -24, 0, altura)
-	texto.BackgroundTransparency = 1
-	texto.Font = Enum.Font.SourceSansBold
-	texto.TextColor3 = Color3.fromRGB(255, 255, 255)
-	texto.TextSize = 18
-	texto.TextWrapped = true
-	texto.Parent = self._painelLoja
-	return texto
-end
+-- Desconecta os ouvintes da interface, encerra os dois paineis e remove o ScreenGui. A guarda _destruida
+-- tambem protege callbacks de rede que retornem depois desse encerramento.
 function InterfaceJogo:Destruir()
 	if self._destruida then return end
 	self._destruida = true
 	for _, conexao in self._conexoes do conexao:Disconnect() end
 	table.clear(self._conexoes)
-	self._botaoCompra:Destruir()
+	for _, painel in self._paineis do painel:Destruir() end
 	self._interface:Destroy()
 end
 
