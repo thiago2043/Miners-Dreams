@@ -164,7 +164,7 @@ local function circuito(fps)
 	local fabrica = Fabrica.new(terrenos)
 	for _ = 1, fps * 9 do fabrica:Avancar(1 / fps) end
 	local valor = perfil.Data.Dinheiro
-	assert(tonumber(valor) > 0 and tonumber(valor) % 20 == 0, "Circuito deve transportar, multiplicar e vender.")
+	assert(tonumber(valor) > 0 and tonumber(valor) % 10 == 0, "Circuito deve transportar, multiplicar e vender.")
 	assert(vendedor:GetAttribute("TotalRecebido") == valor)
 	local corpos = {}
 	for _, entrada in fabrica._simulacao._minerios do table.insert(corpos, estado(entrada.Corpo)) end
@@ -215,8 +215,7 @@ simMovida:Destruir()
 print("PASS: correia movida/girada transporta na direcao atualizada.")
 
 -- Os modelos do projeto inteiro sao suportados pelo colisor de caixas.
-for _, nome in { "MineradoraBasica", "EsteiraBasica", "FornalhaBasica", "ModificadorBasico" } do
-	local original = r.deserializeModel(fs.readFile("modelos/rojo/" .. nome .. ".rbxm"))[1]
+for _, original in require("./suporte/catalogo_modelos")():GetChildren() do
 	for _, p in original:GetDescendants() do
 		if p:IsA("BasePart") and p.CanCollide then assert(p:IsA("Part") and p.Shape == r.Enum.PartType.Block) end
 	end
@@ -225,4 +224,4 @@ assert(not Minerio.DefinicaoValida({ Valor = "10", Tamanho = { 1, 1, 1 }, Elasti
 assert(not Minerio.DefinicaoValida({ Valor = "10", Tamanho = { 1, 1, 1 }, Atrito = 0 / 0 }))
 assert(Corpo.Intersecao(CFrame.identity, Vector3.one, CFrame.new(0.99, 0, 0), Vector3.one))
 assert(not Corpo.Intersecao(CFrame.identity, Vector3.one, CFrame.new(1.01, 0, 0), Vector3.one))
-print("PASS: quatro modelos nativos compativeis, coeficientes invalidos recusados e intersecao sem falsos contatos.")
+print("PASS: 16 modelos nativos compativeis, coeficientes invalidos recusados e intersecao sem falsos contatos.")

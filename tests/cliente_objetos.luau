@@ -1,5 +1,4 @@
 -- Executa os modulos reais com entrada, rede e widgets simulados; nao renderiza o Studio.
-local fs = require("@lune/fs")
 local roblox = require("./suporte/modelos")
 local Instance, Vector3, CFrame = roblox.Instance, roblox.Vector3, roblox.CFrame
 
@@ -32,13 +31,24 @@ local function novaInstancia(classe)
 		function evento:Destroy() self.destruido = true end
 		return evento
 	end
-	if table.find({ "ScreenGui", "Frame", "ScrollingFrame", "TextLabel", "TextButton", "UITextSizeConstraint", "UISizeConstraint", "UIListLayout", "Highlight" }, classe) then
-		local widget = { Activated = sinal(), sinaisPropriedade = {}, AbsoluteSize = roblox.Vector2.new(340, 210) }
+	if table.find({ "ScreenGui", "Frame", "ScrollingFrame", "TextLabel", "TextBox", "TextButton", "SurfaceGui", "UIGradient", "UICorner", "UIStroke", "UIPadding", "UIGridLayout", "UITextSizeConstraint", "UISizeConstraint", "UIScale", "UIListLayout", "Highlight" }, classe) then
+		local widget = { Activated = sinal(), MouseEnter = sinal(), MouseLeave = sinal(),
+			SelectionGained = sinal(), SelectionLost = sinal(), ZIndex = 1, sinaisPropriedade = {}, AbsoluteSize = roblox.Vector2.new(340, 210) }
 		function widget:GetPropertyChangedSignal(nome)
 			self.sinaisPropriedade[nome] = self.sinaisPropriedade[nome] or sinal()
 			return self.sinaisPropriedade[nome]
 		end
 		function widget:Destroy() self.destruido = true end
+		function widget:GetChildren()
+			local filhos = {}
+			for _, candidato in widgets do
+				if candidato.Parent == self then table.insert(filhos, candidato) end
+			end
+			return filhos
+		end
+		function widget:FindFirstChild(nome)
+			for _, filho in self:GetChildren() do if filho.Name == nome then return filho end end
+		end
 		table.insert(widgets, widget)
 		return widget
 	end
@@ -52,10 +62,7 @@ local replicado = { ModelosMaquinas = modelos }
 function replicado:WaitForChild(nome) return assert(self[nome]) end
 local terrenos = Instance.new("Folder")
 terrenos.Name, terrenos.Parent = "Terrenos", mundo
-for _, nome in { "MineradoraBasica", "EsteiraBasica", "FornalhaBasica", "ModificadorBasico" } do
-	local modelo = roblox.deserializeModel(fs.readFile("modelos/rojo/" .. nome .. ".rbxm"))[1]
-	modelo.Parent = modelos
-end
+require("./suporte/catalogo_modelos")(modelos)
 local players = { PlayerRemoving = sinal() }
 local function jogador(id)
 	local p = { Name = "Jogador" .. id, UserId = id, Parent = players, atributos = {}, sinais = {} }
@@ -75,21 +82,26 @@ end
 local p1, p2 = jogador(123), jogador(456)
 players.LocalPlayer = p1
 local input, render, destruirScript = sinal(), sinal(), sinal()
+local heartbeat = sinal()
 local mudou, terminou, perdeuFoco = sinal(), sinal(), sinal()
 local mouse = roblox.Vector2.zero
 local teclas = {}
-for _, nome in { "One", "Two", "Three", "Four", "Five", "B", "G", "E", "Q", "F", "T", "R", "X", "M", "Y", "Z" } do
+for _, nome in { "One", "Two", "Three", "Four", "Five", "B", "G", "E", "Q", "F", "T", "R", "X", "Y", "Z", "C", "V", "LeftShift", "RightShift", "LeftControl", "RightControl", "LeftAlt", "RightAlt" } do
 	teclas[nome] = roblox.Enum.KeyCode[nome]
 end
 -- Lune nao interna EnumItems como o Roblox; usa as mesmas referencias nas chaves do teste.
 local enums = setmetatable({ KeyCode = teclas }, { __index = roblox.Enum })
 local raio = { Origin = Vector3.new(-16, 50, -16), Direction = -Vector3.yAxis }
+local raioPorTela
 local resultado
 local camera = Instance.new("Camera")
 mundo.CurrentCamera = camera
 camera.CFrame = CFrame.identity
+camera.ViewportSize = roblox.Vector2.new(800, 600)
 roblox.implementMethod("Camera", "WorldToViewportPoint", function(_, p) return Vector3.new(400 + p.X * 10, 300 - p.Y * 10, 100), true end)
-roblox.implementMethod("Camera", "ViewportPointToRay", function() return raio end)
+roblox.implementMethod("Camera", "ViewportPointToRay", function(_, x, y)
+	return raioPorTela and raioPorTela(x, y) or raio
+end)
 roblox.implementMethod("Workspace", "Raycast", function() return resultado end)
 roblox.implementMethod("Workspace", "GetPartBoundsInBox", function(_, destino, tamanho, consulta)
 	local encontrados = {}
@@ -105,7 +117,8 @@ roblox.implementMethod("Workspace", "GetPartBoundsInBox", function(_, destino, t
 	end
 	return encontrados
 end)
-local redes, tempo = {}, 0
+local redes, tempo, teclasAtivas = {}, 0, {}
+local acaoRodaSelecao
 local depoisResposta
 local networker = {
 	server = { new = function(nome, servidor, metodos)
@@ -114,22 +127,7 @@ local networker = {
 	end },
 	client = { new = function(nome)
 		return { fetch = function(_, metodo, ...)
-			local argumentos = table.pack(...)
-			local modelo, pastaServidor
-			if (metodo == "Mover" or metodo == "Recolher") and argumentos[1]
-				and argumentos[1].Parent == nil
-			then
-				modelo = argumentos[1]
-				for _, terreno in terrenos:GetChildren() do
-					if terreno:GetAttribute("TerrenoId") == modelo:GetAttribute("TerrenoId") then
-						pastaServidor = terreno:FindFirstChild("Maquinas")
-						break
-					end
-				end
-				if pastaServidor then modelo.Parent = pastaServidor end
-			end
-			local resposta = table.pack(redes[nome][metodo](redes[nome], p1, table.unpack(argumentos, 1, argumentos.n)))
-			if modelo and pastaServidor and modelo.Parent == pastaServidor then modelo.Parent = nil end
+			local resposta = table.pack(redes[nome][metodo](redes[nome], p1, ...))
 			if depoisResposta then depoisResposta(nome, metodo) end
 			return table.unpack(resposta, 1, resposta.n)
 		end }
@@ -139,17 +137,28 @@ local textoFocado = false
 local carregar, no = require("./suporte/carregador")({
 	workspace = mundo, Instance = { new = novaInstancia }, Enum = enums,
 	Vector3 = Vector3, Vector2 = roblox.Vector2, UDim2 = roblox.UDim2, UDim = roblox.UDim,
-	CFrame = CFrame, Color3 = roblox.Color3, typeof = roblox.typeof,
+	CFrame = CFrame, Color3 = roblox.Color3, ColorSequence = roblox.ColorSequence,
+	ColorSequenceKeypoint = roblox.ColorSequenceKeypoint, typeof = roblox.typeof,
 	RaycastParams = { new = function() return {} end }, OverlapParams = { new = function() return {} end },
 	os = { clock = function() return tempo end }, print = function() end,
 }, {
-	Players = players, RunService = { RenderStepped = render },
-	UserInputService = { InputBegan = input, InputChanged = mudou, InputEnded = terminou, WindowFocusReleased = perdeuFoco, GetFocusedTextBox = function() return textoFocado and {} or nil end,
+	Players = players, RunService = { RenderStepped = render, Heartbeat = heartbeat },
+	ContextActionService = {
+		BindActionAtPriority = function(_, _, callback) acaoRodaSelecao = callback end,
+		UnbindAction = function() acaoRodaSelecao = nil end,
+	},
+		UserInputService = { InputBegan = input, InputChanged = mudou, InputEnded = terminou, WindowFocusReleased = perdeuFoco,
+			IsKeyDown = function(_, tecla) return teclasAtivas[tecla] == true end,
+			GetFocusedTextBox = function() return textoFocado and {} or nil end,
 		GetMouseLocation = function() return mouse end },
 	Debris = { AddItem = function() end },
 	ReplicatedStorage = replicado,
 	TextService = { GetTextSize = function() return roblox.Vector2.new(200, 80) end },
-}, { ["Packages/Networker"] = networker })
+}, {
+	["Packages/Networker"] = networker,
+	-- A renderizacao das miniaturas tem teste isolado; este cenario verifica as acoes e os dados do jogo.
+	["src/client/MiniaturaPeca"] = { new = function() return { Destruir = function() end } end },
+})
 replicado.Shared, replicado.Packages = no("src/shared"), no("Packages")
 
 local Terreno = carregar("src/server/Terreno")
@@ -169,7 +178,8 @@ assert(not mundo:FindFirstChild("MineradoraBasica") and not mundo:FindFirstChild
 local perfil = { Data = { Dinheiro = "10000", Inventory = {
 	MineradoraBasica = 0, EsteiraBasica = 0, FornalhaBasica = 0, ModificadorBasico = 0,
 	EsteiraRapida = 0,
-}, MaquinasColocadas = {} } }
+}, MaquinasColocadas = {}, Blueprints = {} } }
+for id in catalogo do if perfil.Data.Inventory[id] == nil then perfil.Data.Inventory[id] = 0 end end
 function perfil:IsActive() return true end
 local manager = carregar("src/server/Data/DataManager")
 manager.RegistrarPerfil(p1, perfil):Sincronizar()
@@ -181,21 +191,58 @@ local c1, c2 = Controlador.new(p1), Controlador.new(p2)
 local interface = Interface.new(p1, c1)
 c1:Iniciar()
 c1:Iniciar()
-assert(input:Contar() == 1 and render:Contar() == 1)
+assert(input:Contar() == 1 and render:Contar() == 2)
 local function tecla(nome)
 	input:Fire({ KeyCode = teclas[nome], UserInputType = roblox.Enum.UserInputType.Keyboard }, false)
 	if nome == "R" then terminou:Fire({ KeyCode = teclas[nome], UserInputType = roblox.Enum.UserInputType.Keyboard }) end
 end
 local function clique()
 	tempo += 1
-	input:Fire({ UserInputType = roblox.Enum.UserInputType.MouseButton1 }, false)
+	local entrada = { UserInputType = roblox.Enum.UserInputType.MouseButton1 }
+	input:Fire(entrada, false)
+	if c1._modoSelecao == "Recolhimento" or c1._modoSelecao == "Venda"
+		or ((c1._modoSelecao == "Movimentacao" or c1._modoSelecao == "Copia") and not c1._movimento)
+	then
+		terminou:Fire(entrada)
+	end
 end
 local function quadro()
 	tempo += 0.25
+	heartbeat:Fire(0.25)
 	render:Fire(0.25)
+end
+local function iniciarArraste(inicio)
+	mouse = inicio
+	local entrada = { UserInputType = roblox.Enum.UserInputType.MouseButton1 }
+	input:Fire(entrada, false)
+	return entrada
+end
+local function moverArraste(fim)
+	mouse = fim
+	mudou:Fire({ UserInputType = roblox.Enum.UserInputType.MouseMovement })
+	assert(c1._caixaSelecao.Parent == mundo, "O volume 3D deve aparecer depois de arrastar o mouse.")
+end
+local function terminarArraste(entrada)
+	terminou:Fire(entrada)
+end
+local function rolarSelecao(delta, shift)
+	teclasAtivas[teclas.LeftShift] = shift == true
+	assert(acaoRodaSelecao, "A roda deve ser capturada durante o arraste da selecao.")
+	local resposta = acaoRodaSelecao("Selecao", "Change", {
+		UserInputType = roblox.Enum.UserInputType.MouseWheel,
+		Position = Vector3.new(0, 0, delta),
+	})
+	assert(resposta == roblox.Enum.ContextActionResult.Sink, "O scroll nao deve alterar o zoom da camera durante a selecao.")
+	teclasAtivas[teclas.LeftShift] = false
 end
 local inventario, loja = interface._paineis.Inventario, interface._paineis.Loja
 local plot = terrenos:FindFirstChild("Terreno_1")
+local function maquinaNoLocal(maquinaId, minimo)
+	for _, maquina in plot.Maquinas:GetChildren() do
+		if maquina.Name == maquinaId and maquina:GetAttribute("VolumeMinimo") == minimo then return maquina end
+	end
+	return nil
+end
 resultado = { Instance = plot.Piso, Position = Vector3.new(-16, 0.5, -16), Normal = Vector3.yAxis, Distance = 49.5 }
 local function clicarPeca(painel, id, intervalo)
 	tempo += intervalo or 0.5
@@ -224,7 +271,7 @@ local function selecionarParaColocar(teclaPeca)
 	assert(c1.Navegacao:Atual() == "Colocacao" and c1._previa)
 end
 assert(not inventario._painelLista.Visible and not loja._painelLista.Visible)
-tecla("B"); tecla("G")
+tecla("B"); assert(c1.Navegacao:Atual() == "Blueprints"); tecla("Q"); tecla("G")
 assert(not c1.Navegacao:Atual())
 tecla("E"); tecla("F")
 assert(inventario._painelLista.Visible and loja._painelLista.Visible)
@@ -266,9 +313,10 @@ comprar("MineradoraBasica")
 clicarPeca(inventario, "MineradoraBasica")
 assert(not c1._previa)
 inventario._acoes.Colocar:ObterInstancia().Activated:Fire()
-assert(c1._previa and inventario._painelLista.Visible and loja._painelLista.Visible)
+verificarAbasFechadas()
 tecla("Q")
-assert(not c1._previa and inventario._painelFicha.Visible and loja._painelFicha.Visible)
+assert(not c1._previa and not c1.Navegacao:Atual())
+tecla("E")
 clicarPeca(inventario, "MineradoraBasica")
 clicarPeca(inventario, "MineradoraBasica", 0.1)
 assert(c1._previa and c1._abaColocacao == "Inventario")
@@ -298,7 +346,7 @@ tecla("F")
 assert(not loja._painelLista.Visible and not loja._painelFicha.Visible and inventario._painelLista.Visible)
 print("PASS: E/F independentes, quatro paineis orientados para o centro, fichas preservam listas e Q fecha a selecao mais recente.")
 
-tecla("X")
+tecla("Z")
 assert(inventario._painelLista.Visible and c1._modoSelecao == "Recolhimento")
 for _ = 1, 2 do
 	local modelo = plot.Maquinas:GetChildren()[1]
@@ -320,7 +368,11 @@ local anterior = c1._previa:ObterCaixa().CFrame.Position
 resultado = { Instance = plot.Piso, Position = Vector3.new(16, 0.5, 16), Normal = Vector3.yAxis, Distance = 10 }
 render:Fire(1 / 60)
 assert((c1._previa:ObterCaixa().CFrame.Position - anterior).Magnitude > 0)
-assert((c1._previa:ObterCaixa().CFrame.Position - c1._alvoColocacao.volumeDestino.Position).Magnitude > 0.01)
+assert((c1._previa:ObterCaixa().CFrame.Position - c1._alvoColocacao.volumeDestino.Position).Magnitude
+	< (anterior - c1._alvoColocacao.volumeDestino.Position).Magnitude * 0.5,
+	"previsualizacao deve acompanhar o cursor sem atraso excessivo")
+assert((c1._previa:ObterCaixa().CFrame.Position - c1._alvoColocacao.volumeDestino.Position).Magnitude > 0.01,
+	"previsualizacao deve continuar suavizada sem teletransportar")
 resultado = nil
 raio = { Origin = Vector3.new(0, 30, 0), Direction = Vector3.new(1, -0.01, 0).Unit }
 quadro()
@@ -355,7 +407,11 @@ mouse += roblox.Vector2.new(16, 0)
 mudou:Fire({ UserInputType = roblox.Enum.UserInputType.MouseMovement })
 render:Fire(1 / 60)
 local primeiroEixo = c1._rotacao
-assert((c1._previa:ObterCFrameVisual().RightVector - c1._alvoColocacao.caixaDestino.RightVector).Magnitude < 0.0001)
+assert((primeiroEixo.RightVector - rotacaoInicial.RightVector).Magnitude > 0.1,
+	"O arraste deve alterar a orientacao logica por um passo da grade.")
+assert((c1._previa:ObterCFrameVisual().RightVector - c1._alvoColocacao.caixaDestino.RightVector).Magnitude > 0.1
+	and (c1._previa:ObterCFrameVisual().RightVector - caixaArraste.RightVector).Magnitude > 0.1,
+	"A previa deve animar o giro sem saltar diretamente para a orientacao final.")
 assert(c1._previa:ObterCaixa().Size == c1._alvoColocacao.ocupado)
 local centroDepois = c1._alvoColocacao.caixaDestino.Position
 assert(math.abs(centroDepois.X - centroArraste.X) <= 2.0001 and math.abs(centroDepois.Z - centroArraste.Z) <= 2.0001)
@@ -391,7 +447,7 @@ input:Fire({ KeyCode = teclas.R, UserInputType = roblox.Enum.UserInputType.Keybo
 perdeuFoco:Fire()
 terminou:Fire({ KeyCode = teclas.R, UserInputType = roblox.Enum.UserInputType.Keyboard })
 assert(not c1._rPressionado and (c1._rotacao.RightVector - rotacaoArrastada.RightVector).Magnitude < 0.0001)
-print("PASS: giro imediato a 60 FPS, centro ajustado a grade, volta sem deriva e altura T preservada.")
+print("PASS: giro logico de 90 graus com previa suave, centro na grade, volta sem deriva e altura T preservada.")
 print("PASS: R + arraste troca de eixo sem soltar, nao coloca nem cobra; liberacao e perda de foco corretas.")
 
 input:Fire({ KeyCode = teclas.R, UserInputType = roblox.Enum.UserInputType.Keyboard }, false)
@@ -432,7 +488,7 @@ assert(redes.Construcao:Recolher(p1, colocadaGirando))
 assert(#perfil.Data.MaquinasColocadas == antesArraste)
 print("PASS: servidor aceita a posicao centralizada e cria a peca na orientacao exibida pela previa.")
 
--- Copia e estatisticas independentes entre as duas fichas.
+-- C usa a mesma selecao 3D do mover, destaca em azul e coloca uma copia sem retirar a fonte.
 tempo += 1
 assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.zero, CFrame.Angles(0, math.pi / 2, 0)))
 local fonte = plot.Maquinas:GetChildren()[1]
@@ -442,15 +498,12 @@ local okPersonalizar, mensagemPersonalizar, fonteNova = redes.Construcao.Persona
 assert(okPersonalizar, mensagemPersonalizar)
 fonteNova.Correia.Color = roblox.Color3.fromRGB(210, 70, 40)
 resultado = { Instance = fonteNova.Correia }
-input:Fire({ UserInputType = roblox.Enum.UserInputType.MouseButton3 }, false)
-assert(c1._copia and c1.Navegacao:Atual() == "FichaInventario" and not c1._previa)
-assert(inventario._textoFicha.Text:find("Transporte: 13 studs/s", 1, true))
-clicarPeca(loja, "EsteiraBasica")
-assert(inventario._painelFicha.Visible and loja._painelFicha.Visible)
-assert(inventario._textoFicha.Text:find("Transporte: 13 studs/s", 1, true))
-assert(loja._textoFicha.Text:find("Transporte: 6 studs/s", 1, true))
-inventario._acoes.Colocar:ObterInstancia().Activated:Fire()
-assert(c1._previa:ObterModelo().Correia.Color == fonteNova.Correia.Color and c1._copia)
+tecla("C")
+assert(c1._modoSelecao == "Copia" and c1._caixaSelecao.Color.B > 0.9
+	and c1._destaqueSelecao.FillColor.B > 0.9)
+quadro(); clique()
+assert(c1._movimento and c1._movimento.Copia and fonteNova.Parent == plot.Maquinas)
+assert(c1._previa:ObterModelo().Correia.Color == fonteNova.Correia.Color)
 resultado = { Instance = plot.Piso, Position = Vector3.new(16, 0.5, 16), Normal = Vector3.yAxis, Distance = 10 }
 raio = { Origin = Vector3.new(16, 100, 16), Direction = -Vector3.yAxis }
 quadro()
@@ -458,14 +511,13 @@ local saldoAntesCopia = perfil.Data.Dinheiro
 clique()
 assert(#perfil.Data.MaquinasColocadas == antesArraste + 2)
 assert(perfil.Data.Dinheiro == carregar("src/server/InteiroGrande").subtrair(saldoAntesCopia, "25"))
-assert(fonteNova.Parent == plot.Maquinas and c1._previa and c1._copia)
+assert(fonteNova.Parent == plot.Maquinas and c1._previa and c1._movimento.Copia)
 local criadaCopia = plot.Maquinas:GetChildren()[#plot.Maquinas:GetChildren()]
 assert(criadaCopia.Correia.Color == fonteNova.Correia.Color)
 assert(carregar("src/shared/PersonalizacaoMaquina").DoModelo(criadaCopia):ObterDados().Dados.Melhoria == 3)
-assert(not inventario._acoes.Vender:ObterInstancia().Active)
 tecla("Q"); tecla("Q")
-assert(not c1._copia and c1._rotacao == CFrame.identity)
-print("PASS: copia preservada ao abrir loja, fichas diferentes simultaneas, colocacao personalizada e original preservada.")
+assert(not c1._movimento and c1._modoSelecao == nil and c1._rotacao == CFrame.identity)
+print("PASS: C copia configuracoes e orientacao para uma previa azul sem retirar a peca original.")
 
 -- A loja coloca a configuracao padrao sem consumir uma variante diferente.
 local dados = manager.ObterDados(p1)
@@ -541,12 +593,16 @@ depoisResposta = nil
 c1.Navegacao:Limpar()
 resultado = { Instance = fonteNova.Correia }
 depoisResposta = function() coroutine.yield() end
-local copiaPendente = coroutine.create(function() input:Fire({ UserInputType = roblox.Enum.UserInputType.MouseButton3 }, false) end)
+tecla("C")
+quadro()
+local copiaPendente = coroutine.create(clique)
 tempo += 1
 assert(coroutine.resume(copiaPendente))
 tecla("Q")
 assert(coroutine.resume(copiaPendente))
-assert(not c1._previa and not c1._copia and not c1.Navegacao:Atual())
+assert(not c1._previa and not c1._movimento and c1._modoSelecao == "Copia")
+tecla("Q")
+assert(c1._modoSelecao == nil and not c1.Navegacao:Atual())
 depoisResposta = nil
 selecionarParaColocar("Four")
 resultado = { Instance = plot.Piso, Position = Vector3.new(16, 0.5, -16), Normal = Vector3.yAxis, Distance = 10 }
@@ -557,11 +613,11 @@ local colocacaoPendente = coroutine.create(clique)
 assert(coroutine.resume(colocacaoPendente))
 tecla("Q")
 assert(coroutine.resume(colocacaoPendente))
-assert(not c1._previa and c1.Navegacao:Atual() == "FichaInventario" and not c1._colocando)
+assert(not c1._previa and not c1.Navegacao:Atual() and not c1._colocando)
 depoisResposta = nil
 
 -- M permite reposicionar. O proprio espaco antigo deve ficar livre para a previa e aceitar recolocar ali.
-tecla("M")
+tecla("X")
 assert(c1.Navegacao:Atual() == "Movimentacao" and c1._modoSelecao == "Movimentacao")
 resultado = { Instance = fonteNova.Correia }
 quadro()
@@ -570,6 +626,8 @@ local posicaoAntesMover = fonteNova:GetAttribute("VolumeMinimo")
 local registroFonte
 for _, registro in perfil.Data.MaquinasColocadas do
 	if registro.MaquinaId == "EsteiraBasica" and registro.Modificacoes
+		and registro.Posicao[1] == posicaoAntesMover.X and registro.Posicao[2] == posicaoAntesMover.Y
+		and registro.Posicao[3] == posicaoAntesMover.Z
 		and registro.Modificacoes.Dados and registro.Modificacoes.Dados.Melhoria == 3 then
 		registroFonte = registro
 		break
@@ -578,30 +636,68 @@ end
 assert(registroFonte)
 local saldoAntesMover, estoqueAntesMover = perfil.Data.Dinheiro, perfil.Data.Inventory.EsteiraBasica
 local quantidadeAntesMover = #perfil.Data.MaquinasColocadas
+local volumeAntesMover = fonteNova:GetAttribute("VolumeOcupado")
 clique()
-assert(c1.Navegacao:Atual() == "Reposicionamento" and c1._movimento.Maquina == fonteNova)
-assert(fonteNova.Parent == nil, "A peca original deve sair da cena local ao comecar a movimentacao.")
+assert(c1.Navegacao:Atual() == "Reposicionamento" and c1._movimento.Pecas[1].Maquina == fonteNova)
+assert(fonteNova.Parent == nil, "O servidor deve apagar a instancia original ao comecar a movimentacao.")
 local geometria = carregar("src/shared/GeometriaColocacao")
 local origemMover = geometria.Origem(plot.Piso)
-local caixaAntiga = posicaoAntesMover + fonteNova:GetAttribute("VolumeOcupado") / 2
+local caixaAntiga = posicaoAntesMover + volumeAntesMover / 2
 local pontoAntigo = origemMover:PointToWorldSpace(Vector3.new(caixaAntiga.X, 0, caixaAntiga.Z))
 resultado = { Instance = plot.Piso, Position = pontoAntigo, Normal = origemMover.UpVector, Distance = 10 }
 raio = { Origin = pontoAntigo + origemMover.UpVector * 100, Direction = -origemMover.UpVector }
 quadro()
 assert(c1._alvoColocacao.livre and c1._alvoColocacao.minimo == posicaoAntesMover,
 	"A propria ocupacao antiga deve ser ignorada pela previa de movimento.")
-clique()
-assert(c1.Navegacao:Atual() == "Movimentacao" and c1._modoSelecao == "Movimentacao" and not c1._previa)
-assert(fonteNova.Parent == plot.Maquinas and fonteNova:GetAttribute("VolumeMinimo") == posicaoAntesMover)
-assert(registroFonte.Posicao[1] == posicaoAntesMover.X and registroFonte.Posicao[2] == posicaoAntesMover.Y
-	and registroFonte.Posicao[3] == posicaoAntesMover.Z)
+local cancelarMovimentoOriginal = redes.Construcao.CancelarMovimento
+redes.Construcao.CancelarMovimento = function() return false, "Recusa simulada." end
+tecla("Q")
+redes.Construcao.CancelarMovimento = cancelarMovimentoOriginal
+assert(fonteNova.Parent == nil and c1._movimento and c1._previa,
+	"Se o servidor recusa o cancelamento, a instancia continua apagada e a previa permanece ativa.")
 assert(perfil.Data.Dinheiro == saldoAntesMover and perfil.Data.Inventory.EsteiraBasica == estoqueAntesMover
 	and #perfil.Data.MaquinasColocadas == quantidadeAntesMover)
 tecla("Q")
+assert(fonteNova.Parent == nil and perfil.Data.Inventory.EsteiraBasica == estoqueAntesMover + 1
+	and #perfil.Data.MaquinasColocadas == quantidadeAntesMover - 1)
+local varianteDevolvida
+for _, variante in perfil.Data.InventarioPersonalizado.EsteiraBasica do
+	if variante.Configuracao and variante.Configuracao.Componentes[1].Velocidade == 13
+		and variante.Dados and variante.Dados.Melhoria == 3 and variante.Partes and #variante.Partes > 0 then
+		varianteDevolvida = variante
+		break
+	end
+end
+assert(varianteDevolvida, "Cancelar deve devolver a configuracao, melhoria e diferenca visual da peca movida.")
+tecla("Q")
 assert(c1._modoSelecao == nil and not c1.Navegacao:Contem("Movimentacao"))
 
--- Confirmar move a mesma instancia e atualiza so a posicao salva; saldo, estoque e melhorias nao mudam.
-tecla("M")
+-- A unidade personalizada retornou ao inventario; a proxima colocacao usa a variante restante em primeiro lugar.
+selecionarParaColocar("Two")
+resultado = { Instance = plot.Piso, Position = pontoAntigo, Normal = origemMover.UpVector, Distance = 10 }
+raio = { Origin = pontoAntigo + origemMover.UpVector * 100, Direction = -origemMover.UpVector }
+quadro()
+assert(c1._alvoColocacao.livre, "A variante devolvida deve poder ser recolocada.")
+posicaoAntesMover = c1._alvoColocacao.minimo
+clique()
+fonteNova = maquinaNoLocal("EsteiraBasica", posicaoAntesMover)
+assert(fonteNova and fonteNova:GetAttribute("VolumeMinimo") == posicaoAntesMover)
+registroFonte = nil
+for _, registro in perfil.Data.MaquinasColocadas do
+	if registro.MaquinaId == "EsteiraBasica" and registro.Modificacoes
+		and registro.Posicao[1] == posicaoAntesMover.X and registro.Posicao[2] == posicaoAntesMover.Y
+		and registro.Posicao[3] == posicaoAntesMover.Z then
+		registroFonte = registro
+		break
+	end
+end
+assert(registroFonte and perfil.Data.Inventory.EsteiraBasica == estoqueAntesMover
+	and #perfil.Data.MaquinasColocadas == quantidadeAntesMover)
+assert(registroFonte.Modificacoes.Configuracao.Componentes[1].Velocidade == 17
+	and registroFonte.Modificacoes.Dados == nil)
+
+-- Confirmar o movimento recria a instancia selecionada e preserva sua configuracao, saldo e estoque.
+tecla("X")
 resultado = { Instance = fonteNova.Correia }
 quadro(); clique()
 local pontoMover = origemMover:PointToWorldSpace(Vector3.new(40, 0, 40))
@@ -612,6 +708,9 @@ assert(c1._alvoColocacao.livre, "A previa deve encaixar em uma celula livre da p
 local destinoEsperado = c1._alvoColocacao.minimo
 local rotacaoEsperada = c1._alvoColocacao.rotacao
 clique()
+local instanciaAntesMover = fonteNova
+fonteNova = maquinaNoLocal("EsteiraBasica", destinoEsperado)
+assert(fonteNova and fonteNova ~= instanciaAntesMover and instanciaAntesMover.Parent == nil)
 assert(fonteNova.Parent == plot.Maquinas and fonteNova:GetAttribute("VolumeMinimo") == destinoEsperado)
 assert((fonteNova:GetAttribute("RotacaoConstrucao").RightVector - rotacaoEsperada.RightVector).Magnitude < 0.0001)
 assert(registroFonte.Posicao[1] == destinoEsperado.X and registroFonte.Posicao[2] == destinoEsperado.Y
@@ -619,32 +718,318 @@ assert(registroFonte.Posicao[1] == destinoEsperado.X and registroFonte.Posicao[2
 assert(#perfil.Data.MaquinasColocadas == quantidadeAntesMover and perfil.Data.Dinheiro == saldoAntesMover
 	and perfil.Data.Inventory.EsteiraBasica == estoqueAntesMover)
 local personalizacaoMovida = carregar("src/shared/PersonalizacaoMaquina").DoModelo(fonteNova):ObterDados()
-assert(personalizacaoMovida.Configuracao.Componentes[1].Velocidade == 13 and personalizacaoMovida.Dados.Melhoria == 3)
+assert(personalizacaoMovida.Configuracao.Componentes[1].Velocidade == 17 and personalizacaoMovida.Dados == nil)
 assert(c1.Navegacao:Atual() == "Movimentacao" and c1._modoSelecao == "Movimentacao")
 tecla("Q")
 assert(c1._modoSelecao == nil and not c1.Navegacao:Contem("Movimentacao"))
 
--- Cancelar o movimento recolhe a peca ao inventario. Uma recusa restaura a origem; o sucesso guarda a variante.
-tecla("M")
+-- A caixa e um volume 3D: o clique em uma peca define a altura inicial; scroll altera sua altura e Shift+scroll
+-- desloca esse plano. Uma copia na mesma coluna, oito studs acima, so entra quando o volume a alcança.
+tecla("X")
+local contornoSelecao = c1._caixaSelecao:FindFirstChild("ContornoSelecao")
+assert(c1._caixaSelecao.Transparency == 1
+	and c1._caixaSelecao.Color.R > 0.99 and c1._caixaSelecao.Color.G > 0.7
+	and c1._caixaSelecao.Color.B < 0.01 and contornoSelecao
+	and contornoSelecao:IsA("SelectionBox") and contornoSelecao.Adornee == c1._caixaSelecao
+	and math.abs(contornoSelecao.LineThickness - 0.1) < 0.001
+	and contornoSelecao.SurfaceTransparency == 1 and contornoSelecao.Color3.R > 0.99
+	and contornoSelecao.Color3.G > 0.8 and contornoSelecao.Color3.B < 0.4,
+	"A area 3D deve usar preenchimento por SurfaceGui e borda amarela sem uma segunda camada de faces na Part.")
 resultado = { Instance = criadaCopia.Correia }
 quadro()
-local pivoCopiaAntes = criadaCopia:GetPivot()
+local origemSelecao = carregar("src/shared/GeometriaColocacao").Origem(plot.Piso)
+local minimoSelecao = criadaCopia:GetAttribute("VolumeMinimo")
+local ocupadoSelecao = criadaCopia:GetAttribute("VolumeOcupado")
+local altoSelecao = criadaCopia:Clone()
+altoSelecao:SetAttribute("VolumeMinimo", minimoSelecao + Vector3.new(0, 8, 0))
+altoSelecao.Parent = plot.Maquinas
+raioPorTela = function(x, z)
+	return {
+		Origin = origemSelecao:PointToWorldSpace(Vector3.new(x, 100, z)),
+		Direction = -origemSelecao.UpVector,
+	}
+end
+local inicioSelecao = roblox.Vector2.new(minimoSelecao.X + ocupadoSelecao.X,
+	minimoSelecao.Z + ocupadoSelecao.Z)
+local fimSelecao = roblox.Vector2.new(minimoSelecao.X, minimoSelecao.Z)
+local function arrastarVolume(modelo, alturaHit, alturaVolume)
+	resultado = {
+		Instance = modelo:FindFirstChildWhichIsA("BasePart", true),
+		Position = origemSelecao:PointToWorldSpace(Vector3.new(inicioSelecao.X, alturaHit, inicioSelecao.Y)),
+	}
+	local entrada = iniciarArraste(inicioSelecao)
+	moverArraste(fimSelecao)
+	if alturaVolume then
+		assert(c1._arrasteSelecao.AlturaInicial == alturaVolume,
+			"A superficie clicada deve definir o plano vertical inicial da selecao.")
+	end
+	return entrada
+end
+local entradaVolume = arrastarVolume(criadaCopia, minimoSelecao.Y + 2, minimoSelecao.Y)
+assert(c1._caixaSelecao.Size.Y == 4, "A caixa deve iniciar com uma celula de altura.")
+assert(table.find(c1._pecasSelecionadas, criadaCopia) and c1._destaquesPecas[criadaCopia],
+	"A peca deve ganhar contorno assim que entra na caixa, antes de soltar o mouse.")
+moverArraste(inicioSelecao)
+assert(not table.find(c1._pecasSelecionadas, criadaCopia) and not c1._destaquesPecas[criadaCopia],
+	"A peca deve perder o contorno ao sair da caixa durante o mesmo arraste.")
+moverArraste(fimSelecao)
+assert(table.find(c1._pecasSelecionadas, criadaCopia) and c1._destaquesPecas[criadaCopia])
+terminarArraste(entradaVolume)
+assert(table.find(c1._pecasSelecionadas, criadaCopia), "O volume deve selecionar a peca que contem por inteiro.")
+assert(not table.find(c1._pecasSelecionadas, altoSelecao),
+	"Uma peca na mesma coluna, mas fora da altura, nao deve ser selecionada.")
+arrastarVolume(criadaCopia, minimoSelecao.Y + 2, minimoSelecao.Y)
+assert(not table.find(c1._pecasSelecionadas, criadaCopia) and not c1._destaquesPecas[criadaCopia],
+	"Uma peca ja selecionada deve perder o contorno quando a caixa a alcança.")
+terminarArraste({ UserInputType = roblox.Enum.UserInputType.MouseButton1 })
+assert(not table.find(c1._pecasSelecionadas, criadaCopia), "Repetir o volume deve desmarcar a peca selecionada.")
+
+entradaVolume = arrastarVolume(criadaCopia, minimoSelecao.Y + 2, minimoSelecao.Y)
+local alturaVisualInicial = c1._caixaSelecao.Size.Y
+local centroVisualInicial = c1._caixaSelecao.CFrame.Position.Y
+rolarSelecao(1, false)
+rolarSelecao(1, false)
+assert(table.find(c1._pecasSelecionadas, altoSelecao) and c1._destaquesPecas[altoSelecao],
+	"A peca elevada deve ganhar contorno no instante em que passa a caber na caixa.")
+assert(c1._arrasteSelecao.VolumeMaximo.Y - c1._arrasteSelecao.VolumeMinimo.Y == 12
+	and c1._caixaSelecao.Size.Y == alturaVisualInicial
+	and c1._caixaSelecao.CFrame.Position.Y == centroVisualInicial,
+	"O volume e os contornos mudam imediatamente, enquanto a altura visual aguarda a interpolacao.")
+heartbeat:Fire(1 / 60)
+local alturaVisualInterpolada = c1._caixaSelecao.Size.Y
+local centroVisualInterpolado = c1._caixaSelecao.CFrame.Position.Y
+local centroVisualAlvo = origemSelecao:PointToWorldSpace(Vector3.new(0, minimoSelecao.Y + 6, 0)).Y
+assert(alturaVisualInterpolada > alturaVisualInicial and alturaVisualInterpolada < 12
+	and centroVisualInterpolado > centroVisualInicial and centroVisualInterpolado < centroVisualAlvo,
+	string.format("Caixa deve interpolar: altura %.4f -> %.4f -> 12; centro %.4f -> %.4f -> %.4f", alturaVisualInicial, alturaVisualInterpolada, centroVisualInicial, centroVisualInterpolado, centroVisualAlvo))
+for _ = 1, 30 do heartbeat:Fire(1 / 60) end
+assert(math.abs(c1._caixaSelecao.Size.Y - 12) < 0.01
+	and math.abs(c1._caixaSelecao.CFrame.Position.Y - centroVisualAlvo) < 0.01,
+	"A animacao vertical deve convergir para a altura indicada pela roda.")
+terminarArraste(entradaVolume)
+assert(table.find(c1._pecasSelecionadas, criadaCopia) and table.find(c1._pecasSelecionadas, altoSelecao),
+	"Aumentar a altura deve incluir as pecas que passaram a caber no volume.")
+
+-- Shift+scroll move o plano inicial; o clique na instancia elevada tambem escolhe sua altura sem projetar em tela.
+resultado = { Instance = altoSelecao:FindFirstChildWhichIsA("BasePart", true),
+	Position = origemSelecao:PointToWorldSpace(Vector3.new(inicioSelecao.X, minimoSelecao.Y + 10, inicioSelecao.Y)) }
+local entradaAlta = iniciarArraste(inicioSelecao)
+moverArraste(fimSelecao)
+assert(c1._arrasteSelecao.AlturaInicial == minimoSelecao.Y + 8)
+local centroAntesDeMoverPlano = c1._caixaSelecao.CFrame.Position.Y
+rolarSelecao(-1, true)
+local centroAlvoPlano = origemSelecao:PointToWorldSpace(Vector3.new(0, minimoSelecao.Y + 6, 0)).Y
+assert(c1._arrasteSelecao.AlturaInicial == minimoSelecao.Y + 4
+	and c1._arrasteSelecao.VolumeMinimo.Y == minimoSelecao.Y + 4
+	and c1._arrasteSelecao.VolumeMaximo.Y == minimoSelecao.Y + 8
+	and c1._caixaSelecao.CFrame.Position.Y == centroAntesDeMoverPlano,
+	"Shift+scroll deve mover o plano logico sem saltar a caixa visual.")
+heartbeat:Fire(1 / 60)
+assert(c1._caixaSelecao.CFrame.Position.Y < centroAntesDeMoverPlano
+	and c1._caixaSelecao.CFrame.Position.Y > centroAlvoPlano,
+	"A posicao vertical deve acompanhar suavemente o plano inicial.")
+for _ = 1, 30 do heartbeat:Fire(1 / 60) end
+assert(math.abs(c1._caixaSelecao.CFrame.Position.Y - centroAlvoPlano) < 0.01,
+	"A caixa deve convergir para o novo plano inicial.")
+rolarSelecao(1, true)
+assert(c1._arrasteSelecao.AlturaInicial == minimoSelecao.Y + 8)
+terminarArraste(entradaAlta)
+local selecaoAntesPerderFoco = table.clone(c1._pecasSelecionadas)
+arrastarVolume(criadaCopia, minimoSelecao.Y + 2, minimoSelecao.Y)
+assert(not c1._destaquesPecas[criadaCopia], "A pre-selecao deve reagir antes de o foco ser perdido.")
+perdeuFoco:Fire()
+assert(not c1._arrasteSelecao and #c1._pecasSelecionadas == #selecaoAntesPerderFoco,
+	"Perder o foco durante o arraste deve restaurar a quantidade de selecoes anterior.")
+for _, maquina in selecaoAntesPerderFoco do
+	assert(c1._destaquesPecas[maquina], "Perder o foco deve restaurar os contornos anteriores.")
+end
+
+-- A camada inicial continua no volume quando a roda acrescenta uma camada acima ou abaixo dela.
+local abaixoSelecao = criadaCopia:Clone()
+abaixoSelecao:SetAttribute("VolumeMinimo", minimoSelecao + Vector3.new(0, 4, 0))
+abaixoSelecao.Parent = plot.Maquinas
+assert(not c1._destaquesPecas[altoSelecao])
+resultado = {
+	Instance = altoSelecao:FindFirstChildWhichIsA("BasePart", true),
+	Position = origemSelecao:PointToWorldSpace(Vector3.new(inicioSelecao.X, minimoSelecao.Y + 10, inicioSelecao.Y)),
+}
+local entradaParaBaixo = iniciarArraste(inicioSelecao)
+moverArraste(fimSelecao)
+assert(c1._arrasteSelecao.AlturaInicial == minimoSelecao.Y + 8)
+local alturaAntesDeExpandir = c1._caixaSelecao.Size.Y
+local centroAntesDeExpandir = c1._caixaSelecao.CFrame.Position.Y
+rolarSelecao(-1, false)
+assert(math.abs(c1._arrasteSelecao.Altura + 4) < 0.001
+	and c1._arrasteSelecao.VolumeMinimo.Y == minimoSelecao.Y + 4
+	and c1._arrasteSelecao.VolumeMaximo.Y == minimoSelecao.Y + 12
+	and table.find(c1._pecasSelecionadas, abaixoSelecao) and c1._destaquesPecas[abaixoSelecao]
+	and table.find(c1._pecasSelecionadas, altoSelecao) and c1._destaquesPecas[altoSelecao],
+	"Ao incluir a camada abaixo, a caixa deve manter selecionadas as pecas da camada inicial.")
+assert(c1._caixaSelecao.Size.Y == alturaAntesDeExpandir
+	and c1._caixaSelecao.CFrame.Position.Y == centroAntesDeExpandir,
+	"Expandir o volume para baixo nao deve mover a caixa verticalmente de uma vez.")
+heartbeat:Fire(1 / 60)
+assert(c1._caixaSelecao.Size.Y > alturaAntesDeExpandir and c1._caixaSelecao.Size.Y < 8
+	and c1._caixaSelecao.CFrame.Position.Y < centroAntesDeExpandir,
+	"A expansao para baixo deve suavizar tanto o tamanho quanto a posicao da caixa.")
+for _ = 1, 30 do heartbeat:Fire(1 / 60) end
+assert(math.abs(c1._caixaSelecao.Size.Y - 8) < 0.01
+	and math.abs(c1._caixaSelecao.CFrame.Position.Y - origemSelecao:PointToWorldSpace(
+		Vector3.new(0, minimoSelecao.Y + 8, 0)).Y) < 0.01,
+	"A expansao vertical deve convergir ao novo limite do volume.")
+perdeuFoco:Fire()
+assert(not c1._destaquesPecas[abaixoSelecao], "Cancelar o arraste deve restaurar o estado anterior da peca inferior.")
+abaixoSelecao:Destroy()
+altoSelecao:Destroy()
+c1:_LimparSelecaoPecas()
+
+-- Mesmo com o cursor entre coordenadas, os limites horizontais devem acompanhar celulas inteiras de 4 studs.
+local inicioForaDaGrade = roblox.Vector2.new(inicioSelecao.X - 0.5, inicioSelecao.Y - 0.5)
+local fimForaDaGrade = roblox.Vector2.new(fimSelecao.X + 0.5, fimSelecao.Y + 0.5)
+resultado = {
+	Instance = criadaCopia:FindFirstChildWhichIsA("BasePart", true),
+	Position = origemSelecao:PointToWorldSpace(Vector3.new(inicioForaDaGrade.X, minimoSelecao.Y + 2, inicioForaDaGrade.Y)),
+}
+local entradaGrade = iniciarArraste(inicioForaDaGrade)
+moverArraste(fimForaDaGrade)
+local volumeGrade = c1._arrasteSelecao
+for _, eixo in { "X", "Z" } do
+	assert(math.abs(volumeGrade.VolumeMinimo[eixo] / 4 - math.round(volumeGrade.VolumeMinimo[eixo] / 4)) < 0.001
+		and math.abs(volumeGrade.VolumeMaximo[eixo] / 4 - math.round(volumeGrade.VolumeMaximo[eixo] / 4)) < 0.001
+		and math.abs(c1._caixaSelecao.Size[eixo] / 4 - math.round(c1._caixaSelecao.Size[eixo] / 4)) < 0.001,
+		"Os limites e o tamanho da caixa devem saltar em blocos de quatro studs.")
+end
+assert(volumeGrade.VolumeMinimo.X == minimoSelecao.X and volumeGrade.VolumeMinimo.Z == minimoSelecao.Z
+	and volumeGrade.VolumeMaximo.X == minimoSelecao.X + ocupadoSelecao.X
+	and volumeGrade.VolumeMaximo.Z == minimoSelecao.Z + ocupadoSelecao.Z,
+	"Ao arrastar entre blocos, a caixa deve arredondar para fora e cobrir a peca inteira.")
+
+local tamanhoAntesDoSalto = c1._caixaSelecao.Size.X
+moverArraste(roblox.Vector2.new(fimForaDaGrade.X + 4, fimForaDaGrade.Y))
+local tamanhoAlvo = c1._arrasteSelecao.VolumeMaximo.X - c1._arrasteSelecao.VolumeMinimo.X
+assert(math.abs(tamanhoAlvo - tamanhoAntesDoSalto) >= 4,
+	"Mover o cursor por um bloco deve atualizar o alvo da caixa.")
+heartbeat:Fire(1 / 60)
+local tamanhoInterpolado = c1._caixaSelecao.Size.X
+assert(tamanhoInterpolado > math.min(tamanhoAntesDoSalto, tamanhoAlvo)
+	and tamanhoInterpolado < math.max(tamanhoAntesDoSalto, tamanhoAlvo),
+	"A caixa visual deve deslizar entre dois tamanhos de bloco em vez de saltar.")
+for _ = 1, 30 do heartbeat:Fire(1 / 60) end
+assert(math.abs(c1._caixaSelecao.Size.X - tamanhoAlvo) < 0.01,
+	"A animacao deve convergir para o bloco indicado pelo cursor.")
+moverArraste(fimForaDaGrade)
+for _ = 1, 30 do heartbeat:Fire(1 / 60) end
+terminarArraste(entradaGrade)
+assert(table.find(c1._pecasSelecionadas, criadaCopia), "A caixa alinhada deve continuar selecionando a peca contida.")
+c1:_LimparSelecaoPecas()
+
+-- A parede virtual da plot pode iniciar a selecao e fornecer a altura mesmo sem um piso fisico sob o cursor.
+local inicioNaParede, fimNaParede = roblox.Vector2.new(10, 10), roblox.Vector2.new(40, 40)
+raioPorTela = function(x)
+	if x < 20 then
+		return {
+			Origin = origemSelecao:PointToWorldSpace(Vector3.new(plot.Piso.Size.X / 2, 20, plot.Piso.Size.Z / 2)),
+			Direction = origemSelecao.RightVector,
+		}
+	end
+	return {
+		Origin = origemSelecao:PointToWorldSpace(Vector3.new(plot.Piso.Size.X / 2, 100, plot.Piso.Size.Z / 2)),
+		Direction = origemSelecao:VectorToWorldSpace(roblox.Vector3.new(1, -1, 0).Unit),
+	}
+end
+resultado = nil
+local entradaParede = iniciarArraste(inicioNaParede)
+moverArraste(fimNaParede)
+assert(c1._arrasteSelecao.InicioLocal == Vector3.new(plot.Piso.Size.X, 20, plot.Piso.Size.Z / 2)
+	and c1._arrasteSelecao.VolumeMinimo.Y == 20
+	and c1._arrasteSelecao.VolumeMinimo.X == plot.Piso.Size.X - 4
+	and c1._arrasteSelecao.VolumeMaximo.X == plot.Piso.Size.X,
+	"A parede deve iniciar a selecao e conter o cursor que, no plano, cairia fora da plot.")
+terminarArraste(entradaParede)
+c1:_LimparSelecaoPecas()
+raioPorTela = nil
+resultado = { Instance = criadaCopia.Correia }
+local function shiftClick(modelo)
+	resultado = { Instance = modelo:FindFirstChildWhichIsA("BasePart", true) }
+	quadro()
+	teclasAtivas[teclas.LeftShift] = true
+	clique()
+	teclasAtivas[teclas.LeftShift] = false
+end
+shiftClick(fonteNova)
+shiftClick(criadaCopia)
+assert(#c1._pecasSelecionadas == 2)
+local centroOriginalAncora = criadaCopia:GetAttribute("VolumeMinimo")
+	+ criadaCopia:GetAttribute("VolumeOcupado") / 2
+local centroOriginalOutra = fonteNova:GetAttribute("VolumeMinimo") + fonteNova:GetAttribute("VolumeOcupado") / 2
+local deslocamentoGrupo = centroOriginalOutra - centroOriginalAncora
+resultado = { Instance = criadaCopia.Correia }
+quadro()
+clique()
+assert(c1._movimento.Grupo and c1._movimento.Pecas[1].Maquina == criadaCopia,
+	"A peca clicada deve ser a ancora do grupo.")
+assert(fonteNova.Parent == nil and criadaCopia.Parent == nil,
+	"As originais selecionadas devem sair da cena local ao iniciar o movimento do conjunto.")
+local origemGrupo = carregar("src/shared/GeometriaColocacao").Origem(plot.Piso)
+local pontoAncoraGrupo = origemGrupo:PointToWorldSpace(Vector3.new(32, 0, 32))
+resultado = { Instance = plot.Piso, Position = pontoAncoraGrupo, Normal = origemGrupo.UpVector, Distance = 10 }
+raio = { Origin = pontoAncoraGrupo + origemGrupo.UpVector * 100, Direction = -origemGrupo.UpVector }
+render:Fire(1 / 60)
+tecla("R")
+render:Fire(1 / 60)
+assert(#c1._alvosGrupo == 2 and c1._alvoColocacao.livre, "O conjunto deve manter uma formacao valida na nova posicao.")
+local alvoAncoraGrupo, alvoOutraGrupo
+for _, item in c1._alvosGrupo do
+	if item.Peca.Maquina == criadaCopia then alvoAncoraGrupo = item.Alvo else alvoOutraGrupo = item.Alvo end
+end
+local centroAlvoCursor = c1._alvoColocacao.minimo + c1._alvoColocacao.ocupado / 2
+local centroAncoraGrupo = alvoAncoraGrupo.minimo + alvoAncoraGrupo.ocupado / 2
+assert((centroAncoraGrupo - centroAlvoCursor).Magnitude < 0.001,
+	"A peca clicada deve permanecer no ponto de destino do cursor.")
+local rotacaoRelativa = alvoAncoraGrupo.rotacao * CFrame.Angles(0, -math.pi / 2, 0)
+local deslocamentoEsperado = rotacaoRelativa:VectorToWorldSpace(deslocamentoGrupo)
+local deslocamentoAlvo = (alvoOutraGrupo.minimo + alvoOutraGrupo.ocupado / 2)
+	- (alvoAncoraGrupo.minimo + alvoAncoraGrupo.ocupado / 2)
+assert((deslocamentoAlvo - deslocamentoEsperado).Magnitude < 0.001,
+	"R deve girar as distancias do conjunto ao redor da peca clicada.")
+do
+	local visualAncora = c1._movimento.Pecas[1].Previa:ObterCFrameVisual()
+	local visualOutra = c1._movimento.Pecas[2].Previa:ObterCFrameVisual()
+	local relativoVisual = visualAncora:ToObjectSpace(visualOutra)
+	local relativoAlvo = alvoAncoraGrupo.caixaDestino:ToObjectSpace(alvoOutraGrupo.caixaDestino)
+	assert((relativoVisual.Position - relativoAlvo.Position).Magnitude < 0.001
+		and (relativoVisual.RightVector - relativoAlvo.RightVector).Magnitude < 0.001
+		and (relativoVisual.UpVector - relativoAlvo.UpVector).Magnitude < 0.001,
+		"Durante o giro, todas as previas devem manter o transform relativo do grupo.")
+end
+clique()
+local instanciaFonteMovida, instanciaCopiaMovida = fonteNova, criadaCopia
+fonteNova = maquinaNoLocal("EsteiraBasica", alvoOutraGrupo.minimo)
+criadaCopia = maquinaNoLocal("EsteiraBasica", alvoAncoraGrupo.minimo)
+assert(fonteNova and criadaCopia and fonteNova ~= instanciaFonteMovida and criadaCopia ~= instanciaCopiaMovida)
+assert(instanciaFonteMovida.Parent == nil and instanciaCopiaMovida.Parent == nil)
+assert(c1._modoSelecao == "Movimentacao" and not c1._movimento)
+assert((fonteNova:GetAttribute("RotacaoConstrucao").RightVector - alvoOutraGrupo.rotacao.RightVector).Magnitude < 0.0001)
+tecla("Q")
+assert(c1._modoSelecao == nil)
+print("PASS: caixa 3D seleciona por altura; scroll expande para cima e para baixo, Shift move o plano e R gira o grupo na ancora.")
+
+-- Cancelar o movimento envia a peca apagada ao inventario. Uma recusa mantem a previa para nova tentativa.
+tecla("X")
+resultado = { Instance = criadaCopia.Correia }
+quadro()
 local inventarioAntesCancelar = perfil.Data.Inventory.EsteiraBasica
 local construcoesAntesCancelar = #perfil.Data.MaquinasColocadas
 clique()
 assert(criadaCopia.Parent == nil, "A copia original tambem deve sair da cena local durante o movimento.")
-local recolherOriginal = redes.Construcao.Recolher
-redes.Construcao.Recolher = function() return false, "Recusa simulada." end
+local cancelarOriginal = redes.Construcao.CancelarMovimento
+redes.Construcao.CancelarMovimento = function() return false, "Recusa simulada." end
 tecla("Q")
-redes.Construcao.Recolher = recolherOriginal
-assert(criadaCopia.Parent == plot.Maquinas and (criadaCopia:GetPivot().Position - pivoCopiaAntes.Position).Magnitude < 0.0001)
+redes.Construcao.CancelarMovimento = cancelarOriginal
+assert(criadaCopia.Parent == nil and c1._movimento and c1._previa)
 assert(perfil.Data.Inventory.EsteiraBasica == inventarioAntesCancelar
 	and #perfil.Data.MaquinasColocadas == construcoesAntesCancelar)
-assert(c1._modoSelecao == "Movimentacao" and not c1._previa)
-
-resultado = { Instance = criadaCopia.Correia }
-quadro(); clique()
-assert(criadaCopia.Parent == nil)
+assert(c1._modoSelecao == "Movimentacao")
 tecla("Q")
 assert(criadaCopia.Parent == nil and perfil.Data.Inventory.EsteiraBasica == inventarioAntesCancelar + 1)
 assert(#perfil.Data.MaquinasColocadas == construcoesAntesCancelar - 1)
@@ -661,7 +1046,7 @@ assert(varianteRecolhida and varianteRecolhida.Partes and #varianteRecolhida.Par
 tecla("Q")
 assert(c1._modoSelecao == nil and not c1.Navegacao:Contem("Movimentacao"))
 
-tecla("X")
+tecla("Z")
 resultado = { Instance = fonteNova.Correia }
 quadro()
 depoisResposta = function() coroutine.yield() end
@@ -669,15 +1054,601 @@ local recolhimentoPendente = coroutine.create(clique)
 assert(coroutine.resume(recolhimentoPendente))
 tecla("Q")
 assert(coroutine.resume(recolhimentoPendente))
-assert(c1._modoSelecao == nil and not c1._colocando and inventario._painelLista.Visible and loja._painelLista.Visible)
+assert(c1._modoSelecao == nil and not c1._colocando and not inventario._painelLista.Visible and not loja._painelLista.Visible)
 depoisResposta = nil
+
+-- Q no reposicionamento do grupo devolve todas as unidades juntas, inclusive suas variantes personalizadas.
+tempo += 1
+assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.zero, CFrame.identity))
+local esteiraLote = plot.Maquinas:GetChildren()[#plot.Maquinas:GetChildren()]
+tempo += 1
+assert(redes.Construcao:Colocar(p1, "MineradoraBasica", Vector3.new(32, 80, 32), CFrame.identity))
+local mineradoraAlta = plot.Maquinas:GetChildren()[#plot.Maquinas:GetChildren()]
+local estoqueEsteiraAntesGrupo = perfil.Data.Inventory.EsteiraBasica
+local estoqueMineradoraAntesGrupo = perfil.Data.Inventory.MineradoraBasica
+local construcoesAntesGrupo = #perfil.Data.MaquinasColocadas
+tecla("X")
+shiftClick(esteiraLote)
+shiftClick(mineradoraAlta)
+assert(#c1._pecasSelecionadas == 2)
+resultado = { Instance = esteiraLote.Correia }
+quadro(); clique()
+assert(c1._movimento.Grupo and esteiraLote.Parent == nil and mineradoraAlta.Parent == nil)
+tecla("Q")
+assert(not c1._movimento and esteiraLote.Parent == nil and mineradoraAlta.Parent == nil)
+assert(perfil.Data.Inventory.EsteiraBasica == estoqueEsteiraAntesGrupo + 1)
+assert(perfil.Data.Inventory.MineradoraBasica == estoqueMineradoraAntesGrupo + 1)
+assert(#perfil.Data.MaquinasColocadas == construcoesAntesGrupo - 2)
+assert(#perfil.Data.InventarioPersonalizado.EsteiraBasica > 0,
+	"Cancelar o grupo deve preservar a personalizacao da esteira no inventario.")
+tecla("Q")
+assert(c1._modoSelecao == nil)
 print("PASS: mover retira a peca da cena local, confirma no destino ou recolhe ao inventario no cancelamento.")
+
+-- O modo Z reutiliza o volume 3D, destaca em vermelho e devolve o grupo ao inventario numa transacao.
+tempo += 1
+assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(0, 0, 0), CFrame.identity))
+local esteiraRecolhida1 = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 0, 0))
+tempo += 1
+assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(32, 0, 32), CFrame.identity))
+local esteiraRecolhida2 = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 0, 32))
+assert(esteiraRecolhida1 and esteiraRecolhida2)
+
+-- C seleciona o mesmo grupo com contorno azul, mas abrir a previa nao retira nenhuma fonte.
+do
+tecla("C")
+assert(c1._caixaSelecao.Color.B > 0.9 and c1._caixaSelecao.ContornoSelecao.Color3.B > 0.9)
+local origemCopia = carregar("src/shared/GeometriaColocacao").Origem(plot.Piso)
+local inicioCopia = roblox.Vector2.new(1, 1)
+local fimCopia = roblox.Vector2.new(41, 41)
+raioPorTela = function(x, z)
+	return {
+		Origin = origemCopia:PointToWorldSpace(Vector3.new(x, 100, z)),
+		Direction = -origemCopia.UpVector,
+	}
+end
+resultado = {
+	Instance = esteiraRecolhida1.Correia,
+	Position = origemCopia:PointToWorldSpace(Vector3.new(1, 2, 1)),
+}
+local arrasteCopia = iniciarArraste(inicioCopia)
+moverArraste(fimCopia)
+assert(#c1._pecasSelecionadas == 2 and c1._destaquesPecas[esteiraRecolhida1].FillColor.B > 0.9
+	and c1._destaquesPecas[esteiraRecolhida2].FillColor.B > 0.9)
+terminarArraste(arrasteCopia)
+raioPorTela = nil
+resultado = { Instance = esteiraRecolhida1.Correia }
+quadro(); clique()
+assert(c1._movimento and c1._movimento.Copia and #c1._movimento.Pecas == 2
+	and esteiraRecolhida1.Parent == plot.Maquinas and esteiraRecolhida2.Parent == plot.Maquinas,
+	"Copiar duas pecas deve abrir uma previa em grupo e conservar as originais.")
+
+local deslocamentoTopo = origemCopia:PointToWorldSpace(Vector3.new(4, 4, 6))
+resultado = {
+	Instance = esteiraRecolhida1.Correia, Position = deslocamentoTopo,
+	Normal = origemCopia.UpVector, Distance = 10,
+}
+raio = { Origin = origemCopia:PointToWorldSpace(Vector3.new(4, 100, 6)), Direction = -origemCopia.UpVector }
+quadro()
+assert(c1._alvosGrupo and #c1._alvosGrupo == 2 and c1._alvoColocacao.minimo.Y == 4
+	and c1._alvoColocacao.livre, "O grupo copiado deve acompanhar o alvo e caber acima das fontes.")
+c1._estoqueAntesRecolherGrupo = perfil.Data.Inventory.EsteiraBasica
+c1._colocadasAntesRecolherGrupo = #perfil.Data.MaquinasColocadas
+clique()
+assert(#perfil.Data.MaquinasColocadas == c1._colocadasAntesRecolherGrupo + 2
+	and esteiraRecolhida1.Parent == plot.Maquinas and esteiraRecolhida2.Parent == plot.Maquinas,
+	"Confirmar a previa deve colocar o grupo inteiro e manter suas fontes.")
+assert(maquinaNoLocal("EsteiraBasica", Vector3.new(0, 4, 0))
+	and maquinaNoLocal("EsteiraBasica", Vector3.new(32, 4, 32)))
+c1._estoqueAntesRecolherGrupo = perfil.Data.Inventory.EsteiraBasica
+c1._colocadasAntesRecolherGrupo = #perfil.Data.MaquinasColocadas
+tecla("Q")
+assert(not c1._movimento and esteiraRecolhida1.Parent == plot.Maquinas and esteiraRecolhida2.Parent == plot.Maquinas)
+tecla("Q")
+assert(c1._modoSelecao == nil)
+end
+
+resultado = { Instance = esteiraRecolhida1.Correia }
+local origemRetirada = carregar("src/shared/GeometriaColocacao").Origem(plot.Piso)
+local inicioRetirada = roblox.Vector2.new(40, 44)
+local fimRetirada = roblox.Vector2.new(0, 0)
+raioPorTela = function(x, z)
+	return {
+		Origin = origemRetirada:PointToWorldSpace(Vector3.new(x, 100, z)),
+		Direction = -origemRetirada.UpVector,
+	}
+end
+resultado = {
+	Instance = esteiraRecolhida2:FindFirstChildWhichIsA("BasePart", true),
+	Position = origemRetirada:PointToWorldSpace(Vector3.new(40, 2, 44)),
+}
+tecla("Z")
+assert(c1._caixaSelecao.Color.R > 0.99 and c1._caixaSelecao.Color.G < 0.3
+	and c1._caixaSelecao.Color.B < 0.3 and c1._caixaSelecao.ContornoSelecao.Color3.R > 0.99
+	and c1._caixaSelecao.ContornoSelecao.Color3.G < 0.3
+	and c1._destaqueSelecao.FillColor.R > 0.99 and c1._destaqueSelecao.FillColor.G < 0.3,
+	"O modo de retirada deve usar vermelho na area, na borda e no destaque sob o cursor.")
+local entradaRetirada = iniciarArraste(inicioRetirada)
+moverArraste(fimRetirada)
+assert(#c1._pecasSelecionadas == 2
+	and c1._destaquesPecas[esteiraRecolhida1] and c1._destaquesPecas[esteiraRecolhida2]
+	and c1._destaquesPecas[esteiraRecolhida1].FillColor.G < 0.3
+	and c1._destaquesPecas[esteiraRecolhida2].FillColor.G < 0.3,
+	"O volume vermelho deve selecionar as duas pecas e aplicar contornos vermelhos.")
+terminarArraste(entradaRetirada)
+
+resultado = { Instance = esteiraRecolhida1:FindFirstChildWhichIsA("BasePart", true) }
+shiftClick(esteiraRecolhida1)
+assert(#c1._pecasSelecionadas == 1 and not c1._destaquesPecas[esteiraRecolhida1]
+	and c1._destaquesPecas[esteiraRecolhida2],
+	"Shift+clique deve desmarcar individualmente uma peca do grupo.")
+shiftClick(esteiraRecolhida1)
+assert(#c1._pecasSelecionadas == 2)
+local estoqueAntesDoPedidoDuplicado = perfil.Data.Inventory.EsteiraBasica
+assert(not redes.Construcao:Recolher(p1, { esteiraRecolhida1, esteiraRecolhida1 })
+	and esteiraRecolhida1.Parent == plot.Maquinas and esteiraRecolhida2.Parent == plot.Maquinas
+	and perfil.Data.Inventory.EsteiraBasica == estoqueAntesDoPedidoDuplicado,
+	"Um lote duplicado deve falhar sem remover maquinas nem alterar o inventario.")
+resultado = { Instance = esteiraRecolhida1:FindFirstChildWhichIsA("BasePart", true) }
+quadro()
+clique()
+assert(esteiraRecolhida1.Parent == nil and esteiraRecolhida2.Parent == nil
+	and #c1._pecasSelecionadas == 0 and not next(c1._destaquesPecas),
+	"Clicar numa selecionada deve recolher o grupo e limpar seus destaques locais.")
+assert(perfil.Data.Inventory.EsteiraBasica == c1._estoqueAntesRecolherGrupo + 2
+	and #perfil.Data.MaquinasColocadas == c1._colocadasAntesRecolherGrupo - 2,
+	"O recolhimento em lote deve devolver todas as unidades sem registrar colocacoes extras.")
+tecla("Q")
+raioPorTela = nil
+print("PASS: Z seleciona com Shift e volume 3D vermelho, e recolhe grupos atomicamente para o inventario.")
 print("PASS: compra, venda, copia, colocacao e recolhimento atrasados respeitam Q e fechamento independente dos paineis.")
 
+-- Em uma face vertical, o cursor escolhe a camada Y tanto ao colocar pelo inventario quanto ao mover uma peca.
+selecionarParaColocar("Three")
+resultado = { Instance = plot.Piso, Position = Vector3.new(-16, 9.5, -16), Normal = Vector3.xAxis, Distance = 40.5 }
+quadro()
+assert(c1._alvoColocacao.minimo.Y == 8,
+	"A fornalha deve subir para a camada indicada pelo cursor, sem centralizar seus 12 studs de volume no ponto.")
+resultado = { Instance = plot.Piso, Position = Vector3.new(-16, 0.5, -16), Normal = Vector3.yAxis, Distance = 49.5 }
+quadro()
+local minimoFornalha = c1._alvoColocacao.minimo
+clique()
+local fornalha = maquinaNoLocal("FornalhaBasica", minimoFornalha)
+assert(fornalha, "O teste precisa colocar a fornalha antes de verificar o reposicionamento.")
+local inventarioFornalhaAntesDoMovimento = perfil.Data.Inventory.FornalhaBasica
+
+tecla("X")
+resultado = { Instance = fornalha:FindFirstChildWhichIsA("BasePart", true) }
+quadro()
+clique()
+assert(c1._movimento and fornalha.Parent == nil, "O reposicionamento deve remover a fornalha original.")
+resultado = { Instance = plot.Piso, Position = Vector3.new(-16, 9.5, -16), Normal = Vector3.xAxis, Distance = 40.5 }
+quadro()
+assert(c1._alvoColocacao.minimo.Y == 8,
+	"O reposicionamento deve usar a mesma camada indicada pelo cursor que a colocacao nova.")
+tecla("Q")
+assert(not c1._movimento and fornalha.Parent == nil
+	and perfil.Data.Inventory.FornalhaBasica == inventarioFornalhaAntesDoMovimento + 1,
+	"Cancelar deve encerrar o movimento e devolver a fornalha ao inventario.")
+tecla("Q")
+assert(c1._modoSelecao == nil)
+print("PASS: camada vertical da fornalha segue o cursor em colocacao e reposicionamento.")
+
+-- O clique do meio executa a acao de uma unica peca sem exigir abrir Z, X ou C.
+do
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(0, 120, 0), CFrame.identity))
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(32, 120, 32), CFrame.identity))
+	local copiaRapida = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 120, 0))
+	local segundaPeca = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 120, 32))
+	assert(copiaRapida and segundaPeca)
+	local function cliqueMeio(maquina, shift, ctrl, alt, modificadorDireito)
+		resultado = { Instance = maquina:FindFirstChildWhichIsA("BasePart", true) }
+		teclasAtivas[teclas.LeftShift] = shift == true and not modificadorDireito
+		teclasAtivas[teclas.RightShift] = shift == true and modificadorDireito == true
+		teclasAtivas[teclas.LeftControl] = ctrl == true and not modificadorDireito
+		teclasAtivas[teclas.RightControl] = ctrl == true and modificadorDireito == true
+		teclasAtivas[teclas.LeftAlt] = alt == true and not modificadorDireito
+		teclasAtivas[teclas.RightAlt] = alt == true and modificadorDireito == true
+		input:Fire({ UserInputType = roblox.Enum.UserInputType.MouseButton3 }, false)
+		table.clear(teclasAtivas)
+	end
+
+	local copiasAntes = #perfil.Data.MaquinasColocadas
+	cliqueMeio(copiaRapida)
+	assert(c1._movimento and c1._movimento.Copia and #c1._movimento.Pecas == 1
+		and copiaRapida.Parent == plot.Maquinas and #perfil.Data.MaquinasColocadas == copiasAntes,
+		"O clique do meio deve abrir uma previa de copia de uma unica peca e preservar a origem.")
+	tecla("Q")
+	assert(not c1._movimento)
+
+	-- Mesmo com duas pecas marcadas no modo C, o atalho copia apenas a peca sob o cursor.
+	tecla("C")
+	resultado = { Instance = copiaRapida:FindFirstChildWhichIsA("BasePart", true) }
+	shiftClick(copiaRapida)
+	resultado = { Instance = segundaPeca:FindFirstChildWhichIsA("BasePart", true) }
+	shiftClick(segundaPeca)
+	assert(#c1._pecasSelecionadas == 2)
+	cliqueMeio(copiaRapida)
+	assert(c1._movimento and c1._movimento.Copia and #c1._movimento.Pecas == 1
+		and #c1._pecasSelecionadas == 0 and copiaRapida.Parent == plot.Maquinas and segundaPeca.Parent == plot.Maquinas,
+		"O atalho de copia deve ignorar a selecao de grupo e copiar somente o alvo.")
+	tecla("Q")
+	tecla("Q")
+	assert(c1._modoSelecao == nil)
+
+	local estoqueAntesMover = perfil.Data.Inventory.EsteiraBasica
+	cliqueMeio(copiaRapida, true, false, false, true)
+	assert(c1._movimento and not c1._movimento.Grupo and #c1._movimento.Pecas == 1
+		and copiaRapida.Parent == nil,
+		"Shift+clique do meio deve iniciar o movimento de uma unica peca e retirar a origem do terreno.")
+	tecla("Q")
+	assert(not c1._movimento and perfil.Data.Inventory.EsteiraBasica == estoqueAntesMover + 1,
+		"Cancelar o movimento rapido deve devolver a peca ao inventario.")
+
+	local estoqueAntesExcluir = perfil.Data.Inventory.EsteiraBasica
+	cliqueMeio(segundaPeca, false, true)
+	assert(segundaPeca.Parent == nil and perfil.Data.Inventory.EsteiraBasica == estoqueAntesExcluir + 1,
+		"Ctrl+clique do meio deve retirar uma unica peca e devolve-la ao inventario sem exigir modo Z.")
+end
+print("PASS: Mouse3 copia uma peca, Shift+Mouse3 move uma peca e Ctrl+Mouse3 a retira do terreno.")
+
+do
+	local venda = {}
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(0, 160, 0), CFrame.identity))
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(32, 160, 32), CFrame.identity))
+	venda.A = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 160, 0))
+	venda.B = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 160, 32))
+	assert(venda.A and venda.B)
+	venda.Saldo = perfil.Data.Dinheiro
+	venda.Estoque = perfil.Data.Inventory.EsteiraBasica
+	venda.Construcoes = #perfil.Data.MaquinasColocadas
+	assert(not redes.Construcao:VenderColocadas(p1, { venda.A, venda.A })
+		and venda.A.Parent == plot.Maquinas and venda.B.Parent == plot.Maquinas
+		and perfil.Data.Dinheiro == venda.Saldo,
+		"Uma venda com peça duplicada deve recusar o lote sem remover nem pagar parcialmente.")
+	tecla("V")
+	assert(c1._modoSelecao == "Venda" and c1._caixaSelecao.Color.G > 0.6
+		and c1._caixaSelecao.ContornoSelecao.Color3.G > 0.9
+		and not interface._interface:FindFirstChild("ModoAtual"),
+		"V deve abrir a seleção de venda com destaque verde.")
+	resultado = { Instance = venda.A:FindFirstChildWhichIsA("BasePart", true) }
+	shiftClick(venda.A)
+	resultado = { Instance = venda.B:FindFirstChildWhichIsA("BasePart", true) }
+	shiftClick(venda.B)
+	assert(#c1._pecasSelecionadas == 2)
+	resultado = { Instance = venda.A:FindFirstChildWhichIsA("BasePart", true) }
+	quadro(); clique()
+	assert(venda.A.Parent == nil and venda.B.Parent == nil
+		and perfil.Data.Dinheiro == carregar("src/server/InteiroGrande").somar(venda.Saldo,
+			carregar("src/server/InteiroGrande").somar(catalogo.EsteiraBasica.Preco, catalogo.EsteiraBasica.Preco))
+		and perfil.Data.Inventory.EsteiraBasica == venda.Estoque
+		and #perfil.Data.MaquinasColocadas == venda.Construcoes - 2,
+		"V deve vender o grupo inteiro, somar os preços exatos e não devolver as peças ao inventário.")
+	tecla("Q")
+	assert(c1._modoSelecao == nil)
+
+	-- Alt+Mouse3 vende exatamente o alvo, mesmo com outra peça próxima na plot.
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(0, 200, 0), CFrame.identity))
+	tempo += 1
+	assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(32, 200, 32), CFrame.identity))
+	venda.A = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 200, 0))
+	venda.B = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 200, 32))
+	venda.Saldo = perfil.Data.Dinheiro
+	venda.Estoque = perfil.Data.Inventory.EsteiraBasica
+	resultado = { Instance = venda.A:FindFirstChildWhichIsA("BasePart", true) }
+	teclasAtivas[teclas.RightAlt] = true
+	input:Fire({ UserInputType = roblox.Enum.UserInputType.MouseButton3 }, false)
+	table.clear(teclasAtivas)
+	assert(venda.A.Parent == nil and venda.B.Parent == plot.Maquinas
+		and perfil.Data.Dinheiro == carregar("src/server/InteiroGrande").somar(venda.Saldo, catalogo.EsteiraBasica.Preco)
+		and perfil.Data.Inventory.EsteiraBasica == venda.Estoque,
+		"Alt+Mouse3 deve vender somente a peça apontada e creditar o preço do catálogo.")
+end
+print("PASS: V vende grupos atomicamente e Alt+Mouse3 vende uma unica peca pelo preco do catalogo.")
+
+do
+	local contexto = { Alvo = plot.Maquinas:GetChildren()[1], Chamadas = {} }
+	assert(contexto.Alvo, "O teste precisa de uma peca colocada para abrir o menu contextual.")
+	resultado = { Instance = contexto.Alvo:FindFirstChildWhichIsA("BasePart", true) }
+	quadro()
+	assert(c1._destaqueHover.Adornee == contexto.Alvo and c1._destaqueHover.Enabled
+		and c1._destaqueHover.OutlineColor.R == 1 and c1._destaqueHover.OutlineColor.G == 1
+		and c1._destaqueHover.OutlineColor.B == 1 and c1._destaqueHover.FillTransparency == 1,
+		"O mouse deve contornar em branco apenas a peca sob o cursor.")
+	clique()
+	assert(c1.Navegacao:Atual() == "MenuPeca" and interface._menuPeca.Visible
+		and interface._menuPeca.Parent == interface._menuGui and interface._menuPeca.AnchorPoint.Y == 1,
+		"Clicar na peca deve abrir o menu contextual ancorado acima dela.")
+	for _, acao in { "Estatisticas", "Copiar", "Mover", "Excluir", "Vender" } do
+		assert(interface._botoesPecaContexto[acao], "O menu deve oferecer " .. acao .. ".")
+	end
+	interface._botoesPecaContexto.Estatisticas:ObterInstancia().Activated:Fire()
+	assert(interface._estatisticasPeca.Visible and interface._estatisticasPeca.Text:find("Transporte:", 1, true),
+		"Ver estatisticas deve exibir as caracteristicas efetivas da unidade selecionada.")
+
+	contexto.Original = {
+		IniciarCopiaGrupo = c1.IniciarCopiaGrupo,
+		IniciarReposicionamento = c1.IniciarReposicionamento,
+		ConfirmarRecolhimento = c1.ConfirmarRecolhimento,
+		ConfirmarVendaTerreno = c1.ConfirmarVendaTerreno,
+	}
+	c1.IniciarCopiaGrupo = function(_, maquina, somente)
+		contexto.Chamadas.Copiar = { maquina, somente }; return true
+	end
+	c1.IniciarReposicionamento = function(_, maquina, somente)
+		contexto.Chamadas.Mover = { maquina, somente }; return true
+	end
+	c1.ConfirmarRecolhimento = function(self)
+		contexto.Chamadas.Excluir = { self._maquinaSelecionada }; return true
+	end
+	c1.ConfirmarVendaTerreno = function(_, maquina)
+		contexto.Chamadas.Vender = { maquina }; return true
+	end
+	for _, acao in { "Copiar", "Mover", "Excluir", "Vender" } do
+		c1:_AbrirMenuPeca(contexto.Alvo)
+		interface._botoesPecaContexto[acao]:ObterInstancia().Activated:Fire()
+		assert(contexto.Chamadas[acao] and contexto.Chamadas[acao][1] == contexto.Alvo
+			and not interface._menuPeca.Visible,
+			acao .. " deve agir somente sobre a peca clicada e fechar o menu.")
+	end
+	for nome, metodo in contexto.Original do c1[nome] = nil; assert(metodo) end
+	print("PASS: contorno branco, menu acima da peca, estatisticas e acoes contextuais.")
+end
+
+do
+	local function testarBlueprints()
+		tempo += 100
+		local dadosJogador = manager.ObterDados(p1)
+		while dadosJogador:ObterQuantidade("EsteiraBasica") < 2 do
+			assert(dadosJogador:ComprarMaquina("EsteiraBasica"), "O teste precisa de duas esteiras no inventário.")
+		end
+		assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(0, 400, 0), CFrame.identity))
+		tempo += 1
+		assert(redes.Construcao:Colocar(p1, "EsteiraBasica", Vector3.new(32, 400, 32), CFrame.Angles(0, math.pi / 2, 0)))
+		local fonteA = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 400, 0))
+		local fonteB = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 400, 32))
+		assert(fonteA and fonteB)
+		local personalizada, _, fontePersonalizada = redes.Construcao.Personalizar(p1, fonteA, {
+			Configuracao = { Componentes = { { Velocidade = 11 } } }, Dados = { Melhoria = 5 },
+		})
+		assert(personalizada, "A fonte do blueprint precisa aceitar uma configuração de teste.")
+		fonteA = fontePersonalizada
+		-- Personalizar recria A no fim da pasta; o cenario usa A como ancora do grupo.
+		fonteB.Parent = nil; fonteB.Parent = plot.Maquinas
+
+		tecla("B")
+		local painelBlueprints = interface._painelBlueprints
+		assert(painelBlueprints._grupo.Visible and #painelBlueprints._listaBlueprints == 0,
+			"B deve abrir a lista persistente de blueprints.")
+		painelBlueprints._nome.Text = "Esteiras de teste"
+		painelBlueprints._botaoCriar:ObterInstancia().Activated:Fire()
+		assert(c1._modoSelecao == "Blueprint" and not painelBlueprints._grupo.Visible
+			and c1._caixaSelecao.Transparency == 1
+			and c1._caixaSelecao.ContornoSelecao.Color3.B > 0.6,
+			"Criar blueprint deve fechar as abas e iniciar uma seleção 3D azul.")
+		local listras = c1._faixasSelecao
+		local origemBlueprint = carregar("src/shared/GeometriaColocacao").Origem(plot.Piso)
+		raioPorTela = function(x, z)
+			return { Origin = origemBlueprint:PointToWorldSpace(Vector3.new(x, 500, z)), Direction = -origemBlueprint.UpVector }
+		end
+		resultado = {
+			Instance = fonteA:FindFirstChildWhichIsA("BasePart", true),
+			Position = origemBlueprint:PointToWorldSpace(Vector3.new(2, 402, 2)),
+		}
+		local arrasteBlueprint = iniciarArraste(roblox.Vector2.new(2, 2))
+		moverArraste(roblox.Vector2.new(42, 42))
+		local passoBlueprint = carregar("src/shared/GeometriaColocacao").Passo
+		local periodoListras = 2 * passoBlueprint
+		local function conferirCobertura(tamanho, deslocamento)
+			listras.deslocamento = deslocamento
+			c1:_AtualizarListrasSelecao(tamanho)
+			for _, face in listras.faces do
+				assert(not face.Superficie.AlwaysOnTop and face.Superficie.ClipsDescendants
+					and face.Superficie.SizingMode == roblox.Enum.SurfaceGuiSizingMode.FixedSize
+					and face.Superficie.Parent == c1._caixaSelecao,
+					"As listras devem preencher a face e respeitar a profundidade das pecas.")
+				local largura, altura
+				-- O esperado vem dos eixos do canvas medidos no Studio, sem reutilizar o mapeamento do controlador.
+				local lado = face.Superficie.Face
+				if lado == roblox.Enum.NormalId.Front or lado == roblox.Enum.NormalId.Back then
+					largura, altura = tamanho.X, tamanho.Y
+				elseif lado == roblox.Enum.NormalId.Left or lado == roblox.Enum.NormalId.Right then
+					largura, altura = tamanho.Z, tamanho.Y
+				else
+					largura, altura = tamanho.Z, tamanho.X
+				end
+				assert(math.abs(face.Largura - largura) < 0.01 and math.abs(face.Altura - altura) < 0.01,
+					"As faixas devem seguir a largura e a altura reais do canvas de cada face.")
+				local pixelsPorStud = face.Superficie.CanvasSize.X / largura
+				assert(pixelsPorStud == 24,
+					"A densidade fisica da face deve manter cada listra com a mesma largura em qualquer retangulo.")
+				local lado = 2 * passoBlueprint * math.sqrt(2)
+				local quantidade = 0
+				for _, faixa in face.Faixas do
+					local f = faixa.Instancia
+					if not f.Visible then continue end
+					quantidade += 1
+					assert((f.Rotation or 0) == 0 and f.BackgroundTransparency == 0.7,
+						"O recorte deve usar quadrados sem giro e preservar a transparencia.")
+					assert(f.Size.X.Offset == math.ceil(lado * pixelsPorStud) + 1
+						and f.Size.Y.Offset == f.Size.X.Offset,
+						"O padrao deve ter tamanho fixo em qualquer retangulo.")
+				end
+				local canto = (face.Normal-face.U-face.V)*tamanho/2
+	            local faseFace = ((face.U.X+face.U.Y+face.U.Z)*(deslocamento-canto.X-canto.Y-canto.Z))%lado
+	            local colunas = math.ceil((largura-faseFace)/lado)-math.floor(-faseFace/lado)
+				assert(quantidade == colunas * math.ceil(altura / lado),
+					"A quantidade de quadrados deve cobrir toda a face, incluindo as pontas parciais.")
+			end
+		end
+		assert(#listras.faces == 6, "As listras devem cobrir todas as faces do volume.")
+		local tamanhoOriginalListras = c1._caixaSelecao.Size
+		for _, tamanho in {
+			tamanhoOriginalListras,
+			roblox.Vector3.new(4, 4, 4),
+			roblox.Vector3.new(32, 12, 8),
+			roblox.Vector3.new(8, 12, 32),
+			roblox.Vector3.new(160, 4, 64),
+			roblox.Vector3.new(20, 36, 8),
+		} do
+			for _, fase in { 0, periodoListras * math.sqrt(2) / 2, periodoListras * math.sqrt(2) - 1e-4 } do
+				conferirCobertura(tamanho, fase)
+			end
+		end
+		listras.deslocamento = 0
+		c1:_AtualizarListrasSelecao(tamanhoOriginalListras)
+		assert(not c1._caixaSelecao.ContornoSelecao.Visible,
+			"O contorno liso nao deve aparecer por cima das bordas listradas do blueprint.")
+		local deslocamentoListras = listras.deslocamento
+		local faixaMovel = listras.faces[1].Faixas[1].Instancia
+		local posicaoInicialListras = faixaMovel.Position
+		heartbeat:Fire(1 / 60)
+		assert(listras.deslocamento ~= deslocamentoListras, "As listras devem se mover enquanto a seleção está ativa.")
+		local posicaoAtualListras = faixaMovel.Position
+		local deslocamentoVisual = roblox.Vector2.new(
+			posicaoAtualListras.X.Offset - posicaoInicialListras.X.Offset,
+			posicaoAtualListras.Y.Offset - posicaoInicialListras.Y.Offset
+		)
+		assert(deslocamentoVisual.Magnitude > 0.1,
+			"A animacao deve mover as faixas visiveis, nao apenas atualizar uma variavel.")
+		local segmentosBorda = 0
+		for _, borda in listras.bordas do
+			assert(#borda.Segmentos > 0, "Cada aresta do volume deve ter segmentos listrados.")
+			for _, segmento in borda.Segmentos do
+				if segmento.Transparency < 1 then
+					assert(segmento.Transparency >= 0.4,
+						"As listras das bordas tambem devem deixar o interior mais visivel.")
+					segmentosBorda += 1
+				end
+			end
+		end
+		assert(segmentosBorda > 0, "As bordas devem acompanhar a caixa de selecao com listras visiveis.")
+		local segmentoMovel
+		for _, segmento in listras.bordas[1].Segmentos do
+			if segmento.Transparency < 1 and math.abs(segmento.Size.X - 4*math.sqrt(2)) < 0.01 then
+				segmentoMovel = segmento
+				break
+			end
+		end
+		assert(segmentoMovel, "A aresta deve conter ao menos a projecao de uma listra diagonal inteira.")
+		local posicaoInicialBorda, corInicialBorda = segmentoMovel.CFrame.Position, segmentoMovel.Color
+		quadro()
+		assert((segmentoMovel.CFrame.Position - posicaoInicialBorda).Magnitude > 0.1
+			and segmentoMovel.Color == corInicialBorda,
+			"As listras da borda devem deslizar continuamente, sem trocar de cor em saltos.")
+		local tamanhoCaixaOriginal = c1._caixaSelecao.Size
+		local deslocamentoBordaOriginal = listras.deslocamento
+		local function conferirCoberturaBorda(comprimento, deslocamento)
+			c1._caixaSelecao.Size = roblox.Vector3.new(comprimento, 4, 4)
+			listras.deslocamento = deslocamento
+			c1:_AtualizarBordasListradas(c1._caixaSelecao)
+			local intervalos = {}
+			for _, segmento in listras.bordas[1].Segmentos do
+				if segmento.Transparency < 1 then
+					local centro = c1._caixaSelecao.CFrame:PointToObjectSpace(segmento.CFrame.Position).X
+					table.insert(intervalos, { centro - segmento.Size.X / 2, centro + segmento.Size.X / 2 })
+				end
+			end
+			local inicioFase = deslocamento + comprimento/2 + 4
+	        local passoAresta = passoBlueprint*math.sqrt(2)
+	        local primeiraFaixa = math.floor(-inicioFase/passoAresta)
+	        local ultimaFaixa = math.ceil((comprimento-inicioFase)/passoAresta)-1
+			assert(#intervalos == ultimaFaixa - primeiraFaixa + 1,
+				"A borda deve criar exatamente as faixas cujo intervalo cruza seu comprimento.")
+			table.sort(intervalos, function(a, b) return a[1] < b[1] end)
+			local cobertoAte = -comprimento / 2
+			for _, intervalo in intervalos do
+				assert(intervalo[1] <= cobertoAte + 0.01,
+					"O calculo das faixas nao pode deixar lacunas entre segmentos consecutivos.")
+				cobertoAte = math.max(cobertoAte, intervalo[2])
+			end
+			assert(cobertoAte >= comprimento / 2 - 0.01,
+				"A ultima listra precisa alcancar a extremidade da aresta, mesmo se for parcial.")
+		end
+		for _, comprimento in { 4, 5.5, 8, 9, 32, 33.25, 65 } do
+			for _, fase in { 0, 0.01, 3.99, 4, 7.99 } do
+				conferirCoberturaBorda(comprimento, fase)
+			end
+		end
+		c1._caixaSelecao.Size = tamanhoCaixaOriginal
+		listras.deslocamento = deslocamentoBordaOriginal
+		c1:_AtualizarBordasListradas(c1._caixaSelecao)
+		assert(#c1._pecasSelecionadas == 2 and c1._destaquesPecas[fonteA].FillColor.B > 0.6
+			and c1._destaquesPecas[fonteB].FillColor.B > 0.6,
+			"A caixa 3D de blueprint deve selecionar e destacar as peças que contém.")
+		terminarArraste(arrasteBlueprint)
+		raioPorTela = nil
+		assert(#perfil.Data.Blueprints == 1 and perfil.Data.Blueprints[1].Nome == "Esteiras de teste"
+			and #perfil.Data.Blueprints[1].Pecas == 2
+			and perfil.Data.Blueprints[1].Pecas[1].Modificacoes.Dados.Melhoria == 5
+			and perfil.Data.Blueprints[1].Pecas[1].Modificacoes.Configuracao.Componentes[1].Velocidade == 11,
+			"Salvar deve persistir nome, peças e personalizações no perfil.")
+		assert(painelBlueprints._grupo.Visible and #painelBlueprints._listaBlueprints == 1
+			and painelBlueprints._status.Text == "Blueprint salvo." and painelBlueprints._nome.Text == "",
+			"Após salvar, a lista deve reabrir e mostrar o resultado e o blueprint.")
+
+		painelBlueprints._listaBlueprints[1]:ObterInstancia().Activated:Fire()
+		assert(c1._movimento and c1._movimento.Blueprint and c1._movimento.BlueprintNome == "Esteiras de teste"
+			and #c1._movimento.Pecas == 2 and painelBlueprints._grupo.Visible == false,
+			"Selecionar um item deve abrir a prévia do conjunto sem as fontes saírem da plot.")
+		tecla("Q")
+		assert(not c1._movimento and fonteA.Parent == plot.Maquinas and fonteB.Parent == plot.Maquinas,
+			"Cancelar a prévia do blueprint deve preservar as peças originais.")
+
+		tempo += 5
+		local sucessoPrevia, _, previaBlueprint = redes.Construcao:PrepararBlueprint(p1, perfil.Data.Blueprints[1].Id)
+		assert(sucessoPrevia and previaBlueprint.BlueprintNome == "Esteiras de teste"
+			and previaBlueprint.Pecas[1].Modificacoes.Dados.Melhoria == 5
+			and (previaBlueprint.Pecas[2].RotacaoInicial.RightVector - CFrame.Angles(0, math.pi / 2, 0).RightVector).Magnitude < 0.0001,
+			"Preparar deve restaurar melhorias e orientação do blueprint salvo.")
+		local saldoAntesBlueprint = perfil.Data.Dinheiro
+		local estoqueAntesBlueprint = perfil.Data.Inventory.EsteiraBasica
+		local colocacoesAntesBlueprint = #perfil.Data.MaquinasColocadas
+		local custoBlueprint = math.max(0, 2 - estoqueAntesBlueprint) * 25
+		local pedidosBlueprint = {
+			{ Minimo = Vector3.new(0, 408, 0), Rotacao = previaBlueprint.Pecas[1].RotacaoInicial },
+			{ Minimo = Vector3.new(32, 408, 32), Rotacao = previaBlueprint.Pecas[2].RotacaoInicial },
+		}
+		local colocouBlueprint, mensagemBlueprint = redes.Construcao:ColocarGrupoCopia(p1, previaBlueprint.Token, pedidosBlueprint)
+		assert(colocouBlueprint, mensagemBlueprint)
+		local InteiroGrande = carregar("src/server/InteiroGrande")
+		local saldoEsperado = custoBlueprint > 0
+			and InteiroGrande.subtrair(saldoAntesBlueprint, tostring(custoBlueprint)) or saldoAntesBlueprint
+		assert(perfil.Data.Dinheiro == saldoEsperado
+			and perfil.Data.Inventory.EsteiraBasica == math.max(0, estoqueAntesBlueprint - 2)
+			and #perfil.Data.MaquinasColocadas == colocacoesAntesBlueprint + 2
+			and maquinaNoLocal("EsteiraBasica", Vector3.new(0, 408, 0))
+			and maquinaNoLocal("EsteiraBasica", Vector3.new(32, 408, 32)),
+			"Colocar o blueprint deve manter o conjunto, consumir estoque e cobrar somente as unidades faltantes.")
+		tempo += 5
+		local segundaA = maquinaNoLocal("EsteiraBasica", Vector3.new(0, 408, 0))
+		local segundaB = maquinaNoLocal("EsteiraBasica", Vector3.new(32, 408, 32))
+		local criouAutomatico, _, blueprintAutomatico = redes.Construcao:CriarBlueprint(p1, "", { segundaA, segundaB })
+		assert(criouAutomatico and blueprintAutomatico.Nome == "Blueprint 2"
+			and #perfil.Data.Blueprints == 2,
+			"Um nome vazio deve gerar o próximo nome automático sem substituir o blueprint anterior.")
+		print("PASS: blueprints 3D são nomeados, persistidos, reconstruídos e colocados como grupo com cobrança normal.")
+	end
+	testarBlueprints()
+end
+
+local botoesBlueprintAntesDeDestruir = table.clone(interface._painelBlueprints._botoes)
+for _, botao in interface._painelBlueprints._listaBlueprints do
+	table.insert(botoesBlueprintAntesDeDestruir, botao)
+end
 interface:Destruir()
 for _, painel in { inventario, loja } do
-	for _, botao in painel._botoes do assert(botao:ObterInstancia().Activated:Contar() == 0) end
-	for _, conexao in painel._conexoes do assert(not conexao.ativa) end
+	for _, botao in painel._grade._botoes do assert(botao:ObterInstancia().Activated:Contar() == 0) end
+	for _, conexao in painel._grade._conexoes do assert(not conexao.ativa) end
+end
+for _, botao in interface._botoesPecaContexto do assert(botao:ObterInstancia().Activated:Contar() == 0) end
+for _, botao in botoesBlueprintAntesDeDestruir do
+	assert(botao:ObterInstancia().Activated:Contar() == 0)
 end
 c1:Destruir(); c2:Destruir()
 for _, evento in p1.sinais do assert(evento:Contar() == 0) end
@@ -687,7 +1658,7 @@ assert(t1:EstaLivre() and #plot.Maquinas:GetChildren() == 0 and not plot.Spawn.E
 assert(t1:Atribuir(p2))
 no("src/client").Destroying = destruirScript
 carregar("src/client/init.client")
-assert(input:Contar() == 1 and render:Contar() == 1)
+assert(input:Contar() == 1 and render:Contar() == 2)
 destruirScript:Fire()
 assert(input:Contar() == 0 and render:Contar() == 0)
 for _, evento in p1.sinais do assert(evento:Contar() == 0) end

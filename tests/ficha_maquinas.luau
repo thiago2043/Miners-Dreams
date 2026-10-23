@@ -4,7 +4,7 @@ local Catalogo = carregar("src/shared/CatalogoMaquinas")
 local Personalizacao = carregar("src/shared/PersonalizacaoMaquina")
 
 local mineradora = Ficha.Descrever(Catalogo.MineradoraBasica)
-for _, trecho in { "Valor por minério: 10", "Intervalo de geração: 2 s", "1 × 1 × 1 studs", "Duração do minério: 10 s" } do
+for _, trecho in { "Valor por minério: 5", "Intervalo de geração: 2 s", "1 × 1 × 1 studs", "Duração do minério: 10 s" } do
 	assert(mineradora:find(trecho, 1, true), trecho)
 end
 assert(Ficha.Descrever(Catalogo.EsteiraBasica) == "Transporte: 6 studs/s")

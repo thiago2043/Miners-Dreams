@@ -10,7 +10,43 @@
       "ModelosMaquinas": {
         "$className": "Folder",
         "MineradoraBasica": {
-          "$path": "modelos/rojo/MineradoraBasica.rbxm"
+          "$path": "modelos/mineradoras/assets/MineradoraBasica.rbxm"
+        },
+        "MineradoraCobre": {
+          "$path": "modelos/mineradoras/assets/MineradoraCobre.rbxm"
+        },
+        "MineradoraFerro": {
+          "$path": "modelos/mineradoras/assets/MineradoraFerro.rbxm"
+        },
+        "MineradoraIndustrial": {
+          "$path": "modelos/mineradoras/assets/MineradoraIndustrial.rbxm"
+        },
+        "MineradoraPressurizada": {
+          "$path": "modelos/mineradoras/assets/MineradoraPressurizada.rbxm"
+        },
+        "MineradoraCristalina": {
+          "$path": "modelos/mineradoras/assets/MineradoraCristalina.rbxm"
+        },
+        "MineradoraRessonante": {
+          "$path": "modelos/mineradoras/assets/MineradoraRessonante.rbxm"
+        },
+        "MineradoraPlasma": {
+          "$path": "modelos/mineradoras/assets/MineradoraPlasma.rbxm"
+        },
+        "MineradoraAtomica": {
+          "$path": "modelos/mineradoras/assets/MineradoraAtomica.rbxm"
+        },
+        "MineradoraQuantica": {
+          "$path": "modelos/mineradoras/assets/MineradoraQuantica.rbxm"
+        },
+        "MineradoraSingularidade": {
+          "$path": "modelos/mineradoras/assets/MineradoraSingularidade.rbxm"
+        },
+        "MineradoraEstelar": {
+          "$path": "modelos/mineradoras/assets/MineradoraEstelar.rbxm"
+        },
+        "MineradoraGalactica": {
+          "$path": "modelos/mineradoras/assets/MineradoraGalactica.rbxm"
         },
         "EsteiraBasica": {
           "$path": "modelos/rojo/EsteiraBasica.rbxm"

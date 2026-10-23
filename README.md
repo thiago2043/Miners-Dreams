@@ -11,6 +11,7 @@ Projeto configurado para Rojo 7.7.1. O arquivo `Miners Dreams.rbxl` foi preserva
 | `src/shared` | `ReplicatedStorage.Shared` |
 | `Packages` e `ServerPackages` | Pastas de pacotes existentes |
 | `modelos/rojo/*.rbxm` | Peças em `ReplicatedStorage.ModelosMaquinas`; chão e SpawnLocation no `Workspace`; Lighting em `Lighting` |
+| `modelos/mineradoras/assets/*.rbxm` | As 13 mineradoras em `ReplicatedStorage.ModelosMaquinas` |
 | `default.project.json` | Também define os eventos `UpdateGold` e `UpdateGems` |
 
 `Server.server.luau` mantém o script `ServerScriptService.Server`. O script `Script.server.luau` continua sendo o teste que adiciona Gold; a lógica dos scripts foi preservada.
@@ -79,7 +80,7 @@ rojo build default.project.json -o "Miners Dreams.rbxlx"
 rojo sourcemap default.project.json --include-non-scripts -o sourcemap.json
 ```
 
-O `.rbxlx` é um arquivo gerado e pode ser reconstruído. Ele inclui os elementos mapeados, incluindo as três máquinas e os scripts de mineração e de teste de dados. Terrain e configurações de publicação não fazem parte desta migração.
+O `.rbxlx` é um arquivo gerado e pode ser reconstruído. Ele inclui os elementos mapeados: 13 mineradoras, esteira, modificador e fornalha básicos, além dos scripts do jogo. Terrain e configurações de publicação não fazem parte deste build.
 
 ## Sincronizar com o Studio
 
@@ -97,10 +98,26 @@ Edite os scripts mapeados nos arquivos de `src`. O Rojo aplica o conteúdo desse
 
 O serviço `ServerScriptService` preserva filhos que não estejam no mapeamento, para manter experimentos criados diretamente no Studio. Isso não altera a origem dos scripts já mapeados.
 
-Os quatro modelos de referência ficam em `ReplicatedStorage.ModelosMaquinas`, fora do mundo renderizado. A prévia e o servidor clonam esses recursos apenas para usar/colocar uma peça. O script dos terrenos não depende desses modelos para criar e atribuir as plots; a restauração é iniciada separadamente e confirma se o jogador continua sendo o dono do terreno.
+Os 16 modelos de referência ficam em `ReplicatedStorage.ModelosMaquinas`, fora do mundo renderizado. A prévia e o servidor clonam esses recursos apenas para usar/colocar uma peça. O script dos terrenos não depende desses modelos para criar e atribuir as plots; a restauração é iniciada separadamente e confirma se o jogador continua sendo o dono do terreno.
 
 Ao atualizar de uma versão com modelos no `Workspace`, pare o teste, reinicie `rojo serve default.project.json`, reconecte o plugin e aplique a sincronização completa para mover os recursos. Antes de testar, confira a pasta `ReplicatedStorage.ModelosMaquinas`.
 
-Para editar uma máquina no Studio, desconecte o Rojo, edite o modelo em `ReplicatedStorage.ModelosMaquinas` e exporte-o para seu arquivo correspondente em `modelos/rojo` antes de reconectar ou gerar outro build. As peças dentro dos modelos continuam vindo dos `.rbxm`.
+Para editar uma máquina no Studio, desconecte o Rojo, edite o modelo em `ReplicatedStorage.ModelosMaquinas` e exporte-o para o arquivo indicado por `default.project.json` antes de reconectar ou gerar outro build. As peças dentro dos modelos continuam vindo dos `.rbxm`.
+
+## Mineradoras integradas
+
+As mineradoras M1–M13 usam os preços, valores por minério e intervalos da seção Mineradoras de `analises/Proposta_2_progressao_por_faixas.md`. A Básica passa a gerar $5 a cada 2 s. As entradas reutilizam `Maquina` e `SoltadorMinerio`; loja, inventário, fichas, miniaturas, cópia, movimento, blueprints e reconciliação de perfis percorrem o mesmo catálogo. Os preços são abreviados nas miniaturas; dinheiro e ordenação continuam usando strings decimais exatas.
+
+`GeometriaColocacao.CaixaDeConstrucao` usa a Part `HitboxConstrucao` nas novas mineradoras. As outras peças conservam o cálculo existente pela caixa visual. A reserva acompanha somente o corpo; cabeçotes e brocas ficam projetados sobre a linha receptora. A emissão usa o `Attachment` `SaidaMinerio`, abaixo do bloco cinza, e os componentes acompanham os passos da simulação para respeitar intervalos de 1,2 / 1,25 / 1,5 s.
+
+Esta integração conserva a duração de minério de 10 s já existente no jogo. A retirada dessa duração nas análises econômicas não foi aplicada ao runtime. O catálogo teórico de modificadores e fornalhas continua separado desta integração de mineradoras.
+
+`tests/integracao_mineradoras.luau` carrega os mesmos `.rbxm` do projeto Rojo, compara prévia/servidor em 24 rotações por mineradora, verifica os preços, testa salvamento/restauração e blueprint com os 13 tipos e mede a geração em 30 e 144 FPS. `tests/abreviar_inteiro.luau` verifica a apresentação dos preços sem conversão dos inteiros grandes para `number`. Os serviços, perfis e consultas espaciais desses testes usam o ambiente local Lune.
+
+O build foi executado no Roblox Studio: loja, ficha e colocação normal da M1 verificadas, com geração de minérios de valor $5. O servidor confirmou 13 mineradoras entre os 16 modelos e reserva de 8 × 8 × 8 studs para a M1. A rodada local terminou com os 23 testes passando, após atualizar as expectativas de apresentação dos preços. O teste `tests/studio_integracao_mineradoras.luau` serve para isolar a emissão de todos os modelos na Command Bar do servidor durante Play, sem depender da sessão de dados ou editar o perfil.
+
+Esse teste nativo também passou: `STUDIO_13_MINERADORAS_OK 13 34`, verificando 34 emissões nos 13 modelos, hitboxes, Attachments, valores e intervalos. O contexto de dados do dono é local aos clones; os minérios são consumidos após a observação, sem testar transporte ou venda nessa cena. O teste destrói a cena temporária ao terminar.
+
+Backup anterior à integração: `backups/integracao-mineradoras-antes-20261023.zip`. Registros antigos que não couberem após a troca do modelo ou que apontem para partes antigas personalizadas continuam preservados pelo serviço, com aviso de restauração; não são apagados.
 
 Referências: [formato de projeto](https://rojo.space/docs/v7/project-format/) e [sincronização de arquivos](https://rojo.space/docs/v7/sync-details/).

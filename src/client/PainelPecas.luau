@@ -1,8 +1,9 @@
 -- A mesma classe monta loja ou inventario. Cada instancia conserva sua lista, ficha e resposta de compra/venda.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
-local Botao = require(script.Parent.Botao)
 local FichaMaquina = require(script.Parent.FichaMaquina)
+local GradePecas = require(script.Parent.GradePecas)
+local FichaPeca = require(script.Parent.FichaPeca)
 
 local PainelPecas = {}
 PainelPecas.__index = PainelPecas
@@ -14,12 +15,13 @@ local function quantidadeValida(quantidade)
 end
 
 -- Recebe o ScreenGui pai, Inventario/Loja, o jogador, o controlador e a rede da loja. Constroi sua lista e sua
--- ficha nos lados correspondentes da tela; os botoes recebem callbacks ligados a esta instancia.
-function PainelPecas.new(pai, aba, jogador, construcao, rede)
+-- ficha nos lados correspondentes da tela; recuoEsquerdo reserva a coluna de navegacao quando ela existe.
+function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
+	recuoEsquerdo = recuoEsquerdo or 0
 	-- Cada painel possui seus botoes, conexoes e operacao pendente. A mesma classe atende loja e inventario,
 	-- mas seus campos de instancia nao sao compartilhados.
 	local self = setmetatable({ Aba = aba, _jogador = jogador, _construcao = construcao,
-		_conexoes = {}, _botoesPecas = {}, _acoes = {}, _destruido = false,
+		_botoesPecas = {}, _acoes = {}, _destruido = false,
 		_rede = rede,
 	}, PainelPecas)
 	local inventario = aba == "Inventario"
@@ -28,121 +30,59 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede)
 	self._grupo = Instance.new("Frame")
 	self._grupo.Name = aba
 	self._grupo.AnchorPoint = Vector2.new(inventario and 0 or 1, 0.5)
-	self._grupo.Position = UDim2.new(inventario and 0 or 1, inventario and 16 or -16, 0.5, 0)
-	self._grupo.Size = UDim2.new(0.5, -24, 1, -160)
+	-- Divide o espaco restante entre os dois paineis, mantendo livre a coluna de navegacao.
+	self._grupo.Position = UDim2.new(inventario and 0 or 1, inventario and (16 + recuoEsquerdo) or -16, 0.5, 0)
+	self._grupo.Size = UDim2.new(0.5, -24 - recuoEsquerdo / 2, 1, -160)
 	self._grupo.BackgroundTransparency = 1
 	self._grupo.Parent = pai
 	local limite = Instance.new("UISizeConstraint")
 	limite.MaxSize, limite.Parent = Vector2.new(568, 520), self._grupo
 	-- A lista ocupa o lado externo e a ficha o lado interno do grupo. As referencias separadas permitem
 	-- esconder a ficha sem desmontar a lista.
-	self._painelLista, self._conteudoLista = self:_CriarPainel("Lista", inventario)
-	self._painelFicha, self._conteudoFicha = self:_CriarPainel("Ficha", not inventario)
-	self:_CriarTexto(self._conteudoLista, "Titulo", 1).Text = inventario and "Inventário [E]" or "Loja [F]"
-	self:_CriarTexto(self._conteudoLista, "Instrucao", 2).Text = "Clique: detalhes\nClique duplo: colocar"
-	self._textoVazio = self:_CriarTexto(self._conteudoLista, "Vazio", 3)
-	self._textoVazio.Text = "Seu inventário está vazio.\nCompre peças na loja [F]."
 	-- Ordenar pelos nomes deixa a lista estavel, independentemente da ordem das chaves no catalogo. Cada
 	-- callback conserva o id do item que seu botao representa.
 	self._ids = {}
 	for id in Catalogo do table.insert(self._ids, id) end
 	table.sort(self._ids, function(a, b) return Catalogo[a].Nome < Catalogo[b].Nome end)
-	for indice, id in self._ids do
-		self._botoesPecas[id] = self:_CriarBotao(self._conteudoLista, id, indice + 3, function()
-			self:Selecionar(id)
-		end)
-	end
-	self:_CriarBotao(self._conteudoLista, "Fechar", #self._ids + 4, function()
-		construcao:AlternarAba(aba)
-	end):ObterInstancia().Text = "Fechar " .. (inventario and "inventário [E]" or "loja [F]")
-	self:_CriarTexto(self._conteudoFicha, "Titulo", 1).Text = "Ficha da peça"
-	self._textoFicha = self:_CriarTexto(self._conteudoFicha, "Estatisticas", 2)
-	self._textoFicha.Font, self._textoFicha.TextSize = Enum.Font.SourceSans, 16
-	self._textoFicha.TextXAlignment, self._textoFicha.TextYAlignment = Enum.TextXAlignment.Left, Enum.TextYAlignment.Top
-	self._textoQuantidade = self:_CriarTexto(self._conteudoFicha, "Quantidade", 3)
+	-- Duas instancias da mesma grade: a loja mostra precos/categorias e o inventario mostra quantidades.
+	-- Os callbacks devolvem a interacao a este painel; a grade nao conhece a rede nem altera os dados.
+	self._grade = GradePecas.new(self._grupo, self._ids, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+		function(id) self:Selecionar(id) end, function() construcao:AlternarAba(aba) end, aba)
+	self._painelLista, self._textoVazio = self._grade:ObterInstancia(), self._grade:ObterTextoVazio()
+	for _, id in self._ids do self._botoesPecas[id] = self._grade:ObterBotao(id) end
 	-- As acoes dependem da aba. O callback fica no Botao e so executa na ativacao: Colocar chama o controlador;
 	-- Comprar/Vender pedem uma transacao ao servidor.
-	local acoes = inventario and { "Colocar", "Vender" } or { "Comprar" }
-	for indice, acao in acoes do
-		self._acoes[acao] = self:_CriarBotao(self._conteudoFicha, acao, indice + 3, function()
-			self._ultimoClique = nil
-			if acao == "Colocar" then construcao:ColocarSelecionada(aba) else self:Negociar(acao) end
-		end)
+	local function executar(acao)
+		self._ultimoClique = nil
+		if acao == "Colocar" then construcao:ColocarSelecionada(aba, true) else self:Negociar(acao) end
 	end
-	self:_CriarBotao(self._conteudoFicha, "Voltar", 7, function() construcao:FecharFicha(aba) end)
-		:ObterInstancia().Text = "Fechar ficha"
-	self._textoResposta = self:_CriarTexto(self._conteudoFicha, "Resposta", 8)
+	-- A mesma classe visual atende as duas abas, com instancias independentes. Os campos ligam a
+	-- apresentacao ao fluxo de validacao e respostas, sem duplicar a compra ou a venda.
+	self._ficha = FichaPeca.new(self._grupo, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+		executar, function() construcao:FecharFicha(aba) end, aba)
+	self._painelFicha = self._ficha:ObterInstancia()
+	local campos = self._ficha:ObterCampos()
+	self._textoFicha, self._textoQuantidade = campos.Estatisticas, campos.Quantidade
+	self._textoResposta, self._acoes = campos.Resposta, campos.Acoes
 	self._textoResposta.Text = ""
 	self:Atualizar()
 	return self
 end
 
--- Cria um ScrollingFrame e seu conteudo com layout vertical, devolvendo ambos. A altura do canvas acompanha o
--- conteudo para que estatisticas e acoes possam ser acessadas pela rolagem.
-function PainelPecas:_CriarPainel(nome, esquerda)
-	local painel = Instance.new("ScrollingFrame")
-	painel.Name, painel.AnchorPoint = nome, Vector2.new(esquerda and 0 or 1, 0)
-	painel.Position, painel.Size = UDim2.new(esquerda and 0 or 1, 0, 0, 0), UDim2.new(0.5, -4, 1, 0)
-	painel.BackgroundColor3, painel.BorderSizePixel = Color3.fromRGB(25, 25, 25), 0
-	painel.Active, painel.ScrollBarThickness = true, 6
-	painel.ScrollingDirection, painel.CanvasSize = Enum.ScrollingDirection.Y, UDim2.new()
-	painel.Parent = self._grupo
-	local conteudo = Instance.new("Frame")
-	conteudo.Name, conteudo.Position = "Conteudo", UDim2.fromOffset(12, 8)
-	conteudo.Size, conteudo.AutomaticSize = UDim2.new(1, -24, 0, 0), Enum.AutomaticSize.Y
-	conteudo.BackgroundTransparency, conteudo.Parent = 1, painel
-	local disposicao = Instance.new("UIListLayout")
-	disposicao.SortOrder, disposicao.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 8)
-	disposicao.Parent = conteudo
-	-- Quando textos ou botoes mudam a altura do conteudo, este evento recalcula a area rolavel. A margem de 16
-	-- pixels impede cortar o ultimo elemento.
-	table.insert(self._conexoes, disposicao:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		painel.CanvasSize = UDim2.fromOffset(0, disposicao.AbsoluteContentSize.Y + 16)
-	end))
-	return painel, conteudo
-end
-
--- Cria um rotulo ordenado dentro do conteudo recebido. A largura acompanha o painel e a altura cresce com o
--- texto, evitando reservar a mesma altura para fichas com quantidades diferentes de informacoes.
-function PainelPecas:_CriarTexto(pai, nome, ordem)
-	local texto = Instance.new("TextLabel")
-	texto.Name, texto.LayoutOrder, texto.Parent = nome, ordem, pai
-	texto.Size, texto.AutomaticSize = UDim2.new(1, 0, 0, 0), Enum.AutomaticSize.Y
-	texto.BackgroundTransparency, texto.Font = 1, Enum.Font.SourceSansBold
-	texto.TextColor3, texto.TextSize, texto.TextWrapped = Color3.fromRGB(255, 255, 255), 18, true
-	return texto
-end
-
--- Cria um Botao reutilizavel, aplica o estilo e a ordem do layout e guarda o objeto para a limpeza futura. O
--- callback recebido sera executado somente quando esse botao for ativado e estiver disponivel.
-function PainelPecas:_CriarBotao(pai, nome, ordem, callback)
-	local botao = Botao.new(pai, nome, callback)
-	-- Botao cuida da acao e de sua conexao. O TextButton retornado recebe estilo e layout; o objeto Botao
-	-- continua guardado para habilitar e destruir corretamente.
-	local instancia = botao:ObterInstancia()
-	instancia.LayoutOrder, instancia.Size, instancia.AutomaticSize = ordem, UDim2.new(1, 0, 0, 48), Enum.AutomaticSize.Y
-	instancia.BackgroundColor3, instancia.BorderSizePixel = Color3.fromRGB(55, 55, 55), 0
-	instancia.Font, instancia.TextColor3, instancia.TextSize = Enum.Font.SourceSansBold, Color3.fromRGB(255, 255, 255), 18
-	instancia.TextWrapped, instancia.Selectable = true, true
-	botao:DefinirDisponivel(true)
-	self._botoes = self._botoes or {}
-	table.insert(self._botoes, botao)
-	return botao
-end
-
--- O segundo clique so conta para a mesma peca e sem outra navegacao entre eles.
+-- O segundo clique so conta para a mesma peca, sem outra navegacao, busca ou ordenacao entre eles.
 -- Interpreta a ativacao de uma entrada da lista. O primeiro clique seleciona e abre a ficha; o segundo, na
 -- mesma peca dentro de 0,35 s e sem outra navegacao, inicia a colocacao e fecha todas as abas.
 function PainelPecas:Selecionar(id)
 	if self._destruido or self._negociando then return end
 	local nav, agora = self._construcao.Navegacao, os.clock()
+	local filtro = self._grade and self._grade.Revisao or 0
 	local anterior = self._ultimoClique
 	-- O segundo clique precisa repetir o id dentro do prazo e na mesma revisao da navegacao. Abrir ou fechar
 	-- outra tela entre cliques invalida o atalho.
 	local duplo = anterior and anterior.Id == id and agora - anterior.Tempo <= 0.35
-		and anterior.Revisao == nav.Revisao
+		and anterior.Revisao == nav.Revisao and anterior.Filtro == filtro
 	if not self._construcao:SelecionarMaquina(id, self.Aba) then return end
-	self._ultimoClique = not duplo and { Id = id, Tempo = agora, Revisao = nav.Revisao } or nil
+	self._ultimoClique = not duplo and { Id = id, Tempo = agora, Revisao = nav.Revisao, Filtro = filtro } or nil
 	if duplo and self._fichaValida then self._construcao:ColocarSelecionada(self.Aba, true) end
 end
 
@@ -161,29 +101,21 @@ function PainelPecas:Atualizar()
 		self._textoResposta.Text = ""
 	end
 	self._selecao = selecao
-	local linhas, inventario = 0, self.Aba == "Inventario"
 	-- Estoque nil ainda esta carregando; dado invalido fica indisponivel. O inventario oculta quantidades zero
 	-- ja carregadas, enquanto a loja mantem todos os itens.
 	for _, id in self._ids do
-		local botao, item = self._botoesPecas[id], Catalogo[id]
 		local quantidade = self._jogador:GetAttribute("Inventario_" .. id)
 		local pronto = quantidadeValida(quantidade)
-		local instancia = botao:ObterInstancia()
-		instancia.Visible = not inventario or not pronto or quantidade > 0
-		if instancia.Visible then linhas += 1 end
-		botao:DefinirDisponivel(pronto and instancia.Visible and not self._negociando)
-		local estoque = quantidade == nil and "carregando..." or (pronto and tostring(quantidade) or "indisponível")
-		instancia.Text = item.Nome .. "\n" .. (not inventario and ("Preço: " .. item.Preco .. " | ") or "") .. "Estoque: " .. estoque
 		local selecionada = selecao and selecao.MaquinaId == id
-		instancia.BackgroundColor3 = selecionada and Color3.fromRGB(255, 210, 70) or Color3.fromRGB(55, 55, 55)
-		instancia.TextColor3 = selecionada and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(255, 255, 255)
+		self._grade:AtualizarItem(id, quantidade, pronto, selecionada, self._negociando)
 	end
-	self._textoVazio.Visible = linhas == 0
+	self._grade:ConcluirAtualizacao()
 	self._fichaValida = false
 	local id = selecao and selecao.MaquinaId
 	local item, quantidade = id and Catalogo[id], id and self._jogador:GetAttribute("Inventario_" .. id)
 	local pronto, copia = quantidadeValida(quantidade), selecao and selecao.Copia ~= nil
 	self._configuracaoExibida = id and self._jogador:GetAttribute("ConfiguracaoInventario_" .. id)
+	local definicao
 	self._textoQuantidade.Text = quantidade == nil and "Inventário: carregando..."
 		or (pronto and ("No inventário: " .. quantidade) or "Inventário indisponível")
 	if not item then
@@ -194,13 +126,19 @@ function PainelPecas:Atualizar()
 		-- Uma personalizacao invalida nao deve interromper toda a interface. pcall converte a falha da descricao em
 		-- mensagem e mantem as acoes bloqueadas.
 		local sucesso, descricao = pcall(function()
-			return FichaMaquina.Descrever(self._construcao:ObterDefinicaoSelecionada(self.Aba))
+			definicao = self._construcao:ObterDefinicaoSelecionada(self.Aba)
+			return FichaMaquina.Descrever(definicao)
 		end)
 		self._fichaValida = sucesso
-		self._textoFicha.Text = sucesso and (item.Nome .. (copia and " (cópia)" or "") .. "\n" .. descricao)
+		-- As duas fichas destacam o nome acima da faixa, separadamente das estatisticas.
+		self._textoFicha.Text = sucesso and descricao
 			or "Não foi possível ler a configuração desta peça."
 	end
 	if copia then self._textoQuantidade.Text ..= "\nConfiguração copiada. Para vender, selecione uma unidade na lista." end
+	local chave = self.Aba == "Inventario" and (copia and selecao.Copia.Modificacoes or self._configuracaoExibida) or nil
+	local retratoValido = self._ficha:Atualizar(id, item and item.Nome, pronto and quantidade or nil,
+		copia, self._fichaValida and definicao or nil, chave)
+	self._fichaValida = self._fichaValida and retratoValido
 	-- A disponibilidade considera estoque e origem da ficha. Uma copia pode ser colocada pelo fluxo normal, mas
 	-- nao vendida como se ja fosse uma unidade do inventario.
 	for acao, botao in self._acoes do
@@ -211,6 +149,7 @@ function PainelPecas:Atualizar()
 		botao:ObterInstancia().Text = self._negociando == acao and (acao == "Comprar" and "Comprando..." or "Vendendo...")
 			or (acao == "Colocar" and "Colocar" or (acao .. ": " .. (item and item.Preco or "—") .. (acao == "Vender" and " (100%)" or "")))
 	end
+	self._ficha:AtualizarDisponibilidade()
 	self._textoResposta.Visible = self._textoResposta.Text ~= ""
 end
 
@@ -240,13 +179,13 @@ function PainelPecas:Negociar(acao)
 	self:Atualizar()
 end
 
--- Desconecta os eventos de layout, encerra cada Botao criado e remove os dois paineis dessa instancia. Marca o
--- objeto como encerrado para respostas pendentes nao acessarem uma interface removida.
+-- Grade e ficha encerram seus proprios botoes, eventos e miniaturas. Marca o painel como encerrado
+-- para respostas de rede pendentes nao acessarem os elementos removidos.
 function PainelPecas:Destruir()
 	if self._destruido then return end
 	self._destruido = true
-	for _, conexao in self._conexoes do conexao:Disconnect() end
-	for _, botao in self._botoes do botao:Destruir() end
+	self._grade:Destruir()
+	self._ficha:Destruir()
 	self._grupo:Destroy()
 end
 

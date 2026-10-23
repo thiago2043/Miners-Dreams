@@ -6,6 +6,16 @@ local Geometria = {}
 Geometria.Passo = VolumeConstrucao.Passo
 Geometria.Tolerancia = VolumeConstrucao.Tolerancia
 
+-- A reserva mede o corpo; cabecotes e brocas podem avancar sobre a linha de transporte.
+function Geometria.CaixaDeConstrucao(modelo)
+	local hitbox = modelo:FindFirstChild("HitboxConstrucao")
+	if hitbox then
+		assert(hitbox:IsA("BasePart"), "HitboxConstrucao deve ser uma BasePart.")
+		return hitbox.CFrame, hitbox.Size
+	end
+	return modelo:GetBoundingBox()
+end
+
 -- O canto superior do piso vira (0,0,0), permitindo validar a grade no referencial local do terreno.
 -- Recebe a Part do piso e devolve um CFrame no canto superior da plot. As posicoes de construcao passam a ser
 -- medidas desse canto, mesmo quando o piso esta deslocado ou girado no mundo.
@@ -61,7 +71,7 @@ function Geometria.VolumeDoModelo(modelo, origem)
 	if typeof(minimoSalvo) == "Vector3" and typeof(ocupadoSalvo) == "Vector3" then
 		return minimoSalvo, minimoSalvo + ocupadoSalvo
 	end
-	local caixa, dimensoes = modelo:GetBoundingBox()
+	local caixa, dimensoes = Geometria.CaixaDeConstrucao(modelo)
 
 	if dimensoes.X <= 0 or dimensoes.Y <= 0 or dimensoes.Z <= 0 then
 		return nil

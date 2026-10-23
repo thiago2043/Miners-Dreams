@@ -55,15 +55,16 @@ end
 
 -- O relogio usado pelos componentes e fornecido pela simulacao, mantendo geracao e expiracao na mesma linha de tempo.
 -- Recebe o tempo decorrido do Heartbeat e o entrega a simulacao de passos fixos. Seu callback agenda a
--- atualizacao dos componentes aproximadamente a cada segundo desse relogio.
+-- descoberta de modelos a cada segundo; os componentes acompanham os passos do relogio.
 function Fabrica:Avancar(delta)
 	if self._destruida then return end
-	-- O callback roda antes do passo fisico. A busca de modelos e a atualizacao das capacidades ocorrem uma vez
-	-- por segundo desse relogio; o movimento continua nos passos de 1/120 s.
+	-- A busca continua uma vez por segundo; intervalos como 1,2 e 1,5 s precisam dos passos intermediarios.
 	self._simulacao:Avancar(delta, function(agora)
 		if agora + 0.000000001 >= self._proximaAtualizacao then
 			self:Atualizar(agora)
 			self._proximaAtualizacao = agora + 1
+		else
+			for _, maquina in self._maquinas do maquina:Atualizar(agora) end
 		end
 	end)
 end

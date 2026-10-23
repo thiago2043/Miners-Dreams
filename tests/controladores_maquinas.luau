@@ -20,8 +20,14 @@ local function objeto(nome, classe, pai)
 	local obj = { Name = nome, Parent = pai, filhos = {}, atributos = {} }
 	function obj:IsA(tipo) return tipo == classe end
 	function obj:GetChildren() return table.clone(self.filhos) end
-	function obj:FindFirstChild(n)
+	function obj:FindFirstChild(n, recursivo)
 		for _, filho in self.filhos do if filho.Name == n then return filho end end
+		if recursivo then
+			for _, filho in self.filhos do
+				local encontrado = filho:FindFirstChild(n, true)
+				if encontrado then return encontrado end
+			end
+		end
 	end
 	obj.WaitForChild = obj.FindFirstChild
 	function obj:GetAttribute(n) return self.atributos[n] end
@@ -129,7 +135,7 @@ assert(p3.AssemblyLinearVelocity and e3.Parent == maquinas)
 assert(#gerados == 1)
 fabrica:Atualizar(2)
 assert(#gerados == 2 and gerados[1].Parent == minerios)
-assert(gerados[1]:GetAttribute("Valor") == "10")
+assert(gerados[1]:GetAttribute("Valor") == "5")
 assert(gerados[1]:GetAttribute("DonoUserId") == 123)
 assert(gerados[1].Anchored and not gerados[1].CanCollide and not gerados[1].CanTouch and not gerados[1].CanQuery)
 assert(fabrica._simulacao._minerios[1].Expira == 10)
@@ -200,7 +206,9 @@ catalogo.VendedorVariante = {
 	Componentes = { { Tipo = "Vendedor", Sensor = "SensorEntrada", Multiplicador = "2", Bonus = "1" } },
 }
 local novaMineradora = maquina("MineradoraVariante")
-objeto("SaidaMinerio", "BasePart", novaMineradora).CFrame = CFrame.identity
+local cabecoteVariante = objeto("Cabecote", "BasePart", novaMineradora)
+local bocalExterno = objeto("SaidaMinerio", "Attachment", cabecoteVariante)
+bocalExterno.WorldCFrame = CFrame.new(7, 4, 12) * CFrame.Angles(0, math.pi / 2, 0)
 local novaEsteira = maquina("EsteiraVariante")
 local correia = objeto("Correia", "BasePart", novaEsteira)
 correia.CFrame = CFrame.identity
@@ -214,6 +222,7 @@ local variantes = novaFabrica(terrenos)
 variantes:Atualizar(10)
 local novoMinerio = gerados[#gerados]
 assert(novoMinerio:GetAttribute("Valor") == "70" and novoMinerio.Size == Vector3.new(2, 3, 4))
+assert(novoMinerio.CFrame == bocalExterno.WorldCFrame, "O Attachment deve usar a pose mundial do bocal.")
 assert(transporte(correia) == -correia.CFrame.LookVector * 12)
 tocar(sensorModificador, novoMinerio)
 tocar(sensorModificador, novoMinerio)

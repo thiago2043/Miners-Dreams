@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local DataManager = require(ServerScriptService.Data.DataManager)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
+local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
 local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local Componente = require(script.Parent.Parent.Componentes.Componente)
 
@@ -28,7 +29,7 @@ function Maquina.new(modelo, terreno, definicao, simulacao)
 	-- As dimensoes originais conservam os eixos da definicao depois de girar a peca.
 	local tamanho = modelo:GetAttribute("TamanhoConstrucao")
 	if not tamanho then
-		local _, dimensoes = modelo:GetBoundingBox()
+		local _, dimensoes = Geometria.CaixaDeConstrucao(modelo)
 		tamanho = dimensoes
 	end
 	-- A instancia possui o Model, a plot, o volume e a lista de comportamentos. Os metodos ficam na classe; os

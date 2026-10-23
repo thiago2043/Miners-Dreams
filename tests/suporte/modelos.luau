@@ -45,6 +45,12 @@ roblox.implementMethod("Model", "PivotTo", function(modelo, destino)
 	for _, parte in modelo:GetDescendants() do
 		if parte:IsA("BasePart") then parte.CFrame = delta * parte.CFrame end
 	end
+	-- O Lune armazena WorldCFrame, mas nao o recalcula ao mover o pai.
+	for _, saida in modelo:GetDescendants() do
+		if saida:IsA("Attachment") and saida.Parent:IsA("BasePart") then
+			saida.WorldCFrame = saida.Parent.CFrame * saida.CFrame
+		end
+	end
 	pivos[modelo] = destino
 end)
 

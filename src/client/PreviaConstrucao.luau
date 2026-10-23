@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
 local passoGrade = Geometria.Passo
-local velocidadeSuavizacao = 30
+local velocidadeSuavizacao = 45
 -- A folga evita contar o contato entre duas faces como uma sobreposicao.
 local folgaConsulta = Vector3.new(0.01, 0.01, 0.01)
 
@@ -23,7 +23,7 @@ function PreviaConstrucao.new(original, personalizacao, definicao, maquinas, ign
 	local modelo = original:Clone()
 	modelo.Name = "Previa" .. original.Name
 	personalizacao:Aplicar(modelo)
-	local caixa, tamanho = modelo:GetBoundingBox()
+	local caixa, tamanho = Geometria.CaixaDeConstrucao(modelo)
 	-- Guarda o deslocamento entre o centro da caixa e o pivo do Model. Ele sera reaplicado ao mover a previa,
 	-- pois o pivo nem sempre coincide com o centro visual.
 	local self = setmetatable({
@@ -203,20 +203,22 @@ function PreviaConstrucao:EncaixarLivre(origem: CFrame, desejado: Vector3, ocupa
 	return melhor
 end
 
--- Suaviza o deslocamento; o giro e aplicado imediatamente para nao mostrar uma orientacao fora da grade.
--- Recebe o alvo completo e o tempo desde o quadro anterior. Aproxima o modelo e sua caixa das posicoes
--- desejadas, aplica a orientacao final de 90 graus e pinta o contorno conforme o alvo esteja livre ou ocupado.
-function PreviaConstrucao:Animar(alvo: Alvo, deltaTime: number)
+-- Interpola o CFrame visual; o alvo logico continua encaixado na grade e e o que sera enviado ao servidor.
+-- cframeGrupo e aplicado diretamente aos membros secundarios para que a peca ancora mova e gire o grupo como
+-- uma unica transformacao, sem cada previa seguir uma rota independente.
+function PreviaConstrucao:Animar(alvo: Alvo, deltaTime: number, cframeGrupo: CFrame?)
 	local destino = alvo.caixaDestino
 	local volumeVisual = alvo.volumeDestino
 	local tamanhoVisual = alvo.ocupado
+	local alpha = 1 - math.exp(-velocidadeSuavizacao * deltaTime)
 
-	if self._cframeVisual then
-		-- alpha define quanto falta percorrer neste quadro, levando o tempo em conta. A posicao e a caixa sao
-		-- interpoladas; a orientacao visual da maquina ja usa o giro final.
-		local alpha = 1 - math.exp(-velocidadeSuavizacao * deltaTime)
-
-		self._cframeVisual = CFrame.new(self._cframeVisual.Position:Lerp(destino.Position, alpha)) * destino.Rotation
+	if cframeGrupo then
+		self._cframeVisual = cframeGrupo
+		local deslocamentoVolume = destino:PointToObjectSpace(volumeVisual.Position)
+		volumeVisual = CFrame.new(cframeGrupo:PointToWorldSpace(deslocamentoVolume)) * volumeVisual.Rotation
+	elseif self._cframeVisual then
+		-- A orientacao visual tambem percorre o giro; o alvo logico continua valido em passos de 90 graus.
+		self._cframeVisual = self._cframeVisual:Lerp(destino, alpha)
 		volumeVisual = self._caixaPrevia.CFrame:Lerp(volumeVisual, alpha)
 	else
 		self._cframeVisual = destino

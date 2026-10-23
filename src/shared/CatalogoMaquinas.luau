@@ -1,22 +1,32 @@
 -- Definicoes compartilhadas: nome, preco, volume e parametros dos comportamentos. Variantes existentes
 -- reutilizam as mesmas classes.
+local function mineradora(nome, preco, blocos, intervalo, valor, atalho)
+	return {
+		Nome = "Mineradora " .. nome, Preco = preco, Blocos = blocos, Atalho = atalho,
+		Componentes = { {
+			Tipo = "Soltador", Saida = "SaidaMinerio", Intervalo = intervalo, TempoVida = 10,
+			Minerio = { Valor = valor, Tamanho = { 1, 1, 1 } },
+		} },
+	}
+end
+
 return {
 	-- A chave deve corresponder ao nome do Model em ModelosMaquinas. Nome e texto da interface; Atalho usa o
 	-- nome da tecla no Enum.KeyCode; Preco e um inteiro decimal em texto.
-	MineradoraBasica = {
-		Atalho = "One",
-		Nome = "Mineradora básica",
-		Preco = "100",
-		Componentes = {
-			{
-				-- Tipo escolhe a classe do comportamento. Saida indica a parte do modelo; Intervalo e TempoVida sao
-				-- segundos; Valor e texto e Tamanho lista dimensoes do minerio em studs.
-				Tipo = "Soltador", Saida = "SaidaMinerio",
-				Intervalo = 2, TempoVida = 10,
-				Minerio = { Valor = "10", Tamanho = { 1, 1, 1 } },
-			},
-		},
-	},
+	-- Valores da proposta revisada; precos e valores de minerio permanecem inteiros decimais exatos.
+	MineradoraBasica        = mineradora("básica",        "100",                      { 2, 2, 2 },   2,    "5",         "One"),
+	MineradoraCobre         = mineradora("de cobre",      "1500",                     { 2, 3, 2 },   1.5,  "15"),
+	MineradoraFerro         = mineradora("de ferro",      "100000",                   { 3, 3, 2 },   1.2,  "45"),
+	MineradoraIndustrial    = mineradora("industrial",    "10000000",                 { 3, 3, 3 },   1,    "150"),
+	MineradoraPressurizada  = mineradora("pressurizada",  "750000000",                { 3, 3, 3 },   1.5,  "1200"),
+	MineradoraCristalina    = mineradora("cristalina",    "50000000000",              { 4, 4, 4 },   1.2,  "6000"),
+	MineradoraRessonante    = mineradora("ressonante",    "2000000000000",            { 4, 5, 3 },   1.5,  "18000"),
+	MineradoraPlasma        = mineradora("de plasma",     "100000000000000",          { 5, 5, 4 },   1,    "75000"),
+	MineradoraAtomica       = mineradora("atômica",       "5000000000000000",         { 5, 5, 4 },   1.25, "350000"),
+	MineradoraQuantica      = mineradora("quântica",      "250000000000000000",       { 6, 5, 6 },   1.5,  "2000000"),
+	MineradoraSingularidade = mineradora("singularidade", "25000000000000000000",     { 7, 6, 7 },   1.2,  "15000000"),
+	MineradoraEstelar       = mineradora("estelar",       "2500000000000000000000",   { 9, 8, 9 },   1,    "90000000"),
+	MineradoraGalactica     = mineradora("galáctica",     "500000000000000000000000", { 10, 8, 10 }, 1.25, "500000000"),
 	EsteiraBasica = {
 		Atalho = "Two",
 		Nome = "Esteira básica",

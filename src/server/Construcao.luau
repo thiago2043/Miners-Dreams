@@ -25,14 +25,50 @@ end
 function Construcao:Recolher(jogador, maquina)
 	return servico:Recolher(jogador, maquina)
 end
+-- Vende uma lista de pecas colocadas; o servico valida o dono, atualiza o perfil e so entao destroi os modelos.
+function Construcao:VenderColocadas(jogador, maquinas)
+	return servico:VenderMaquinasColocadas(jogador, maquinas)
+end
 -- Solicita ao servico a captura de uma peca do terreno. A resposta inclui uma configuracao para a previa e um
 -- token, sem conceder ao cliente permissao para definir as melhorias.
 function Construcao:Copiar(jogador, maquina)
 	return servico:Copiar(jogador, maquina)
 end
--- Move uma unidade existente; o cliente propoe apenas destino e giro, sem enviar preco ou modificacoes.
-function Construcao:Mover(jogador, maquina, minimo, rotacao)
-	return servico:Mover(jogador, maquina, minimo, rotacao)
+-- Captura um conjunto selecionado sem apagar as fontes e devolve os dados para montar a previa azul de copia.
+function Construcao:CopiarGrupo(jogador, maquinas)
+	return servico:CopiarGrupo(jogador, maquinas)
+end
+-- Confirma todas as copias da previa numa operacao validada pelo servidor.
+function Construcao:ColocarGrupoCopia(jogador, token, pedidos)
+	return servico:ColocarGrupoCopia(jogador, token, pedidos)
+end
+-- Encaminha a captura e o salvamento persistente das pecas selecionadas como um blueprint.
+function Construcao:CriarBlueprint(jogador, nome, maquinas)
+	return servico:CriarBlueprint(jogador, nome, maquinas)
+end
+-- Devolve somente os nomes e a quantidade de pecas de cada blueprint do jogador.
+function Construcao:ListarBlueprints(jogador)
+	return servico:ListarBlueprints(jogador)
+end
+-- Gera um token temporario para posicionar uma copia do blueprint escolhido usando a compra em grupo existente.
+function Construcao:PrepararBlueprint(jogador, identificador)
+	return servico:PrepararBlueprint(jogador, identificador)
+end
+-- Valida, captura e apaga as instancias selecionadas antes de iniciar a previa; devolve um token temporario.
+function Construcao:IniciarMovimento(jogador, maquinas)
+	return servico:IniciarMovimento(jogador, maquinas)
+end
+-- Finaliza o token de uma peca e cria uma nova instancia no destino validado pelo servico.
+function Construcao:Mover(jogador, token, minimo, rotacao)
+	return servico:Mover(jogador, token, minimo, rotacao)
+end
+-- Confirma os destinos do grupo em lote ou deixa o movimento pendente para uma nova tentativa.
+function Construcao:MoverGrupo(jogador, token, movimentos)
+	return servico:MoverGrupo(jogador, token, movimentos)
+end
+-- Encerra o token pendente e devolve as personalizacoes capturadas ao inventario.
+function Construcao:CancelarMovimento(jogador, token)
+	return servico:CancelarMovimento(jogador, token)
 end
 -- API interna para scripts do servidor alterarem uma peca de forma validada. Nao esta na lista de metodos
 -- remotos; uma interface futura de melhorias precisa de pedidos especificos autorizados pelo servidor.
@@ -45,10 +81,20 @@ function Construcao.Sincronizar(jogador)
 	servico:Sincronizar(jogador)
 end
 
+-- Apenas servicos do servidor podem coordenar um reinicio; este metodo nao pertence a lista remota.
+function Construcao.ReiniciarProgresso(jogador, alterarDados)
+	return servico:ReiniciarProgresso(jogador, alterarDados)
+end
+
 Players.PlayerRemoving:Connect(function(jogador)
 	servico:LimparJogador(jogador)
 end)
 -- Esta lista autoriza somente os metodos abaixo pela rede. O jogador e fornecido pelo canal; Personalizar,
 -- Restaurar e Sincronizar continuam acessiveis apenas a scripts do servidor.
-Networker.server.new("Construcao", Construcao, { Construcao.Colocar, Construcao.Recolher, Construcao.Copiar, Construcao.Mover })
+Networker.server.new("Construcao", Construcao, {
+	Construcao.Colocar, Construcao.Recolher, Construcao.Copiar, Construcao.CopiarGrupo,
+	Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
+	Construcao.PrepararBlueprint, Construcao.IniciarMovimento,
+	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
+})
 return Construcao

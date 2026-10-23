@@ -2,6 +2,7 @@
 -- as escolhas das listas.
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
@@ -16,7 +17,18 @@ local NavegacaoEstados = require(script.Parent.NavegacaoEstados)
 local passoGrade = Geometria.Passo
 local alcance = 500
 local tolerancia = Geometria.Tolerancia
-
+local acaoRodaSelecao = "Construcao_SelecaoVolume"
+local pixelsPorStud, velocidadeListras = 24, Geometria.Passo
+local transparenciaSelecao = 0.7
+local corListraClara, corListraEscura = Color3.fromRGB(115, 205, 255), Color3.fromRGB(25, 85, 190)
+local ladoPadraoListras = 2 * passoGrade * math.sqrt(2)
+-- Quatro bandas na diagonal do quadrado repetem o padrao sem mudar a largura em faces retangulares.
+local coresPadraoListras = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, corListraClara), ColorSequenceKeypoint.new(0.2499, corListraClara),
+	ColorSequenceKeypoint.new(0.25, corListraEscura), ColorSequenceKeypoint.new(0.4999, corListraEscura),
+	ColorSequenceKeypoint.new(0.5, corListraClara), ColorSequenceKeypoint.new(0.7499, corListraClara),
+	ColorSequenceKeypoint.new(0.75, corListraEscura), ColorSequenceKeypoint.new(1, corListraEscura),
+})
 
 local ControladorConstrucao = {}
 ControladorConstrucao.__index = ControladorConstrucao
@@ -39,7 +51,19 @@ function ControladorConstrucao.new(jogador)
 		_selecoes = SelecaoPecas.new(), _abaSelecionada = "Inventario",
 		_rotacao = CFrame.identity, _colocando = false,
 		_destruido = false, _modoSelecao = nil, _movimento = nil,
+		_pecasSelecionadas = {}, _destaquesPecas = {}, _arrasteSelecao = nil,
+		_salvandoBlueprint = false, _nomeBlueprintEmCriacao = nil, _resultadoBlueprint = nil,
 	}, ControladorConstrucao)
+	self._eventoPecaFocada = Instance.new("BindableEvent")
+	self.PecaFocada = self._eventoPecaFocada.Event
+	self._destaqueHover = Instance.new("Highlight")
+	self._destaqueHover.Name = "PecaSobCursor"
+	self._destaqueHover.Enabled = false
+	self._destaqueHover.FillTransparency = 1
+	self._destaqueHover.OutlineColor = Color3.fromRGB(255, 255, 255)
+	self._destaqueHover.OutlineTransparency = 0
+	self._destaqueHover.DepthMode = Enum.HighlightDepthMode.Occluded
+	self._destaqueHover.Parent = workspace
 	-- Os originais servem de referencia para clonar previas. Cada entrada de catalogo associa seu identificador
 	-- a um modelo e, quando definido, a uma tecla numerica unica.
 	local modelos = ReplicatedStorage:WaitForChild("ModelosMaquinas")
@@ -59,6 +83,9 @@ function ControladorConstrucao.new(jogador)
 	self._consultaMaquinas = RaycastParams.new()
 	self._consultaMaquinas.FilterType = Enum.RaycastFilterType.Include
 	self._consultaMaquinas.RespectCanCollide = true
+	self._consultaSelecao = RaycastParams.new()
+	self._consultaSelecao.FilterType = Enum.RaycastFilterType.Include
+	self._consultaSelecao.RespectCanCollide = false
 	jogador:SetAttribute("MaquinaSelecionada", self._maquinaIdSelecionada)
 	return self
 end
@@ -78,12 +105,23 @@ function ControladorConstrucao:Iniciar()
 	table.insert(self._conexoes, RunService.RenderStepped:Connect(function(deltaTime)
 		self:Atualizar(deltaTime)
 	end))
+	-- SurfaceGui precisa receber tamanho e recorte antes da preparacao da imagem; em RenderStepped o canvas
+	-- pode aparecer com o tamanho do quadro anterior, mesmo quando AbsoluteSize ja informa o tamanho novo.
+	table.insert(self._conexoes, RunService.Heartbeat:Connect(function(deltaTime)
+		if not self._destruido and self._modoSelecao and not self._movimento then
+			self:_AnimarCaixaSelecao(deltaTime)
+		end
+	end))
 	-- Enquanto R esta ativo, os deslocamentos do cursor alteram somente a rotacao da previa. O alvo de posicao
 	-- fica ancorado durante esse gesto.
 	table.insert(self._conexoes, UserInputService.InputChanged:Connect(function(entrada)
 		if self._arraste and self.Navegacao:Atual() == "Rotacao"
 			and entrada.UserInputType == Enum.UserInputType.MouseMovement then
 			self._rotacao = self._arraste:Atualizar(UserInputService:GetMouseLocation())
+		elseif self._arrasteSelecao then
+			if entrada.UserInputType == Enum.UserInputType.MouseMovement then
+				self:_AtualizarArrasteSelecao(UserInputService:GetMouseLocation())
+			end
 		end
 	end))
 	table.insert(self._conexoes, UserInputService.InputEnded:Connect(function(entrada)
@@ -93,6 +131,12 @@ function ControladorConstrucao:Iniciar()
 	-- rotacao preso.
 	table.insert(self._conexoes, UserInputService.WindowFocusReleased:Connect(function()
 		self.Navegacao:Fechar("Rotacao")
+		if self._arrasteSelecao and self._arrasteSelecao.SelecaoInicial then
+			self:_RestaurarSelecaoAntesDoArraste(self._arrasteSelecao)
+		end
+		self._arrasteSelecao = nil
+		ContextActionService:UnbindAction(acaoRodaSelecao)
+		self:_ExibirCaixaSelecao(false)
 	end))
 	-- O servidor publica qual variante do inventario deve ser exibida. Quando ela muda, a previa dessa peca
 	-- precisa refletir a nova configuracao.
@@ -113,45 +157,49 @@ function ControladorConstrucao:Destruir()
 	self.Navegacao:Destruir()
 	self:EncerrarColocacao()
 	self:EncerrarSelecaoTerreno()
+	self._destaqueHover:Destroy()
+	self._eventoPecaFocada:Destroy()
 end
 
 -- Retira o modelo temporario da cena e apaga o alvo e o ultimo encaixe. A instancia continua existindo para
 -- poder reaparecer quando houver uma posicao calculavel.
 function ControladorConstrucao:_OcultarPrevia()
-	self._previa:Ocultar()
+	if self._movimento and self._movimento.Grupo then
+		for _, peca in self._movimento.Pecas do peca.Previa:Ocultar() end
+	else
+		self._previa:Ocultar()
+	end
 	self._alvoColocacao = nil
 	self._ultimoEncaixe = nil
+	self._alvosGrupo = nil
 end
 
--- Remove a previa e suas caixas e libera a altura travada. Ao sair do movimento sem recolher, recoloca a
--- instancia original no destino confirmado ou, se nao houve confirmacao, no pivo de origem.
+-- Destruir a previa libera suas hitboxes e recursos. As instancias movidas ja foram apagadas pelo servidor;
+-- somente ConfirmarMovimento cria substitutas, enquanto o cancelamento as devolve ao inventario.
 function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
 	self:_EncerrarRotacao()
 	if not preservarSelecao then
 		self._rotacao = CFrame.identity
 		self._copia = nil
 	end
-	if self._previa then
-		self._previa:Destruir()
-		self._previa = nil
-	end
 	local movimento = self._movimento
-	if movimento and not movimento.Recolhida and movimento.Maquina.Parent == nil and movimento.PaiOriginal then
-		pcall(function()
-			movimento.Maquina:PivotTo(movimento.PivoConfirmado or movimento.PivoOriginal)
-			movimento.Maquina.Parent = movimento.PaiOriginal
-		end)
+	if movimento and movimento.Grupo then
+		for _, peca in movimento.Pecas do peca.Previa:Destruir() end
+	elseif self._previa then
+		self._previa:Destruir()
 	end
+	self._previa = nil
 
 	self._alvoColocacao = nil
 	self._ultimoEncaixe = nil
 	self._travamentoAltura = nil
 	self._movimento = nil
+	self._alvosGrupo = nil
 end
 
 -- Procura a plot cujo DonoUserId corresponde ao jogador e guarda suas pastas e piso. Devolve true quando esse
 -- contexto existe; false interrompe a acao sem criar ou atribuir outra plot.
-function ControladorConstrucao:_EncontrarTerreno()
+function ControladorConstrucao:_EncontrarTerreno(silencioso)
 	self._terreno = nil
 
 	for _, candidato in self._pastaTerrenos:GetChildren() do
@@ -165,7 +213,7 @@ function ControladorConstrucao:_EncontrarTerreno()
 	self._maquinas = self._terreno and self._terreno:FindFirstChild("Maquinas")
 
 	if not self._piso or not self._piso:IsA("BasePart") or not self._maquinas then
-		warn("Seu terreno ainda nao esta disponivel.")
+		if not silencioso then warn("Seu terreno ainda nao esta disponivel.") end
 		return false
 	end
 
@@ -241,12 +289,30 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	self._colocando = true
 	print("Confirmando colocacao...")
+	local alvosGrupo = movimento and movimento.Grupo and self._alvosGrupo
 
 	-- fetch espera uma resposta de rede. pcall distingue falha de comunicacao de uma recusa normal do servidor;
 	-- _colocando impede enviar outro pedido durante a espera.
 	local comunicou, sucesso, mensagem = pcall(function()
-		if movimento then
-			return self._redeConstrucao:fetch("Mover", movimento.Maquina, alvo.minimo, alvo.rotacao)
+		if movimento and movimento.Copia then
+			if not alvosGrupo or #alvosGrupo ~= #movimento.Pecas then return false, "O grupo nao esta pronto." end
+			local pedidos = {}
+			for _, item in alvosGrupo do
+				table.insert(pedidos, { Minimo = item.Alvo.minimo, Rotacao = item.Alvo.rotacao })
+			end
+			return self._redeConstrucao:fetch("ColocarGrupoCopia", movimento.Token, pedidos)
+		elseif movimento then
+			if movimento.Grupo then
+				if not alvosGrupo or #alvosGrupo ~= #movimento.Pecas then return false, "O grupo nao esta pronto." end
+				local pedidos = {}
+				for _, item in alvosGrupo do
+					table.insert(pedidos, {
+						Minimo = item.Alvo.minimo, Rotacao = item.Alvo.rotacao,
+					})
+				end
+				return self._redeConstrucao:fetch("MoverGrupo", movimento.Token, pedidos)
+			end
+			return self._redeConstrucao:fetch("Mover", movimento.Token, alvo.minimo, alvo.rotacao)
 		end
 		return self._redeConstrucao:fetch(
 			"Colocar", alvo.maquinaId, alvo.minimo, alvo.rotacao, self._copia and self._copia.Token,
@@ -264,9 +330,15 @@ function ControladorConstrucao:ConfirmarColocacao()
 	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
 		warn("Resposta invalida do servidor.")
 	elseif sucesso then
+		if movimento and movimento.Copia then
+			self._alvoColocacao = nil
+			for _, peca in movimento.Pecas do peca.Previa:ForcarAtualizacao() end
+			print(mensagem)
+			return
+		end
 		if movimento then
-			movimento.PivoConfirmado = previa:CalcularPivoAlvo(alvo)
-			-- Fecha apenas esta previa; o modo M permanece para escolher a proxima peca.
+			movimento.Concluido = true
+			-- Fecha apenas esta previa; o modo X permanece para escolher a proxima peca.
 			self.Navegacao:Fechar("Reposicionamento")
 			print(mensagem)
 			return
@@ -282,9 +354,518 @@ end
 
 -- Encerra a selecao de pecas do terreno (mover ou recolher) e destroi seu Highlight. Esta limpeza local nao
 -- altera a maquina real nem o inventario.
+function ControladorConstrucao:_LimparSelecaoPecas()
+	table.clear(self._pecasSelecionadas)
+	for maquina, destaque in self._destaquesPecas do
+		destaque:Destroy()
+		self._destaquesPecas[maquina] = nil
+	end
+end
+
+-- Cria uma caixa tridimensional que nao participa das consultas nem da fisica; o volume visivel acompanha a plot.
+function ControladorConstrucao:_CriarCaixaSelecao()
+	if self._caixaSelecao then return end
+	local caixa = Instance.new("Part")
+	caixa.Name = "VolumeSelecaoGrupo"
+	caixa.Anchored = true
+	caixa.CanCollide, caixa.CanTouch, caixa.CanQuery = false, false, false
+	caixa.CastShadow = false
+	local blueprint = self._modoSelecao == "Blueprint"
+	local corArea = if self._modoSelecao == "Recolhimento" then Color3.fromRGB(255, 65, 65)
+		elseif self._modoSelecao == "Copia" then Color3.fromRGB(40, 125, 255)
+		elseif blueprint then Color3.fromRGB(25, 85, 190)
+		elseif self._modoSelecao == "Venda" then Color3.fromRGB(35, 190, 95)
+		else Color3.fromRGB(255, 185, 0)
+	local corContorno = if self._modoSelecao == "Recolhimento" then Color3.fromRGB(255, 25, 25)
+		elseif self._modoSelecao == "Copia" then Color3.fromRGB(20, 75, 235)
+		elseif blueprint then Color3.fromRGB(15, 65, 165)
+		elseif self._modoSelecao == "Venda" then Color3.fromRGB(30, 255, 110)
+		else Color3.fromRGB(255, 235, 70)
+	caixa.Color = corArea
+	-- O material da Part nao reproduz a opacidade do SurfaceGui; todas as faces usam o mesmo preenchimento.
+	caixa.Transparency = 1
+	caixa.Size = Vector3.new(0.05, passoGrade, 0.05)
+	local contorno = Instance.new("SelectionBox")
+	contorno.Name = "ContornoSelecao"
+	contorno.Adornee = caixa
+	contorno.Color3 = corContorno
+	contorno.LineThickness = 0.1
+	contorno.SurfaceTransparency = 1
+	contorno.Visible = not blueprint
+	contorno.Parent = caixa
+	self._faixasSelecao = {
+		deslocamento = 0, faces = {}, bordas = {},
+	}
+	for _, face in {
+		{ Lado = Enum.NormalId.Front, U = -Vector3.xAxis, V = -Vector3.yAxis },
+		{ Lado = Enum.NormalId.Back, U = Vector3.xAxis, V = -Vector3.yAxis },
+		{ Lado = Enum.NormalId.Left, U = Vector3.zAxis, V = -Vector3.yAxis },
+		{ Lado = Enum.NormalId.Right, U = -Vector3.zAxis, V = -Vector3.yAxis },
+		-- Medido com marcadores no Studio: topo/fundo comecam no lado +Z e U segue para -Z.
+		{ Lado = Enum.NormalId.Top, U = -Vector3.zAxis, V = Vector3.xAxis },
+		{ Lado = Enum.NormalId.Bottom, U = -Vector3.zAxis, V = -Vector3.xAxis },
+	} do
+		local superficie = Instance.new("SurfaceGui")
+		superficie.Name = blueprint and "ListrasBlueprint" or "FaceSelecao"
+		superficie.Adornee, superficie.Face = caixa, face.Lado
+		-- O canvas explicito acompanha Size no mesmo quadro, sem esperar o calculo automatico de PixelsPerStud.
+		superficie.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+		superficie.LightInfluence, superficie.AlwaysOnTop = 0, false
+		superficie.ClipsDescendants, superficie.Parent = true, caixa
+		local preenchimento
+		if not blueprint then
+			preenchimento = Instance.new("Frame")
+			preenchimento.Name, preenchimento.Size = "PreenchimentoSelecao", UDim2.fromScale(1, 1)
+			preenchimento.BackgroundColor3, preenchimento.BackgroundTransparency = corArea, transparenciaSelecao
+			preenchimento.BorderSizePixel, preenchimento.Parent = 0, superficie
+		end
+		table.insert(self._faixasSelecao.faces, {
+			U = face.U, V = face.V, Normal = -face.U:Cross(face.V), Superficie = superficie,
+			Angulo = math.deg(math.atan2(face.V.X + face.V.Y + face.V.Z,
+				face.U.X + face.U.Y + face.U.Z)) % 360,
+			Preenchimento = preenchimento, Faixas = {}, Largura = 0, Altura = 0,
+		})
+	end
+	if blueprint then
+		for _, borda in {
+			{ Eixo = "X", Y = -1, Z = -1 }, { Eixo = "X", Y = -1, Z = 1 },
+			{ Eixo = "X", Y = 1, Z = -1 }, { Eixo = "X", Y = 1, Z = 1 },
+			{ Eixo = "Y", X = -1, Z = -1 }, { Eixo = "Y", X = -1, Z = 1 },
+			{ Eixo = "Y", X = 1, Z = -1 }, { Eixo = "Y", X = 1, Z = 1 },
+			{ Eixo = "Z", X = -1, Y = -1 }, { Eixo = "Z", X = -1, Y = 1 },
+			{ Eixo = "Z", X = 1, Y = -1 }, { Eixo = "Z", X = 1, Y = 1 },
+		} do
+			borda.Segmentos = {}
+			table.insert(self._faixasSelecao.bordas, borda)
+		end
+	end
+	self._caixaSelecao = caixa
+end
+
+-- O SurfaceGui recorta mal Frames girados; quadrados sem giro usam apenas a rotacao do UIGradient.
+function ControladorConstrucao:_AtualizarListrasSelecao(tamanho)
+	local estado = self._faixasSelecao
+	if not estado then return end
+	local camera = workspace.CurrentCamera
+	local olho = camera and self._caixaSelecao.CFrame:PointToObjectSpace(camera.CFrame.Position)
+	local dentro = olho and math.abs(olho.X) <= tamanho.X / 2
+		and math.abs(olho.Y) <= tamanho.Y / 2 and math.abs(olho.Z) <= tamanho.Z / 2
+	for _, face in estado.faces do
+		-- SurfaceGui tambem desenha o verso: esconder faces opostas evita misturar dois padroes transparentes.
+		face.Superficie.Enabled = olho ~= nil and (dentro
+			or face.Normal:Dot(olho) > (face.Normal * tamanho).Magnitude / 2)
+		local largura, altura = (face.U * tamanho).Magnitude, (face.V * tamanho).Magnitude
+		face.Superficie.CanvasSize = Vector2.new(largura * pixelsPorStud, altura * pixelsPorStud)
+		face.Largura, face.Altura = largura, altura
+		if face.Preenchimento then continue end
+		-- Todas as faces amostram (x+y+z-fase)/sqrt(2), inclusive nas arestas compartilhadas.
+		local canto = (face.Normal - face.U - face.V) * tamanho / 2
+		local sinalU = face.U.X + face.U.Y + face.U.Z
+		local deslocamento = (sinalU * (estado.deslocamento - canto.X - canto.Y - canto.Z)) % ladoPadraoListras
+		local primeiraColuna = math.floor(-deslocamento / ladoPadraoListras)
+		local ultimaColuna = math.ceil((largura - deslocamento) / ladoPadraoListras) - 1
+		local linhas = math.ceil(altura / ladoPadraoListras)
+		local indice = 0
+		for coluna = primeiraColuna, ultimaColuna do
+			for linha = 0, linhas - 1 do
+				indice += 1
+				local faixa = face.Faixas[indice]
+				if not faixa then
+					local instancia = Instance.new("Frame")
+					instancia.Name = "PadraoListrasBlueprint"
+					-- Um pixel de sobreposicao evita fendas pelo arredondamento do layout da interface.
+					local ladoPixels = math.ceil(ladoPadraoListras * pixelsPorStud) + 1
+					instancia.Size = UDim2.fromOffset(ladoPixels, ladoPixels)
+					instancia.BackgroundColor3 = Color3.new(1, 1, 1)
+					instancia.BorderSizePixel = 0
+					instancia.BackgroundTransparency = transparenciaSelecao
+					instancia.Parent = face.Superficie
+					local gradiente = Instance.new("UIGradient")
+					gradiente.Rotation, gradiente.Color = face.Angulo, coresPadraoListras
+					gradiente.Parent = instancia
+					faixa = { Instancia = instancia }
+					face.Faixas[indice] = faixa
+				end
+				faixa.Instancia.Position = UDim2.fromOffset(
+					(coluna * ladoPadraoListras + deslocamento) * pixelsPorStud,
+					linha * ladoPadraoListras * pixelsPorStud
+				)
+				faixa.Instancia.Visible = true
+			end
+		end
+		for excedente = indice + 1, #face.Faixas do
+			face.Faixas[excedente].Instancia.Visible = false
+		end
+	end
+end
+
+-- Move todas as faixas para a direita; o periodo de reinicio preserva a repeticao azul-claro/azul-escuro.
+function ControladorConstrucao:_AnimarListrasSelecao(deltaTime)
+	local estado = self._faixasSelecao
+	if not estado then return end
+	estado.deslocamento = (estado.deslocamento + velocidadeListras * deltaTime)
+		% ladoPadraoListras
+end
+
+-- SelectionBox so tem uma cor; segmentos alternados desenham as 12 arestas e acompanham o volume suavizado.
+function ControladorConstrucao:_AtualizarBordasListradas(caixa)
+	local estado = self._faixasSelecao
+	if not estado then return end
+	local tamanho = caixa.Size
+	local espessura = 0.12
+	for _, borda in estado.bordas do
+		local comprimento = if borda.Eixo == "X" then tamanho.X
+			elseif borda.Eixo == "Y" then tamanho.Y else tamanho.Z
+		local canto = Vector3.new((borda.X or -1) * tamanho.X / 2,
+			(borda.Y or -1) * tamanho.Y / 2, (borda.Z or -1) * tamanho.Z / 2)
+		local deslocamento = estado.deslocamento - canto.X - canto.Y - canto.Z
+		-- Uma listra diagonal de 4 studs cruza uma aresta a cada 4*sqrt(2) studs.
+		local passoAresta = passoGrade * math.sqrt(2)
+		local primeiraFaixa = math.floor(-deslocamento / passoAresta)
+		local ultimaFaixa = math.ceil((comprimento - deslocamento) / passoAresta) - 1
+		for faixa = primeiraFaixa, ultimaFaixa do
+			local indice = faixa - primeiraFaixa + 1
+			local segmento = borda.Segmentos[indice]
+			if not segmento then
+				segmento = Instance.new("Part")
+				segmento.Name = "ListraBordaBlueprint"
+				segmento.Anchored = true
+				segmento.CanCollide, segmento.CanTouch, segmento.CanQuery = false, false, false
+				segmento.CastShadow = false
+				segmento.Material = Enum.Material.SmoothPlastic
+				segmento.Transparency = 0.45
+				segmento.Parent = caixa
+				borda.Segmentos[indice] = segmento
+			end
+
+			-- Cada faixa atravessa o limite da aresta e e recortada, evitando saltos ou sobras nas pontas.
+			local inicio = faixa * passoAresta + deslocamento
+			local fim = inicio + passoAresta
+			local inicioVisivel, fimVisivel = math.max(0, inicio), math.min(comprimento, fim)
+			if fimVisivel <= inicioVisivel then
+				segmento.Transparency = 1
+				continue
+			end
+			local tamanhoSegmento = math.max(0.05, fimVisivel - inicioVisivel)
+			local localizacao = Vector3.new(
+				(borda.X or 0) * tamanho.X / 2,
+				(borda.Y or 0) * tamanho.Y / 2,
+				(borda.Z or 0) * tamanho.Z / 2
+			)
+			if borda.Eixo == "X" then
+				localizacao = Vector3.new(-comprimento / 2 + (inicioVisivel + fimVisivel) / 2, localizacao.Y, localizacao.Z)
+				segmento.Size = Vector3.new(tamanhoSegmento, espessura, espessura)
+			elseif borda.Eixo == "Y" then
+				localizacao = Vector3.new(localizacao.X, -comprimento / 2 + (inicioVisivel + fimVisivel) / 2, localizacao.Z)
+				segmento.Size = Vector3.new(espessura, tamanhoSegmento, espessura)
+			else
+				localizacao = Vector3.new(localizacao.X, localizacao.Y, -comprimento / 2 + (inicioVisivel + fimVisivel) / 2)
+				segmento.Size = Vector3.new(espessura, espessura, tamanhoSegmento)
+			end
+			segmento.CFrame = caixa.CFrame * CFrame.new(localizacao)
+			segmento.Transparency = 0.45
+			segmento.Color = faixa % 2 == 0 and Color3.fromRGB(115, 205, 255)
+				or Color3.fromRGB(25, 85, 190)
+		end
+		for indice = ultimaFaixa - primeiraFaixa + 2, #borda.Segmentos do
+			borda.Segmentos[indice].Transparency = 1
+		end
+	end
+end
+
+-- Mantem a caixa fora do mundo ate comecar um arraste para ela nao interferir em outras acoes.
+function ControladorConstrucao:_ExibirCaixaSelecao(visivel)
+	if self._caixaSelecao then self._caixaSelecao.Parent = if visivel then workspace else nil end
+end
+
+-- O primeiro raio acerta piso ou maquina e fixa a altura inicial no bloco atingido; a area horizontal continua
+-- acompanhando o cursor num plano nessa altura.
+function ControladorConstrucao:_PontoInicialSelecao(mouse)
+	local camera = workspace.CurrentCamera
+	if not camera then return nil end
+	local raio = camera:ViewportPointToRay(mouse.X, mouse.Y)
+	local resultado = workspace:Raycast(raio.Origin, raio.Direction * alcance, self._consultaSelecao)
+	local origem = Geometria.Origem(self._piso)
+	local ponto, maquina
+	if resultado then
+		ponto = origem:PointToObjectSpace(resultado.Position)
+		local objeto = resultado.Instance
+		while objeto and objeto.Parent ~= self._maquinas do objeto = objeto.Parent end
+		if objeto and objeto:IsA("Model") then maquina = objeto end
+	end
+
+	-- A borda virtual tambem e uma superficie de apoio, mesmo quando o cursor esta fora do piso fisico.
+	local parede, _, distanciaParede = Geometria.ParedeDoTerreno(
+		origem:PointToObjectSpace(raio.Origin), origem:VectorToObjectSpace(raio.Direction),
+		self._piso.Size, alcance
+	)
+	local distanciaSuperficie = resultado and (resultado.Position - raio.Origin).Magnitude
+	if parede and (not distanciaSuperficie or distanciaParede < distanciaSuperficie) then
+		ponto, maquina = parede, nil
+	end
+	if not ponto then return nil end
+
+	local minimo = maquina and maquina:GetAttribute("VolumeMinimo")
+	local altura = if typeof(minimo) == "Vector3" then minimo.Y
+		else math.max(0, math.floor((ponto.Y + tolerancia) / passoGrade) * passoGrade)
+	return Vector3.new(
+		math.clamp(ponto.X, 0, self._piso.Size.X), altura,
+		math.clamp(ponto.Z, 0, self._piso.Size.Z)
+	)
+end
+
+-- Projeta o cursor no plano horizontal da altura inicial. Rayos paralelos ou voltados para tras mantem o ultimo
+-- ponto valido, evitando que a caixa suma ao passar o cursor por uma regiao sem intersecao.
+function ControladorConstrucao:_PontoNoPlanoSelecao(mouse, altura)
+	local camera = workspace.CurrentCamera
+	if not camera then return nil end
+	local raio = camera:ViewportPointToRay(mouse.X, mouse.Y)
+	local origem = Geometria.Origem(self._piso)
+	local inicio = origem:PointToObjectSpace(raio.Origin)
+	local direcao = origem:VectorToObjectSpace(raio.Direction)
+	local ponto
+	if math.abs(direcao.Y) > tolerancia then
+		local distancia = (altura - inicio.Y) / direcao.Y
+		if distancia >= 0 and distancia <= alcance then ponto = inicio + direcao * distancia end
+	end
+	if ponto and (ponto.X < 0 or ponto.X > self._piso.Size.X or ponto.Z < 0 or ponto.Z > self._piso.Size.Z) then
+		ponto = nil
+	end
+	if not ponto then
+		local parede = Geometria.ParedeDoTerreno(inicio, direcao, self._piso.Size, alcance)
+		if not parede then return nil end
+		ponto = parede
+	end
+	return Vector3.new(
+		math.clamp(ponto.X, 0, self._piso.Size.X), altura,
+		math.clamp(ponto.Z, 0, self._piso.Size.Z)
+	)
+end
+
+-- A roda expande uma camada inicial inteira para cima ou para baixo; Shift+roda move a altura dessa camada.
+function ControladorConstrucao:_AjustarAlturaSelecao(delta)
+	local arraste = self._arrasteSelecao
+	if not arraste or delta == 0 then return end
+	local deslocamento = math.sign(delta) * passoGrade
+	if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+		or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+	then
+		if arraste.InicioLocal then
+			arraste.AlturaInicial = math.max(0, arraste.AlturaInicial + deslocamento)
+		else
+			arraste.AjusteAlturaInicial += deslocamento
+		end
+	else
+		arraste.Altura += deslocamento
+	end
+	-- A extensao inferior nao atravessa o piso, mesmo quando Shift move a camada inicial para baixo.
+	arraste.Altura = math.max(-arraste.AlturaInicial, arraste.Altura)
+	self:_AtualizarArrasteSelecao(UserInputService:GetMouseLocation())
+end
+
+-- A roda pertence ao volume enquanto o botao esquerdo esta pressionado, sem tambem aplicar zoom da camera.
+function ControladorConstrucao:_CapturarRodaSelecao()
+	ContextActionService:BindActionAtPriority(acaoRodaSelecao, function(_, _, entrada)
+		if entrada.UserInputType == Enum.UserInputType.MouseWheel and entrada.Position.Z ~= 0 then
+			self:_AjustarAlturaSelecao(entrada.Position.Z)
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.ContextActionPriority.High.Value, Enum.UserInputType.MouseWheel)
+end
+
+-- Atualiza o volume apos movimento real do mouse; movimentos menores que quatro pixels continuam sendo cliques.
+function ControladorConstrucao:_AtualizarArrasteSelecao(mouse)
+	local arraste = self._arrasteSelecao
+	if not arraste then return end
+	if not arraste.Arrastando and (mouse - arraste.Inicio).Magnitude >= 4 then
+		arraste.Arrastando = true
+		arraste.SelecaoInicial = {}
+		for _, maquina in self._pecasSelecionadas do arraste.SelecaoInicial[maquina] = true end
+		arraste.InicioLocal = self:_PontoInicialSelecao(arraste.Inicio)
+		if arraste.InicioLocal then
+			arraste.AlturaInicial = math.max(0,
+				arraste.InicioLocal.Y + (arraste.AjusteAlturaInicial or 0))
+		end
+		self:_ExibirCaixaSelecao(true)
+	end
+	if not arraste.Arrastando or not arraste.InicioLocal then return end
+	local fim = self:_PontoNoPlanoSelecao(mouse, arraste.AlturaInicial) or arraste.UltimoLocal
+	if not fim then return end
+	arraste.UltimoLocal = fim
+	-- A camada inicial permanece no volume: a extensao positiva cresce acima e a negativa, abaixo dela.
+	local alturaMinima = arraste.AlturaInicial + math.min(0, arraste.Altura)
+	local alturaMaxima = arraste.AlturaInicial + passoGrade + math.max(0, arraste.Altura)
+	local function intervaloEmBlocos(a, b, limite)
+		local minimo = math.clamp(math.floor((math.min(a, b) + tolerancia) / passoGrade) * passoGrade, 0, limite)
+		local maximo = math.clamp(math.ceil((math.max(a, b) - tolerancia) / passoGrade) * passoGrade, 0, limite)
+		if maximo - minimo < passoGrade then
+			if minimo + passoGrade <= limite + tolerancia then
+				maximo = math.min(limite, minimo + passoGrade)
+			else
+				minimo = math.max(0, maximo - passoGrade)
+			end
+		end
+		return minimo, maximo
+	end
+	-- Arredonda para fora para a caixa acompanhar celulas inteiras sem deixar escapar pecas tocadas nas bordas.
+	local minimoX, maximoX = intervaloEmBlocos(arraste.InicioLocal.X, fim.X, self._piso.Size.X)
+	local minimoZ, maximoZ = intervaloEmBlocos(arraste.InicioLocal.Z, fim.Z, self._piso.Size.Z)
+	local minimo = Vector3.new(
+		minimoX, alturaMinima, minimoZ
+	)
+	local maximo = Vector3.new(
+		maximoX, alturaMaxima, maximoZ
+	)
+	local alturaCaixa = math.max(0.05, alturaMaxima - alturaMinima)
+	local tamanho = Vector3.new(
+		math.max(0.05, maximo.X - minimo.X), alturaCaixa,
+		math.max(0.05, maximo.Z - minimo.Z)
+	)
+	local centro = Vector3.new((minimo.X + maximo.X) / 2, alturaMinima + alturaCaixa / 2,
+		(minimo.Z + maximo.Z) / 2)
+	local origem = Geometria.Origem(self._piso)
+	local cframeAlvo = origem * CFrame.new(centro)
+	if not arraste.AlvoVisual then
+		self._caixaSelecao.Size = tamanho
+		self._caixaSelecao.CFrame = cframeAlvo
+	end
+	arraste.AlvoVisual = { CFrame = cframeAlvo, Size = tamanho }
+	arraste.VolumeMinimo, arraste.VolumeMaximo = minimo, maximo
+	self:_AtualizarSelecaoDuranteArraste(arraste)
+end
+
+-- Suaviza o desenho nos tres eixos; o volume e os destaques continuam mudando na celula exata do cursor.
+function ControladorConstrucao:_AnimarCaixaSelecao(deltaTime)
+	local arraste = self._arrasteSelecao
+	local caixa = self._caixaSelecao
+	local alvo = arraste and arraste.AlvoVisual
+	if not caixa or not alvo then return end
+	self:_AnimarListrasSelecao(deltaTime)
+
+	local progresso = 1 - math.exp(-20 * deltaTime)
+	local origem = Geometria.Origem(self._piso)
+	local atual = origem:PointToObjectSpace(caixa.CFrame.Position)
+	local destino = origem:PointToObjectSpace(alvo.CFrame.Position)
+	local posicao = atual:Lerp(destino, progresso)
+	caixa.CFrame = origem * CFrame.new(posicao)
+	caixa.Size = caixa.Size:Lerp(alvo.Size, progresso)
+	self:_AtualizarListrasSelecao(caixa.Size)
+	self:_AtualizarBordasListradas(caixa)
+end
+
+-- Aplica um estado explicito para que o retangulo possa atualizar os destaques sem alternar a mesma peca a cada
+-- quadro. A previa de movimento nao altera a aparencia das outras unidades selecionadas.
+function ControladorConstrucao:_DefinirPecaSelecionada(maquina, selecionada)
+	local indice = table.find(self._pecasSelecionadas, maquina)
+	if indice and not selecionada then
+		table.remove(self._pecasSelecionadas, indice)
+		local destaque = self._destaquesPecas[maquina]
+		if destaque then destaque:Destroy(); self._destaquesPecas[maquina] = nil end
+		return true
+	end
+	if indice then return true end
+	if not selecionada then return true end
+	if #self._pecasSelecionadas >= 60 then
+		return false
+	end
+	table.insert(self._pecasSelecionadas, maquina)
+	local destaque = Instance.new("Highlight")
+	destaque.Name = "PecaSelecionada"
+	destaque.Adornee = maquina
+	local cor = if self._modoSelecao == "Recolhimento" then Color3.fromRGB(255, 65, 65)
+		elseif self._modoSelecao == "Copia" then Color3.fromRGB(40, 125, 255)
+		elseif self._modoSelecao == "Blueprint" then Color3.fromRGB(85, 180, 255)
+		elseif self._modoSelecao == "Venda" then Color3.fromRGB(35, 210, 100)
+		else Color3.fromRGB(255, 210, 70)
+	destaque.FillColor = cor
+	destaque.OutlineColor = cor
+	destaque.FillTransparency = 0.8
+	destaque.OutlineTransparency = 0
+	destaque.DepthMode = Enum.HighlightDepthMode.Occluded
+	destaque.Parent = workspace
+	self._destaquesPecas[maquina] = destaque
+	return true
+end
+
+-- O clique individual continua alternando a peca, enquanto a caixa usa o mesmo mecanismo com estado explicito.
+function ControladorConstrucao:_AlternarPecaSelecionada(maquina)
+	local selecionada = table.find(self._pecasSelecionadas, maquina) == nil
+	if not self:_DefinirPecaSelecionada(maquina, selecionada) then warn("Selecione ate 60 pecas por grupo.") end
+end
+
+-- Devolve as pecas cujo volume reservado cabe por inteiro na caixa; as medidas estao no referencial da plot.
+function ControladorConstrucao:_PecasDentroDaCaixa(minimo, maximo)
+	local dentro = {}
+	if not minimo or not maximo then return dentro end
+	for _, maquina in self._maquinas:GetChildren() do
+		if not maquina:IsA("Model") or maquina:GetAttribute("PodeRecolher") ~= true then continue end
+		local cantoMinimo = maquina:GetAttribute("VolumeMinimo")
+		local ocupado = maquina:GetAttribute("VolumeOcupado")
+		if typeof(cantoMinimo) ~= "Vector3" or typeof(ocupado) ~= "Vector3" then
+			local cantoMaximo
+			cantoMinimo, cantoMaximo = Geometria.VolumeDoModelo(maquina, Geometria.Origem(self._piso))
+			ocupado = cantoMaximo and cantoMaximo - cantoMinimo
+		end
+		if typeof(cantoMinimo) == "Vector3" and typeof(ocupado) == "Vector3"
+			and cantoMinimo.X >= minimo.X - tolerancia and cantoMinimo.Y >= minimo.Y - tolerancia
+			and cantoMinimo.Z >= minimo.Z - tolerancia
+			and cantoMinimo.X + ocupado.X <= maximo.X + tolerancia
+			and cantoMinimo.Y + ocupado.Y <= maximo.Y + tolerancia
+			and cantoMinimo.Z + ocupado.Z <= maximo.Z + tolerancia
+		then
+			dentro[maquina] = true
+		end
+	end
+	return dentro
+end
+
+-- Enquanto a caixa muda, pecas dentro dela invertem seu estado inicial; ao sair da caixa, cada destaque volta
+-- ao que era antes do gesto. Remocoes sao aplicadas antes de novas selecoes para respeitar o limite de 60.
+function ControladorConstrucao:_AtualizarSelecaoDuranteArraste(arraste)
+	if not arraste.SelecaoInicial then return end
+	local dentro = self:_PecasDentroDaCaixa(arraste.VolumeMinimo, arraste.VolumeMaximo)
+	local adicionar = {}
+	for _, maquina in self._maquinas:GetChildren() do
+		if not maquina:IsA("Model") then continue end
+		local inicial = arraste.SelecaoInicial[maquina] == true
+		local desejada = if dentro[maquina] then not inicial else inicial
+		if desejada then
+			table.insert(adicionar, maquina)
+		else
+			self:_DefinirPecaSelecionada(maquina, false)
+		end
+	end
+	for _, maquina in adicionar do
+		if not self:_DefinirPecaSelecionada(maquina, true) and not arraste.AvisoLimite then
+			arraste.AvisoLimite = true
+			warn("Selecione ate 60 pecas por grupo.")
+		end
+	end
+end
+
+-- Perder foco cancela o gesto de arraste, por isso restaura a selecao anterior em vez de deixar uma pre-selecao
+-- parcialmente aplicada.
+function ControladorConstrucao:_RestaurarSelecaoAntesDoArraste(arraste)
+	for _, maquina in self._maquinas:GetChildren() do
+		if not arraste.SelecaoInicial[maquina] then self:_DefinirPecaSelecionada(maquina, false) end
+	end
+	for maquina in arraste.SelecaoInicial do
+		if maquina.Parent == self._maquinas then self:_DefinirPecaSelecionada(maquina, true) end
+	end
+end
+
 function ControladorConstrucao:EncerrarSelecaoTerreno()
 	self._modoSelecao = nil
 	self._maquinaSelecionada = nil
+	self._arrasteSelecao = nil
+	ContextActionService:UnbindAction(acaoRodaSelecao)
+	self:_ExibirCaixaSelecao(false)
+	self:_LimparSelecaoPecas()
+	if self._caixaSelecao then
+		self._caixaSelecao:Destroy()
+		self._caixaSelecao = nil
+	end
+	self._faixasSelecao = nil
 
 	if self._destaqueSelecao then
 		self._destaqueSelecao:Destroy()
@@ -292,22 +873,63 @@ function ControladorConstrucao:EncerrarSelecaoTerreno()
 	end
 end
 
--- Recebe Recolhimento ou Movimentacao. Ambos usam o mesmo raio e destaque; o modo decide o efeito do clique.
+-- Persiste as pecas atualmente destacadas como uma unica formacao, preservando configuracoes e distancias.
+function ControladorConstrucao:_SalvarBlueprintDaSelecao()
+	local maquinas = {}
+	for _, maquina in self._pecasSelecionadas do
+		if maquina.Parent == self._maquinas then table.insert(maquinas, maquina) end
+	end
+	if #maquinas == 0 then
+		self._resultadoBlueprint = { Sucesso = false, Mensagem = "A area precisa conter pelo menos uma peca." }
+		self.Navegacao:Fechar("CriacaoBlueprint")
+		return false
+	end
+
+	self._salvandoBlueprint, self._colocando = true, true
+	local comunicou, sucesso, mensagem, blueprint = pcall(function()
+		return self._redeConstrucao:fetch("CriarBlueprint", self._nomeBlueprintEmCriacao, maquinas)
+	end)
+	self._salvandoBlueprint, self._colocando = false, false
+	if self._destruido then return false end
+	if not comunicou then
+		self._resultadoBlueprint = { Sucesso = false, Mensagem = "Nao foi possivel salvar o blueprint." }
+	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+		self._resultadoBlueprint = { Sucesso = false, Mensagem = "Resposta invalida ao salvar o blueprint." }
+	else
+		self._resultadoBlueprint = { Sucesso = sucesso, Mensagem = mensagem }
+	end
+	local salvou = self._resultadoBlueprint.Sucesso
+	self.Navegacao:Fechar("CriacaoBlueprint")
+	return salvou
+end
+
+-- Recebe Recolhimento, Movimentacao, Copia ou Venda. A caixa 3D e reutilizada; o modo define cor e acao final.
 -- Retorna true quando encontrou a plot e preparou a selecao.
 function ControladorConstrucao:_IniciarSelecaoTerreno(modo)
 	if self._destruido or self._colocando then return end
-	assert(modo == "Recolhimento" or modo == "Movimentacao", "Modo de selecao invalido.")
+	assert(modo == "Recolhimento" or modo == "Movimentacao" or modo == "Copia" or modo == "Venda"
+		or modo == "Blueprint",
+		"Modo de selecao invalido.")
 	self:EncerrarSelecaoTerreno()
 	self:EncerrarColocacao()
 	if not self:_EncontrarTerreno() then return end
 
 	self._modoSelecao = modo
+	self._destaqueHover.Adornee = nil
+	self._destaqueHover.Enabled = false
 	self._consultaMaquinas.FilterDescendantsInstances = { self._maquinas }
+	self._consultaSelecao.FilterDescendantsInstances = { self._piso, self._maquinas }
+	self:_CriarCaixaSelecao()
 
 	self._destaqueSelecao = Instance.new("Highlight")
 	self._destaqueSelecao.Name = "SelecaoTerreno"
-	self._destaqueSelecao.FillColor = Color3.fromRGB(255, 210, 70)
-	self._destaqueSelecao.OutlineColor = Color3.fromRGB(255, 210, 70)
+	local corSelecao = if modo == "Recolhimento" then Color3.fromRGB(255, 65, 65)
+		elseif modo == "Copia" then Color3.fromRGB(40, 125, 255)
+		elseif modo == "Blueprint" then Color3.fromRGB(85, 180, 255)
+		elseif modo == "Venda" then Color3.fromRGB(35, 210, 100)
+		else Color3.fromRGB(255, 210, 70)
+	self._destaqueSelecao.FillColor = corSelecao
+	self._destaqueSelecao.OutlineColor = corSelecao
 	self._destaqueSelecao.FillTransparency = 0.8
 	self._destaqueSelecao.OutlineTransparency = 0
 	self._destaqueSelecao.DepthMode = Enum.HighlightDepthMode.Occluded
@@ -336,14 +958,141 @@ function ControladorConstrucao:_AtualizarSelecaoTerreno()
 
 	self._destaqueSelecao.Adornee = self._maquinaSelecionada
 	self._destaqueSelecao.Enabled = self._maquinaSelecionada ~= nil
+	self._destaqueHover.Adornee = nil
+	self._destaqueHover.Enabled = false
 end
 
--- Escolhe a unidade destacada no modo M. A captura local serve somente para desenhar a previa; na confirmacao
--- o servidor captura novamente a configuracao real, sem aceitar estatisticas enviadas pelo cliente.
-function ControladorConstrucao:IniciarReposicionamento()
-	if self._destruido or self._colocando or self._modoSelecao ~= "Movimentacao" or self._movimento then return end
-	local maquina = self._maquinaSelecionada
+-- O contorno branco acompanha a peca sob o cursor fora dos modos de selecao colorida.
+function ControladorConstrucao:_AtualizarDestaqueHover()
+	if self._modoSelecao or self._previa or self._movimento or self._rPressionado or self._colocando then
+		self._destaqueHover.Adornee = nil
+		self._destaqueHover.Enabled = false
+		return
+	end
+	if not self._terreno or self._terreno.Parent ~= self._pastaTerrenos
+		or self._terreno:GetAttribute("DonoUserId") ~= self._jogador.UserId
+		or not self._maquinas or self._maquinas.Parent ~= self._terreno
+	then
+		if not self:_EncontrarTerreno(true) then
+			self._destaqueHover.Adornee = nil
+			self._destaqueHover.Enabled = false
+			return
+		end
+	end
+	local maquina = self:_MaquinaSobMouse()
+	self._destaqueHover.Adornee = maquina
+	self._destaqueHover.Enabled = maquina ~= nil
+end
+
+-- Abre o menu contextual da peca clicada, mantendo-o atualizado pela interface mesmo se a navegacao ja estiver aberta.
+function ControladorConstrucao:_AbrirMenuPeca(maquina)
+	if not maquina or maquina.Parent ~= self._maquinas or maquina:GetAttribute("PodeRecolher") ~= true then
+		self._maquinaSelecionada = nil
+		self.Navegacao:Fechar("MenuPeca")
+		return
+	end
+	self._maquinaSelecionada = maquina
+	self._pecaFocada = maquina
+	if not self.Navegacao:Contem("MenuPeca") then
+		self.Navegacao:Abrir("MenuPeca", function()
+			self._pecaFocada = nil
+			self._eventoPecaFocada:Fire(nil)
+		end)
+	end
+	self._eventoPecaFocada:Fire(maquina)
+end
+
+-- Clique no mundo abre o menu da maquina sob o cursor ou fecha o menu se o clique foi em outra superficie.
+function ControladorConstrucao:_SelecionarPecaNoCursor()
+	if not self:_EncontrarTerreno() then return end
+	self:_AbrirMenuPeca(self:_MaquinaSobMouse())
+end
+
+-- Devolve a definicao efetiva da maquina para a ficha contextual, incluindo personalizacoes salvas naquela unidade.
+function ControladorConstrucao:ObterDefinicaoPeca(maquina)
+	if not maquina or maquina.Parent ~= self._maquinas or maquina:GetAttribute("PodeRecolher") ~= true then return nil end
+	local item, original = CatalogoMaquinas[maquina.Name], self._modelosOriginais[maquina.Name]
+	if not item or not original then return nil end
+	return PersonalizacaoMaquina.DoModelo(maquina):Capturar(maquina, original):ObterDefinicao(item)
+end
+
+-- Executa uma acao do menu sobre uma unidade especifica; excluir reaproveita o recolhimento para nao perder a peca.
+function ControladorConstrucao:ExecutarAcaoPeca(acao)
+	local maquina = self._pecaFocada
+	if self._destruido or self._colocando or not maquina or maquina.Parent ~= self._maquinas then return false end
+	self._maquinaSelecionada = maquina
+	self.Navegacao:Fechar("MenuPeca")
+	if acao == "Copiar" then return self:IniciarCopiaGrupo(maquina, true)
+	elseif acao == "Mover" then return self:IniciarReposicionamento(maquina, true)
+	elseif acao == "Excluir" then
+		self:_LimparSelecaoPecas()
+		self._maquinaSelecionada = maquina
+		self:ConfirmarRecolhimento()
+		return true
+	elseif acao == "Vender" then return self:ConfirmarVendaTerreno(maquina) end
+	return false
+end
+
+-- Captura a previa local, pede ao servidor para validar/capturar e destruir as instancias, e so entao abre o
+-- reposicionamento com um token que impede o cliente de escolher outras pecas ou configuracoes.
+function ControladorConstrucao:_IniciarMovimentoServidor(pecas, grupo)
+	local maquinas = {}
+	for _, peca in pecas do table.insert(maquinas, peca.Maquina) end
+	self._colocando = true
+	local comunicou, sucesso, mensagem, token = pcall(function()
+		return self._redeConstrucao:fetch("IniciarMovimento", maquinas)
+	end)
+	self._colocando = false
+
+	if self._destruido then
+		for _, peca in pecas do peca.Previa:Destruir() end
+		if comunicou and sucesso == true and token then
+			pcall(function() self._redeConstrucao:fetch("CancelarMovimento", token) end)
+		end
+		return false
+	end
+	if not comunicou or sucesso ~= true or type(token) ~= "number" then
+		for _, peca in pecas do peca.Previa:Destruir() end
+		warn(if comunicou and type(mensagem) == "string" then mensagem else "Nao foi possivel iniciar o movimento.")
+		return false
+	end
+
+	local ancora = pecas[1]
+	self._previa, self._rotacao = ancora.Previa, ancora.RotacaoInicial
+	self._movimento = {
+		Token = token, MaquinaId = ancora.MaquinaId, Pecas = pecas, Grupo = grupo,
+	}
+	for _, peca in pecas do
+		if peca.Maquina.Parent then peca.Maquina:Destroy() end
+	end
+	self:_LimparSelecaoPecas()
+	self._maquinaSelecionada = nil
+	if self._destaqueSelecao then
+		self._destaqueSelecao.Adornee = nil
+		self._destaqueSelecao.Enabled = false
+	end
+	self._maquinaIdSelecionada = ancora.MaquinaId
+	self._jogador:SetAttribute("MaquinaSelecionada", ancora.MaquinaId)
+	self._consulta.FilterDescendantsInstances = { self._piso, self._previa:ObterPastaVolumes() }
+	self.Navegacao:Abrir("Reposicionamento", function()
+		self.Navegacao:Fechar("Rotacao")
+		self:EncerrarColocacao()
+	end)
+	return true
+end
+
+function ControladorConstrucao:IniciarReposicionamento(maquina, somentePeca)
+	if self._destruido or self._colocando or (not somentePeca and self._modoSelecao ~= "Movimentacao")
+		or self._movimento then return end
+	maquina = maquina or self._maquinaSelecionada
 	if not maquina then return end
+	if somentePeca then self:_LimparSelecaoPecas() end
+	if table.find(self._pecasSelecionadas, maquina) and #self._pecasSelecionadas > 1 then
+		return self:_IniciarReposicionamentoGrupo(maquina)
+	end
+	if #self._pecasSelecionadas > 0 and not table.find(self._pecasSelecionadas, maquina) then
+		self:_LimparSelecaoPecas()
+	end
 	local original = self._modelosOriginais[maquina.Name]
 	if not original then return end
 	local sucesso, previa, rotacao = pcall(function()
@@ -355,39 +1104,160 @@ function ControladorConstrucao:IniciarReposicionamento()
 	end)
 	if not sucesso then warn("Nao foi possivel preparar a peca para mover."); return end
 
-	-- A previa preserva as diferencas da unidade; retirar a instancia original da cena local evita mostrar duas
-	-- pecas durante o movimento. Pai e pivo ficam guardados para confirmar ou restaurar a operacao com seguranca.
-	self._previa, self._rotacao = previa, rotacao
-	self._movimento = { Maquina = maquina, PaiOriginal = maquina.Parent, PivoOriginal = maquina:GetPivot() }
-	maquina.Parent = nil
-	self._destaqueSelecao.Adornee = nil
-	self._destaqueSelecao.Enabled = false
-	self._maquinaIdSelecionada = maquina.Name
-	self._jogador:SetAttribute("MaquinaSelecionada", maquina.Name)
-	self._consulta.FilterDescendantsInstances = { self._piso, previa:ObterPastaVolumes() }
-	self.Navegacao:Abrir("Reposicionamento", function()
-		self.Navegacao:Fechar("Rotacao")
-		self:EncerrarColocacao()
-	end)
+	-- A previa preserva as diferencas da unidade; o servidor destrói o original antes do movimento, e esta
+	-- referencia permite remover a replica local caso ela ainda nao tenha recebido a destruicao replicada.
+	local peca = { Maquina = maquina, MaquinaId = maquina.Name, Previa = previa, RotacaoInicial = rotacao }
+	self:_IniciarMovimentoServidor({ peca }, false)
 end
 
--- Ao cancelar o movimento, pede ao servidor para recolher a unidade. O servidor salva suas diferencas no
--- inventario e so destroi o modelo depois que o perfil aceita a devolucao.
+-- Prepara previas individualmente, mas guarda uma relacao espacial comum. O item clicado vira ancora, por isso
+-- o cursor move esse item e os demais mantem seus deslocamentos ao redor dele.
+function ControladorConstrucao:_IniciarReposicionamentoGrupo(ancora)
+	local modelos = { ancora }
+	for _, maquina in self._pecasSelecionadas do
+		if maquina ~= ancora and maquina.Parent == self._maquinas then table.insert(modelos, maquina) end
+	end
+	if #modelos < 2 then return self:IniciarReposicionamento(ancora) end
+
+	local pecas = {}
+	local sucesso = pcall(function()
+		local origem = Geometria.Origem(self._piso)
+		for _, maquina in modelos do
+			local original = assert(self._modelosOriginais[maquina.Name])
+			local personalizacao = PersonalizacaoMaquina.DoModelo(maquina):Capturar(maquina, original)
+			local rotacao = assert(RotacaoConstrucao.Validar(maquina:GetAttribute("RotacaoConstrucao")), "Rotacao invalida.")
+			rotacao = RotacaoConstrucao.EncaixarNaGrade(rotacao)
+			local minimo = maquina:GetAttribute("VolumeMinimo")
+			local ocupado = maquina:GetAttribute("VolumeOcupado")
+			if typeof(minimo) ~= "Vector3" or typeof(ocupado) ~= "Vector3" then
+				local maximo
+				minimo, maximo = Geometria.VolumeDoModelo(maquina, origem)
+				ocupado = maximo and (maximo - minimo)
+			end
+			assert(typeof(minimo) == "Vector3" and typeof(ocupado) == "Vector3", "Volume invalido.")
+			local definicao = personalizacao:ObterDefinicao(CatalogoMaquinas[maquina.Name])
+			local previa = PreviaConstrucao.new(original, personalizacao, definicao, self._maquinas, maquina)
+			table.insert(pecas, {
+				Maquina = maquina, MaquinaId = maquina.Name, Previa = previa,
+				CentroInicial = minimo + ocupado / 2,
+				RotacaoInicial = rotacao,
+			})
+		end
+	end)
+	if not sucesso then
+		for _, peca in pecas do peca.Previa:Destruir() end
+		warn("Nao foi possivel preparar o grupo para mover.")
+		return false
+	end
+
+	local centroAncora = pecas[1].CentroInicial
+	for _, peca in pecas do peca.DeslocamentoInicial = peca.CentroInicial - centroAncora end
+	return self:_IniciarMovimentoServidor(pecas, true)
+end
+
+-- Converte a resposta do servidor numa previa de grupo para copiar uma selecao ou colocar um blueprint.
+function ControladorConstrucao:_IniciarPreviaCopiaGrupo(resposta, nomeBlueprint, quantidadeEsperada)
+	if type(resposta) ~= "table" or type(resposta.Token) ~= "number"
+		or type(resposta.Pecas) ~= "table" or #resposta.Pecas < 1 or #resposta.Pecas > 60
+		or (quantidadeEsperada and #resposta.Pecas ~= quantidadeEsperada)
+	then warn("Resposta de copia invalida."); return false end
+
+	local pecas = {}
+	local preparou = pcall(function()
+		for _, item in resposta.Pecas do
+			local original = self._modelosOriginais[item.MaquinaId]
+			local rotacao = RotacaoConstrucao.ValidarNaGrade(item.RotacaoInicial)
+			assert(original and type(item.Modificacoes) == "table"
+				and typeof(item.DeslocamentoInicial) == "Vector3" and rotacao, "Dados de copia invalidos.")
+			local personalizacao = PersonalizacaoMaquina.new(item.Modificacoes)
+			local definicao = personalizacao:ObterDefinicao(CatalogoMaquinas[item.MaquinaId])
+			local previa = PreviaConstrucao.new(original, personalizacao, definicao, self._maquinas)
+			table.insert(pecas, {
+				MaquinaId = item.MaquinaId, Previa = previa,
+				DeslocamentoInicial = item.DeslocamentoInicial, RotacaoInicial = rotacao,
+			})
+		end
+	end)
+	if not preparou then
+		for _, peca in pecas do peca.Previa:Destruir() end
+		warn("Nao foi possivel montar a previa de copia.")
+		return false
+	end
+
+	local ancoraPrevia = pecas[1]
+	self._previa, self._rotacao = ancoraPrevia.Previa, ancoraPrevia.RotacaoInicial
+	self._movimento = {
+		Token = resposta.Token, MaquinaId = ancoraPrevia.MaquinaId, Pecas = pecas,
+		Grupo = true, Copia = true, Blueprint = nomeBlueprint ~= nil, BlueprintNome = nomeBlueprint,
+	}
+	self._maquinaIdSelecionada = ancoraPrevia.MaquinaId
+	self._jogador:SetAttribute("MaquinaSelecionada", ancoraPrevia.MaquinaId)
+	self._consulta.FilterDescendantsInstances = { self._piso, self._previa:ObterPastaVolumes() }
+	self._maquinaSelecionada = nil
+	if self._destaqueSelecao then
+		self._destaqueSelecao.Adornee = nil
+		self._destaqueSelecao.Enabled = false
+	end
+	self.Navegacao:Abrir("Reposicionamento", function() self:EncerrarColocacao() end)
+	return true
+end
+
+-- Captura a peca clicada e, se ela pertence a selecao azul, as demais selecionadas. As originais ficam no
+-- terreno; o servidor devolve um token de copia e uma previa que conserva configuracoes, rotacoes e distancias.
+function ControladorConstrucao:IniciarCopiaGrupo(ancora, somenteAncora)
+	if self._destruido or self._colocando or (not somenteAncora and self._modoSelecao ~= "Copia")
+		or not ancora then return false end
+	local modelos = { ancora }
+	if somenteAncora then
+		self:_LimparSelecaoPecas()
+	elseif table.find(self._pecasSelecionadas, ancora) then
+		for _, maquina in self._pecasSelecionadas do
+			if maquina ~= ancora and maquina.Parent == self._maquinas then table.insert(modelos, maquina) end
+		end
+	else
+		self:_LimparSelecaoPecas()
+	end
+	if #modelos > 60 then return false end
+
+	self.Navegacao:Abrir("Copiando")
+	local revisao = self.Navegacao.Revisao
+	self._colocando = true
+	local comunicou, sucesso, mensagem, resposta = pcall(function()
+		return self._redeConstrucao:fetch("CopiarGrupo", modelos)
+	end)
+	if self._destruido then return false end
+	self._colocando = false
+	if self.Navegacao.Revisao ~= revisao then
+		self.Navegacao:Fechar("Copiando")
+		return false
+	end
+	self.Navegacao:Voltar()
+	if not comunicou then warn("Nao foi possivel copiar as pecas."); return false end
+	if not sucesso then warn(mensagem); return false end
+	return self:_IniciarPreviaCopiaGrupo(resposta, nil, #modelos)
+end
+
+-- Ao cancelar, envia o token; o servidor devolve as configuracoes ao inventario e encerra o movimento atomico.
 function ControladorConstrucao:CancelarReposicionamento()
 	local movimento = self._movimento
 	if self._destruido or self._colocando or not movimento then return false end
+	if movimento.Copia then
+		self.Navegacao:Fechar("Reposicionamento")
+		return true
+	end
 	self._colocando = true
 	local comunicou, sucesso, mensagem = pcall(function()
-		return self._redeConstrucao:fetch("Recolher", movimento.Maquina)
+		return self._redeConstrucao:fetch("CancelarMovimento", movimento.Token)
 	end)
 	self._colocando = false
 	if self._destruido or self._movimento ~= movimento then return false end
 
 	if comunicou and sucesso == true then
-		movimento.Recolhida = true
+		movimento.Concluido = true
 		print(type(mensagem) == "string" and mensagem or "Peca devolvida ao inventario.")
 	else
 		warn(if comunicou and type(mensagem) == "string" then mensagem else "Nao foi possivel recolher a peca.")
+		return false
 	end
 	self.Navegacao:Fechar("Reposicionamento")
 	return true
@@ -396,14 +1266,17 @@ end
 -- Envia ao servidor a maquina atualmente destacada. Enquanto espera, bloqueia outro pedido local; na resposta,
 -- so limpa o destaque se ele ainda for o mesmo que iniciou a retirada.
 function ControladorConstrucao:ConfirmarRecolhimento()
-	if self._colocando or not self._maquinaSelecionada then return end
+	local maquina = self._maquinaSelecionada
+	if self._colocando or not maquina then return end
 
-	local maquina, destaque = self._maquinaSelecionada, self._destaqueSelecao
+	local selecionadas = self._pecasSelecionadas
+	local alvo = if #selecionadas > 1 and table.find(selecionadas, maquina) then table.clone(selecionadas) else maquina
+	local destaque = self._destaqueSelecao
 	self._colocando = true
-	print("Recolhendo maquina...")
+	print(if type(alvo) == "table" then "Recolhendo grupo..." else "Recolhendo maquina...")
 
 	local comunicou, sucesso, mensagem = pcall(function()
-		return self._redeConstrucao:fetch("Recolher", maquina)
+		return self._redeConstrucao:fetch("Recolher", alvo)
 	end)
 
 	if self._destruido then return end
@@ -415,13 +1288,58 @@ function ControladorConstrucao:ConfirmarRecolhimento()
 	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
 		warn("Resposta invalida do servidor.")
 	elseif sucesso then
+		self:_LimparSelecaoPecas()
 		self._maquinaSelecionada = nil
-		self._destaqueSelecao.Adornee = nil
-		self._destaqueSelecao.Enabled = false
+		if self._destaqueSelecao then
+			self._destaqueSelecao.Adornee = nil
+			self._destaqueSelecao.Enabled = false
+		end
 		print(mensagem)
 	else
 		warn(mensagem)
 	end
+end
+
+-- Vende somente a unidade clicada no atalho ou o grupo selecionado no modo V. O servidor calcula o preco pelo
+-- catalogo e aplica a remocao de todas as construcoes junto com o credito do saldo.
+function ControladorConstrucao:ConfirmarVendaTerreno(maquinaUnica)
+	if self._colocando then return false end
+	local maquinas
+	if maquinaUnica then
+		self:_LimparSelecaoPecas()
+		maquinas = { maquinaUnica }
+	else
+		if self._modoSelecao ~= "Venda" or not self._maquinaSelecionada then return false end
+		local selecionadas = self._pecasSelecionadas
+		maquinas = if #selecionadas > 1 and table.find(selecionadas, self._maquinaSelecionada)
+			then table.clone(selecionadas) else { self._maquinaSelecionada }
+	end
+
+	local destaque = self._destaqueSelecao
+	self._colocando = true
+	local comunicou, sucesso, mensagem = pcall(function()
+		return self._redeConstrucao:fetch("VenderColocadas", maquinas)
+	end)
+	if self._destruido then return false end
+	self._colocando = false
+	if self._destaqueSelecao ~= destaque then return false end
+
+	if not comunicou then
+		warn("Nao foi possivel confirmar a venda.")
+	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+		warn("Resposta invalida do servidor.")
+	elseif sucesso then
+		self:_LimparSelecaoPecas()
+		self._maquinaSelecionada = nil
+		if self._destaqueSelecao then
+			self._destaqueSelecao.Adornee = nil
+			self._destaqueSelecao.Enabled = false
+		end
+		print(mensagem)
+	else
+		warn(mensagem)
+	end
+	return comunicou and sucesso == true
 end
 
 -- Entradas consumidas pela interface ou pelo chat nao devem executar a construcao no mundo.
@@ -437,6 +1355,7 @@ function ControladorConstrucao:ProcessarEntrada(entrada, processada)
 	-- Q fecha o topo da pilha antes da guarda de rede. Assim o jogador pode cancelar a tela/acao local mesmo
 	-- enquanto um pedido aguarda resposta.
 	if entrada.KeyCode == Enum.KeyCode.Q then
+		if self._salvandoBlueprint then return end
 		if self._colocando and self._movimento then return end
 		if self.Navegacao:Atual() == "Reposicionamento" and self._movimento then
 			self:CancelarReposicionamento()
@@ -448,42 +1367,94 @@ function ControladorConstrucao:ProcessarEntrada(entrada, processada)
 	if self._colocando then return end
 	local estado = self.Navegacao:Atual()
 	if estado and estado ~= "Inventario" and estado ~= "Loja" and estado ~= "FichaInventario"
-		and estado ~= "FichaLoja" and estado ~= "Colocacao"
+		and estado ~= "FichaLoja" and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
+		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes"
+		and estado ~= "Colocacao"
 		and estado ~= "Rotacao" and estado ~= "Recolhimento"
-		and estado ~= "Movimentacao" and estado ~= "Reposicionamento" then return end
+		and estado ~= "Movimentacao" and estado ~= "Copia" and estado ~= "Venda" and estado ~= "Copiando"
+		and estado ~= "Reposicionamento" and estado ~= "MenuPeca" then return end
+	local tecla = entrada.KeyCode
+	-- Nas abas centrais simples, apenas os atalhos de paineis continuam ativos; cliques nao operam sobre a plot.
+	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes") and tecla ~= Enum.KeyCode.U
+		and tecla ~= Enum.KeyCode.P and tecla ~= Enum.KeyCode.B
+		and tecla ~= Enum.KeyCode.E and tecla ~= Enum.KeyCode.F then return end
 
-	-- O mesmo clique tem destinos diferentes: R inicia o gesto de giro, X recolhe, M seleciona/move e a colocacao
-	-- normal confirma o alvo. Os returns impedem executar dois comandos com o mesmo clique.
+	-- O clique do meio age em uma unidade: Alt vende, Ctrl recolhe, Shift move e sem modificador cria uma copia.
+	if entrada.UserInputType == Enum.UserInputType.MouseButton3 then
+		if self._previa or self._movimento or self._rPressionado or self._arrasteSelecao
+			or not self:_EncontrarTerreno() then return end
+		local maquina = self:_MaquinaSobMouse()
+		if not maquina then return end
+		self.Navegacao:Fechar("MenuPeca")
+
+		local alt = UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
+			or UserInputService:IsKeyDown(Enum.KeyCode.RightAlt)
+		local ctrl = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+			or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
+		local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+			or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+		if alt then
+			if maquina:GetAttribute("PodeRecolher") ~= true then return end
+			self:ConfirmarVendaTerreno(maquina)
+		elseif ctrl then
+			if maquina:GetAttribute("PodeRecolher") ~= true then return end
+			self:_LimparSelecaoPecas()
+			self._maquinaSelecionada = maquina
+			self:ConfirmarRecolhimento()
+		elseif shift then
+			self:IniciarReposicionamento(maquina, true)
+		else
+			self:IniciarCopiaGrupo(maquina, true)
+		end
+		return
+	end
+
+	-- O clique esquerdo confirma a previa ou inicia a selecao comum, inclusive para recolher, mover, copiar e vender.
 	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
 		if self._rPressionado then
 			self._rConsumido = true
 			self:_IniciarArraste()
-		elseif self._modoSelecao == "Recolhimento" then
-			self:ConfirmarRecolhimento()
-		elseif self._modoSelecao == "Movimentacao" and not self._movimento then
-			self:IniciarReposicionamento()
+		elseif self._modoSelecao == "Recolhimento" or self._modoSelecao == "Venda"
+			or self._modoSelecao == "Blueprint"
+			or ((self._modoSelecao == "Copia" or self._modoSelecao == "Movimentacao") and not self._movimento) then
+			local inicio = UserInputService:GetMouseLocation()
+			self._arrasteSelecao = {
+				Inicio = inicio,
+				AlturaInicial = 0,
+				AjusteAlturaInicial = 0,
+				Altura = 0,
+				ComShift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+					or UserInputService:IsKeyDown(Enum.KeyCode.RightShift),
+			}
+			self:_CapturarRodaSelecao()
+		elseif not self._previa and not self._modoSelecao then
+			self:_SelecionarPecaNoCursor()
 		else
 			self:ConfirmarColocacao()
 		end
 		return
 	end
-	if entrada.UserInputType == Enum.UserInputType.MouseButton3 then
-		self:CopiarApontada()
-		return
-	end
-
-	local tecla = entrada.KeyCode
 	local maquinaId = self._atalhosMaquinas[tecla]
 
 	if maquinaId then
 		self:SelecionarMaquina(maquinaId)
 		return
 	end
+	if tecla == Enum.KeyCode.B then
+		if estado ~= "CriacaoBlueprint" then self:AlternarBlueprints() end
+		return
+	end
+	if tecla == Enum.KeyCode.U or tecla == Enum.KeyCode.P then
+		self:AlternarPainelCentral(tecla == Enum.KeyCode.U and "Upgrades" or "Prestigio")
+		return
+	end
 
-	if tecla == Enum.KeyCode.X or tecla == Enum.KeyCode.M then
-		local modo = tecla == Enum.KeyCode.X and "Recolhimento" or "Movimentacao"
+	if tecla == Enum.KeyCode.Z or tecla == Enum.KeyCode.X or tecla == Enum.KeyCode.C or tecla == Enum.KeyCode.V then
+		local modo = if tecla == Enum.KeyCode.Z then "Recolhimento"
+			elseif tecla == Enum.KeyCode.X then "Movimentacao"
+			elseif tecla == Enum.KeyCode.C then "Copia" else "Venda"
 		local jaAtivo = self._modoSelecao == modo
-		self:_EncerrarAcao()
+		if not self:_EncerrarAcao() then return end
 		if not jaAtivo and self:_IniciarSelecaoTerreno(modo) then
 			self.Navegacao:Abrir(modo, function()
 				self.Navegacao:Fechar("Reposicionamento")
@@ -519,6 +1490,7 @@ end
 -- camera, da superficie apontada, da grade e das bordas; em seguida solicita a animacao da previa.
 function ControladorConstrucao:Atualizar(deltaTime)
 	if self._destruido then return end
+	self:_AtualizarDestaqueHover()
 	if self._modoSelecao and not self._movimento then
 		if not self._colocando then
 			self:_AtualizarSelecaoTerreno()
@@ -526,22 +1498,12 @@ function ControladorConstrucao:Atualizar(deltaTime)
 		return
 	end
 
-	if not self._previa then
-		return
-	end
-
-	if self._movimento and ((self._movimento.Maquina.Parent ~= nil
-			and self._movimento.Maquina.Parent ~= self._movimento.PaiOriginal)
-		or self._movimento.PaiOriginal ~= self._maquinas
-		or self._movimento.Maquina:GetAttribute("DonoUserId") ~= self._jogador.UserId
-		or self._movimento.Maquina:GetAttribute("TerrenoId") ~= self._terreno:GetAttribute("TerrenoId"))
-	then
-		self.Navegacao:Fechar("Reposicionamento")
-		return
-	end
+	if not self._previa then return end
 
 	if self._colocando then
-		if self._alvoColocacao then
+		if self._movimento and self._movimento.Grupo then
+			self:_AnimarPreviasGrupo(deltaTime)
+		elseif self._alvoColocacao then
 			self._previa:Animar(self._alvoColocacao, deltaTime)
 		end
 
@@ -561,7 +1523,11 @@ function ControladorConstrucao:Atualizar(deltaTime)
 	-- depender da posicao mundial do terreno.
 	local origem = Geometria.Origem(self._piso)
 
-	self._previa:AtualizarVolumes(origem, deltaTime)
+	if self._movimento and self._movimento.Grupo then
+		for _, peca in self._movimento.Pecas do peca.Previa:AtualizarVolumes(origem, deltaTime) end
+	else
+		self._previa:AtualizarVolumes(origem, deltaTime)
+	end
 	if self._rPressionado and self._ancoraRotacao then
 		self:_AtualizarAlvoRotacao(deltaTime)
 		return
@@ -609,7 +1575,8 @@ function ControladorConstrucao:Atualizar(deltaTime)
 			ponto = parede
 		else
 			if self._alvoColocacao then
-				self._previa:Animar(self._alvoColocacao, deltaTime)
+				if self._movimento and self._movimento.Grupo then self:_AnimarPreviasGrupo(deltaTime)
+				else self._previa:Animar(self._alvoColocacao, deltaTime) end
 			end
 			return
 		end
@@ -631,7 +1598,8 @@ function ControladorConstrucao:Atualizar(deltaTime)
 			normal = Geometria.EixoDaFace(origem:VectorToObjectSpace(resultado.Normal))
 		else
 			if self._alvoColocacao then
-				self._previa:Animar(self._alvoColocacao, deltaTime)
+				if self._movimento and self._movimento.Grupo then self:_AnimarPreviasGrupo(deltaTime)
+				else self._previa:Animar(self._alvoColocacao, deltaTime) end
 				return
 			end
 
@@ -653,7 +1621,10 @@ function ControladorConstrucao:Atualizar(deltaTime)
 		z = math.round((ponto.Z - ancora.Z) / passoGrade) * passoGrade
 	else
 		x = Geometria.EncaixarEixo(ponto.X, normal.X, ocupado.X)
-		y = Geometria.EncaixarEixo(ponto.Y, normal.Y, ocupado.Y)
+		-- Em faces verticais, o bloco sob o cursor define a camada da base; centralizar a fornalha alta no ponto
+		-- fazia o volume de 12 studs permanecer uma camada abaixo do que o usuario apontava.
+		y = if normal.Y == 0 then math.floor((ponto.Y + tolerancia) / passoGrade) * passoGrade
+			else Geometria.EncaixarEixo(ponto.Y, normal.Y, ocupado.Y)
 		z = Geometria.EncaixarEixo(ponto.Z, normal.Z, ocupado.Z)
 	end
 
@@ -707,7 +1678,11 @@ function ControladorConstrucao:Atualizar(deltaTime)
 		ocupado = ocupado,
 	}
 
-	self._previa:Animar(self._alvoColocacao, deltaTime)
+	if self._movimento and self._movimento.Grupo then
+		self:_AtualizarAlvosGrupo(self._alvoColocacao, origem, deltaTime)
+	else
+		self._previa:Animar(self._alvoColocacao, deltaTime)
+	end
 end
 
 -- Atalho especifico do comando E para abrir ou fechar Inventario pelo mesmo fluxo usado pelas outras abas.
@@ -719,6 +1694,7 @@ end
 -- pilha, mantendo Q como cancelamento da acao mais recente.
 function ControladorConstrucao:AbrirAba(aba)
 	if self._destruido or self._colocando or (aba ~= "Inventario" and aba ~= "Loja") then return end
+	self.Navegacao:Fechar("MenuPeca")
 	self._abaSelecionada = aba
 	if not self.Navegacao:Focar(aba) then
 		self.Navegacao:Abrir(aba, function() self:FecharFicha(aba) end)
@@ -729,6 +1705,8 @@ function ControladorConstrucao:AbrirAba(aba)
 	self.Navegacao:Focar("Movimentacao")
 	self.Navegacao:Focar("Reposicionamento")
 	self.Navegacao:Focar("Rotacao")
+	self.Navegacao:Focar("Copia")
+	self.Navegacao:Focar("Venda")
 end
 
 -- Se a aba recebida ja existe na pilha, fecha esse estado e deixa suas rotinas de saida limparem a ficha. Caso
@@ -738,15 +1716,103 @@ function ControladorConstrucao:AlternarAba(aba)
 	if self.Navegacao:Contem(aba) then self.Navegacao:Fechar(aba) else self:AbrirAba(aba) end
 end
 
--- Fecha rotacao, colocacao, movimento e recolhimento por seus nomes, disparando as limpezas dos modos. As
+-- Fecha rotacao, colocacao, movimento, copia, venda e recolhimento por seus nomes, disparando as limpezas. As
 -- listas da loja e do inventario permanecem na pilha.
 function ControladorConstrucao:_EncerrarAcao()
-	if self._movimento then self:CancelarReposicionamento() end
+	if self._movimento and not self:CancelarReposicionamento() then return false end
+	self.Navegacao:Fechar("MenuPeca")
 	self.Navegacao:Fechar("Rotacao")
 	self.Navegacao:Fechar("Colocacao")
 	self.Navegacao:Fechar("Reposicionamento")
 	self.Navegacao:Fechar("Recolhimento")
 	self.Navegacao:Fechar("Movimentacao")
+	self.Navegacao:Fechar("Copia")
+	self.Navegacao:Fechar("Venda")
+	return true
+end
+
+-- Abre ou fecha a lista de blueprints sem sobrepor um posicionamento ou outro modo de selecao ativo.
+function ControladorConstrucao:AlternarBlueprints()
+	return self:AlternarPainelCentral("Blueprints")
+end
+
+-- As abas usam a mesma regiao central; trocar de aba preserva inventario e loja nas laterais.
+function ControladorConstrucao:AlternarPainelCentral(aba)
+	if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" then return false end
+	if self._destruido or self._colocando or self._previa or self._movimento or self._modoSelecao then return false end
+	if self.Navegacao:Contem(aba) then
+		self.Navegacao:Fechar(aba)
+	else
+		self.Navegacao:Fechar("MenuPeca")
+		for _, nome in { "Blueprints", "Upgrades", "Prestigio", "Configuracoes" } do self.Navegacao:Fechar(nome) end
+		self.Navegacao:Abrir(aba)
+	end
+	return true
+end
+
+-- Inicia uma unica selecao 3D; Q encerra a selecao e retorna a lista de blueprints sem alterar o terreno.
+function ControladorConstrucao:IniciarCriacaoBlueprint(nome)
+	if self._destruido or self._colocando or self._previa or self._movimento or self._modoSelecao then
+		return false, "Encerre a acao atual antes de criar um blueprint."
+	end
+	if not self:_IniciarSelecaoTerreno("Blueprint") then return false, "Sua plot ainda nao esta disponivel." end
+	self._nomeBlueprintEmCriacao = nome
+	for _, aba in { "Inventario", "Loja", "Blueprints" } do self.Navegacao:Fechar(aba) end
+	self.Navegacao:Abrir("CriacaoBlueprint", function()
+		self:EncerrarSelecaoTerreno()
+		self._nomeBlueprintEmCriacao = nil
+		if not self._destruido and not self.Navegacao:Contem("Blueprints") then
+			self.Navegacao:Abrir("Blueprints")
+		end
+	end)
+	return true
+end
+
+-- Faz a leitura pela rede e devolve o erro ao painel, sem expor os registros completos do perfil.
+function ControladorConstrucao:ListarBlueprints()
+	if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
+	local comunicou, sucesso, mensagem, blueprints = pcall(function()
+		return self._redeConstrucao:fetch("ListarBlueprints")
+	end)
+	if not comunicou then return false, "Nao foi possivel carregar os blueprints." end
+	if type(sucesso) ~= "boolean" or type(mensagem) ~= "string" or (sucesso and type(blueprints) ~= "table") then
+		return false, "Resposta invalida ao carregar os blueprints."
+	end
+	return sucesso, mensagem, blueprints
+end
+
+-- Consome a resposta do ultimo salvamento para que a interface a mostre uma unica vez.
+function ControladorConstrucao:ObterResultadoBlueprint()
+	local resultado = self._resultadoBlueprint
+	self._resultadoBlueprint = nil
+	return resultado
+end
+
+-- Prepara a formacao salva como uma previa de grupo; o servidor conserva o token e cobrara as pecas ao confirmar.
+function ControladorConstrucao:ColocarBlueprint(identificador)
+	if self._destruido or self._colocando or self._previa or not self.Navegacao:Contem("Blueprints") then
+		return false, "Blueprint indisponivel agora."
+	end
+	self._colocando = true
+	local revisao = self.Navegacao.Revisao
+	local comunicou, sucesso, mensagem, resposta = pcall(function()
+		return self._redeConstrucao:fetch("PrepararBlueprint", identificador)
+	end)
+	self._colocando = false
+	if self._destruido then return false, "A construcao foi encerrada." end
+	if self.Navegacao.Revisao ~= revisao then return false, "A tela mudou antes de preparar o blueprint." end
+	if not comunicou then return false, "Nao foi possivel preparar o blueprint." end
+	if type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+		return false, "Resposta invalida ao preparar o blueprint."
+	end
+	if not sucesso then return false, mensagem end
+	if type(resposta) ~= "table" or type(resposta.BlueprintNome) ~= "string" then
+		return false, "Resposta invalida ao preparar o blueprint."
+	end
+	self.Navegacao:Fechar("Blueprints")
+	local iniciou = self:_IniciarPreviaCopiaGrupo(resposta, resposta.BlueprintNome, nil)
+	if not iniciou then return false, "Nao foi possivel montar a previa do blueprint." end
+	return true
 end
 
 -- Encerra a colocacao vinculada a esta aba, se houver, e fecha sua ficha. A rotina de saida da ficha descarta
@@ -764,7 +1830,7 @@ function ControladorConstrucao:SelecionarMaquina(maquinaId, aba, copia)
 	aba = aba or (self.Navegacao:Contem(self._abaSelecionada) and self._abaSelecionada
 		or (self.Navegacao:Contem("Loja") and "Loja" or "Inventario"))
 	if aba ~= "Inventario" and aba ~= "Loja" then return false end
-	self:_EncerrarAcao()
+	if not self:_EncerrarAcao() then return false end
 	self:AbrirAba(aba)
 	-- Reutiliza o Id e a rotacao somente se a mesma escolha comum continua selecionada. Trocar de tipo ou
 	-- iniciar uma copia cria outra selecao e descarta a orientacao temporaria anterior.
@@ -795,8 +1861,8 @@ function ControladorConstrucao:_AbrirDetalhes(aba)
 end
 
 -- Inicia a previa a partir da ficha da aba recebida; devolve false se a selecao ou o estoque nao permitem
--- isso. fecharAbas=true e usado pelo clique duplo: captura a escolha, fecha os paineis e preserva a peca para
--- a colocacao; o botao Colocar usa o fluxo com fichas abertas.
+-- isso. fecharAbas=true e usado pelas acoes que iniciam colocacao a partir da ficha: captura a escolha,
+-- fecha os paineis e preserva a peca para a colocacao.
 function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	aba = aba or self._abaSelecionada
 	local selecao = self._selecoes:Obter(aba)
@@ -806,7 +1872,7 @@ function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 		or (aba == "Inventario" and quantidade == 0 and not selecao.Copia) then return false end
 	if self._abaColocacao == aba and self._previa then return true end
 	if fecharAbas and not self:_EncontrarTerreno() then return false end
-	self:_EncerrarAcao()
+	if not self:_EncerrarAcao() then return false end
 	-- A selecao local foi capturada antes de fechar as fichas, preservando a configuracao do clique duplo.
 	if fecharAbas then
 		self.Navegacao:Fechar("Inventario")
@@ -881,7 +1947,39 @@ end
 -- Recebe a liberacao de uma tecla ou botao. Soltar o mouse termina o arraste; soltar R aplica um giro simples
 -- em Y somente quando R nao foi usado para arrastar nem cancelado por outra tela.
 function ControladorConstrucao:FinalizarEntrada(entrada)
-	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then self._arraste = nil end
+	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
+		self._arraste = nil
+		local arraste = self._arrasteSelecao
+		if arraste and arraste.Arrastando then
+			self:_AtualizarArrasteSelecao(UserInputService:GetMouseLocation())
+		end
+		self._arrasteSelecao = nil
+		if arraste then
+			ContextActionService:UnbindAction(acaoRodaSelecao)
+			self:_ExibirCaixaSelecao(false)
+			if arraste.Arrastando and self._modoSelecao == "Blueprint" then
+				self:_SalvarBlueprintDaSelecao()
+			elseif not arraste.Arrastando and self._modoSelecao and not self._movimento then
+				self:_AtualizarSelecaoTerreno()
+				local maquina = self._maquinaSelecionada
+				if maquina then
+					if arraste.ComShift then
+						self:_AlternarPecaSelecionada(maquina)
+					elseif self._modoSelecao == "Movimentacao" then
+						self:IniciarReposicionamento(maquina)
+					elseif self._modoSelecao == "Copia" then
+						self:IniciarCopiaGrupo(maquina)
+					elseif self._modoSelecao == "Venda" then
+						self:ConfirmarVendaTerreno()
+					elseif self._modoSelecao == "Recolhimento"
+						and (#self._pecasSelecionadas == 0 or table.find(self._pecasSelecionadas, maquina))
+					then
+						self:ConfirmarRecolhimento()
+					end
+				end
+			end
+		end
+	end
 	if entrada.KeyCode == Enum.KeyCode.R and self._rPressionado then
 		local girar = self.Navegacao:Atual() == "Rotacao"
 			and not self._rConsumido and not UserInputService:GetFocusedTextBox()
@@ -911,9 +2009,77 @@ function ControladorConstrucao:_IniciarArraste()
 		Vector2.new(centroTela.X, centroTela.Y), raioTela)
 end
 
--- Mantem o centro ao girar; a troca das dimensoes ainda exige encaixar o canto na grade e nos limites.
--- Recalcula o canto e o volume depois de girar, mantendo como referencia o centro capturado no inicio do
--- gesto. Respeita a altura fixa, encaixa nas bordas e marca se o novo espaco continua livre.
+-- Anima primeiro a ancora e aplica o mesmo transform relativo a cada membro do grupo. Os alvos continuam
+-- separados para validar limites e ocupacao, mas os modelos visuais nao interpolam trajetorias independentes.
+function ControladorConstrucao:_AnimarPreviasGrupo(deltaTime)
+	local alvos = self._alvosGrupo
+	if not alvos or #alvos == 0 then return end
+
+	local ancora = alvos[1]
+	ancora.Peca.Previa:Animar(ancora.Alvo, deltaTime)
+	local cframeVisualAncora = ancora.Peca.Previa:ObterCFrameVisual()
+
+	for indice = 2, #alvos do
+		local item = alvos[indice]
+		local relativo = ancora.Alvo.caixaDestino:ToObjectSpace(item.Alvo.caixaDestino)
+		item.Peca.Previa:Animar(item.Alvo, deltaTime, cframeVisualAncora * relativo)
+	end
+end
+
+-- Aplica a rotacao relativa ao redor da peca clicada, conserva os centros relativos dos volumes e verifica
+-- limites, obstaculos e sobreposicoes antes de permitir confirmar o grupo.
+function ControladorConstrucao:_AtualizarAlvosGrupo(alvoAncora, origem, deltaTime)
+	local movimento = self._movimento
+	if not movimento or not movimento.Grupo then return end
+	local ancora = movimento.Pecas[1]
+	local deltaRotacao = alvoAncora.rotacao * ancora.RotacaoInicial:Inverse()
+	local centroAncora = alvoAncora.minimo + alvoAncora.ocupado / 2
+	local alvos, livres = {}, true
+	for _, peca in movimento.Pecas do
+		local rotacao = assert(RotacaoConstrucao.ValidarNaGrade(deltaRotacao * peca.RotacaoInicial))
+		local extensao, ocupado = peca.Previa:ObterVolume():Calcular(rotacao)
+		local centro = centroAncora + deltaRotacao:VectorToWorldSpace(peca.DeslocamentoInicial)
+		local minimo = Vector3.new(
+			math.round((centro.X - ocupado.X / 2) / passoGrade) * passoGrade,
+			math.round((centro.Y - ocupado.Y / 2) / passoGrade) * passoGrade,
+			math.round((centro.Z - ocupado.Z / 2) / passoGrade) * passoGrade
+		)
+		local dentro = minimo.X >= 0 and minimo.Y >= 0 and minimo.Z >= 0
+			and minimo.X + ocupado.X <= self._piso.Size.X + tolerancia
+			and minimo.Z + ocupado.Z <= self._piso.Size.Z + tolerancia
+		local livre = dentro and peca.Previa:VolumeLivre(origem, minimo, ocupado)
+		local caixaDestino = origem * CFrame.new(
+			minimo + Vector3.new(ocupado.X / 2, extensao.Y, ocupado.Z / 2)
+		) * rotacao
+		local alvo = {
+			maquinaId = peca.MaquinaId, minimo = minimo, rotacao = rotacao, ocupado = ocupado,
+			caixaDestino = caixaDestino, volumeDestino = Geometria.CFrameDoVolume(origem, minimo, ocupado),
+			livre = livre,
+		}
+		if not livre then livres = false end
+		table.insert(alvos, { Peca = peca, Alvo = alvo })
+	end
+
+	-- Cada par e comparado como volumes alinhados a grade. Se uma peca do conjunto intercepta outra, as duas
+	-- previas ficam vermelhas e o servidor nao recebe uma confirmacao parcial.
+	for indice, item in alvos do
+		local a, b = item.Alvo.minimo, item.Alvo.minimo + item.Alvo.ocupado
+		for anteriorIndice = 1, indice - 1 do
+			local anterior = alvos[anteriorIndice].Alvo
+			local c, d = anterior.minimo, anterior.minimo + anterior.ocupado
+			if a.X < d.X - tolerancia and b.X > c.X + tolerancia
+				and a.Y < d.Y - tolerancia and b.Y > c.Y + tolerancia
+				and a.Z < d.Z - tolerancia and b.Z > c.Z + tolerancia
+			then
+				item.Alvo.livre, anterior.livre, livres = false, false, false
+			end
+		end
+	end
+	alvoAncora.livre = livres
+	self._alvosGrupo = alvos
+	self:_AnimarPreviasGrupo(deltaTime)
+end
+
 function ControladorConstrucao:_AtualizarAlvoRotacao(deltaTime)
 	local extensao, ocupado = self._previa:ObterVolume():Calcular(self._rotacao)
 	local maxX = math.floor((self._piso.Size.X - ocupado.X) / passoGrade + tolerancia) * passoGrade
@@ -935,7 +2101,11 @@ function ControladorConstrucao:_AtualizarAlvoRotacao(deltaTime)
 		livre = self._previa:VolumeLivre(origem, minimo, ocupado),
 	}
 	self._ultimoEncaixe = minimo + Vector3.new(ocupado.X / 2, 0, ocupado.Z / 2)
-	self._previa:Animar(self._alvoColocacao, deltaTime)
+	if self._movimento and self._movimento.Grupo then
+		self:_AtualizarAlvosGrupo(self._alvoColocacao, origem, deltaTime)
+	else
+		self._previa:Animar(self._alvoColocacao, deltaTime)
+	end
 end
 
 -- Quando a variante publicada do estoque muda, recria a previa com essa configuracao. Ignora compras em
@@ -963,36 +2133,6 @@ function ControladorConstrucao:_MaquinaSobMouse()
 		and objeto:GetAttribute("TerrenoId") == self._terreno:GetAttribute("TerrenoId")
 	then return objeto end
 	return nil
-end
-
--- Solicita ao servidor a captura da peca sob o cursor e abre um estado cancelavel enquanto espera. Valida a
--- resposta e seleciona a copia no inventario; a original fica no mundo e nenhuma colocacao e confirmada aqui.
-function ControladorConstrucao:CopiarApontada()
-	if self._destruido or self._colocando or not self:_EncontrarTerreno() then return end
-	local maquina = self:_MaquinaSobMouse()
-	if not maquina then return end
-	self.Navegacao:Abrir("Copiando")
-	-- A revisao identifica o estado antes da espera. Se Q ou outra navegacao muda a pilha, a resposta de copia
-	-- nao deve selecionar algo que o jogador cancelou.
-	local revisao = self.Navegacao.Revisao
-	self._colocando = true
-	local comunicou, sucesso, mensagem, copia = pcall(function()
-		return self._redeConstrucao:fetch("Copiar", maquina)
-	end)
-	if self._destruido then return end
-	self._colocando = false
-	if self.Navegacao.Revisao ~= revisao then
-		self.Navegacao:Fechar("Copiando")
-		return
-	end
-	self.Navegacao:Voltar()
-	if not comunicou then warn("Nao foi possivel copiar a peca."); return end
-	if not sucesso then warn(mensagem); return end
-	if type(copia) ~= "table" or not CatalogoMaquinas[copia.MaquinaId]
-		or type(copia.Token) ~= "number" or not RotacaoConstrucao.ValidarNaGrade(copia.Rotacao)
-	then warn("Resposta de copia invalida."); return end
-	self:SelecionarMaquina(copia.MaquinaId, "Inventario", copia)
-	print(mensagem)
 end
 
 -- Recebe X, Y ou Z e acumula um quarto de volta nesse eixo do referencial da construcao. So modifica uma

@@ -23,16 +23,18 @@ end
 -- Recebe o tempo da simulacao e gera uma unidade somente quando o intervalo venceu e os dados do dono estao
 -- ativos. Usa o CFrame da saida e registra corpo e expiracao na simulacao.
 function SoltadorMinerio:Atualizar(agora)
-	if not self:EstaAtivo() or agora < self._proximaGeracao or not self._maquina:ObterDadosDono() then return end
+	if not self:EstaAtivo() or agora + 0.000000001 < self._proximaGeracao or not self._maquina:ObterDadosDono() then return end
 	-- Agenda a proxima tentativa no mesmo relogio usado pela simulacao. A saida do modelo determina a pose
 	-- inicial; Criar monta a Part e RegistrarMinerio inicia seu movimento e expiracao.
 	self._proximaGeracao = agora + self._configuracao.Intervalo
-	local saida = self._maquina:ObterModelo():FindFirstChild(self._configuracao.Saida)
-	if not saida or not saida:IsA("BasePart") then
+	local saida = self._maquina:ObterModelo():FindFirstChild(self._configuracao.Saida, true)
+	if not saida or not (saida:IsA("BasePart") or saida:IsA("Attachment")) then
 		warn("Soltador sem saida valida: " .. self._maquina:ObterModelo():GetFullName())
 		return
 	end
-	local minerio = Minerio.Criar(self._configuracao.Minerio, saida.CFrame, self._maquina:ObterTerreno())
+	-- Attachments marcam bocais externos sem aumentar a caixa ocupada pelo modelo.
+	local pose = if saida:IsA("Attachment") then saida.WorldCFrame else saida.CFrame
+	local minerio = Minerio.Criar(self._configuracao.Minerio, pose, self._maquina:ObterTerreno())
 	local simulacao = assert(self._maquina:ObterSimulacao(), "Soltador sem simulacao de minerios.")
 	simulacao:RegistrarMinerio(minerio, self._configuracao.TempoVida, self._configuracao.Minerio)
 end

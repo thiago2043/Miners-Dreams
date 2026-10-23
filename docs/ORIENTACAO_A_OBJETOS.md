@@ -40,7 +40,13 @@ Isso registra um recurso no Rojo; não exige alterar a lógica de geração, inv
 
 `PainelPecas` é reutilizado por duas instâncias independentes, uma para inventário e outra para loja; cada uma mantém lista, ficha, resposta e detecção de clique duplo. `SelecionarMaquina(id, aba)` abre `FichaInventario` ou `FichaLoja` sem fechar a outra seleção. `ColocarSelecionada(aba)` inicia a colocação pelo botão ou clique duplo; `AbrirAba` abre e foca um painel. `NavegacaoEstados:Focar` muda a ordem de retorno por Q sem encerrar o estado. A loja solicita a configuração padrão ao servidor; o cliente não fornece suas estatísticas. A venda continua passando por `ServicoLoja`, `DataManager.VenderMaquina` e `DadosJogador:VenderMaquina`, consumindo a unidade exibida e devolvendo o preço integral do catálogo.
 
-Cada lista e ficha possui seu próprio `UIListLayout`, conteúdo de altura automática e rolagem calculada por `AbsoluteContentSize`. A ficha do inventário fica à sua direita e a da loja à sua esquerda. Um clique duplo fecha os quatro painéis e inicia a colocação com a seleção capturada; o botão Colocar conserva os painéis abertos.
+`GradePecas` é a classe de apresentação compartilhada por loja e inventário. Cada instância tem pesquisa, ordenação, cartões e miniaturas independentes; `MiniaturaPeca` possui o clone visual, o viewport e a câmera de cada cartão. O inventário mostra quantidades e esconde estoque zero; a loja mostra preços e permite filtrar os componentes de geração, transporte, modificação e venda. Uma peça com mais de um comportamento aparece em mais de uma categoria. `IconesAbas` desenha os símbolos dos botões e categorias com funções sem estado; o objeto `Botao` continua responsável pela conexão de ativação.
+
+`FichaPeca` possui a apresentação dos detalhes, com uma instância independente por aba: retrato, nome, faixa dos comportamentos e estatísticas roláveis. No inventário mostra quantidade e personalizações da unidade, com Colocar/Vender no rodapé. Na loja mostra o preço e o modelo padrão, com Comprar num rodapé verde. Cada ficha fica no lado interno de sua lista; disponibilidade e transações continuam em `PainelPecas`. O retrato conserva uma única miniatura até mudar de tipo ou configuração, sem recriá-la por mudança de quantidade. Nenhuma raridade é atribuída pela interface.
+
+O retrato se limita a 20% da altura da ficha e a 96 pixels, preservando espaço para as estatísticas em janelas baixas. As ações dividem uma única linha fixa; informações longas continuam acessíveis pela rolagem. A antiga faixa inferior de instruções foi removida do HUD, sem alterar os controles do jogo.
+
+As grades usam `UIGridLayout` e as fichas usam `UIListLayout`, com conteúdo de altura automática e rolagem calculada por `AbsoluteContentSize`. A ficha do inventário fica à sua direita e a da loja à sua esquerda. O clique duplo e o botão Colocar fecham as abas e iniciam a colocação com a seleção capturada. Alterar pesquisa, categoria ou ordenação invalida o primeiro clique de uma possível sequência de clique duplo.
 
 Se `Blocos` for omitido, `VolumeConstrucao` calcula a ocupação arredondando as dimensões do modelo para a grade. Se for declarado, precisa comportar o modelo; um volume menor causa um erro de configuração. As rotações também giram esse volume. Os atributos `VolumeMinimo` e `VolumeOcupado` das cópias colocadas são gerados no servidor para que a colisão e a prévia usem o mesmo espaço reservado.
 
@@ -91,12 +97,22 @@ Um comportamento realmente diferente precisa de implementação própria. Nesse 
 | `PreviaConstrucao` | Possui o modelo temporário, caixas, consulta de ocupação e animação; libera esses recursos ao encerrar. |
 | `SelecaoPecas` | Guarda seleções em estado privado e publica visões imutáveis com identificadores. |
 | `InterfaceJogo` | Constrói o HUD e os dois painéis, atualizando-os pelos atributos replicados. |
+| `PainelMoedas` | Possui os três campos do HUD; apresenta o dinheiro decimal e reserva espaço para duas moedas ainda não definidas. |
+| `ProgressaoLogaritmica` | Compara marcos decimais exatos e calcula a fração visual entre eles. |
+| `RegraReencarnacao` | Calcula vidas disponíveis com custo que aumenta por operação, independentemente das vidas puladas. |
+| `ReinicioProgresso` | Prepara dados iniciais preservando somente as categorias escolhidas pela mecânica chamadora. |
+| `ServicoPrestigio` | Valida o pedido remoto e coordena o reinício com o serviço de construção. |
+| `PainelPrestigio` / `BarraProgressao` | Apresentam o estado e a estimativa; a barra pode receber qualquer escala calculada. |
 | `PainelPecas` | Possui uma lista e sua ficha; interpreta clique simples/duplo e acompanha a resposta da loja. |
 | `Botao` | Possui um botão, controla sua disponibilidade e encerra a conexão da ação. |
 
 Velocidade, valor e tamanho são propriedades dos objetos apropriados. Seus métodos concentram as operações e validações. Assim, ajustar uma estatística não exige criar uma classe para cada número.
 
 ## Relação com as aulas
+
+A reencarnação inicial exige 1qd (`10^15`) de saldo disponível. `Reencarnacoes` conta operações e aumenta o expoente do custo em um por operação. `Vidas` começa em 1 e recebe uma vida por marco completo a partir do requisito atual. Assim, com `10^19` no primeiro ciclo, a vida passa de 1 para 6, a contagem de reencarnações passa para 1 e o novo requisito é `10^16`. A barra mostra o progresso logarítmico até o requisito ou, quando ele já foi atingido, até o próximo salto.
+
+O reinício volta ao template inicial, incluindo o kit no inventário. A política de reencarnação preserva `Blueprints` e `RecompensasReencarnacao`; outra mecânica pode criar sua própria instância de `ReinicioProgresso` sem preservar as recompensas. Nenhuma recompensa nova é concedida enquanto elas não forem definidas. O servidor recalcula os saltos, recusa ciclos antigos e remove máquinas, minérios e tokens antes de sincronizar o novo estado. O ProfileStore continua responsável pela persistência; os testes locais não acessam perfis reais.
 
 - **Construtor:** `DadosJogador.new(jogador, perfil)` cria uma instância ligada à sessão do jogador. Em C++ seria o papel do construtor.
 - **Método de instância:** `dados:ComprarMaquina(id)` passa `dados` implicitamente como `self`. É equivalente a `dados.ComprarMaquina(dados, id)`.
