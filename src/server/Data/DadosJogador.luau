@@ -1,15 +1,23 @@
 -- Concentra saldo, estoque e construcoes de uma sessao ativa; os atributos do jogador publicam esses dados
 -- para a interface.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
+local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
+local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
+local Classificacao = require(ReplicatedStorage.Shared.Classificacao)
 local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local RegraReencarnacao = require(ReplicatedStorage.Shared.RegraReencarnacao)
 local ReinicioProgresso = require(script.Parent.ReinicioProgresso)
+local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso" })
+local reinicioTotal = ReinicioProgresso.new(Template,{})
+local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
 local DadosJogador = {}
 DadosJogador.__index = DadosJogador
@@ -26,13 +34,13 @@ end
 function DadosJogador.new(jogador, perfil)
 	-- O objeto guarda quem recebe os atributos e qual perfil deve ser alterado. Os metodos compartilham essa
 	-- sessao; criar o objeto nao faz uma copia nem abre outra sessao.
-	return setmetatable({ _jogador = jogador, _perfil = perfil }, DadosJogador)
+	return setmetatable({ _jogador = jogador, _perfil = perfil, _ganhos = "0", _recebido="0", _amostrasGanhos={} }, DadosJogador)
 end
 
 -- Consulta IsActive do perfil antes de permitir alteracoes de jogo. A sessao pode terminar enquanto o jogador
 -- ainda existe localmente.
 function DadosJogador:EstaAtivo()
-	return self._perfil:IsActive()
+	return self._perfil:IsActive() and not self._suspenso
 end
 
 -- Devolve Dinheiro do perfil como string decimal. O saldo nao e convertido para number, preservando a
@@ -72,7 +80,7 @@ function DadosJogador:AdicionarBlueprint(blueprint)
 	local blueprints = self._perfil.Data.Blueprints
 	if type(blueprints) ~= "table" or type(blueprint.Id) ~= "string"
 		or type(blueprint.Nome) ~= "string" or type(blueprint.Pecas) ~= "table"
-		or #blueprint.Pecas < 1 or #blueprint.Pecas > 60
+		or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
 	then
 		return false, "Blueprint invalido."
 	end
@@ -122,9 +130,24 @@ function DadosJogador:_GravarVariantes(maquinaId, variantes)
 	dados.InventarioPersonalizado[maquinaId] = variantes
 end
 
--- Publica saldo e estoque de todo o catalogo nos atributos do jogador depois de carregar os dados. Atualiza a
--- apresentacao do cliente; nao executa um salvamento no DataStore.
+-- Resumo derivado dos registros, sem depender das instancias que podem estar ocultas durante um movimento.
+function DadosJogador:PublicarResumoPlot()
+	local registros=self._perfil.Data.MaquinasColocadas
+	if type(registros)~="table" then self._jogador:SetAttribute("PecasNaPlot",nil); return end
+	local contagens={}
+	for _,registro in registros do
+		local id=type(registro)=="table" and registro.MaquinaId
+		if id and CatalogoMaquinas[id] then contagens[id]=(contagens[id] or 0)+1 end
+	end
+	self._jogador:SetAttribute("PecasNaPlot",HttpService:JSONEncode(contagens))
+end
+
+-- Publica os dados replicados depois do carregamento ou de uma alteracao completa de progresso.
 function DadosJogador:Sincronizar()
+	self:RegistrarRecorde("Vidas", string.format("%.0f", self._perfil.Data.Vidas or 1))
+	self:RegistrarRecorde("Dinheiro", self:ObterSaldo())
+	for _,item in Upgrades.Itens do self._jogador:SetAttribute("Upgrade_"..item.Id,self:ObterUpgrade(item.Id)) end
+	self._jogador:SetAttribute("VelocidadeMotores",self:ObterVelocidadeMotores())
 	self._jogador:SetAttribute("Dinheiro", self:ObterSaldo())
 	-- Perfis antigos recebem os campos por Reconcile; os valores iniciais tambem permitem consultar dados legados.
 	self._jogador:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
@@ -132,6 +155,69 @@ function DadosJogador:Sincronizar()
 	for maquinaId in CatalogoMaquinas do
 		self:_PublicarInventario(maquinaId)
 	end
+	self:PublicarResumoPlot()
+	self:PublicarRecebimentos()
+end
+
+function DadosJogador:RegistrarRecorde(id, valor)
+	if not self:EstaAtivo() then return false end
+	local normalizado = Classificacao.Normalizar(valor)
+	if not normalizado then return false end
+	local recordes = self._perfil.Data.Recordes
+	if not recordes then recordes = {}; self._perfil.Data.Recordes = recordes end
+	local anterior = Classificacao.Normalizar(recordes[id]) or "0"
+	if not Classificacao.Maior(normalizado, anterior) then return false end
+	recordes[id] = normalizado
+	return true
+end
+
+function DadosJogador:ObterRecordes()
+	return table.clone(self._perfil.Data.Recordes or {}),self._perfil.Data.GeracaoProgresso or 0
+end
+
+function DadosJogador:ZerarProgresso()
+	if not self:EstaAtivo() then return false,"Perfil indisponível." end
+	local novo=reinicioTotal:Preparar({})
+	novo.GeracaoProgresso=(self._perfil.Data.GeracaoProgresso or 0)+1
+	novo.NomeJogador=self._jogador.Name
+	self._perfil.Data=novo
+	self._ganhos,self._ultimaTaxa="0","0"
+	table.clear(self._amostrasGanhos)
+	self._jogador:SetAttribute("GanhosPorSegundo","0")
+	return true,"Dados zerados. O jogador voltou ao início com o kit inicial."
+end
+
+function DadosJogador:ObterUpgrade(id) return Upgrades.Nivel(self._perfil.Data,id) end
+function DadosJogador:ObterVelocidadeMotores()
+	local n=self._perfil.Data.VelocidadeMotores or 0
+	return Upgrades.Valido(n) and math.min(n,self:ObterUpgrade("Motores")) or 0
+end
+function DadosJogador:ComprarUpgrade(id,nivelEsperado,ciclo)
+	if not self:EstaAtivo() or ciclo~=(self._perfil.Data.Reencarnacoes or 0) then return false,"A progressão mudou. Abra a aba novamente." end
+	local item=Upgrades.Item(id)
+	if not item then return false,"Upgrade inválido." end
+	local nivel=self:ObterUpgrade(id)
+	if nivelEsperado~=nivel or nivel>=#item.Precos then return false,"O nível mudou ou já está no máximo." end
+	local dados=self._perfil.Data
+	if (dados.Reencarnacoes or 0)<item.Renascimentos then return false,"Disponível após "..item.Renascimentos.." renascimento(s)." end
+	if not InteiroGrande.eValido(self:ObterSaldo()) then return false,"Saldo inválido." end
+	local saldo=InteiroGrande.subtrair(self:ObterSaldo(),item.Precos[nivel+1])
+	if not saldo then return false,"Dinheiro insuficiente." end
+	if id=="Expansao" then
+		dados.ExpansaoPlot=nivel+1
+	else
+		dados.Upgrades=dados.Upgrades or {}; dados.Upgrades[id]=nivel+1
+		if id=="Motores" then dados.VelocidadeMotores=nivel+1 end
+	end
+	self:_DefinirSaldo(saldo)
+	Historico.Evento(dados,"Upgrade",{Id=id,Nivel=nivel+1,Preco=item.Precos[nivel+1]})
+	self:Sincronizar(); return true,"Upgrade adquirido."
+end
+function DadosJogador:DefinirVelocidadeMotores(nivel)
+	if not self:EstaAtivo() or not Upgrades.Valido(nivel) or nivel>self:ObterUpgrade("Motores") then return false,"Velocidade não desbloqueada." end
+	self._perfil.Data.VelocidadeMotores=nivel
+	self._jogador:SetAttribute("VelocidadeMotores",nivel)
+	return true,"Velocidade alterada."
 end
 
 -- Consulta a regra com o saldo do perfil, sem confiar na quantidade de vidas sugerida pelo cliente.
@@ -152,8 +238,15 @@ function DadosJogador:Reencarnar(indiceEsperado)
 		or (dados.RecompensasReencarnacao ~= nil and type(dados.RecompensasReencarnacao) ~= "table")
 	then return false, "Dados persistentes invalidos; nenhum progresso foi reiniciado." end
 	local novo = reinicioReencarnacao:Preparar(dados)
+	local preparou = pcall(PremiosRenascimento.Aplicar, novo, dados, estado.VidasDisponiveis)
+	if not preparou then return false, "Recompensas invalidas; nenhum progresso foi reiniciado." end
 	novo.Reencarnacoes, novo.Vidas = estado.Reencarnacoes + 1, estado.VidaDestino
+	Historico.Evento(novo,"Renascimento",{VidasAntes=dados.Vidas,VidasDepois=novo.Vidas,Dinheiro=dados.Dinheiro})
 	self._perfil.Data = novo
+	self._ganhos,self._ultimaTaxa="0","0"
+	table.clear(self._amostrasGanhos)
+	self._jogador:SetAttribute("GanhosPorSegundo","0")
+	self:RegistrarRecorde("Vidas", string.format("%.0f", novo.Vidas))
 	return true, "Reencarnou: +" .. estado.VidasDisponiveis .. " vida(s).", estado
 end
 
@@ -167,8 +260,19 @@ end
 -- Grava a string decimal no perfil e no atributo Dinheiro, fazendo o HUD acompanhar a mudanca. As validacoes
 -- pertencem a operacao que calculou esse novo saldo.
 function DadosJogador:_DefinirSaldo(saldo)
+	local anterior=self:ObterSaldo()
+	local ganho=InteiroGrande.eValido(anterior) and InteiroGrande.subtrair(saldo,anterior)
+	if ganho and ganho~="0" then self._recebido=InteiroGrande.somar(self._recebido,ganho) end
 	self._perfil.Data.Dinheiro = saldo
+	self:RegistrarRecorde("Dinheiro", saldo)
 	self._jogador:SetAttribute("Dinheiro", saldo)
+end
+
+function DadosJogador:PublicarRecebimentos()
+	if self._recebido~=self._recebidoPublicado then
+		self._recebidoPublicado=self._recebido
+		self._jogador:SetAttribute("DinheiroRecebido",self._recebido)
+	end
 end
 
 -- Recebe um valor decimal nao negativo e tenta soma-lo ao saldo de uma sessao ativa. Devolve true quando o
@@ -181,7 +285,27 @@ function DadosJogador:AdicionarDinheiro(valor)
 		return false
 	end
 	self:_DefinirSaldo(InteiroGrande.somar(saldo, valor))
+	self._ganhos = InteiroGrande.somar(self._ganhos, valor)
 	return true
+end
+
+function DadosJogador:PublicarGanhosPorSegundo(segundos)
+	assert(type(segundos)=="number" and segundos>0 and segundos<math.huge,"Intervalo de ganhos inválido.")
+	table.insert(self._amostrasGanhos,{Valor=self._ganhos,Segundos=segundos})
+	local total,tempo="0",0
+	-- A media dos ultimos 20 segundos evita alternar entre picos e zero entre vendas.
+	for i=#self._amostrasGanhos,1,-1 do
+		local amostra=self._amostrasGanhos[i]
+		if tempo>=20 then table.remove(self._amostrasGanhos,i)
+		else total=InteiroGrande.somar(total,amostra.Valor); tempo+=amostra.Segundos end
+	end
+	local taxa = InteiroGrande.multiplicarArredondado(total, string.format("%.6f", 1 / tempo))
+	self:RegistrarRecorde("DinheiroPorSegundo", taxa)
+	self._ganhos = "0"
+	if taxa ~= self._ultimaTaxa then
+		self._ultimaTaxa = taxa
+		self._jogador:SetAttribute("GanhosPorSegundo", taxa)
+	end
 end
 
 -- O preco vem do catalogo do servidor; saldo e quantidade mudam juntos, sem esperar rede entre as alteracoes.
@@ -191,6 +315,7 @@ function DadosJogador:ComprarMaquina(maquinaId)
 	if type(maquinaId) ~= "string" or #maquinaId > 64 then return false, "Maquina invalida." end
 	local item = CatalogoMaquinas[maquinaId]
 	if not item then return false, "Maquina nao encontrada na loja." end
+	if item.Renascimento then return false, "Esta peca e obtida no renascimento." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	if not InteiroGrande.eValido(self:ObterSaldo()) then return false, "Saldo invalido." end
 	if type(self._perfil.Data.Inventory) ~= "table" then return false, "Inventario invalido." end
@@ -218,6 +343,7 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	if type(maquinaId) ~= "string" or #maquinaId > 64 then return false, "Maquina invalida." end
 	local item = CatalogoMaquinas[maquinaId]
 	if not item then return false, "Maquina nao encontrada na loja." end
+	if item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	local quantidade = self:ObterQuantidade(maquinaId)
 	if not quantidade or quantidade == 0 then return false, "Voce nao possui esta peca no inventario." end
@@ -246,13 +372,13 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	self:_GravarVariantes(maquinaId, variantes)
 	self:_DefinirQuantidade(maquinaId, quantidade - 1)
 	self:_DefinirSaldo(novoSaldo)
-	return true, "Peca vendida por " .. item.Preco .. "."
+	return true, "Peca vendida por $" .. AbreviarInteiro(item.Preco) .. "."
 end
 
 -- Recebe o registro ja validado de uma peca e consome uma variante compativel ou unidade comum. Se nao houver
 -- uma utilizavel, tenta comprar; depois inclui o registro no terreno e reduz o estoque, devolvendo sucesso e
 -- mensagem.
-function DadosJogador:RegistrarColocacao(registro)
+function DadosJogador:RegistrarColocacao(registro, emLote)
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	local registros = self._perfil.Data.MaquinasColocadas
 	local quantidade = self:ObterQuantidade(registro.MaquinaId)
@@ -282,23 +408,23 @@ function DadosJogador:RegistrarColocacao(registro)
 	end
 	table.insert(registros, registro)
 	self:_DefinirQuantidade(registro.MaquinaId, quantidade - 1)
+	if not emLote then self:PublicarResumoPlot() end
 	return true, comprou and "Maquina comprada e colocada." or "Maquina colocada."
 end
 
--- Aplica uma colocacao de copias como lote. Se estoque ou saldo impedir uma unidade, restaura o perfil inteiro
--- antes de responder; assim uma formacao nao fica parcialmente colocada por causa de uma compra recusada.
+-- Uma recusa de compra pula a unidade; uma excecao interna ainda restaura o perfil antes de responder.
 function DadosJogador:RegistrarColocacoes(registros)
 	if not self:EstaAtivo() or type(registros) ~= "table" then
 		return false, "Dados ainda nao estao disponiveis."
 	end
 	local quantidade = 0
 	for indice, registro in registros do
-		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > 60
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo
 			or type(registro) ~= "table" or type(registro.MaquinaId) ~= "string"
 		then return false, "Colocacoes invalidas." end
 		quantidade += 1
 	end
-	if quantidade < 1 or quantidade > 60 or quantidade ~= #registros then
+	if quantidade < 1 or quantidade > Limites.PecasPorGrupo or quantidade ~= #registros then
 		return false, "Quantidade de colocacoes invalida."
 	end
 
@@ -314,18 +440,22 @@ function DadosJogador:RegistrarColocacoes(registros)
 		MaquinasColocadas = table.clone(dados.MaquinasColocadas),
 		InventarioPersonalizado = table.clone(dados.InventarioPersonalizado or {}),
 	}
+	local aceitos, ultimaRecusa = {}, "Nenhuma peca pode ser colocada."
 	for _, registro in registros do
-		local executou, sucesso, mensagem = pcall(self.RegistrarColocacao, self, registro)
-		if not executou or not sucesso then
+		local executou, sucesso, mensagem = pcall(self.RegistrarColocacao, self, registro, true)
+		if not executou then
 			dados.Dinheiro = anterior.Dinheiro
 			dados.Inventory = anterior.Inventory
 			dados.MaquinasColocadas = anterior.MaquinasColocadas
 			dados.InventarioPersonalizado = anterior.InventarioPersonalizado
 			self:Sincronizar()
-			return false, executou and mensagem or "Nao foi possivel registrar as colocacoes."
+			return false, "Nao foi possivel registrar as colocacoes."
 		end
+		if sucesso then table.insert(aceitos, registro) else ultimaRecusa = mensagem end
 	end
-	return true, "Copias colocadas."
+	if #aceitos == 0 then return false, ultimaRecusa end
+	self:PublicarResumoPlot()
+	return true, string.format("%d de %d pecas colocadas.", #aceitos, quantidade), aceitos
 end
 
 -- O registro salvo sai do terreno e volta ao estoque com suas personalizacoes, sem criar uma unidade extra.
@@ -348,17 +478,21 @@ function DadosJogador:RegistrarRecolhimento(registro)
 	end
 	table.remove(registros, indice)
 	self:_DefinirQuantidade(registro.MaquinaId, quantidade + 1)
+	self:PublicarResumoPlot()
 	return true, "Maquina devolvida ao inventario."
 end
 
 -- Prepara o retorno de varias unidades e valida identidade, estoque e personalizacoes antes de alterar o perfil.
 -- A identidade dos registros liga os modelos do terreno as construcoes salvas.
-function DadosJogador:RegistrarRecolhimentos(devolucoes)
-	if not self:EstaAtivo() or type(devolucoes) ~= "table" or #devolucoes < 2 then
+function DadosJogador:RegistrarRecolhimentos(devolucoes, plotInteira)
+	if not self:EstaAtivo() or type(devolucoes) ~= "table" or #devolucoes < 2 or (not plotInteira and #devolucoes > Limites.PecasPorGrupo) then
 		return false, "Nao foi possivel atualizar seu inventario."
 	end
 	local registros = self._perfil.Data.MaquinasColocadas
 	if type(registros) ~= "table" then return false, "Nao foi possivel atualizar seu inventario." end
+	if plotInteira and #devolucoes~=#registros then return false,"A plot mudou. Tente novamente." end
+	local porRegistro={}
+	for i,r in registros do porRegistro[r]=i end
 
 	local indices, vistos, porTipo = {}, {}, {}
 	for _, devolucao in devolucoes do
@@ -366,7 +500,7 @@ function DadosJogador:RegistrarRecolhimentos(devolucoes)
 		if type(registro) ~= "table" or vistos[registro] or not CatalogoMaquinas[registro.MaquinaId] then
 			return false, "Nao foi possivel atualizar seu inventario."
 		end
-		local indice = table.find(registros, registro)
+		local indice = porRegistro[registro]
 		local quantidade = self:ObterQuantidade(registro.MaquinaId)
 		if not indice or not quantidade then return false, "Nao foi possivel atualizar seu inventario." end
 		vistos[registro] = true
@@ -399,6 +533,7 @@ function DadosJogador:RegistrarRecolhimentos(devolucoes)
 		self._perfil.Data.Inventory[maquinaId] = tipo.Quantidade + tipo.Devolvidas
 		self:_PublicarInventario(maquinaId)
 	end
+	self:PublicarResumoPlot()
 	return true
 end
 
@@ -416,12 +551,12 @@ function DadosJogador:VenderConstrucoes(construcoes)
 
 	local quantidade = 0
 	for indice in construcoes do
-		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > 60 then
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo then
 			return false, "Selecao de venda invalida."
 		end
 		quantidade += 1
 	end
-	if quantidade < 1 or quantidade > 60 then return false, "Quantidade de pecas invalida." end
+	if quantidade < 1 or quantidade > Limites.PecasPorGrupo then return false, "Quantidade de pecas invalida." end
 	for indice = 1, quantidade do
 		if construcoes[indice] == nil then return false, "Selecao de venda invalida." end
 	end
@@ -430,6 +565,7 @@ function DadosJogador:VenderConstrucoes(construcoes)
 	for _, registro in construcoes do
 		local maquinaId = type(registro) == "table" and registro.MaquinaId
 		local item = type(maquinaId) == "string" and CatalogoMaquinas[maquinaId]
+		if item and item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
 		local indice = table.find(registros, registro)
 		if not indice or vistos[registro] or not item or not InteiroGrande.eValido(item.Preco) then
 			return false, "Uma das pecas nao pode ser vendida."
@@ -443,7 +579,8 @@ function DadosJogador:VenderConstrucoes(construcoes)
 	table.sort(indices, function(a, b) return a > b end)
 	for _, indice in indices do table.remove(registros, indice) end
 	self:_DefinirSaldo(novoSaldo)
-	return true, "Pecas vendidas por " .. total .. "."
+	self:PublicarResumoPlot()
+	return true, "Pecas vendidas por $" .. AbreviarInteiro(total) .. "."
 end
 
 return DadosJogador

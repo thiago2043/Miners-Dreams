@@ -1,5 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RegraReencarnacao = require(ReplicatedStorage.Shared.RegraReencarnacao)
+local Config=require(ReplicatedStorage.Shared.Configuracoes)
+local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local BarraProgressao = require(script.Parent.BarraProgressao)
 local Botao = require(script.Parent.Botao)
 
@@ -12,21 +14,9 @@ local function acabamento(objeto, raio)
 	canto.CornerRadius, canto.Parent = UDim.new(0, raio), objeto
 end
 
--- Abreviacao somente visual. A regra e o servidor continuam recebendo o inteiro decimal completo.
-local function dinheiro(valor)
-	if type(valor) ~= "string" or not valor:match("^[0-9]+$") then return "indisponível" end
-	valor = valor:gsub("^0+", "")
-	if #valor == 0 then return "0" end
-	if #valor <= 7 then return valor end
-	if valor == "1000000000000000" then return "1qd" end
-	local fracao = valor:sub(2, 4):gsub("0+$", "")
-	return valor:sub(1, 1) .. (fracao ~= "" and "." .. fracao or "") .. "e" .. (#valor - 1)
-end
-
 local function marco(expoente)
-	if expoente == 0 then return "1" end
-	if expoente >= 15 and expoente <= 17 then return ({ "1qd", "10qd", "100qd" })[expoente - 14] end
-	return "1e" .. expoente
+	if expoente <= 38 then return AbreviarInteiro("1" .. string.rep("0", expoente)) end
+	return "1e" .. string.format("%.0f", expoente)
 end
 
 -- A ficha possui apresentacao e botoes. Navegacao controla P/Q, regra calcula a estimativa e rede
@@ -36,12 +26,13 @@ function PainelPrestigio.new(pai, jogador, navegacao, rede)
 		_regra = RegraReencarnacao.new(), _botoes = {}, _estado = nil }, PainelPrestigio)
 	self._grupo = Instance.new("Frame")
 	self._grupo.Name, self._grupo.AnchorPoint = "Prestigio", Vector2.new(0.5, 0.5)
-	self._grupo.Position, self._grupo.Size = UDim2.fromScale(0.5, 0.5), UDim2.new(1, -32, 0, 360)
+	self._grupo.Position, self._grupo.Size = UDim2.fromScale(0.5, 0.5), UDim2.new(1, -32, 0, 260)
 	self._grupo.BackgroundColor3, self._grupo.BorderSizePixel = Color3.fromRGB(22, 23, 29), 0
+	self._grupo.ZIndex = 2
 	self._grupo.Active, self._grupo.Visible, self._grupo.Parent = true, false, pai
 	acabamento(self._grupo, 12)
 	local limite = Instance.new("UISizeConstraint")
-	limite.MaxSize, limite.Parent = Vector2.new(620, 360), self._grupo
+	limite.MaxSize, limite.Parent = Vector2.new(620, 260), self._grupo
 	local borda = Instance.new("UIStroke")
 	borda.Color, borda.Thickness, borda.Transparency, borda.Parent = laranja, 1.5, 0.2, self._grupo
 	self._titulo = self:_Texto("Titulo", "Prestígio [P]", UDim2.fromOffset(18, 10), UDim2.new(1, -74, 0, 30), 22, laranja)
@@ -59,12 +50,7 @@ function PainelPrestigio.new(pai, jogador, navegacao, rede)
 	self._saltos = self:_Texto("Saltos", "", UDim2.fromOffset(18, 134), UDim2.new(1, -36, 0, 24), 18, Color3.fromRGB(88, 244, 166))
 	self._barra = BarraProgressao.new(self._grupo, laranja, coral)
 	self._barra:ObterInstancia().Position, self._barra:ObterInstancia().Size = UDim2.fromOffset(18, 169), UDim2.new(1, -36, 0, 16)
-	self._marcos = self:_Texto("Marcos", "", UDim2.fromOffset(18, 190), UDim2.new(1, -36, 0, 22), 14)
-	self._aviso = self:_Texto("Reinicio", "O dinheiro e as peças da plot e do inventário serão reiniciados. Você recomeça com o kit básico.",
-		UDim2.fromOffset(18, 220), UDim2.new(1, -36, 0, 36), 14, Color3.fromRGB(221, 209, 200))
-	self._recompensas = self:_Texto("Recompensas", "Recompensas: a definir. Blueprints e recompensas já obtidas serão preservados.",
-		UDim2.fromOffset(18, 260), UDim2.new(1, -36, 0, 28), 13, Color3.fromRGB(179, 184, 202))
-	self._mensagem = self:_Texto("Resposta", "", UDim2.fromOffset(18, 289), UDim2.new(1, -36, 0, 20), 14, laranja)
+	self._mensagem = self:_Texto("Resposta", "", UDim2.fromOffset(18, 195), UDim2.new(1, -36, 0, 20), 14, laranja)
 	self._reencarnar = self:_Botao("Reencarnar", UDim2.new(0, 18, 1, -44), UDim2.new(1, -36, 0, 32), function()
 		self:Reencarnar()
 	end)
@@ -99,6 +85,7 @@ end
 -- textos separados: uma barra zerada no novo marco nao esconde as vidas que ja podem ser obtidas.
 function PainelPrestigio:Atualizar()
 	if self._destruido then return end
+	self._titulo.Text="Prestígio ["..Config.Tecla(self._jogador,"P").."]"
 	self._grupo.Visible = self._navegacao:Contem("Prestigio")
 	local saldo = self._jogador:GetAttribute("Dinheiro")
 	local estado = self._regra:Calcular(saldo, self._jogador:GetAttribute("Reencarnacoes"), self._jogador:GetAttribute("Vidas"))
@@ -111,28 +98,28 @@ function PainelPrestigio:Atualizar()
 	b.Text = self._enviando and "Reencarnando..." or "Reencarnar"
 	if not estado then
 		self._vida.Text, self._ciclos.Text, self._requisito.Text = "Vida: carregando...", "", "Progressão indisponível."
-		self._saldo.Text, self._saltos.Text, self._marcos.Text = "", "", "Aguarde os dados do servidor."
+		self._saldo.Text, self._saltos.Text = "", ""
 		self._barra:Atualizar(0)
 		return
 	end
-	self._vida.Text, self._ciclos.Text = "Vida " .. estado.Vidas, "Reencarnações: " .. estado.Reencarnacoes
+	self._vida.Text, self._ciclos.Text = "Vida " .. AbreviarInteiro(estado.Vidas), "Reencarnações: " .. AbreviarInteiro(estado.Reencarnacoes)
 	self._requisito.Text = "Requisito: $" .. marco(estado.ExpoenteRequisito)
-	self._saldo.Text = "Saldo disponível: $" .. dinheiro(saldo)
+	self._saldo.Text = "Saldo disponível: $" .. AbreviarInteiro(saldo)
 	self._saltos.Text = estado.VidasDisponiveis > 0
-		and ("+" .. estado.VidasDisponiveis .. " vida(s) · " .. estado.VidasPuladas .. " pulada(s) · destino: vida " .. estado.VidaDestino)
-		or "Ainda não há vidas disponíveis."
+		and ("+" .. AbreviarInteiro(estado.VidasDisponiveis) .. " vida(s) · " .. AbreviarInteiro(estado.VidasPuladas) .. " pulada(s) · destino: vida " .. AbreviarInteiro(estado.VidaDestino))
+		or ""
 	self._barra:Atualizar(estado.Fracao)
-	self._marcos.Text = marco(estado.ExpoenteMarcoAtual) .. " → " .. marco(estado.ExpoenteProximoMarco)
-		.. " · " .. math.floor(estado.Fracao * 100) .. "% até o próximo marco"
-	if disponivel then b.Text = "Reencarnar · +" .. estado.VidasDisponiveis .. " vida(s)" end
+
+	if disponivel then b.Text = "Reencarnar · +" .. AbreviarInteiro(estado.VidasDisponiveis) .. " vida(s)" end
 end
 
 -- Um clique envia apenas o ciclo esperado. O guarda evita pedidos simultaneos; fechar com Q durante
 -- a resposta continua permitido. Uma ficha destruida ignora o retorno sem acessar seus elementos.
-function PainelPrestigio:Reencarnar()
+function PainelPrestigio:Reencarnar(confirmada)
 	if self._destruido or self._enviando or not self._grupo.Visible then return end
 	self:Atualizar()
 	if not self._estado or self._estado.VidasDisponiveis == 0 then return end
+	if not confirmada and self.Confirmacao then return self.Confirmacao:Pedir("Renascimento",1,function() self:Reencarnar(true) end) end
 	local indice = self._estado.Reencarnacoes
 	self._enviando = true
 	self:Atualizar()

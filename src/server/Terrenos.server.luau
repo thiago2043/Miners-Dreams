@@ -3,6 +3,7 @@
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Terreno = require(script.Parent.Terreno)
+local Mapa = require(game:GetService("ReplicatedStorage").Shared.Mapa)
 
 local baseplate = workspace:WaitForChild("Baseplate")
 
@@ -15,11 +16,7 @@ local pastaTerrenos = Instance.new("Folder")
 pastaTerrenos.Name = "Terrenos"
 pastaTerrenos.Parent = workspace
 
-local quantidadeTerrenos = Players.MaxPlayers
--- A raiz quadrada arredondada para cima distribui as plots em linhas e colunas. O espacamento de 80 studs
--- deixa separacao entre pisos de 64 studs.
-local colunas = math.ceil(math.sqrt(quantidadeTerrenos))
-local distanciaEntreTerrenos = 80
+local quantidadeTerrenos = Mapa.QuantidadePlots
 
 local alturaChao = baseplate.Position.Y + baseplate.Size.Y / 2
 
@@ -57,14 +54,9 @@ local function liberarTerreno(jogador)
 	terreno:Liberar()
 end
 
--- Converte cada id em coluna pelo resto da divisao e linha pela divisao inteira. O deslocamento centraliza
--- as colunas e coloca os pisos sobre a Baseplate.
+-- As origens das duas fileiras fazem as expansoes crescerem para fora da estrada.
 for id = 1, quantidadeTerrenos do
-	local coluna = (id - 1) % colunas
-	local linha = math.floor((id - 1) / colunas)
-	local x = (coluna - (colunas - 1) / 2) * distanciaEntreTerrenos
-	local z = 80 + linha * distanciaEntreTerrenos
-	table.insert(terrenos, Terreno.new(id, CFrame.new(x, alturaChao + 0.5, z), pastaTerrenos))
+	table.insert(terrenos, Terreno.new(id, Mapa.CFramePlot(id, alturaChao + 0.5), pastaTerrenos))
 end
 
 -- Conecta entradas futuras e, abaixo, atribui plots aos jogadores ja presentes. A guarda dentro de

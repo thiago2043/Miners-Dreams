@@ -53,7 +53,7 @@ function Fabrica:Atualizar(agora)
 	end
 end
 
--- O relogio usado pelos componentes e fornecido pela simulacao, mantendo geracao e expiracao na mesma linha de tempo.
+-- O relogio usado pelos componentes e fornecido pela simulacao.
 -- Recebe o tempo decorrido do Heartbeat e o entrega a simulacao de passos fixos. Seu callback agenda a
 -- descoberta de modelos a cada segundo; os componentes acompanham os passos do relogio.
 function Fabrica:Avancar(delta)

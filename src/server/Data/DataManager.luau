@@ -1,9 +1,22 @@
--- Associa jogadores aos perfis e objetos DadosJogador. A API de Gold/Gems abaixo pertence apenas ao exercicio
--- de teste.
+-- Associa jogadores aos perfis e objetos DadosJogador.
 local DadosJogador = require(script.Parent.DadosJogador)
 
 local DataManager = { Profiles = {} }
 local objetos = {}
+
+function DataManager.PublicarRecebimentos()
+	for jogador in DataManager.Profiles do
+		local dados=DataManager.ObterDados(jogador)
+		if dados then dados:PublicarRecebimentos() end
+	end
+end
+
+function DataManager.PublicarGanhosPorSegundo(segundos)
+	for jogador in DataManager.Profiles do
+		local dados = DataManager.ObterDados(jogador)
+		if dados then dados:PublicarGanhosPorSegundo(segundos) end
+	end
+end
 
 -- Procura uma sessao ativa do jogador e devolve o objeto DadosJogador correspondente. Reutiliza o objeto
 -- enquanto o perfil for o mesmo; sem sessao ativa devolve nil.
@@ -17,7 +30,7 @@ function DataManager.ObterDados(jogador)
 		entrada = { perfil = perfil, dados = DadosJogador.new(jogador, perfil) }
 		objetos[jogador] = entrada
 	end
-	return entrada.dados
+	return not entrada.dados._suspenso and entrada.dados or nil
 end
 
 -- Registra a sessao aberta pelo carregamento e devolve seu objeto DadosJogador. Substituir a sessao faz
@@ -55,28 +68,6 @@ function DataManager.VenderMaquina(jogador: Player, maquinaId: string, configura
 	local dados = DataManager.ObterDados(jogador)
 	if not dados then return false, "Dados ainda nao estao disponiveis." end
 	return dados:VenderMaquina(maquinaId, configuracaoEsperada)
-end
-
--- API do exercicio de Gold/Gems, independente do dinheiro do jogo.
--- Funcao do exercicio: soma amount no Gold do perfil e atualiza o valor do placar. Sem perfil, encerra sem
--- fazer nada; nao usa a moeda Dinheiro da fabrica.
-function DataManager.AddGold(player: Player, amount: number)
-	local profile = DataManager.Profiles[player]
-	if not profile then return end
-	
-	profile.Data.Gold += amount
-	player.leaderstats.Gold.Value = profile.Data.Gold
-	--ReplicatedStorage.UpdateGold:FireClient(player, profile.Data.Gold)
-end
-
--- Funcao do exercicio: soma amount apenas no campo Gems do perfil. A chamada de evento permanece desativada;
--- esta funcao nao sincroniza o placar por conta propria.
-function DataManager.AddGems(player: Player, amount: number)
-	local profile = DataManager.Profiles[player]
-	if not profile then return end
-	
-	profile.Data.Gems += amount
-	--ReplicatedStorage.UpdateGems:FireClient(player, profile.Data.Gems)
 end
 
 return DataManager

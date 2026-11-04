@@ -1,6 +1,9 @@
 -- A mesma classe monta loja ou inventario. Cada instancia conserva sua lista, ficha e resposta de compra/venda.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local Input = game:GetService("UserInputService")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
+local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local FichaMaquina = require(script.Parent.FichaMaquina)
 local GradePecas = require(script.Parent.GradePecas)
 local FichaPeca = require(script.Parent.FichaPeca)
@@ -21,7 +24,7 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
 	-- Cada painel possui seus botoes, conexoes e operacao pendente. A mesma classe atende loja e inventario,
 	-- mas seus campos de instancia nao sao compartilhados.
 	local self = setmetatable({ Aba = aba, _jogador = jogador, _construcao = construcao,
-		_botoesPecas = {}, _acoes = {}, _destruido = false,
+		_botoesPecas = {}, _acoes = {}, _destruido = false, _conexoes = {},
 		_rede = rede,
 	}, PainelPecas)
 	local inventario = aba == "Inventario"
@@ -42,12 +45,15 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
 	-- Ordenar pelos nomes deixa a lista estavel, independentemente da ordem das chaves no catalogo. Cada
 	-- callback conserva o id do item que seu botao representa.
 	self._ids = {}
-	for id in Catalogo do table.insert(self._ids, id) end
+	for id, item in Catalogo do
+		if inventario or not item.Renascimento then table.insert(self._ids, id) end
+	end
 	table.sort(self._ids, function(a, b) return Catalogo[a].Nome < Catalogo[b].Nome end)
 	-- Duas instancias da mesma grade: a loja mostra precos/categorias e o inventario mostra quantidades.
 	-- Os callbacks devolvem a interacao a este painel; a grade nao conhece a rede nem altera os dados.
 	self._grade = GradePecas.new(self._grupo, self._ids, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 		function(id) self:Selecionar(id) end, function() construcao:AlternarAba(aba) end, aba)
+	self._grade.AoMudarModo=function() self:Atualizar() end
 	self._painelLista, self._textoVazio = self._grade:ObterInstancia(), self._grade:ObterTextoVazio()
 	for _, id in self._ids do self._botoesPecas[id] = self._grade:ObterBotao(id) end
 	-- As acoes dependem da aba. O callback fica no Botao e so executa na ativacao: Colocar chama o controlador;
@@ -65,6 +71,7 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
 	self._textoFicha, self._textoQuantidade = campos.Estatisticas, campos.Quantidade
 	self._textoResposta, self._acoes = campos.Resposta, campos.Acoes
 	self._textoResposta.Text = ""
+	table.insert(self._conexoes,pai:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:Atualizar() end))
 	self:Atualizar()
 	return self
 end
@@ -74,6 +81,12 @@ end
 -- mesma peca dentro de 0,35 s e sem outra navegacao, inicia a colocacao e fecha todas as abas.
 function PainelPecas:Selecionar(id)
 	if self._destruido or self._negociando then return end
+	if self.Aba=="Inventario" and self._grade._modo~="Estoque"
+		and self._jogador:GetAttribute("Inventario_"..id)==0 and not Catalogo[id].Renascimento then
+		self._ultimoClique=nil
+		self._construcao:SelecionarMaquina(id,"Loja")
+		return
+	end
 	local nav, agora = self._construcao.Navegacao, os.clock()
 	local filtro = self._grade and self._grade.Revisao or 0
 	local anterior = self._ultimoClique
@@ -96,19 +109,61 @@ function PainelPecas:Atualizar()
 	-- visiveis enquanto outra acao esta ativa.
 	self._painelLista.Visible = nav:Contem(self.Aba)
 	self._painelFicha.Visible = self._painelLista.Visible and nav:Contem("Ficha" .. self.Aba)
+	local tela=self._grupo.Parent.AbsoluteSize
+	local compacta=tela.X<900 or tela.Y<600 or (Input.TouchEnabled==true and Input.KeyboardEnabled~=true)
+	local inventario=self.Aba=="Inventario"
+	local listaLarga=compacta or (inventario and self._grade._modo~="Estoque")
+	self._grupo.AnchorPoint=Vector2.new(compacta and .5 or (inventario and 0 or 1),.5)
+	self._grupo.Position=compacta and UDim2.fromScale(.5,.5) or UDim2.new(inventario and 0 or 1,inventario and 84 or -16,.5,0)
+	local largura=math.min(440,tela.X-32)
+	local altura=math.max(200,math.min(420,tela.Y-96))
+	self._grupo.Size=compacta and UDim2.new(1,largura-tela.X,1,altura-tela.Y) or UDim2.new(.5,-58,1,-160)
+	if self._grade._compacta~=compacta then self._grade._compacta=compacta; self._grade:_DimensionarGrade() end
+	for _,painel in {self._painelLista,self._painelFicha} do
+		if listaLarga then painel.AnchorPoint=Vector2.zero; painel.Position=UDim2.new(); painel.Size=UDim2.fromScale(1,1)
+		else
+			local esquerda=(painel==self._painelLista)==inventario
+			painel.AnchorPoint=Vector2.new(esquerda and 0 or 1,0); painel.Position=UDim2.fromScale(esquerda and 0 or 1,0); painel.Size=UDim2.new(.5,-4,1,0)
+		end
+	end
+	if listaLarga and self._painelFicha.Visible then self._painelLista.Visible=false end
+	if compacta then
+		if self._construcao._abaSelecionada~=self.Aba then self._painelLista.Visible=false; self._painelFicha.Visible=false end
+		if self._painelFicha.Visible then self._painelLista.Visible=false end
+	end
 	local selecao = self._construcao:ObterSelecao(self.Aba)
 	if (self._selecao and self._selecao.Id) ~= (selecao and selecao.Id) or not self._painelFicha.Visible then
 		self._textoResposta.Text = ""
 	end
 	self._selecao = selecao
+	local resumo=self._jogador:GetAttribute("PecasNaPlot")
+	if resumo~=self._resumoTexto then
+		self._resumoTexto,self._contagensPlot=resumo,nil
+		local ok,contagens=pcall(HttpService.JSONDecode,HttpService,resumo or "")
+		if ok and type(contagens)=="table" then
+			local valido=true
+			for id,n in contagens do if not Catalogo[id] or not quantidadeValida(n) then valido=false; break end end
+			if valido then self._contagensPlot=contagens end
+		end
+	end
 	-- Estoque nil ainda esta carregando; dado invalido fica indisponivel. O inventario oculta quantidades zero
 	-- ja carregadas, enquanto a loja mantem todos os itens.
+	local chaveDescricao=""
+	for _,a in {"Extracao","Fundicao","Motores","Calibracao"} do chaveDescricao..=tostring(self._jogador:GetAttribute("Upgrade_"..a))..":" end
+	chaveDescricao..=tostring(self._jogador:GetAttribute("VelocidadeMotores"))
 	for _, id in self._ids do
 		local quantidade = self._jogador:GetAttribute("Inventario_" .. id)
 		local pronto = quantidadeValida(quantidade)
 		local selecionada = selecao and selecao.MaquinaId == id
-		self._grade:AtualizarItem(id, quantidade, pronto, selecionada, self._negociando)
+		if chaveDescricao~=self._chaveDescricao then
+			local ok,descricao=pcall(FichaMaquina.Descrever,Catalogo[id],self._jogador)
+			self._grade:AtualizarDescricao(id,ok and descricao or "Descrição indisponível")
+		end
+		self._grade:AtualizarItem(id, quantidade, pronto, selecionada, self._negociando,
+			self._contagensPlot and (self._contagensPlot[id] or 0))
 	end
+	self._chaveDescricao=chaveDescricao
+	self._grade.Saldo=self._jogador:GetAttribute("Dinheiro")
 	self._grade:ConcluirAtualizacao()
 	self._fichaValida = false
 	local id = selecao and selecao.MaquinaId
@@ -117,7 +172,8 @@ function PainelPecas:Atualizar()
 	self._configuracaoExibida = id and self._jogador:GetAttribute("ConfiguracaoInventario_" .. id)
 	local definicao
 	self._textoQuantidade.Text = quantidade == nil and "Inventário: carregando..."
-		or (pronto and ("No inventário: " .. quantidade) or "Inventário indisponível")
+		or (pronto and ("No inventário: " .. AbreviarInteiro(quantidade)) or "Inventário indisponível")
+	if id and self._contagensPlot then self._textoQuantidade.Text..="\nNa plot: "..AbreviarInteiro(self._contagensPlot[id] or 0) end
 	if not item then
 		self._textoFicha.Text = "Selecione uma peça para ver suas características."
 	elseif not pronto then
@@ -127,7 +183,7 @@ function PainelPecas:Atualizar()
 		-- mensagem e mantem as acoes bloqueadas.
 		local sucesso, descricao = pcall(function()
 			definicao = self._construcao:ObterDefinicaoSelecionada(self.Aba)
-			return FichaMaquina.Descrever(definicao)
+			return FichaMaquina.Descrever(definicao,self._jogador)
 		end)
 		self._fichaValida = sucesso
 		-- As duas fichas destacam o nome acima da faixa, separadamente das estatisticas.
@@ -144,10 +200,12 @@ function PainelPecas:Atualizar()
 	for acao, botao in self._acoes do
 		local disponivel = self._painelFicha.Visible and item ~= nil and pronto and self._fichaValida and not self._negociando
 		if acao == "Colocar" then disponivel = disponivel and (quantidade > 0 or copia) end
-		if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia end
+		if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Renascimento end
+		if acao == "Comprar" then disponivel = disponivel and not item.Renascimento end
 		botao:DefinirDisponivel(disponivel)
 		botao:ObterInstancia().Text = self._negociando == acao and (acao == "Comprar" and "Comprando..." or "Vendendo...")
-			or (acao == "Colocar" and "Colocar" or (acao .. ": " .. (item and item.Preco or "—") .. (acao == "Vender" and " (100%)" or "")))
+			or (item and item.Renascimento and acao ~= "Colocar" and "Renascimento")
+			or (acao == "Colocar" and "Colocar" or (acao .. ": " .. (item and ("$" .. AbreviarInteiro(item.Preco)) or "—") .. (acao == "Vender" and " (100%)" or "")))
 	end
 	self._ficha:AtualizarDisponibilidade()
 	self._textoResposta.Visible = self._textoResposta.Text ~= ""
@@ -156,9 +214,12 @@ end
 -- Recebe Comprar ou Vender e solicita uma unidade ao servidor, guardando a identidade da selecao e sua
 -- configuracao exibida. Bloqueia repeticao local enquanto espera e so apresenta a resposta se a mesma ficha
 -- ainda existir.
-function PainelPecas:Negociar(acao)
+function PainelPecas:Negociar(acao,confirmada)
 	local botao = self._acoes[acao]
 	if self._destruido or self._negociando or acao == "Colocar" or not botao or not botao:ObterInstancia().Active then return end
+	if acao=="Vender" and not confirmada and self._construcao.Confirmacao then
+		return self._construcao.Confirmacao:Pedir("Venda",1,function() self:Negociar(acao,true) end)
+	end
 	local selecao, configuracao = self._selecao, self._configuracaoExibida
 	self._negociando, self._textoResposta.Text = acao, ""
 	self:Atualizar()
@@ -184,6 +245,7 @@ end
 function PainelPecas:Destruir()
 	if self._destruido then return end
 	self._destruido = true
+	for _,c in self._conexoes do c:Disconnect() end
 	self._grade:Destruir()
 	self._ficha:Destruir()
 	self._grupo:Destroy()

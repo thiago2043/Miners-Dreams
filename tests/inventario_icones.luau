@@ -44,7 +44,7 @@ scriptTeste:Destroy()
 -- A ficha pode aplicar a aparencia da unidade ao clone; nunca altera o original nem deixa um viewport
 -- abandonado quando uma personalizacao aponta para uma parte inexistente.
 local PersonalizacaoReal=carregarMiniatura("src/shared/PersonalizacaoMaquina")
-local esteiraOriginal=modelos:FindFirstChild("EsteiraBasica")
+local esteiraOriginal=modelos:FindFirstChild("Esteira2x2")
 local corOriginal=esteiraOriginal.Correia.Color
 local holder=roblox.Instance.new("Frame")
 local varianteVisual=PersonalizacaoReal.new({Partes={{Caminho={{Nome="Correia",Indice=1}},Cor={0.9,0.1,0.2}}}})
@@ -75,7 +75,7 @@ replicado.Shared=no("src/shared")
 local Painel=carregar("src/client/PainelPecas")
 local Catalogo=carregar("src/shared/CatalogoMaquinas")
 local nav=carregar("src/client/NavegacaoEstados").new()
-local estoque={ MineradoraBasica=3, EsteiraBasica=5, FornalhaBasica=1, ModificadorBasico=0 }
+local estoque={ MineradoraBasica=3, Esteira2x2=5, FornalhaBasica=1, PrensaMinerio=0 }
 for id in Catalogo do if estoque[id] == nil then estoque[id] = 0 end end
 local jogador={ GetAttribute=function(_, nome) return estoque[nome:match("^Inventario_(.+)$")] end }
 local paineis,selecoes,sequencia={}, {},0
@@ -106,25 +106,34 @@ local rede={fetch=function(_,acao,id)
 end}
 nav:Abrir("Inventario"); nav:Abrir("Loja")
 local pai=suporte.NovaInstancia("ScreenGui")
+pai.AbsoluteSize=roblox.Vector2.new(1280,720)
 paineis.Inventario=Painel.new(pai,"Inventario",jogador,construcao,rede,68)
 paineis.Loja=Painel.new(pai,"Loja",jogador,construcao,rede,68)
 local p,loja=paineis.Inventario,paineis.Loja
 local g=p._grade
 local gl=loja._grade
-assert(g and gl and #miniaturas==19)
-assert(not g._itens.ModificadorBasico.Miniatura, "Uma peca sem estoque nao deve clonar uma miniatura.")
+local totalCatalogo=0
+for _,item in Catalogo do if not item.Renascimento then totalCatalogo+=1 end end
+
+assert(g and gl and #miniaturas==totalCatalogo+3)
+assert(not g._itens.PrensaMinerio.Miniatura, "Uma peca sem estoque nao deve clonar uma miniatura.")
 assert(p._painelLista.AnchorPoint.X==0 and loja._painelLista.AnchorPoint.X==1)
 assert(g._layout.FillDirectionMaxCells==4 and g._layout.CellSize.X.Offset==58)
 assert(p._grupo.Position.X.Offset==84 and loja._grupo.Position.X.Offset==-16)
 assert(g._itens.MineradoraBasica.Quantidade.Text=="x3")
-assert(not p._botoesPecas.ModificadorBasico:ObterInstancia().Visible)
+assert(not p._botoesPecas.PrensaMinerio:ObterInstancia().Visible)
 assert(loja._botoesPecas.MineradoraBasica:ObterInstancia().Text=="")
 assert(gl._itens.MineradoraBasica.Quantidade.Text=="$100")
-assert(gl._itens.ModificadorBasico.Quantidade.Text=="$200")
-assert(loja._botoesPecas.ModificadorBasico:ObterInstancia().Visible, "A loja inclui pecas sem estoque.")
-assert(loja._botoesPecas.EsteiraBasica:ObterInstancia().LayoutOrder==1, "O menor preco vem primeiro.")
+assert(gl._itens.PrensaMinerio.Quantidade.Text=="$10K")
+assert(loja._botoesPecas.PrensaMinerio:ObterInstancia().Visible, "A loja inclui pecas sem estoque.")
+for id, item in Catalogo do
+	if item.Preco == "25" then
+		assert(loja._botoesPecas[id]:ObterInstancia().LayoutOrder < loja._botoesPecas.JatoMineral:ObterInstancia().LayoutOrder,
+			"Pecas de $25 devem preceder o jato de $50, inclusive quando empatam entre si.")
+	end
+end
 
--- As categorias usam componentes, inclusive quando uma peca combina mais de um comportamento.
+-- A ultima categoria inclui utilidades e exclui as tres familias de maquinas, mesmo com correia.
 local function categoria(id) gl._categorias[id].Botao:ObterInstancia().Activated:Fire() end
 categoria("Soltador")
 assert(loja._botoesPecas.MineradoraBasica:ObterInstancia().Visible)
@@ -133,41 +142,49 @@ categoria("Vendedor")
 assert(loja._botoesPecas.FornalhaBasica:ObterInstancia().Visible)
 assert(not loja._botoesPecas.MineradoraBasica:ObterInstancia().Visible)
 categoria("Modificador")
-assert(loja._botoesPecas.ModificadorBasico:ObterInstancia().Visible)
+assert(loja._botoesPecas.PrensaMinerio:ObterInstancia().Visible)
+assert(loja._botoesPecas.JatoMineral:ObterInstancia().Visible and loja._botoesPecas.NucleoDimensional:ObterInstancia().Visible)
 categoria("Transportador")
-for _, id in { "EsteiraBasica", "FornalhaBasica", "ModificadorBasico" } do
+for _, id in { "JatoMineral", "LaserIndustrial", "FornalhaBasica", "PrensaMinerio", "MineradoraBasica" } do
+	assert(not loja._botoesPecas[id]:ObterInstancia().Visible)
+end
+for _, id in { "Esteira2x2", "Esteira1x1", "Centralizadora2x2", "Centralizadora1x1", "Parede1x1" } do
 	assert(loja._botoesPecas[id]:ObterInstancia().Visible)
 end
+assert(gl._categorias.Soltador.Botao:ObterInstancia().Position.X.Scale<gl._categorias.Modificador.Botao:ObterInstancia().Position.X.Scale)
+assert(gl._categorias.Modificador.Botao:ObterInstancia().Position.X.Scale<gl._categorias.Vendedor.Botao:ObterInstancia().Position.X.Scale)
+assert(gl._categorias.Vendedor.Botao:ObterInstancia().Position.X.Scale<gl._categorias.Transportador.Botao:ObterInstancia().Position.X.Scale)
 categoria("Todos")
+assert(loja._botoesPecas.Parede1x1:ObterInstancia().Visible)
 gl._busca.Text="fornalha"; gl._busca:GetPropertyChangedSignal("Text"):Fire()
 categoria("Transportador")
-assert(loja._botoesPecas.FornalhaBasica:ObterInstancia().Visible)
-assert(not loja._botoesPecas.EsteiraBasica:ObterInstancia().Visible, "Busca e categoria devem ser combinadas.")
+assert(not loja._botoesPecas.FornalhaBasica:ObterInstancia().Visible and gl._vazio.Visible)
+assert(not loja._botoesPecas.Esteira2x2:ObterInstancia().Visible, "Busca e categoria devem ser combinadas.")
 gl._busca.Text="sem resultado"; gl._busca:GetPropertyChangedSignal("Text"):Fire()
 assert(gl._vazio.Visible and gl._vazio.Text=="Nenhuma peça encontrada.")
 gl._busca.Text=""; gl._busca:GetPropertyChangedSignal("Text"):Fire()
 categoria("Todos")
 local bc=gl._categorias.Modificador.Botao:ObterInstancia()
-bc.SelectionGained:Fire(); assert(gl._dica.Text=="Modificação")
+bc.SelectionGained:Fire(); assert(gl._dica.Text=="Modificadores")
 bc.SelectionLost:Fire()
 gl._conteudo.AbsoluteSize=roblox.Vector2.new(310,400)
 gl:_DimensionarGrade(); assert(gl._layout.FillDirectionMaxCells==5)
 gl._conteudo.AbsoluteSize=roblox.Vector2.new(110,400)
 gl:_DimensionarGrade(); assert(gl._layout.FillDirectionMaxCells==1 and gl._layout.CellSize.X.Offset>0)
 assert(#pedidos==0, "Filtros e navegacao nao compram pecas.")
-assert(not p._botoesPecas.ModificadorBasico:ObterInstancia().Visible, "Os filtros da loja nao alteram o inventario.")
+assert(not p._botoesPecas.PrensaMinerio:ObterInstancia().Visible, "Os filtros da loja nao alteram o inventario.")
 
 local function buscar(valor)
 	g._busca.Text=valor; g._busca:GetPropertyChangedSignal("Text"):Fire()
 end
 buscar("MINERADORA BÁSICA")
 assert(p._botoesPecas.MineradoraBasica:ObterInstancia().Visible)
-assert(not p._botoesPecas.EsteiraBasica:ObterInstancia().Visible)
+assert(not p._botoesPecas.Esteira2x2:ObterInstancia().Visible)
 buscar("[nao e padrao]")
 assert(g._vazio.Visible and g._vazio.Text=="Nenhuma peça encontrada.")
 buscar("")
 g._ordenar:ObterInstancia().Activated:Fire()
-assert(p._botoesPecas.EsteiraBasica:ObterInstancia().LayoutOrder==1)
+assert(p._botoesPecas.Esteira2x2:ObterInstancia().LayoutOrder==1)
 g._conteudo.AbsoluteSize=roblox.Vector2.new(190,400)
 g._conteudo:GetPropertyChangedSignal("AbsoluteSize"):Fire()
 assert(g._layout.FillDirectionMaxCells==3 and g._layout.CellSize.X.Offset==58)
@@ -182,8 +199,8 @@ b.Activated:Fire()
 assert(p._painelFicha.Visible and p._fichaValida and selecoes.Inventario.MaquinaId=="MineradoraBasica")
 assert(p._ficha and loja._ficha and p._ficha~=loja._ficha)
 assert(p._ficha._nome.Text==Catalogo.MineradoraBasica.Nome)
-assert(p._ficha._tipo.Text=="Geração" and p._ficha._quantidade.Text=="x3")
-assert(p._textoFicha.Text:find("Valor por minério: 5",1,true))
+assert(p._ficha._raridade.Text=="Comum" and p._ficha._quantidade.Text=="x3")
+assert(p._textoFicha.Text:find("Minério: $5",1,true))
 assert(not p._textoFicha.Text:find(Catalogo.MineradoraBasica.Nome,1,true), "O nome ja aparece acima das estatisticas.")
 assert(p._acoes.Colocar:ObterInstancia().Parent.Name=="Acoes", "As acoes ficam fora da area rolavel.")
 assert(g._itens.MineradoraBasica.Borda.Thickness==2)
@@ -204,7 +221,7 @@ estoque.MineradoraBasica=nil; p:Atualizar(); assert(not b.Active and g._itens.Mi
 estoque.MineradoraBasica="3"; p:Atualizar(); assert(not b.Active and g._itens.MineradoraBasica.Quantidade.Text=="!")
 for id in estoque do estoque[id]=0 end
 p:Atualizar(); assert(g._vazio.Visible and g._vazio.Text:find("vazio"))
-assert(#miniaturas==20, "Atualizar estoque, busca e ordem preserva as 19 miniaturas da grade e o retrato selecionado.")
+assert(#miniaturas==totalCatalogo+4, "Atualizar estoque, busca e ordem preserva as miniaturas da grade e o retrato selecionado.")
 g._fechar:ObterInstancia().Activated:Fire(); assert(not p._painelLista.Visible)
 
 -- Clique simples abre a ficha. Trocar categoria ou busca invalida o clique duplo; Comprar continua
@@ -217,7 +234,7 @@ assert(loja._painelFicha.Visible and loja._fichaValida and #pedidos==0)
 assert(loja._ficha._quantidade.Text=="$100" and loja._ficha._nome.Text==Catalogo.MineradoraBasica.Nome)
 assert(loja._acoes.Comprar:ObterInstancia().Parent.Name=="Acoes")
 assert(not loja._textoFicha.Text:find(Catalogo.MineradoraBasica.Nome,1,true))
-assert(gl._itens.MineradoraBasica.Borda.Color==roblox.Color3.fromRGB(45,245,163))
+assert(gl._itens.MineradoraBasica.Borda:FindFirstChild("Raridade").Color==loja._ficha._faixaRaridade.Color,"Selecionar preserva a raridade na borda.")
 categoria("Soltador"); bm.Activated:Fire(); assert(not colocou)
 gl._busca.Text="MINERADORA BÁSICA"; gl._busca:GetPropertyChangedSignal("Text"):Fire()
 bm.Activated:Fire(); assert(not colocou)
@@ -228,15 +245,21 @@ assert(colocou and colocou[1]=="Loja" and colocou[2]==true and not loja._painelL
 
 -- A ordem conserva cada digito; o cartao abrevia o preco para caber na miniatura.
 local precoAnterior=Catalogo.MineradoraBasica.Preco
-local precoEsteira=Catalogo.EsteiraBasica.Preco
+local precoEsteira=Catalogo.Esteira2x2.Preco
 Catalogo.MineradoraBasica.Preco="100000000000000000000000000000000000001"
-Catalogo.EsteiraBasica.Preco="100000000000000000000000000000000000000"
+Catalogo.Esteira2x2.Preco="100000000000000000000000000000000000000"
 gl._busca.Text=""; categoria("Todos"); loja:Atualizar()
-assert(gl._itens.MineradoraBasica.Quantidade.Text=="$100ude")
-assert(bm.LayoutOrder==16)
-assert(loja._botoesPecas.EsteiraBasica:ObterInstancia().LayoutOrder==15, "Precos grandes com um digito de diferenca mantem a ordem exata.")
+assert(gl._itens.MineradoraBasica.Quantidade.Text=="$100UDe")
+assert(bm.LayoutOrder==totalCatalogo)
+assert(loja._botoesPecas.Esteira2x2:ObterInstancia().LayoutOrder==totalCatalogo-1, "Precos grandes com um digito de diferenca mantem a ordem exata.")
+nav:Abrir("Loja"); loja:Selecionar("NucleoDimensional")
+assert(gl._itens.NucleoDimensional.Quantidade.Text=="$250De")
+assert(loja._ficha._quantidade.Text=="$250De" and loja._acoes.Comprar:ObterInstancia().Text=="Comprar: $250De")
+nav:Abrir("Inventario"); estoque.MineradoraBasica=1234567; p:Selecionar("MineradoraBasica")
+assert(g._itens.MineradoraBasica.Quantidade.Text=="x1,23M" and p._ficha._quantidade.Text=="x1,23M")
+assert(p._acoes.Vender:ObterInstancia().Text=="Vender: $100UDe (100%)")
 Catalogo.MineradoraBasica.Preco=precoAnterior
-Catalogo.EsteiraBasica.Preco=precoEsteira
+Catalogo.Esteira2x2.Preco=precoEsteira
 p:Destruir(); p:Destruir(); loja:Destruir()
 for _, m in miniaturas do assert(m.destruido) end
 for _, c in g._conexoes do assert(not c.ativa) end

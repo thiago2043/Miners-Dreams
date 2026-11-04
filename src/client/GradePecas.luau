@@ -4,14 +4,16 @@ local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Botao = require(script.Parent.Botao)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local IconesAbas = require(script.Parent.IconesAbas)
+local Raridades = require(script.Parent.Raridades)
+local Inteiro=require(game:GetService("ReplicatedStorage").Shared.InteiroGrande)
 
 -- Cada instancia possui seus filtros, botoes e miniaturas. Loja e inventario compartilham o desenho,
 -- mas PainelPecas continua decidindo as acoes e validando o estoque recebido do servidor.
 local GradePecas = {}
 GradePecas.__index = GradePecas
 local categorias = {
-	{ "Todos", "Todas as peças" }, { "Soltador", "Geração" }, { "Transportador", "Transporte" },
-	{ "Modificador", "Modificação" }, { "Vendedor", "Venda" },
+	{ "Todos", "Todas as peças" }, { "Soltador", "Mineradoras" }, { "Modificador", "Modificadores" },
+	{ "Vendedor", "Fornalhas" }, { "Transportador", "Esteiras e outras peças" },
 }
 
 -- Acrescenta cantos arredondados ao elemento recebido, sem criar outro conteiner.
@@ -53,12 +55,13 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 	local loja = aba == "Loja"
 	-- setmetatable liga os metodos a esta instancia. Os filtros e conexoes sao exclusivos dela, nao da classe.
 	local self = setmetatable({ _ids = ids, _itens = {}, _conexoes = {}, _botoes = {}, _loja = loja,
+		_modo=loja and "Loja" or "Estoque",
 		_ordem = loja and "Preco" or "Nome", _categoria = "Todos", Revisao = 0,
 		_cor = loja and Color3.fromRGB(45, 245, 163) or Color3.fromRGB(255, 78, 153),
 	}, GradePecas)
 	-- A lista ocupa a metade externa do grupo. A outra metade pertence a ficha de PainelPecas.
 	self._grupo = Instance.new("Frame")
-	self._grupo.Name, self._grupo.AnchorPoint = "Lista", Vector2.new(loja and 1 or 0, 0)
+	self._grupo.Name, self._grupo.AnchorPoint, self._grupo.Visible = "Lista", Vector2.new(loja and 1 or 0, 0), false
 	self._grupo.Position = UDim2.fromScale(loja and 1 or 0, 0)
 	self._grupo.Size = UDim2.new(0.5, -4, 1, 0)
 	self._grupo.BackgroundColor3, self._grupo.BorderSizePixel = Color3.fromRGB(22, 23, 29), 0
@@ -73,10 +76,10 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 	x.Position, x.Size, x.Text = UDim2.new(1, -42, 0, 10), UDim2.fromOffset(28, 28), "×"
 	x.BackgroundColor3, x.TextColor3, x.TextSize = self._cor, Color3.fromRGB(22, 23, 29), 28
 	arredondar(x, 14)
-	if loja then self:_CriarCategorias() end
+	if loja then self:_CriarCategorias() else self:_CriarModos() end
 	-- A loja reserva uma linha adicional para as categorias. Busca e ordenacao continuam independentes
 	-- das do inventario, mesmo quando as duas abas estao abertas.
-	local topoBusca = loja and 102 or 50
+	local topoBusca = 102
 	self._busca = Instance.new("TextBox")
 	self._busca.Name, self._busca.Text, self._busca.PlaceholderText = "Busca", "", "Pesquisar..."
 	self._busca.Position, self._busca.Size = UDim2.fromOffset(12, topoBusca), UDim2.new(1, -114, 0, 32)
@@ -125,6 +128,7 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 		b.BackgroundColor3 = Color3.fromRGB(40,48,63)
 		arredondar(b, 5)
 		local contorno = borda(b, Color3.fromRGB(66,72,89), 1)
+		Raridades.ColorirBorda(contorno, Raridades.Obter(Catalogo[id]))
 		local gradiente = Instance.new("UIGradient")
 		gradiente.Color, gradiente.Rotation, gradiente.Parent = ColorSequence.new(Color3.fromRGB(115,140,170), Color3.fromRGB(45,50,67)), 90, b
 		local quantidade = texto(b, "Quantidade", "...", UDim2.new(1,-4,1,-3), UDim2.new(1,-8,0,20), 16)
@@ -136,8 +140,23 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 			local limite = Instance.new("UITextSizeConstraint")
 			limite.MinTextSize, limite.MaxTextSize, limite.Parent = 10, 16, quantidade
 		end
+		local retrato=Instance.new("Frame")
+		retrato.Name,retrato.Size,retrato.BackgroundTransparency="Retrato",UDim2.fromScale(1,1),1
+		retrato.Parent=b
+		local detalhes=texto(b,"ResumoPlot","",UDim2.fromOffset(8,8),UDim2.new(1,-16,1,-16),14)
+		detalhes.TextXAlignment,detalhes.TextYAlignment=Enum.TextXAlignment.Left,Enum.TextYAlignment.Top
+		detalhes.TextWrapped,detalhes.Visible,detalhes.ZIndex=true,false,b.ZIndex+3
 		self._itens[id] = { Botao = botao, Modelo = modelos:WaitForChild(id), Quantidade = quantidade,
-			Borda = contorno, Busca = normalizar(Catalogo[id].Nome), Pronto = false }
+			Retrato=retrato,Detalhes=detalhes,Borda = contorno, Busca = normalizar(Catalogo[id].Nome), Pronto = false }
+		table.insert(self._conexoes,detalhes:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+			if self._modo=="Plot" or self._modo=="Novas" then self:_DimensionarGrade() end
+		end))
+		-- O layout pode reposicionar cartoes sem mudar o tamanho total, por exemplo ao ordenar.
+		for _, propriedade in { "AbsolutePosition", "AbsoluteSize" } do
+			table.insert(self._conexoes, b:GetPropertyChangedSignal(propriedade):Connect(function()
+				self:_AtualizarMiniatura(self._itens[id])
+			end))
+		end
 		for _, evento in { b.MouseEnter, b.SelectionGained } do
 			table.insert(self._conexoes, evento:Connect(function() self._foco = id; self:_AtualizarDica() end))
 		end
@@ -156,8 +175,49 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 	table.insert(self._conexoes, self._layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		self._area.CanvasSize = UDim2.fromOffset(0, self._layout.AbsoluteContentSize.Y + 12)
 	end))
+	for _, propriedade in { "CanvasPosition", "AbsolutePosition", "AbsoluteWindowSize" } do
+		table.insert(self._conexoes, self._area:GetPropertyChangedSignal(propriedade):Connect(function() self:_AtualizarMiniaturas() end))
+	end
+	table.insert(self._conexoes, self._grupo:GetPropertyChangedSignal("Visible"):Connect(function() self:_AtualizarMiniaturas() end))
 	self:_DimensionarGrade()
 	return self
+end
+
+function GradePecas:_AtualizarMiniatura(item)
+	if self._destruido or item.Miniatura or not self._grupo.Visible then return end
+	local botao = item.Botao:ObterInstancia()
+	if not botao.Visible then return end
+	local origem, janela = self._area.AbsolutePosition, self._area.AbsoluteWindowSize
+	local posicao, tamanho = botao.AbsolutePosition, botao.AbsoluteSize
+	if janela.X <= 0 or janela.Y <= 0 or tamanho.X <= 0 or tamanho.Y <= 0 then return end
+	if posicao.X < origem.X + janela.X and posicao.X + tamanho.X > origem.X
+		and posicao.Y < origem.Y + janela.Y and posicao.Y + tamanho.Y > origem.Y then
+		if not item.Retrato.Visible then return end
+		item.Miniatura = MiniaturaPeca.new(item.Retrato, item.Modelo)
+	end
+end
+
+function GradePecas:_CriarModos()
+	self._modos={}
+	for i,item in {{"Estoque","Inventário"},{"Plot","Na plot"},{"Novas","Não usadas"}} do
+		local id,nome=item[1],item[2]
+		local botao=self:_Botao(self._grupo,id,function()
+			if self._modo==id then return end
+			self._modo=id; self.Revisao+=1
+			self._area.CanvasPosition=Vector2.zero
+			self:_DimensionarGrade(); self:ConcluirAtualizacao()
+			if self.AoMudarModo then self.AoMudarModo() end
+		end)
+		local b=botao:ObterInstancia()
+		b.Text,b.TextSize,b.Position,b.Size=nome,14,UDim2.new((i-1)/3,10,0,50),UDim2.new(1/3,-14,0,44)
+		b.TextWrapped=true; arredondar(b,7)
+		self._modos[id]=botao
+	end
+end
+
+function GradePecas:_AtualizarMiniaturas()
+	if self._destruido or not self._grupo.Visible then return end
+	for _, item in self._itens do self:_AtualizarMiniatura(item) end
 end
 
 -- Cria um Botao com estilo comum e guarda o objeto, para encerrar sua acao junto com a grade.
@@ -171,8 +231,7 @@ function GradePecas:_Botao(pai, nome, callback)
 	return botao
 end
 
--- Os filtros representam comportamentos existentes. Uma fornalha com transporte e venda pertence aos dois;
--- assim uma peca nova com os mesmos componentes entra nas categorias sem editar a interface.
+-- A ultima categoria reune utilidades; ter correia nao tira a peca da sua categoria principal.
 function GradePecas:_CriarCategorias()
 	local faixa = Instance.new("Frame")
 	faixa.Name, faixa.Position, faixa.Size = "Categorias", UDim2.fromOffset(12, 50), UDim2.new(1, -24, 0, 42)
@@ -207,6 +266,12 @@ end
 -- Compara o filtro com os componentes declarados, sem depender do nome ou do modelo da peca.
 function GradePecas:_PertenceACategoria(id)
 	if self._categoria == "Todos" then return true end
+	if self._categoria == "Transportador" then
+		for _, componente in Catalogo[id].Componentes do
+			if componente.Tipo=="Soltador" or componente.Tipo=="Modificador" or componente.Tipo=="Vendedor" then return false end
+		end
+		return true
+	end
 	for _, componente in Catalogo[id].Componentes do
 		if componente.Tipo == self._categoria then return true end
 	end
@@ -217,7 +282,26 @@ end
 function GradePecas:_DimensionarGrade()
 	local largura = self._conteudo.AbsoluteSize.X
 	if largura <= 0 then return end
-	local colunas = math.clamp(math.floor((largura + 8) / 60), 1, self._loja and 5 or 4)
+	local resumo=not self._loja and self._modo~="Estoque"
+	for _,item in self._itens do
+		local imagem=resumo and largura>=420
+		item.Retrato.Visible=not resumo or imagem
+		item.Retrato.Position=imagem and UDim2.fromOffset(8,8) or UDim2.new()
+		item.Retrato.Size=imagem and UDim2.fromOffset(48,48) or UDim2.fromScale(1,1)
+		item.Quantidade.Visible,item.Detalhes.Visible=not resumo,resumo
+		item.Detalhes.Position=UDim2.fromOffset(imagem and 64 or 8,6)
+		item.Detalhes.Size=UDim2.new(1,imagem and -72 or -16,0,0)
+		item.Detalhes.AutomaticSize=Enum.AutomaticSize.Y
+	end
+	if resumo then
+		local altura=88
+		for _,item in self._itens do
+			if item.Botao:ObterInstancia().Visible then altura=math.max(altura,item.Detalhes.AbsoluteSize.Y+12) end
+		end
+		self._layout.FillDirectionMaxCells,self._layout.CellSize=1,UDim2.fromOffset(largura,altura)
+		return
+	end
+	local colunas = math.clamp(math.floor((largura + 8) / 60), 1, self._compacta and 6 or (self._loja and 5 or 4))
 	local lado = math.max(1, math.floor((largura - (colunas - 1) * 8) / colunas))
 	self._layout.FillDirectionMaxCells, self._layout.CellSize = colunas, UDim2.fromOffset(lado,lado)
 end
@@ -230,12 +314,20 @@ function GradePecas:ObterBotao(id) return self._itens[id].Botao end
 function GradePecas:ObterTextoVazio() return self._vazio end
 
 -- PainelPecas fornece a validacao do estoque, compartilhada com a ficha e com a loja.
-function GradePecas:AtualizarItem(id, quantidade, pronto, selecionada, bloqueado)
+function GradePecas:AtualizarItem(id, quantidade, pronto, selecionada, bloqueado, colocadas)
 	local item = self._itens[id]
+	item.Colocadas=colocadas
 	item.Estoque, item.Pronto, item.Selecionada, item.Bloqueado = quantidade, pronto, selecionada, bloqueado
 	item.Quantidade.Text = self._loja and ("$" .. AbreviarInteiro(Catalogo[id].Preco))
-		or (quantidade == nil and "..." or (pronto and ("x" .. tostring(quantidade)) or "!"))
-	item.Borda.Color, item.Borda.Thickness = selecionada and self._cor or Color3.fromRGB(66,72,89), selecionada and 2 or 1
+		or (quantidade == nil and "..." or (pronto and ("x" .. AbreviarInteiro(quantidade)) or "!"))
+	item.Borda.Thickness = selecionada and 2 or 1
+	local preco=Catalogo[id].Renascimento and "Recompensa de renascimento" or "Loja: $"..AbreviarInteiro(Catalogo[id].Preco)
+	item.Detalhes.Text=Catalogo[id].Nome.."\nNa plot: "..(colocadas and AbreviarInteiro(colocadas) or "...")
+		.." • Inventário: "..(pronto and AbreviarInteiro(quantidade) or "...").." • "..preco.."\n"..(item.Descricao or "")
+end
+
+function GradePecas:AtualizarDescricao(id,descricao)
+	self._itens[id].Descricao=descricao
 end
 
 -- Busca e ordenacao alteram somente a apresentacao; nunca mudam o estoque nem a selecao no controlador.
@@ -245,6 +337,7 @@ function GradePecas:ConcluirAtualizacao()
 	table.sort(ordenados, function(a,b)
 		local ia, ib = self._itens[a], self._itens[b]
 		local qa, qb = ia.Pronto and ia.Estoque or -1, ib.Pronto and ib.Estoque or -1
+		if self._modo=="Plot" then qa,qb=ia.Colocadas or -1,ib.Colocadas or -1 end
 		if self._ordem == "Quantidade" and qa ~= qb then return qa > qb end
 		-- Precos do catalogo sao inteiros decimais canonicos em texto. Comparar tamanho e depois os digitos
 		-- mantem a ordem exata sem converter valores grandes para o number de Luau.
@@ -257,25 +350,37 @@ function GradePecas:ConcluirAtualizacao()
 		return a < b
 	end)
 	local visiveis, comEstoque = 0, 0
+	local totalPlot,tiposPlot,semUso,plotPronta=0,0,0,true
 	-- O inventario exige estoque; a loja inclui todo o catalogo. Os dois filtros visuais podem ocultar
 	-- cartoes, mas nao apagam a selecao nem as miniaturas ja criadas.
 	for ordem, id in ordenados do
 		local item = self._itens[id]
-		local possui = self._loja or not item.Pronto or item.Estoque > 0
+		local possui = if self._loja then not Catalogo[id].Renascimento else not item.Pronto or item.Estoque > 0
+		if item.Colocadas==nil then plotPronta=false
+		elseif item.Colocadas>0 then totalPlot+=item.Colocadas; tiposPlot+=1
+		end
+		local disponivel=item.Pronto and (item.Estoque>0 or (not Catalogo[id].Renascimento
+			and Inteiro.eValido(self.Saldo) and Inteiro.subtrair(self.Saldo,Catalogo[id].Preco)~=nil))
+		if item.Colocadas==0 and disponivel then semUso+=1 end
+		if self._modo=="Plot" then possui=item.Colocadas~=nil and item.Colocadas>0
+		elseif self._modo=="Novas" then possui=item.Colocadas==0 and disponivel end
 		if possui then comEstoque += 1 end
 		local visivel = possui and self:_PertenceACategoria(id) and item.Busca:find(busca,1,true) ~= nil
 		local b = item.Botao:ObterInstancia()
 		b.Visible, b.LayoutOrder = visivel, ordem
-		-- Clona uma unica vez, quando o cartao realmente aparece numa aba aberta.
-		if visivel and self._grupo.Visible and not item.Miniatura then
-			item.Miniatura = MiniaturaPeca.new(b, item.Modelo)
-		end
 		item.Botao:DefinirDisponivel(visivel and item.Pronto and not item.Bloqueado)
 		if visivel then visiveis += 1 end
 	end
 	self._vazio.Visible = visiveis == 0
 	self._vazio.Text = comEstoque == 0 and (self._loja and "Nenhuma peça disponível."
 		or "Seu inventário está vazio.\nCompre peças na loja [F].") or "Nenhuma peça encontrada."
+	if self._modo=="Plot" or self._modo=="Novas" then
+		self._vazio.Text=not plotPronta and "Carregando peças da plot..." or (comEstoque>0 and "Nenhuma peça encontrada."
+			or (self._modo=="Plot" and "Você ainda não colocou peças na plot." or "Nenhuma peça não usada disponível com seu estoque e saldo."))
+	end
+	self._resumoDica=not plotPronta and "Carregando resumo..." or (self._modo=="Plot"
+		and (AbreviarInteiro(totalPlot).." peças • "..tiposPlot.." tipos na plot") or semUso.." tipos disponíveis ainda não usados")
+	for id,b in self._modos or {} do b:ObterInstancia().BackgroundColor3=id==self._modo and Color3.fromRGB(91,43,66) or Color3.fromRGB(37,39,47) end
 	self._ordenar:ObterInstancia().Text = self._ordem == "Nome" and "Nome ↑" or (self._loja and "Preço ↑" or "Qtd. ↓")
 	-- O filtro ativo recebe a mesma cor verde do titulo. Os filhos diretos do icone sao as formas
 	-- desenhadas por CriarCategoria, portanto podem ser recoloridos sem recriar botoes ou conexoes.
@@ -288,6 +393,7 @@ function GradePecas:ConcluirAtualizacao()
 			end
 		end
 	end
+	self:_AtualizarMiniaturas()
 	self:_AtualizarDica()
 end
 
@@ -295,12 +401,13 @@ end
 function GradePecas:_AtualizarDica()
 	if self._categoriaFoco then self._dica.Text = self._categoriaFoco; return end
 	local id = self._foco
+	if id and not self._itens[id].Botao:ObterInstancia().Visible then id=nil end
 	if not id then
 		for _, candidato in self._ids do
-			if self._itens[candidato].Selecionada then id = candidato; break end
+			if self._itens[candidato].Selecionada and self._itens[candidato].Botao:ObterInstancia().Visible then id = candidato; break end
 		end
 	end
-	self._dica.Text = id and Catalogo[id].Nome or "Clique: detalhes • Duplo clique: colocar"
+	self._dica.Text = id and Catalogo[id].Nome or (not self._loja and self._modo~="Estoque" and self._resumoDica) or "Clique: detalhes • Duplo clique: colocar"
 end
 
 -- Primeiro desconecta eventos, depois libera miniaturas e botoes. A guarda permite chamar novamente

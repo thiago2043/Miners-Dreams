@@ -1,152 +1,103 @@
-local Botao = require(script.Parent.Botao)
+local Janela=require(script.Parent.PainelProgressao)
+local PainelBlueprints={}
+PainelBlueprints.__index=PainelBlueprints
 
-local PainelBlueprints = {}
-PainelBlueprints.__index = PainelBlueprints
-
--- Cria uma aba central para nomear, listar e preparar blueprints. O controlador mantem o estado e o servidor
--- valida os registros; este painel apenas apresenta as respostas e inicia as acoes.
-function PainelBlueprints.new(pai, construcao)
-	local self = setmetatable({
-		_construcao = construcao,
-		_botoes = {},
-		_jaVisivel = false,
-		_destruido = false,
-	}, PainelBlueprints)
-
-	self._grupo = Instance.new("Frame")
-	self._grupo.Name, self._grupo.AnchorPoint = "Blueprints", Vector2.new(0.5, 0.5)
-	self._grupo.Position, self._grupo.Size = UDim2.new(0.5, 0, 0.5, 0), UDim2.new(0.4, 0, 0.72, 0)
-	self._grupo.BackgroundColor3, self._grupo.BorderSizePixel = Color3.fromRGB(25, 25, 25), 0
-	self._grupo.Visible, self._grupo.Parent = false, pai
-	local limite = Instance.new("UISizeConstraint")
-	limite.MaxSize, limite.Parent = Vector2.new(460, 560), self._grupo
-
-	self._titulo = self:_CriarTexto("Titulo", "Blueprints [B]", UDim2.new(0, 16, 0, 10), UDim2.new(1, -108, 0, 36), 20, true)
-	local fechar = self:_CriarBotao(self._grupo, "Fechar", UDim2.new(1, -88, 0, 10), UDim2.fromOffset(72, 34), function()
-		construcao:AlternarBlueprints()
-	end)
-	fechar:ObterInstancia().Text = "Fechar [B]"
-
-	self._nome = Instance.new("TextBox")
-	self._nome.Name, self._nome.Position = "NomeBlueprint", UDim2.new(0, 16, 0, 56)
-	self._nome.Size, self._nome.BackgroundColor3 = UDim2.new(1, -32, 0, 38), Color3.fromRGB(45, 45, 45)
-	self._nome.BorderSizePixel, self._nome.ClearTextOnFocus = 0, false
-	self._nome.Font, self._nome.TextColor3, self._nome.PlaceholderColor3 = Enum.Font.SourceSans, Color3.fromRGB(255, 255, 255), Color3.fromRGB(190, 190, 190)
-	self._nome.TextSize, self._nome.TextXAlignment = 17, Enum.TextXAlignment.Left
-	self._nome.TextWrapped = true
-	self._nome.PlaceholderText, self._nome.Text = "Nome opcional (máximo 40 caracteres)", ""
-	self._nome.Parent = self._grupo
-
-	self._botaoCriar = self:_CriarBotao(self._grupo, "Criar", UDim2.new(0, 16, 0, 102), UDim2.new(1, -32, 0, 42), function()
-		local iniciou, mensagem = construcao:IniciarCriacaoBlueprint(self._nome.Text)
+function PainelBlueprints.new(pai,construcao,jogador)
+	local janela=Janela.new(pai,construcao.Navegacao,"Blueprints","Blueprints","B",nil,520,jogador)
+	local self=setmetatable({_construcao=construcao,_janela=janela,_grupo=janela._grupo,_botoes=janela._botoes,
+		_listaBlueprints={},_jaVisivel=false},PainelBlueprints)
+	local area=janela.Conteudo
+	janela:Texto(area,"Novo","Novo blueprint",UDim2.fromOffset(0,0),UDim2.new(1,-8,0,24),18,true)
+	self._nome=Instance.new("TextBox")
+	local nome=self._nome
+	nome.Name,nome.Position,nome.Size="NomeBlueprint",UDim2.fromOffset(0,30),UDim2.new(1,-8,0,38)
+	nome.BackgroundColor3,nome.BorderSizePixel,nome.ClearTextOnFocus=Color3.fromRGB(31,33,40),0,false
+	nome.Font,nome.TextColor3,nome.PlaceholderColor3=Enum.Font.SourceSans,Color3.fromRGB(240,243,250),Color3.fromRGB(163,172,189)
+	nome.TextSize,nome.TextXAlignment,nome.TextWrapped=17,Enum.TextXAlignment.Left,true
+	nome.PlaceholderText,nome.Text,nome.Parent="Nome do conjunto (opcional)","",area
+	local canto=Instance.new("UICorner"); canto.CornerRadius,canto.Parent=UDim.new(0,7),nome
+	local padding=Instance.new("UIPadding"); padding.PaddingLeft,padding.PaddingRight,padding.Parent=UDim.new(0,10),UDim.new(0,10),nome
+	self._botaoCriar=janela:Botao(area,"Criar",UDim2.fromOffset(0,78),UDim2.new(1,-8,0,36),function()
+		local iniciou,mensagem=construcao:IniciarCriacaoBlueprint(nome.Text)
 		if not iniciou then self:_MostrarMensagem(mensagem) end
 	end)
-	self._botaoCriar:ObterInstancia().Text = "Criar blueprint pela seleção 3D"
-
-	self._status = self:_CriarTexto("Status", "", UDim2.new(0, 16, 0, 152), UDim2.new(1, -32, 0, 42), 15, false)
-	self._lista = Instance.new("ScrollingFrame")
-	self._lista.Name, self._lista.Position = "ListaBlueprints", UDim2.new(0, 12, 0, 200)
-	self._lista.Size, self._lista.BackgroundColor3 = UDim2.new(1, -24, 1, -270), Color3.fromRGB(35, 35, 35)
-	self._lista.BorderSizePixel, self._lista.ScrollBarThickness = 0, 6
-	self._lista.CanvasSize, self._lista.ScrollingDirection = UDim2.new(), Enum.ScrollingDirection.Y
-	self._lista.Active, self._lista.Parent = true, self._grupo
-	self._vazio = self:_CriarTexto("Vazio", "Nenhum blueprint salvo ainda.", UDim2.new(0, 10, 0, 8), UDim2.new(1, -28, 0, 48), 16, false)
-	self._vazio.Parent = self._lista
-	self._nota = self:_CriarTexto("Nota", "Selecionar um item prepara o conjunto. A colocação consome o inventário e compra o que faltar.",
-		UDim2.new(0, 16, 1, -54), UDim2.new(1, -32, 0, 42), 14, false)
-	self._nota.TextColor3, self._nota.Parent = Color3.fromRGB(210, 210, 210), self._grupo
-	self._listaBlueprints = {}
+	local criar=self._botaoCriar:ObterInstancia()
+	criar.Text,criar.BackgroundColor3,criar.TextColor3="Selecionar peças na plot",janela.Cor,Color3.fromRGB(17,29,35)
+	self._status=janela:Texto(area,"Status","Selecione a área e confirme para salvar o conjunto.",UDim2.fromOffset(0,120),UDim2.new(1,-8,0,36),14)
+	janela:Texto(area,"Salvos","Conjuntos salvos",UDim2.fromOffset(0,168),UDim2.new(.65,0,0,24),18,true)
+	self._quantidade=janela:Texto(area,"Quantidade","",UDim2.new(.65,0,0,168),UDim2.new(.35,-8,0,24),14)
+	self._quantidade.TextXAlignment=Enum.TextXAlignment.Right
+	self._lista=Instance.new("Frame")
+	self._lista.Name,self._lista.Position,self._lista.Size="ListaBlueprints",UDim2.fromOffset(0,202),UDim2.new(1,-8,0,92)
+	self._lista.BackgroundTransparency,self._lista.Parent=1,area
+	self._vazio=janela:Texto(self._lista,"Vazio","Nenhum blueprint salvo.\nCrie um conjunto com as peças da sua plot.",UDim2.fromOffset(14,8),UDim2.new(1,-28,0,72),17)
+	self._vazio.TextXAlignment=Enum.TextXAlignment.Center
 	return self
 end
 
--- Monta um texto no lugar recebido, mantendo fonte, contraste e quebra de linha iguais entre titulo, status e nota.
-function PainelBlueprints:_CriarTexto(nome, texto, posicao, tamanho, fonte, negrito)
-	local label = Instance.new("TextLabel")
-	label.Name, label.Text, label.Position, label.Size = nome, texto, posicao, tamanho
-	label.BackgroundTransparency, label.BorderSizePixel = 1, 0
-	label.Font = if negrito then Enum.Font.SourceSansBold else Enum.Font.SourceSans
-	label.TextColor3, label.TextSize, label.TextWrapped = Color3.fromRGB(255, 255, 255), fonte, true
-	label.TextXAlignment, label.TextYAlignment = Enum.TextXAlignment.Left, Enum.TextYAlignment.Center
-	return label
-end
-
--- Registra cada TextButton no Botao reutilizavel para desconectar seu callback ao recriar ou fechar a aba.
-function PainelBlueprints:_CriarBotao(pai, nome, posicao, tamanho, callback)
-	local botao = Botao.new(pai, nome, callback)
-	local instancia = botao:ObterInstancia()
-	instancia.Position, instancia.Size = posicao, tamanho
-	instancia.BackgroundColor3, instancia.BorderSizePixel = Color3.fromRGB(55, 55, 55), 0
-	instancia.Font, instancia.TextColor3, instancia.TextSize = Enum.Font.SourceSansBold, Color3.fromRGB(255, 255, 255), 16
-	instancia.TextWrapped, instancia.Selectable = true, true
-	botao:DefinirDisponivel(true)
-	table.insert(self._botoes, botao)
-	return botao
-end
-
--- Mostra somente mensagens seguras vindas do controlador; respostas inesperadas viram uma falha legivel.
 function PainelBlueprints:_MostrarMensagem(mensagem)
-	self._status.Text = type(mensagem) == "string" and mensagem or "Não foi possível concluir a operação."
+	self._status.Text=type(mensagem)=="string" and mensagem or "Não foi possível concluir a operação."
 end
 
--- Descarta os itens dinamicos antes de carregar outra lista, liberando os callbacks antigos.
 function PainelBlueprints:_LimparLista()
-	for _, botao in self._listaBlueprints do
+	for _,botao in self._listaBlueprints do
 		botao:Destruir()
-		local indice = table.find(self._botoes, botao)
-		if indice then table.remove(self._botoes, indice) end
+		local indice=table.find(self._botoes,botao)
+		if indice then table.remove(self._botoes,indice) end
 	end
 	table.clear(self._listaBlueprints)
 end
 
--- Busca apenas metadados de cada blueprint e cria um botao por conjunto; selecionar prepara a previa validada no servidor.
 function PainelBlueprints:_CarregarLista()
 	self:_LimparLista()
-	local sucesso, mensagem, blueprints = self._construcao:ListarBlueprints()
+	local sucesso,mensagem,blueprints=self._construcao:ListarBlueprints()
+	if self._destruido then return end
 	if not sucesso then
-		self._vazio.Visible = true
-		self._vazio.Text = mensagem
-		self._lista.CanvasSize = UDim2.fromOffset(0, 56)
-		return
+		self._vazio.Visible,self._vazio.Text=true,mensagem
+		self._quantidade.Text="Indisponível"
+	else
+		self._quantidade.Text=#blueprints.." salvo(s)"
+		self._vazio.Visible,self._vazio.Text=#blueprints==0,"Nenhum blueprint salvo.\nCrie um conjunto com as peças da sua plot."
+		for indice,blueprint in blueprints do
+			local id=blueprint.Id
+			local botao=self._janela:Botao(self._lista,"Blueprint_"..id,UDim2.fromOffset(0,(indice-1)*76),UDim2.new(1,0,0,66),function()
+				local iniciou,erro=self._construcao:ColocarBlueprint(id)
+				if not iniciou then self:_MostrarMensagem(erro) end
+			end)
+			local b=botao:ObterInstancia(); b.Text=""
+			local nome=self._janela:Texto(b,"Nome",blueprint.Nome,UDim2.fromOffset(12,7),UDim2.new(1,-112,0,24),18,true)
+			nome.TextWrapped,nome.TextTruncate=false,Enum.TextTruncate.AtEnd
+			self._janela:Texto(b,"Pecas",tostring(blueprint.Quantidade).." peças",UDim2.fromOffset(12,34),UDim2.new(1,-112,0,21),14)
+			local acao=self._janela:Texto(b,"Acao","Colocar →",UDim2.new(1,-100,0,0),UDim2.fromOffset(88,66),16,true)
+			acao.TextColor3=self._janela.Cor
+			table.insert(self._listaBlueprints,botao)
+		end
 	end
-	self._vazio.Visible = #blueprints == 0
-	self._vazio.Text = "Nenhum blueprint salvo ainda."
-	for indice, blueprint in blueprints do
-		local identificador = blueprint.Id
-		local botao = self:_CriarBotao(self._lista, "Blueprint_" .. identificador,
-			UDim2.new(0, 10, 0, 8 + (indice - 1) * 58), UDim2.new(1, -28, 0, 50), function()
-			local iniciou, erro = self._construcao:ColocarBlueprint(identificador)
-			if not iniciou then self:_MostrarMensagem(erro) end
-		end)
-		botao:ObterInstancia().Text = blueprint.Nome .. "\n" .. tostring(blueprint.Quantidade) .. " peças — clique para preparar"
-		table.insert(self._listaBlueprints, botao)
-	end
-	self._lista.CanvasSize = UDim2.fromOffset(0, math.max(56, #blueprints * 58 + 8))
+	local altura=math.max(92,#self._listaBlueprints*76)
+	self._lista.Size=UDim2.new(1,-8,0,altura)
+	self._janela.Conteudo.CanvasSize=UDim2.fromOffset(0,202+altura)
 end
 
--- Mostra a aba quando ela esta na pilha de navegacao e busca dados apenas ao abrir ou apos salvar.
 function PainelBlueprints:Atualizar()
 	if self._destruido then return end
-	local visivel = self._construcao.Navegacao:Contem("Blueprints")
-	self._grupo.Visible = visivel
+	self._janela:Atualizar()
+	local visivel=self._grupo.Visible
 	if visivel then
-		local resultado = self._construcao:ObterResultadoBlueprint()
+		local resultado=self._construcao:ObterResultadoBlueprint()
 		if resultado then
 			self:_MostrarMensagem(resultado.Mensagem)
-			if resultado.Sucesso then self._nome.Text = "" end
+			if resultado.Sucesso then self._nome.Text="" end
 		end
 		if not self._jaVisivel or resultado then self:_CarregarLista() end
 	end
-	self._jaVisivel = visivel
+	self._jaVisivel=visivel
 end
 
--- Desliga os callbacks e remove o painel sem deixar botoes ativos apos o ScreenGui ser destruido.
 function PainelBlueprints:Destruir()
 	if self._destruido then return end
-	self._destruido = true
+	self._destruido=true
 	self:_LimparLista()
-	for _, botao in self._botoes do botao:Destruir() end
-	table.clear(self._botoes)
-	self._grupo:Destroy()
+	self._janela:Destruir()
 end
 
 return PainelBlueprints

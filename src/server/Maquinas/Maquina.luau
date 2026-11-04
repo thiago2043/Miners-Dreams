@@ -36,7 +36,7 @@ function Maquina.new(modelo, terreno, definicao, simulacao)
 	-- valores mutaveis e a lista sao proprios desta maquina.
 	local self = setmetatable({
 		_modelo = modelo, _terreno = terreno, _componentes = componentes, _destruida = false, _simulacao = simulacao,
-		_volume = VolumeConstrucao.new(tamanho, definicao.Blocos),
+		_volume = VolumeConstrucao.new(tamanho, definicao.Blocos, if not modelo:GetAttribute("OrientacaoEsteiraLegada") then definicao else nil),
 	}, Maquina)
 	-- Composicao: cada entrada cria uma capacidade reutilizavel com seus proprios parametros.
 	for _, configuracao in definicao.Componentes do
@@ -63,6 +63,15 @@ function Maquina:ObterVolume() return self._volume end
 -- Devolve a simulacao compartilhada pela fabrica. Os componentes a usam para registrar minerios, superficies
 -- em movimento e sensores.
 function Maquina:ObterSimulacao() return self._simulacao end
+
+function Maquina:ObterNivelUpgrade(id)
+	local dados=self:ObterDadosDono()
+	return dados and dados.ObterUpgrade and dados:ObterUpgrade(id) or 0
+end
+function Maquina:ObterNivelMotores()
+	local dados=self:ObterDadosDono()
+	return dados and dados.ObterVelocidadeMotores and dados:ObterVelocidadeMotores() or 0
+end
 
 -- Polimorfismo: a mesma chamada executa geracao, transporte ou contato conforme a classe do componente.
 -- So executa quando o modelo ainda pertence a plot correta. Percorre as capacidades e chama a mesma operacao

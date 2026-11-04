@@ -8,6 +8,7 @@ local serde = require("@lune/serde")
 -- GetService e substituicoes permite controlar dependencias; devolve carregar e o criador de nos de script.
 local function criarCarregador(ambiente, servicos, substituicoes)
 	local nos, cache, carregando = {}, {}, {}
+	local sequenciaGuid=0
 	-- Cria ou reutiliza um objeto que representa um caminho de ModuleScript. A metatabela traduz Parent e
 	-- WaitForChild em caminhos, sem criar instancias reais no Studio.
 	local function no(caminho)
@@ -27,16 +28,22 @@ local function criarCarregador(ambiente, servicos, substituicoes)
 	-- Os testes recebem somente os servicos necessarios. HttpService usa JSON do runtime local e as raizes de
 	-- scripts apontam para arquivos da pasta do projeto.
 	local raizes = {
+		UserInputService = {TouchEnabled=false,KeyboardEnabled=true},
+		TextService = { GetTextSize = function(_, texto, _, _, limite)
+			return { X = limite.X, Y = math.max(15, math.ceil(#texto / 40) * 15) }
+		end },
+		Debris = { AddItem = function(_, objeto) objeto:Destroy() end },
 		HttpService = {
+			GenerateGUID = function() sequenciaGuid+=1; return string.format("00000000-0000-0000-0000-%012d",sequenciaGuid) end,
 			JSONEncode = function(_, valor) return serde.encode("json", valor) end,
 			JSONDecode = function(_, valor) return serde.decode("json", valor) end,
 		},
 		ServerScriptService = no("src/server"),
 		ReplicatedStorage = { Shared = no("src/shared"), Packages = no("Packages") },
 	}
-	local jogo = { GetService = function(_, nome)
+	local jogo = setmetatable({ GetService = function(_, nome)
 		return assert(servicos[nome] or raizes[nome], "Servico nao simulado: " .. nome)
-	end }
+	end },{__index=ambiente.game})
 	local carregar
 	-- Executa um modulo uma vez e guarda seu retorno no cache, como require. A marca carregando reconhece
 	-- dependencias circulares antes de entrar em recursao infinita.
@@ -49,6 +56,7 @@ local function criarCarregador(ambiente, servicos, substituicoes)
 		-- Cada modulo recebe game, script e require proprios neste ambiente isolado. A funcao compilada e executada
 		-- apenas com esses recursos simulados, sem entrar no servidor Roblox.
 		local env = table.clone(ambiente)
+		if ambiente.os then env.os=setmetatable(table.clone(ambiente.os),{__index=os}) end
 		env.game = jogo
 		env.script = no(caminho:match("/init%.client$") and "src/client" or caminho)
 		env.require = function(modulo) return carregar(modulo.Caminho) end

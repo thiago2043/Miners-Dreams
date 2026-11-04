@@ -25,6 +25,7 @@ repousar("Giro residual em Y", residual)
 local caiu = repousar("Queda inclinada", Corpo.new(CFrame.new(0, 7, 0) * CFrame.Angles(0.2, 0.3, 0.1), Vector3.one))
 repousar("Minerio retangular", Corpo.new(CFrame.new(0, 7, 0) * CFrame.Angles(0.2, 0.3, 0.1), Vector3.new(2, 1, 0.5)))
 
+assert(caiu._apoio, "Um corpo estabilizado deve reutilizar seu apoio.")
 local altura = caiu.CFrame.Position.Y
 for _ = 1, 12 do caiu:Avancar(passo, gravidade, {}) end
 assert(caiu.CFrame.Position.Y < altura - 0.5, "Remover o apoio deve fazer o minerio voltar a cair.")
@@ -51,3 +52,18 @@ local beirada = { CFrame = CFrame.new(0.55, -0.5, 0), Tamanho = Vector3.new(0.5,
 for _ = 1, 120 do pendurado:Avancar(passo, gravidade, { beirada }) end
 assert(pendurado.CFrame.Position.Y < -1, "Um apoio fora do centro de massa nao pode prender o minerio no ar.")
 print("PASS: repouso, giro residual, queda, remocao do apoio, esteira e giro livre no ar.")
+
+local esquerdo={CFrame=CFrame.new(-.375,-.5,0),Tamanho=Vector3.new(.75,1,2),Velocidade=Vector3.zero}
+local direito={CFrame=CFrame.new(.375,-.5,0),Tamanho=Vector3.new(.75,1,2),Velocidade=Vector3.zero}
+local junto=Corpo.new(CFrame.new(0,.5001,0),Vector3.one)
+for _=1,120 do junto:Avancar(passo,gravidade,{esquerdo,direito}) end
+assert(junto.Velocidade==Vector3.zero and junto.MomentoAngular==Vector3.zero)
+assert(junto._apoio and junto._apoio.Apoios,"Repouso sustentado por duas pecas deve ser reutilizado sem exigir uma face unica.")
+local pose=junto.CFrame
+for _=1,120 do junto:Avancar(passo,gravidade,{esquerdo,direito}) end
+assert(junto.CFrame==pose)
+-- Alterar o proprio descritor tambem precisa invalidar a fotografia do apoio.
+esquerdo.CFrame+=Vector3.new(0,-2,0); direito.CFrame+=Vector3.new(0,-2,0)
+junto:Avancar(passo,gravidade,{esquerdo,direito})
+assert(junto.CFrame.Position.Y<pose.Position.Y and not junto._apoio)
+print("PASS: repouso sobre multiplas pecas permanece estavel e acorda quando os apoios mudam.")

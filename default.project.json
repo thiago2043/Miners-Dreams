@@ -1,8 +1,9 @@
 {
   "name": "Miners Dreams",
+  "placeId": 112816071646522,
+  "gameId": 10770782136,
   "tree": {
     "$className": "DataModel",
-
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
@@ -48,17 +49,242 @@
         "MineradoraGalactica": {
           "$path": "modelos/mineradoras/assets/MineradoraGalactica.rbxm"
         },
-        "EsteiraBasica": {
-          "$path": "modelos/rojo/EsteiraBasica.rbxm"
+        "JatoMineral": {
+          "$path": "modelos/modificadores/assets/JatoMineral.rbxm"
+        },
+        "BanhoCobre": {
+          "$path": "modelos/modificadores/assets/BanhoCobre.rbxm"
+        },
+        "PrensaTripla": {
+          "$path": "modelos/modificadores/assets/PrensaTripla.rbxm"
+        },
+        "PrensaMinerio": {
+          "$path": "modelos/modificadores/assets/PrensaMinerio.rbxm"
+        },
+        "LaserBasico": {
+          "$path": "modelos/modificadores/assets/LaserBasico.rbxm"
+        },
+        "RefinadorCobre": {
+          "$path": "modelos/modificadores/assets/RefinadorCobre.rbxm"
+        },
+        "BobinaDupla": {
+          "$path": "modelos/modificadores/assets/BobinaDupla.rbxm"
+        },
+        "Ionizador": {
+          "$path": "modelos/modificadores/assets/Ionizador.rbxm"
+        },
+        "RefinadorIndustrial": {
+          "$path": "modelos/modificadores/assets/RefinadorIndustrial.rbxm"
+        },
+        "LaserIndustrial": {
+          "$path": "modelos/modificadores/assets/LaserIndustrial.rbxm"
+        },
+        "RaioPlasma": {
+          "$path": "modelos/modificadores/assets/RaioPlasma.rbxm"
+        },
+        "BobinaInducao": {
+          "$path": "modelos/modificadores/assets/BobinaInducao.rbxm"
+        },
+        "CamaraMagnetica": {
+          "$path": "modelos/modificadores/assets/CamaraMagnetica.rbxm"
+        },
+        "RefinadorMolecular": {
+          "$path": "modelos/modificadores/assets/RefinadorMolecular.rbxm"
+        },
+        "TunelCompressao": {
+          "$path": "modelos/modificadores/assets/TunelCompressao.rbxm"
+        },
+        "ProcessadorTermico": {
+          "$path": "modelos/modificadores/assets/ProcessadorTermico.rbxm"
+        },
+        "CatalisadorTermico": {
+          "$path": "modelos/modificadores/assets/CatalisadorTermico.rbxm"
+        },
+        "CamaraPlasma": {
+          "$path": "modelos/modificadores/assets/CamaraPlasma.rbxm"
+        },
+        "LaserDuplo": {
+          "$path": "modelos/modificadores/assets/LaserDuplo.rbxm"
+        },
+        "Polarizador": {
+          "$path": "modelos/modificadores/assets/Polarizador.rbxm"
+        },
+        "RessonadorPlasma": {
+          "$path": "modelos/modificadores/assets/RessonadorPlasma.rbxm"
+        },
+        "RefinadorAtomico": {
+          "$path": "modelos/modificadores/assets/RefinadorAtomico.rbxm"
+        },
+        "AceleradorModular": {
+          "$path": "modelos/modificadores/assets/AceleradorModular.rbxm"
+        },
+        "TunelMolecular": {
+          "$path": "modelos/modificadores/assets/TunelMolecular.rbxm"
+        },
+        "ProcessadorParticulas": {
+          "$path": "modelos/modificadores/assets/ProcessadorParticulas.rbxm"
+        },
+        "FeixeMolecular": {
+          "$path": "modelos/modificadores/assets/FeixeMolecular.rbxm"
+        },
+        "CamaraQuantica": {
+          "$path": "modelos/modificadores/assets/CamaraQuantica.rbxm"
+        },
+        "CompressorAtomico": {
+          "$path": "modelos/modificadores/assets/CompressorAtomico.rbxm"
+        },
+        "CamaraFissao": {
+          "$path": "modelos/modificadores/assets/CamaraFissao.rbxm"
+        },
+        "NucleoAntimateria": {
+          "$path": "modelos/modificadores/assets/NucleoAntimateria.rbxm"
+        },
+        "RessonadorQuantico": {
+          "$path": "modelos/modificadores/assets/RessonadorQuantico.rbxm"
+        },
+        "CamaraEstelar": {
+          "$path": "modelos/modificadores/assets/CamaraEstelar.rbxm"
+        },
+        "AnelParticulas": {
+          "$path": "modelos/modificadores/assets/AnelParticulas.rbxm"
+        },
+        "LaserQuantico": {
+          "$path": "modelos/modificadores/assets/LaserQuantico.rbxm"
+        },
+        "AmplificadorFase": {
+          "$path": "modelos/modificadores/assets/AmplificadorFase.rbxm"
+        },
+        "PulsoEstelar": {
+          "$path": "modelos/modificadores/assets/PulsoEstelar.rbxm"
+        },
+        "RefinadorGalactico": {
+          "$path": "modelos/modificadores/assets/RefinadorGalactico.rbxm"
+        },
+        "AnelGravitacional": {
+          "$path": "modelos/modificadores/assets/AnelGravitacional.rbxm"
+        },
+        "BobinaEstelar": {
+          "$path": "modelos/modificadores/assets/BobinaEstelar.rbxm"
+        },
+        "TunelFase": {
+          "$path": "modelos/modificadores/assets/TunelFase.rbxm"
+        },
+        "FeixeFotons": {
+          "$path": "modelos/modificadores/assets/FeixeFotons.rbxm"
+        },
+        "RessonadorEstelar": {
+          "$path": "modelos/modificadores/assets/RessonadorEstelar.rbxm"
+        },
+        "NucleoQuasar": {
+          "$path": "modelos/modificadores/assets/NucleoQuasar.rbxm"
+        },
+        "CompressorGalactico": {
+          "$path": "modelos/modificadores/assets/CompressorGalactico.rbxm"
+        },
+        "TunelHorizonte": {
+          "$path": "modelos/modificadores/assets/TunelHorizonte.rbxm"
+        },
+        "FeixeSingularidade": {
+          "$path": "modelos/modificadores/assets/FeixeSingularidade.rbxm"
+        },
+        "LaserGalactico": {
+          "$path": "modelos/modificadores/assets/LaserGalactico.rbxm"
+        },
+        "PolarizadorCosmico": {
+          "$path": "modelos/modificadores/assets/PolarizadorCosmico.rbxm"
+        },
+        "RessonadorVacuo": {
+          "$path": "modelos/modificadores/assets/RessonadorVacuo.rbxm"
+        },
+        "NucleoHorizonte": {
+          "$path": "modelos/modificadores/assets/NucleoHorizonte.rbxm"
+        },
+        "CamaraSingularidade": {
+          "$path": "modelos/modificadores/assets/CamaraSingularidade.rbxm"
+        },
+        "AmplificadorVacuo": {
+          "$path": "modelos/modificadores/assets/AmplificadorVacuo.rbxm"
+        },
+        "PulsoDimensional": {
+          "$path": "modelos/modificadores/assets/PulsoDimensional.rbxm"
+        },
+        "RessonadorDimensional": {
+          "$path": "modelos/modificadores/assets/RessonadorDimensional.rbxm"
+        },
+        "NucleoDimensional": {
+          "$path": "modelos/modificadores/assets/NucleoDimensional.rbxm"
+        },
+        "Esteira2x2": {
+          "$path": "modelos/esteiras/assets/Esteira2x2.rbxm"
+        },
+        "Esteira1x1": {
+          "$path": "modelos/esteiras/assets/Esteira1x1.rbxm"
+        },
+        "Centralizadora2x2": {
+          "$path": "modelos/esteiras/assets/Centralizadora2x2.rbxm"
+        },
+        "Centralizadora1x1": {
+          "$path": "modelos/esteiras/assets/Centralizadora1x1.rbxm"
+        },
+        "Parede1x1": {
+          "$path": "modelos/esteiras/assets/Parede1x1.rbxm"
         },
         "FornalhaBasica": {
-          "$path": "modelos/rojo/FornalhaBasica.rbxm"
+          "$path": "modelos/fornalhas/assets/FornalhaBasica.rbxm"
         },
-        "ModificadorBasico": {
-          "$path": "modelos/rojo/ModificadorBasico.rbxm"
+        "FornalhaReforcada": {
+          "$path": "modelos/fornalhas/assets/FornalhaReforcada.rbxm"
+        },
+        "FornalhaIndustrial": {
+          "$path": "modelos/fornalhas/assets/FornalhaIndustrial.rbxm"
+        },
+        "FornalhaTermica": {
+          "$path": "modelos/fornalhas/assets/FornalhaTermica.rbxm"
+        },
+        "FornalhaPlasma": {
+          "$path": "modelos/fornalhas/assets/FornalhaPlasma.rbxm"
+        },
+        "FornalhaMolecular": {
+          "$path": "modelos/fornalhas/assets/FornalhaMolecular.rbxm"
+        },
+        "FornalhaQuantica": {
+          "$path": "modelos/fornalhas/assets/FornalhaQuantica.rbxm"
+        },
+        "FornalhaEstelar": {
+          "$path": "modelos/fornalhas/assets/FornalhaEstelar.rbxm"
+        },
+        "FornalhaGalactica": {
+          "$path": "modelos/fornalhas/assets/FornalhaGalactica.rbxm"
+        },
+        "MineradoraAurora": {
+          "$path": "modelos/renascimento/assets/MineradoraAurora.rbxm"
+        },
+        "MineradoraPulsar": {
+          "$path": "modelos/renascimento/assets/MineradoraPulsar.rbxm"
+        },
+        "MineradoraEterna": {
+          "$path": "modelos/renascimento/assets/MineradoraEterna.rbxm"
+        },
+        "FornalhaAurora": {
+          "$path": "modelos/renascimento/assets/FornalhaAurora.rbxm"
+        },
+        "FornalhaSupernova": {
+          "$path": "modelos/renascimento/assets/FornalhaSupernova.rbxm"
+        },
+        "FornalhaEterna": {
+          "$path": "modelos/renascimento/assets/FornalhaEterna.rbxm"
+        },
+        "SeloAurora": {
+          "$path": "modelos/renascimento/assets/SeloAurora.rbxm"
+        },
+        "PrismaPulsar": {
+          "$path": "modelos/renascimento/assets/PrismaPulsar.rbxm"
+        },
+        "NexusEterno": {
+          "$path": "modelos/renascimento/assets/NexusEterno.rbxm"
         }
       },
-      "Packages":{
+      "Packages": {
         "$path": "Packages"
       },
       "UpdateGold": {
@@ -68,16 +294,14 @@
         "$className": "RemoteEvent"
       }
     },
-
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "$path": "src/server",
       "$ignoreUnknownInstances": true,
-      "ServerPackages":{
+      "ServerPackages": {
         "$path": "ServerPackages"
       }
     },
-
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "Client": {
@@ -85,8 +309,8 @@
         }
       }
     },
-
     "Workspace": {
+      "$ignoreUnknownInstances": true,
       "$properties": {
         "FilteringEnabled": true
       },

@@ -1,6 +1,7 @@
 -- Representa a parte do minerio e oferece operacoes validadas sobre valor, dimensoes, propriedade e consumo.
 local ServerScriptService = game:GetService("ServerScriptService")
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
+local Debris = game:GetService("Debris")
 
 local Minerio = {}
 Minerio.__index = Minerio
@@ -30,13 +31,14 @@ end
 
 -- Recebe a definicao, o CFrame de saida e o terreno dono. Cria a Part ancorada com valor/tamanho validados e
 -- atributos de propriedade, insere na pasta Minerios e devolve o objeto Minerio.
-function Minerio.Criar(definicao, cframe, terreno)
+function Minerio.Criar(definicao, cframe, terreno, dadosDono)
 	assert(Minerio.DefinicaoValida(definicao), "Definicao de minerio invalida.")
 	local parte = Instance.new("Part")
 	parte.Name = "Minerio"
 	-- O objeto envolve a Part recem-criada e aplica valor/tamanho pelos mesmos metodos validados usados depois.
 	-- O atributo Valor e texto decimal; Size e um Vector3 em studs.
 	local self = Minerio.new(parte)
+	self._dadosDono = dadosDono
 	assert(self:DefinirValor(definicao.Valor), "Valor inicial de minerio invalido.")
 	assert(self:DefinirTamanho(Vector3.new(table.unpack(definicao.Tamanho))), "Tamanho inicial de minerio invalido.")
 	parte.CFrame = cframe
@@ -47,6 +49,7 @@ function Minerio.Criar(definicao, cframe, terreno)
 	parte.CanCollide = false
 	parte.CanTouch = false
 	parte.CanQuery = false
+	parte.CastShadow = false
 	-- Os atributos ligam a unidade a uma plot especifica. Sensores conferem esses dados e a pasta antes de
 	-- modificar ou pagar por ela.
 	parte:SetAttribute("DonoUserId", terreno:GetAttribute("DonoUserId"))
@@ -55,8 +58,7 @@ function Minerio.Criar(definicao, cframe, terreno)
 	return self
 end
 
--- Devolve a Part real usada como representacao visual. A simulacao atualiza seu CFrame e os componentes podem
--- usa-la como identidade da unidade.
+-- Devolve a Part visual e identidade da unidade. A pose fisica atual vem de SimulacaoMinerios:ObterCorpo.
 function Minerio:ObterParte() return self._parte end
 -- Devolve o atributo Valor como texto decimal. O calculo deve passar por CalcularValor/InteiroGrande, sem
 -- converter o saldo completo para number.
@@ -70,6 +72,7 @@ function Minerio:ObterTamanho() return self._parte.Size end
 function Minerio:DefinirValor(valor)
 	if not InteiroGrande.eValido(valor) then return false end
 	self._parte:SetAttribute("Valor", valor)
+	if self._dadosDono then self._dadosDono:RegistrarRecorde("Minerio", valor) end
 	return true
 end
 
@@ -93,19 +96,23 @@ function Minerio:EstaDisponivel(terreno)
 		and self._parte:GetAttribute("TerrenoId") == terreno:GetAttribute("TerrenoId")
 end
 
--- Calcula valor atual vezes multiplicador mais bonus usando as strings decimais. Os argumentos omitidos
--- equivalem a 1 e 0; devolve nil se o valor atual estiver invalido e nao grava o resultado automaticamente.
+-- Arredonda o produto no proprio minerio (0,5 para cima) antes do bonus inteiro. Nao grava automaticamente.
 function Minerio:CalcularValor(multiplicador, bonus)
 	local valor = self:ObterValor()
 	if not InteiroGrande.eValido(valor) then return nil end
-	return InteiroGrande.somar(InteiroGrande.multiplicar(valor, multiplicador or "1"), bonus or "0")
+	return InteiroGrande.somar(InteiroGrande.multiplicarArredondado(valor, multiplicador or "1"), bonus or "0")
 end
 
--- Marca a unidade como processada e destroi sua Part. O vendedor chama esse metodo depois de confirmar o
--- credito, impedindo outro sensor de vender a mesma unidade.
-function Minerio:Consumir()
+-- A marca bloqueia novos pagamentos; a venda aguarda a animacao local antes da remocao.
+function Minerio:Consumir(vendido)
+	if self._parte:GetAttribute("Processado") then return end
 	self._parte:SetAttribute("Processado", true)
-	self._parte:Destroy()
+	if vendido then
+		self._parte:SetAttribute("Vendido", true)
+		Debris:AddItem(self._parte, 0.3)
+	else
+		self._parte:Destroy()
+	end
 end
 
 return Minerio

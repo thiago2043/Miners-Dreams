@@ -8,7 +8,7 @@ local Navegacao = carregar("src/client/NavegacaoEstados")
 local Painel = carregar("src/client/PainelPrestigio")
 local Barra = carregar("src/client/BarraProgressao")
 local pai, nav = suporte.NovaInstancia("ScreenGui"), Navegacao.new()
-local atributos = { Dinheiro = "10000000000000000000", Reencarnacoes = 0, Vidas = 1 }
+local atributos = { Dinheiro = "1"..string.rep("0",33), Reencarnacoes = 0, Vidas = 1 }
 local jogador = { GetAttribute = function(_, nome) return atributos[nome] end }
 local pedidos, falhar, malformar = 0, false, false
 local painel
@@ -27,12 +27,21 @@ painel:Reencarnar()
 assert(pedidos == 0)
 nav:Abrir("Prestigio")
 painel:Atualizar()
-assert(painel._grupo.Visible and painel._vida.Text == "Vida 1" and painel._requisito.Text == "Requisito: $1qd")
+assert(painel._grupo.Visible and painel._vida.Text == "Vida 1" and painel._requisito.Text == "Requisito: $1Sx")
+assert(painel._saldo.Text == "Saldo disponível: $1De")
 assert(painel._estado.VidasDisponiveis == 5 and painel._saltos.Text:find("4 pulada", 1, true))
+local confirmacao=carregar("src/client/Confirmacao").new(pai,jogador,nav)
+painel.Confirmacao=confirmacao
 painel._reencarnar:ObterInstancia().Activated:Fire()
-assert(pedidos == 1 and painel._vida.Text == "Vida 6" and painel._requisito.Text == "Requisito: $10qd")
+assert(pedidos==0 and nav:Atual()=="Confirmacao")
+nav:Voltar(); assert(pedidos==0 and atributos.Vidas==1)
+painel._reencarnar:ObterInstancia().Activated:Fire()
+confirmacao._sim:ObterInstancia().Activated:Fire()
+confirmacao._sim:ObterInstancia().Activated:Fire()
+painel.Confirmacao=nil
+assert(pedidos == 1 and painel._vida.Text == "Vida 6" and painel._requisito.Text == "Requisito: $1Sp")
 assert(not painel._reencarnar:ObterInstancia().Active and painel._mensagem.Text == "Reencarnou: +5 vidas.")
-atributos.Dinheiro = "100000000000000000"
+atributos.Dinheiro = "1"..string.rep("0",27)
 falhar = true
 painel:Atualizar()
 painel:Reencarnar()
@@ -58,7 +67,7 @@ barra:Atualizar(2)
 assert(barra._preenchimento.Size.X.Scale == 1)
 assert(not pcall(barra.Atualizar, barra, 0 / 0))
 barra:Destruir(); barra:Destruir()
-painel:Destruir(); painel:Destruir()
+painel:Destruir(); painel:Destruir(); confirmacao:Destruir()
 assert(painel._barra._destruido)
 for _, botao in painel._botoes do assert(botao._destruido and not botao._conexao.ativa) end
 nav:Destruir()

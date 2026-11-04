@@ -3,12 +3,12 @@ local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local Botao = require(script.Parent.Botao)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local Personalizacao = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
+local Raridades = require(script.Parent.Raridades)
 
 -- Loja e inventario possuem instancias independentes desta apresentacao. PainelPecas conserva
 -- selecao, validacoes e rede; a ficha possui apenas os elementos visuais e suas conexoes.
 local FichaPeca = {}
 FichaPeca.__index = FichaPeca
-local tipos = { Soltador = "Geração", Transportador = "Transporte", Modificador = "Modificação", Vendedor = "Venda" }
 
 -- Arredonda o elemento e, quando solicitado, devolve a borda usada para destacar a miniatura.
 local function acabamento(objeto, raio, cor)
@@ -81,6 +81,8 @@ function FichaPeca.new(pai, modelos, aoAtivar, fechar, aba)
 	self._retrato.ClipsDescendants = true
 	local borda = acabamento(self._retrato, 8, Color3.fromRGB(61, 228, 187))
 	borda.Thickness = 2
+	self._bordaRetrato = borda
+	Raridades.ColorirBorda(borda, Raridades.Estilos.Comum)
 	local gradiente = Instance.new("UIGradient")
 	gradiente.Color, gradiente.Rotation, gradiente.Parent = ColorSequence.new(Color3.fromRGB(109, 121, 183), Color3.fromRGB(43, 39, 66)), 90, self._retrato
 	self._quantidade = texto(self._retrato, "QuantidadeRetrato", 0, 14, true)
@@ -92,14 +94,14 @@ function FichaPeca.new(pai, modelos, aoAtivar, fechar, aba)
 	self._erroRetrato.Text, self._erroRetrato.Visible = "Prévia indisponível.", false
 	self._erroRetrato.Position, self._erroRetrato.Size, self._erroRetrato.ZIndex = UDim2.fromScale(0, 0.4), UDim2.fromScale(1, 0.4), self._retrato.ZIndex + 3
 	self._nome = texto(self._conteudo, "NomePeca", 2, 17, true)
-	self._tipo = texto(self._conteudo, "TipoPeca", 3, 13, true)
-	self._tipo.Size, self._tipo.BackgroundTransparency = UDim2.new(1, 0, 0, 22), 0
-	self._tipo.BackgroundColor3, self._tipo.TextColor3 = Color3.new(1, 1, 1), Color3.fromRGB(11, 28, 30)
-	acabamento(self._tipo, 6)
-	-- A faixa identifica comportamentos reais, sem atribuir raridades que ainda nao existem no catalogo.
-	local faixa = Instance.new("UIGradient")
-	faixa.Color, faixa.Parent = ColorSequence.new(Color3.fromRGB(107, 187, 255), Color3.fromRGB(53, 255, 144)), self._tipo
+	self._raridade = texto(self._conteudo, "RaridadePeca", 3, 13, true)
+	self._raridade.Size, self._raridade.BackgroundTransparency = UDim2.new(1, 0, 0, 22), 0
+	self._raridade.BackgroundColor3, self._raridade.TextColor3 = Color3.new(1, 1, 1), Color3.fromRGB(11, 28, 30)
+	acabamento(self._raridade, 6)
+	self._faixaRaridade = Instance.new("UIGradient")
+	self._faixaRaridade.Color, self._faixaRaridade.Parent = Raridades.Estilos.Comum.Cores, self._raridade
 	local estatisticas = Instance.new("Frame")
+	self._quadroEstatisticas=estatisticas
 	estatisticas.Name, estatisticas.LayoutOrder = "QuadroEstatisticas", 4
 	estatisticas.Size, estatisticas.AutomaticSize = UDim2.new(1, 0, 0, 0), Enum.AutomaticSize.Y
 	estatisticas.BackgroundColor3, estatisticas.BorderSizePixel, estatisticas.Parent = Color3.fromRGB(15, 16, 21), 0, self._conteudo
@@ -167,23 +169,19 @@ function FichaPeca:ObterCampos() return self._campos end
 -- chave e o JSON da variante ou a tabela da copia; quantidade e disponibilidade nao recriam o modelo.
 function FichaPeca:Atualizar(id, nome, quantidade, copia, definicao, chave)
 	if self._destruido then return false end
+	self._quadroEstatisticas.Visible=self._campos.Estatisticas.Text~=""
 	-- A loja sempre retrata a configuracao padrao. Uma variante no estoque nao altera o que sera comprado.
 	if self._loja then copia, chave = false, nil end
 	self._nome.Text = (nome or "Selecione uma peça") .. (copia and " (cópia)" or "")
 	-- O preco permanece em texto decimal, sem perder digitos em uma conversao para number.
 	self._quantidade.Text = self._loja and (definicao and ("$" .. AbreviarInteiro(definicao.Preco)) or "…")
-		or (type(quantidade) == "number" and ("x" .. tostring(quantidade)) or "…")
+		or (type(quantidade) == "number" and ("x" .. AbreviarInteiro(quantidade)) or "…")
 	-- No inventario normal, o retrato ja informa a quantidade. A linha extra fica reservada para
 	-- carregamento/erro ou explicacao da copia; na loja ela informa o estoque, pois o retrato mostra preco.
 	self._campos.Quantidade.Visible = self._loja or copia or type(quantidade) ~= "number"
-	local nomes, vistos = {}, {}
-	for _, componente in (definicao and definicao.Componentes) or {} do
-		if not vistos[componente.Tipo] then
-			vistos[componente.Tipo] = true
-			table.insert(nomes, tipos[componente.Tipo] or componente.Tipo)
-		end
-	end
-	self._tipo.Text = #nomes > 0 and table.concat(nomes, " • ") or "Peça"
+	local raridade = Raridades.Obter(definicao)
+	self._raridade.Text, self._faixaRaridade.Color = raridade.Nome, raridade.Cores
+	Raridades.ColorirBorda(self._bordaRetrato, raridade)
 	if not self._instancia.Visible then return true end
 	if not id or not definicao then
 		-- Ao trocar para dados ainda indisponiveis, o retrato antigo nao pode representar a nova selecao.

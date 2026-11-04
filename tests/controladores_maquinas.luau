@@ -17,7 +17,12 @@ local function sinal()
 	return evento
 end
 local function objeto(nome, classe, pai)
-	local obj = { Name = nome, Parent = pai, filhos = {}, atributos = {} }
+	local obj = { Name = nome, Parent = pai, filhos = {}, atributos = {}, sinais = {}, ChildAdded = sinal(), ChildRemoved = sinal() }
+	function obj:GetPropertyChangedSignal(n)
+		self.sinais[n] = self.sinais[n] or sinal()
+		return self.sinais[n]
+	end
+	function obj:GetAttributeChangedSignal(n) return self:GetPropertyChangedSignal("Atributo:"..n) end
 	function obj:IsA(tipo) return tipo == classe end
 	function obj:GetChildren() return table.clone(self.filhos) end
 	function obj:FindFirstChild(n, recursivo)
@@ -31,7 +36,11 @@ local function objeto(nome, classe, pai)
 	end
 	obj.WaitForChild = obj.FindFirstChild
 	function obj:GetAttribute(n) return self.atributos[n] end
-	function obj:SetAttribute(n, v) self.atributos[n] = v end
+	function obj:SetAttribute(n, v)
+		local anterior = self.atributos[n]
+		self.atributos[n] = v
+		if anterior ~= v then self:GetAttributeChangedSignal(n):Fire() end
+	end
 	function obj:IsDescendantOf(raiz)
 		local atual = self.Parent
 		while atual do
@@ -41,15 +50,16 @@ local function objeto(nome, classe, pai)
 		return false
 	end
 	function obj:GetFullName() return self.Name end
-	function obj:GetBoundingBox() return CFrame.identity, Vector3.new(4, 4, 4) end
+	function obj:GetBoundingBox() return CFrame.identity, Vector3.new(3, 3, 3) end
 	function obj:Destroy()
 		if self.Parent then
 			local indice = table.find(self.Parent.filhos, self)
 			if indice then table.remove(self.Parent.filhos, indice) end
+			self.Parent.ChildRemoved:Fire(self)
 			self.Parent = nil
 		end
 	end
-	if pai then table.insert(pai.filhos, obj) end
+	if pai then table.insert(pai.filhos, obj); pai.ChildAdded:Fire(obj) end
 	return obj
 end
 local mundo = objeto("Workspace", "Workspace")
@@ -63,19 +73,19 @@ local function maquina(nome, dono, rotacao)
 	local m = objeto(nome, "Model", maquinas)
 	m:SetAttribute("DonoUserId", dono or 123)
 	m:SetAttribute("TerrenoId", 1)
-	local parte = objeto((nome == "EsteiraBasica" or nome == "ModificadorBasico") and "Correia" or "BandejaEntrada", "BasePart", m)
+	local parte = objeto((nome == "Esteira2x2" or nome == "PrensaMinerio") and "Correia" or "BandejaEntrada", "BasePart", m)
 	parte.CFrame = rotacao or CFrame.identity
-	if nome == "FornalhaBasica" or nome == "ModificadorBasico" then
+	if nome == "FornalhaBasica" or nome == "PrensaMinerio" then
 		local sensor = objeto("SensorEntrada", "BasePart", m)
 		sensor.Touched = sinal()
 	end
 	return m, parte
 end
-local e1, p1 = maquina("EsteiraBasica")
-local e2, p2 = maquina("EsteiraBasica", 123, CFrame.Angles(math.pi / 2, 0, 0))
+local e1, p1 = maquina("Esteira2x2")
+local e2, p2 = maquina("Esteira2x2", 123, CFrame.Angles(math.pi / 2, 0, 0))
 local f1, b1 = maquina("FornalhaBasica")
 local f2, b2 = maquina("FornalhaBasica", 123, CFrame.Angles(0, math.pi / 2, 0))
-local alheia, parteAlheia = maquina("EsteiraBasica", 999)
+local alheia, parteAlheia = maquina("Esteira2x2", 999)
 local fornoAlheio = maquina("FornalhaBasica", 999)
 local jogador = objeto("Jogador", "Player")
 local players = { GetPlayerByUserId = function(_, id) return id == 123 and jogador or nil end }
@@ -129,7 +139,7 @@ for _, parte in { p1, p2, b1, b2 } do
 	assert((transporte(parte) + parte.CFrame.LookVector * 6).Magnitude < 0.001)
 end
 assert(parteAlheia.AssemblyLinearVelocity == nil)
-local e3, p3 = maquina("EsteiraBasica")
+local e3, p3 = maquina("Esteira2x2")
 fabrica:Atualizar(1)
 assert(p3.AssemblyLinearVelocity and e3.Parent == maquinas)
 assert(#gerados == 1)
@@ -138,7 +148,7 @@ assert(#gerados == 2 and gerados[1].Parent == minerios)
 assert(gerados[1]:GetAttribute("Valor") == "5")
 assert(gerados[1]:GetAttribute("DonoUserId") == 123)
 assert(gerados[1].Anchored and not gerados[1].CanCollide and not gerados[1].CanTouch and not gerados[1].CanQuery)
-assert(fabrica._simulacao._minerios[1].Expira == 10)
+assert(fabrica._simulacao._minerios[1].Expira == nil)
 ativo = false
 fabrica:Atualizar(4)
 assert(#gerados == 2)
@@ -200,7 +210,7 @@ catalogo.EsteiraVariante = {
 	Componentes = { { Tipo = "Transportador", Parte = "Correia", Velocidade = 12 } },
 }
 catalogo.ModificadorVariante = {
-	Componentes = { { Tipo = "Modificador", Sensor = "SensorEntrada", Multiplicador = "3", Bonus = "5" } },
+	Componentes = { { Tipo = "Modificador", TipoModificador = "N99", Etapas = 1, LimiteUsos = 1, Sensor = "SensorEntrada", Multiplicador = "3", Bonus = "5" } },
 }
 catalogo.VendedorVariante = {
 	Componentes = { { Tipo = "Vendedor", Sensor = "SensorEntrada", Multiplicador = "2", Bonus = "1" } },
@@ -245,14 +255,14 @@ print("PASS: multiplicacao inteira decimal usada por modificadores e vendedores.
 local Personalizacao = carregar("src/shared/PersonalizacaoMaquina")
 Personalizacao.new({ Configuracao = { Componentes = { { Velocidade = 15 } } } }):Publicar(e1)
 local Maquina = carregar("src/server/Maquinas/Maquina")
-local personalizada = Maquina.new(e1, terreno, catalogo.EsteiraBasica, variantes._simulacao)
+local personalizada = Maquina.new(e1, terreno, catalogo.Esteira2x2, variantes._simulacao)
 personalizada:Atualizar(20)
 assert(transporte(p1) == -p1.CFrame.LookVector * 15)
 personalizada:Destruir()
 print("PASS: comportamento real usa estatisticas particulares publicadas na peca.")
 
-local primeiroModificador, correiaPrimeiro = maquina("ModificadorBasico")
-local segundoModificador = maquina("ModificadorBasico")
+local primeiroModificador, correiaPrimeiro = maquina("PrensaMinerio")
+local segundoModificador = maquina("PrensaMinerio")
 local primeiroSensor = primeiroModificador:FindFirstChild("SensorEntrada")
 local segundoSensor = segundoModificador:FindFirstChild("SensorEntrada")
 local circuito = novaFabrica(terrenos)
@@ -293,3 +303,110 @@ circuito:Destruir()
 assert(not sensorRegistrado(segundoSensor))
 print("PASS: modificador do catalogo: 10 sem efeito, 20 com uma copia, 40 com duas, sem reaplicacao ou venda duplicada.")
 print("PASS: modificador recusa minerios alheios/invalidos e encerra os sensores ao remover as pecas.")
+
+local simCache = carregar("src/server/SimulacaoMinerios").new()
+local registrosTransporte, registrosSensor, remocoes = 0, 0, 0
+local registrarTransporte, registrarSensor, remover = simCache.RegistrarTransportador, simCache.RegistrarSensor, simCache.RemoverComponente
+function simCache:RegistrarTransportador(...)
+	registrosTransporte += 1; return registrarTransporte(self, ...)
+end
+function simCache:RegistrarSensor(...)
+	registrosSensor += 1; return registrarSensor(self, ...)
+end
+function simCache:RemoverComponente(...)
+	remocoes += 1; return remover(self, ...)
+end
+local function donoCache(modelo)
+	return { ObterNivelUpgrade=function() return 0 end, ObterNivelMotores=function() return 0 end, EstaNoTerreno=function() return true end, ObterModelo=function() return modelo end,
+		ObterSimulacao=function() return simCache end, ObterTerreno=function() return terreno end }
+end
+local function contarBuscas(modelo)
+	local contagem = { Filhos=0, Nomes=0 }
+	local filhos, encontrar = modelo.GetChildren, modelo.FindFirstChild
+	function modelo:GetChildren() contagem.Filhos += 1; return filhos(self) end
+	function modelo:FindFirstChild(...) contagem.Nomes += 1; return encontrar(self, ...) end
+	return contagem
+end
+local modeloCache, correiaCache = maquina("Esteira2x2")
+correiaCache.Size = Vector3.new(6, .5, 6)
+local decoracaoCache = objeto("Decoracao", "BasePart", modeloCache)
+decoracaoCache.CFrame, decoracaoCache.Size = CFrame.new(0,0,3), Vector3.one
+local contagemTransporte = contarBuscas(modeloCache)
+local configCache = { Parte="Correia", Velocidade=6 }
+local donoTransporte=donoCache(modeloCache)
+function donoTransporte:ObterNivelMotores() return 0 end
+local transportadorCache = carregar("src/server/Componentes/TransportadorMinerio").new(donoTransporte, configCache)
+for i=1,120 do transportadorCache:Atualizar(i/120) end
+assert(contagemTransporte.Filhos==2 and contagemTransporte.Nomes==2 and registrosTransporte==1,
+	"Uma correia estavel so deve descobrir suas partes e registrar o transporte inicialmente.")
+local versaoCache = simCache._versao
+for i=1,120 do transportadorCache:Atualizar(i/120) end
+assert(simCache._versao==versaoCache and registrosTransporte==1 and contagemTransporte.Filhos==2)
+correiaCache.CFrame = CFrame.Angles(0,math.pi/2,0)
+correiaCache.Size = Vector3.new(3,.5,6)
+transportadorCache:Atualizar(3)
+assert(registrosTransporte==2 and simCache._transportadores[correiaCache].CFrame==correiaCache.CFrame)
+correiaCache:SetAttribute("DirecaoSuperficie", Vector3.xAxis)
+configCache.Velocidade = 9
+modeloCache:SetAttribute("InclinacaoEsteira", true)
+transportadorCache:Atualizar(4)
+assert(simCache._transportadores[correiaCache].Velocidade==correiaCache.CFrame:VectorToWorldSpace(Vector3.xAxis)*9)
+assert(simCache._transportadores[correiaCache].Atrito==1.2)
+decoracaoCache:SetAttribute("ParteTransporteOrigem", "Correia")
+transportadorCache:Atualizar(5)
+assert(simCache._transportadores[decoracaoCache], "Uma parte existente pode virar encaixe de transporte.")
+decoracaoCache:SetAttribute("ParteTransporteOrigem", nil)
+transportadorCache:Atualizar(6)
+assert(not simCache._transportadores[decoracaoCache])
+local hitboxCache = objeto("HitboxConstrucao", "BasePart", modeloCache)
+hitboxCache.CFrame, hitboxCache.Size = CFrame.new(2,3,4), Vector3.new(6,3,6)
+correiaCache:SetAttribute("DirecaoTransporte", Vector3.new(.3,0,1))
+transportadorCache:Atualizar(7)
+assert(simCache._transportadores[correiaCache].Centralizacao.Centro==hitboxCache.CFrame.Position)
+hitboxCache.CFrame += Vector3.new(3,0,0)
+transportadorCache:Atualizar(8)
+assert(simCache._transportadores[correiaCache].Centralizacao.Centro==hitboxCache.CFrame.Position)
+correiaCache:SetAttribute("DirecaoTransporte", nil)
+correiaCache.Name="Antiga"; correiaCache:GetPropertyChangedSignal("Name"):Fire()
+transportadorCache:Atualizar(9)
+assert(not simCache._transportadores[correiaCache])
+local novaCorreiaCache = objeto("Correia", "BasePart", modeloCache)
+novaCorreiaCache.CFrame, novaCorreiaCache.Size = CFrame.identity, Vector3.new(6,.5,6)
+transportadorCache:Atualizar(10)
+assert(simCache._transportadores[novaCorreiaCache] and not simCache._transportadores[correiaCache])
+novaCorreiaCache:Destroy(); transportadorCache:Atualizar(11)
+assert(not simCache._transportadores[novaCorreiaCache])
+transportadorCache:Destruir(); transportadorCache:Destruir()
+for _, conexao in modeloCache.ChildAdded.conexoes do assert(not conexao.ativa) end
+for _, parte in modeloCache.filhos do
+	for _, evento in parte.sinais do for _, conexao in evento.conexoes do assert(not conexao.ativa) end end
+end
+print("PASS: cache de transporte: 2 varreduras/2 buscas/1 registro em 120 passos; geometria, direcao, velocidade, inclinacao, centralizacao, encaixes e limpeza.")
+
+local modeloSensorCache = maquina("PrensaMinerio")
+local sensorCache = modeloSensorCache:FindFirstChild("SensorEntrada")
+local etapaCache = objeto("SensorEtapa02", "BasePart", modeloSensorCache)
+local contagemSensor = contarBuscas(modeloSensorCache)
+local contatoCache = carregar("src/server/Componentes/ContatoMinerio").new(donoCache(modeloSensorCache), { Sensor="SensorEntrada", Etapas=2 })
+for i=1,120 do contatoCache:Atualizar(i/120) end
+assert(contagemSensor.Filhos==1 and contagemSensor.Nomes==2 and registrosSensor==2,
+	"Sensores estaveis nao devem repetir a descoberta ou o registro em cada passo.")
+local antesRemover = remocoes
+etapaCache:Destroy(); contatoCache:Atualizar(2)
+assert(not simCache._sensores[sensorCache] and not simCache._sensores[etapaCache])
+for i=1,10 do contatoCache:Atualizar(2+i/120) end
+assert(remocoes==antesRemover+1, "Um sensor ausente nao deve invalidar a simulacao repetidamente.")
+local novaEtapaCache = objeto("Temporario", "BasePart", modeloSensorCache)
+contatoCache:Atualizar(3)
+novaEtapaCache.Name="SensorEtapa02"; novaEtapaCache:GetPropertyChangedSignal("Name"):Fire()
+contatoCache:Atualizar(4)
+assert(simCache._sensores[sensorCache] and simCache._sensores[novaEtapaCache])
+local antesSensores = registrosSensor
+sensorCache.CFrame = CFrame.new(0,10,0)
+contatoCache:Atualizar(5)
+assert(registrosSensor==antesSensores, "Mover o sensor conserva seu registro; a consulta fisica usa a pose atual.")
+contatoCache:Destruir(); contatoCache:Destruir()
+assert(not simCache._sensores[sensorCache] and not simCache._sensores[novaEtapaCache])
+for _, conexao in modeloSensorCache.ChildRemoved.conexoes do assert(not conexao.ativa) end
+simCache:Destruir()
+print("PASS: cache de sensores: descoberta unica, varias etapas, ausencia, troca, renomeacao, movimento e destruicao repetida.")

@@ -25,10 +25,11 @@ local function simular(fps)
 			local minerio = Minerio.Criar({ Valor = "10", Tamanho = { 1, 1, 1 } }, inicial, terreno)
 			sim:RegistrarMinerio(minerio, 12, { Elasticidade = 0.5 })
 		end
-		local a, b = sim._minerios[1].Corpo, sim._minerios[2].Corpo
+		local a, b = sim:ObterCorpo(sim._minerios[1].Parte), sim:ObterCorpo(sim._minerios[2].Parte)
 		local trajetoria, quicou, girou, repouso = {}, false, false, nil
 		for _ = 1, fps * 10 do
 			sim:Avancar(1 / fps, function()
+				a, b = sim:ObterCorpo(sim._minerios[1].Parte), sim:ObterCorpo(sim._minerios[2].Parte)
 				assert(a.CFrame == b.CFrame and a.Velocidade == b.Velocidade
 					and a.MomentoAngular == b.MomentoAngular, "Minerios interferiram entre si.")
 				local valores = { a.CFrame:GetComponents() }
@@ -65,3 +66,4 @@ for _, fps in { 30, 60, 144 } do
 	end
 end
 print("FISICA_STUDIO_PASS: 1200 estados identicos em 30/60/120/144 FPS; quicada, giro, repouso e minerios sem colisao entre si.")
+return true

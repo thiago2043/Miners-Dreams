@@ -29,7 +29,7 @@ local carregar = require("./suporte/carregador")({
 }, { Players = players }, setmetatable({}, { __index = function(_, caminho)
 	if caminho ~= "src/server/Construcao" then return nil end
 	consultas += 1
-	assert(mundo:FindFirstChild("Terrenos") and #mundo.Terrenos:GetChildren() == 2,
+	assert(mundo:FindFirstChild("Terrenos") and #mundo.Terrenos:GetChildren() == 8,
 		"Criar os terrenos nao pode depender de carregar Construcao ou os modelos.")
 	return { Restaurar = function(p)
 		table.insert(restaurados, p)
@@ -39,8 +39,12 @@ carregar("src/server/Terrenos.server")
 assert(consultas == 0, "A atribuicao dos terrenos nao deve aguardar Construcao.")
 assert(p1:GetAttribute("TerrenoId") == 1 and p2:GetAttribute("TerrenoId") == 2)
 for _, terreno in mundo.Terrenos:GetChildren() do
+	assert(terreno.Piso.Size==Vector3.new(36,1,36))
 	assert(#terreno.Maquinas:GetChildren() == 0 and #terreno.Minerios:GetChildren() == 0)
-	assert(terreno.Spawn.Enabled)
+	assert(terreno.Spawn.Enabled==(terreno:GetAttribute("TerrenoId")<=2))
+	assert(terreno.Spawn.Transparency==1 and not terreno.Spawn.CastShadow
+		and not terreno.Spawn.CanCollide and not terreno.Spawn.CanTouch and not terreno.Spawn.CanQuery)
+	assert(terreno.Piso.Color==roblox.Color3.fromRGB(145,145,145))
 end
 players.PlayerRemoving:Fire(p1)
 assert(p1:GetAttribute("TerrenoId") == nil)
@@ -53,8 +57,8 @@ assert(table.find(restaurados, p2) and table.find(restaurados, p3))
 for _, terreno in mundo.Terrenos:GetChildren() do assert(#terreno.Maquinas:GetChildren() == 0) end
 local template = carregar("src/server/Data/Template")
 assert(template.Dinheiro == "0" and #template.MaquinasColocadas == 0)
-assert(template.Inventory.MineradoraBasica == 1 and template.Inventory.EsteiraBasica == 1
-	and template.Inventory.FornalhaBasica == 1 and template.Inventory.ModificadorBasico == 0)
+assert(template.Inventory.MineradoraBasica == 1 and template.Inventory.Esteira2x2 == 10
+	and template.Inventory.FornalhaBasica == 1 and template.Inventory.PrensaMinerio == 0)
 print("PASS: plots criadas e atribuidas vazias sem modelos no Workspace nem dependencia sincrona de Construcao.")
 print("PASS: saida/reutilizacao do terreno e restauracao adiada respeitam o dono atual.")
-print("PASS: perfil novo recebe uma mineradora, esteira e fornalha no inventario, sem construcoes iniciais.")
+print("PASS: perfil novo recebe uma mineradora, dez esteiras 2x2 e uma fornalha, sem construcoes iniciais.")

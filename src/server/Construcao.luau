@@ -20,10 +20,16 @@ end
 function Construcao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao)
 	return servico:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao)
 end
+function Construcao:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
+	return servico:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
+end
 -- Encaminha o modelo apontado pelo cliente; o servico decide se o jogador pode retira-lo e devolve sucesso e
 -- mensagem.
 function Construcao:Recolher(jogador, maquina)
 	return servico:Recolher(jogador, maquina)
+end
+function Construcao:RecolherTudo(jogador)
+	return servico:RecolherTudo(jogador)
 end
 -- Vende uma lista de pecas colocadas; o servico valida o dono, atualiza o perfil e so entao destroi os modelos.
 function Construcao:VenderColocadas(jogador, maquinas)
@@ -81,6 +87,9 @@ function Construcao.Sincronizar(jogador)
 	servico:Sincronizar(jogador)
 end
 
+function Construcao.Administrar(jogador,pedido) return servico:Administrar(jogador,pedido) end
+function Construcao.RedimensionarAdministrativo(jogador,nivel) return servico:RedimensionarAdministrativo(jogador,nivel) end
+
 -- Apenas servicos do servidor podem coordenar um reinicio; este metodo nao pertence a lista remota.
 function Construcao.ReiniciarProgresso(jogador, alterarDados)
 	return servico:ReiniciarProgresso(jogador, alterarDados)
@@ -96,5 +105,7 @@ Networker.server.new("Construcao", Construcao, {
 	Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
 	Construcao.PrepararBlueprint, Construcao.IniciarMovimento,
 	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
+	Construcao.ColocarMultiplos,
+	Construcao.RecolherTudo,
 })
 return Construcao

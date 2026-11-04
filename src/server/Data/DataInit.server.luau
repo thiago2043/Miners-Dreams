@@ -2,51 +2,28 @@
 -- os dados.
 -- Os servicos abaixo fornecem jogadores, ambiente e acesso aos modulos.
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
--- ProfileStore gerencia a posse e a persistencia da sessao de dados.
-local ProfileStore = require(ServerScriptService.Libraries.ProfileStore)
-
--- Escolhe Test no Studio ou Live no jogo publicado. Esse nome separa os armazenamentos usados pelo tutorial em
--- cada ambiente.
-local function GetStoreName()
-	return RunService:IsStudio() and "Test" or "Live"
-end
-
-local Template = require(ServerScriptService.Data.Template)
+local MigracaoCatalogo = require(ServerScriptService.Data.MigracaoCatalogo)
+local MigracaoGrade = require(ServerScriptService.Data.MigracaoGrade)
+local MigracaoHitboxes = require(ServerScriptService.Data.MigracaoHitboxes)
+local MigracaoExpansaoPlot = require(ServerScriptService.Data.MigracaoExpansaoPlot)
 local DataManager = require(ServerScriptService.Data.DataManager)
 local Construcao = require(ServerScriptService:WaitForChild("Construcao"))
 
 -- Studio e jogo publicado usam nomes separados para nao compartilhar o mesmo armazenamento.
-local PlayerStore = ProfileStore.New(GetStoreName(), Template)
+local PlayerStore = require(script.Parent.ArmazenamentoPerfis)
 
--- Publica os dados carregados; Gold/Gems permanecem apenas como teste do tutorial.
--- Recebe o jogador e seu perfil registrado, publica os atributos e monta o placar Gold/Gems do exercicio. Ao
--- final solicita a restauracao das construcoes; Dinheiro e inventario pertencem ao fluxo da fabrica.
-local function Initialize(player:Player, profile: typeof(PlayerStore:StartSessionAsync()))
-	
-	DataManager.ObterDados(player):Sincronizar()
+local CriarPlacar = require(script.Parent.PlacarJogador)
+local Classificacao = require(ServerScriptService.ClassificacaoGlobal)
 
-	-- Estes dois valores aparecem no placar de teste, separados do Dinheiro da fabrica.
-	local leaderstats = Instance.new("Folder", player)
-	leaderstats.Name = "leaderstats"
-	
-	local Gold = Instance.new("NumberValue", leaderstats)
-	Gold.Name = "Gold"
-	Gold.Value = profile.Data.Gold
-	
-	local Gems = Instance.new("NumberValue", leaderstats)
-	Gems.Name = "Gems"
-	Gems.Value = profile.Data.Gems
-	
-	-- Os eventos do exercicio ficam desativados; o HUD atual acompanha atributos do jogador.
-	--ReplicatedStorage.UpdateGold:FireClient(player, profile.Data.Gold)
-	--ReplicatedStorage.UpdateGems:FireClient(player, profile.Data.Gems)
-	
+local function Initialize(player, profile)
+	local dados = DataManager.ObterDados(player)
+	dados:Sincronizar()
+	CriarPlacar(player)
+	Classificacao:Registrar(player, dados:ObterRecordes())
 	Construcao.Restaurar(player)
-
+	require(ServerScriptService.Administracao):Registrar(player,profile)
 end
 
 -- A sessao so e registrada quando o jogador ainda pertence a este servidor.
@@ -68,15 +45,29 @@ local function PlayerAdded(player: Player)
 		-- Associa o UserId ao perfil para os recursos de identificacao do ProfileStore. Reconcile preenche campos
 		-- ausentes com o template sem reiniciar o progresso existente.
 		profile:AddUserId(player.UserId) -- GDPR compliance
+		local migrou, dados = pcall(function()
+			return MigracaoHitboxes.Preparar(MigracaoGrade.Preparar(MigracaoCatalogo.Preparar(profile.Data)))
+		end)
+		if not migrou then
+			warn("Perfil preservado; falha ao migrar construcoes: " .. tostring(dados))
+			profile:EndSession()
+			player:Kick("Nao foi possivel carregar suas construcoes antigas. Tente novamente.")
+			return
+		end
+		profile.Data = dados
+		MigracaoExpansaoPlot.Aplicar(profile.Data)
 		profile:Reconcile() -- Inclui campos ausentes sem substituir os valores que ja foram salvos.
 		-- Antes de o ProfileStore salvar, captura no perfil as modificacoes atuais dos modelos. O callback e
 		-- chamado pelo evento de salvamento, nao apenas quando o jogador sai.
 		profile.OnSave:Connect(function()
 			Construcao.Sincronizar(player)
+			Classificacao:Registrar(player, profile.Data.Recordes or {},profile.Data.GeracaoProgresso or 0)
 		end)
 		
 		-- Perder a sessao encerra o acesso local, impedindo dois servidores de usar o mesmo perfil.
 		profile.OnSessionEnd:Connect(function()
+			Classificacao:Registrar(player, profile.Data.Recordes or {},profile.Data.GeracaoProgresso or 0)
+			task.spawn(function() Classificacao:Atualizar() end)
 			DataManager.RemoverPerfil(player)
 			player:Kick("Data error occured. plase rejoin.")
 		end)

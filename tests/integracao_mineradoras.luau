@@ -9,9 +9,9 @@ local replicado = { ModelosMaquinas = modelos }
 function replicado:WaitForChild(nome) return assert(self[nome]) end
 r.implementMethod("Workspace", "GetPartBoundsInBox", function(_, cf, tamanho, consulta)
 	local encontrados = {}
-	for _, raiz in consulta.FilterDescendantsInstances do
+	for _, raiz in (if consulta.FilterType==r.Enum.RaycastFilterType.Exclude then {mundo} else consulta.FilterDescendantsInstances) do
 		for _, parte in raiz:IsA("BasePart") and { raiz } or raiz:GetDescendants() do
-			if parte:IsA("BasePart") and parte.CanQuery
+			if parte:IsA("BasePart") and (if consulta.RespectCanCollide then parte.CanCollide else parte.CanQuery)
 				and (parte.CFrame.Position - cf.Position).Magnitude <= (parte.Size.Magnitude + tamanho.Magnitude) / 2 then
 				table.insert(encontrados, parte)
 			end
@@ -72,12 +72,12 @@ for x = 0, 3 do for y = 0, 3 do for z = 0, 3 do
 	end
 	if not repetida then table.insert(rotacoes, cf) end
 end end end
-assert(#rotacoes == 24 and #modelos:GetChildren() == 16)
+assert(#rotacoes == 24 and #modelos:GetChildren() == 91)
 for n, entrada in manifesto do
 	local id, def = entrada.id, Catalogo[entrada.id]
 	assert(def.Preco == precos[n] and def.Componentes[1].Minerio.Valor == valores[n] and def.Componentes[1].Intervalo == intervalos[n])
 	assert(Template.Inventory[id] == (n == 1 and 1 or 0))
-	local esperado = V.new(def.Blocos[1], def.Blocos[2], def.Blocos[3]) * 4
+	local esperado = V.new(def.Blocos[1], def.Blocos[2], def.Blocos[3]) * 3
 	assert(modelos[id].HitboxConstrucao.Size == esperado)
 	for _, rotacao in rotacoes do
 		tempo += 1
@@ -116,7 +116,7 @@ end
 -- Restaura todos os tipos num perfil serializado, preservando tambem o blueprint salvo.
 for n, entrada in manifesto do
 	tempo += 1
-	assert(servico:Colocar(jogador, entrada.id, V.new(0, n * 48, 0), CF.identity))
+	assert(servico:Colocar(jogador, entrada.id, V.new((n-1)%4*27, 0, math.floor((n-1)/4)*27), CF.identity))
 end
 tempo += 1
 local criou, mensagem = servico:CriarBlueprint(jogador, "Mineradoras", terreno.Maquinas:GetChildren())
@@ -146,7 +146,7 @@ for _, fps in {30, 144} do
 			local saida = modelo:FindFirstChild("SaidaMinerio", true)
 			assert((parte.CFrame.Position - (saida.Parent.CFrame * saida.CFrame).Position).Magnitude < .001)
 			assert(parte:GetAttribute("Valor") == valores[n])
-			assert(vida == 10 and configuracao.Valor == valores[n])
+			assert(vida == nil and configuracao.Valor == valores[n])
 			table.insert(instantes, sim._tempo)
 			-- O teste mede a emissao; queda, transporte e venda sao exercitados nos testes de fisica.
 			minerio:Consumir()

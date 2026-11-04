@@ -5,8 +5,8 @@ local carregar = require("./suporte/carregador")({
 }, {})
 local Rotacao = carregar("src/shared/RotacaoConstrucao")
 local Volume = carregar("src/shared/VolumeConstrucao")
-local volume = Volume.new(Vector3.new(8, 6, 12))
-local declarado = Volume.new(Vector3.new(8, 6, 12), { 3, 4, 5 })
+local volume = Volume.new(Vector3.new(6, 4.5, 9))
+local declarado = Volume.new(Vector3.new(6, 4.5, 9), { 3, 4, 5 })
 local orientacoes = {}
 for x = 0, 3 do
 	for y = 0, 3 do
@@ -19,11 +19,11 @@ for x = 0, 3 do
 			assert((validada.RightVector - original.RightVector).Magnitude < 0.00001)
 			assert((validada.UpVector - original.UpVector).Magnitude < 0.00001)
 			local extensao, ocupado = volume:Calcular(validada)
-			assert(ocupado.X * ocupado.Y * ocupado.Z == 8 * 8 * 12, "Girar nao deve reservar blocos extras.")
+			assert(ocupado.X * ocupado.Y * ocupado.Z == 6 * 6 * 9, "Girar nao deve reservar blocos extras.")
 			local _, reserva = declarado:Calcular(validada)
-			assert(reserva.X * reserva.Y * reserva.Z == 12 * 16 * 20)
+			assert(reserva.X * reserva.Y * reserva.Z == 9 * 12 * 15)
 			for _, nome in { "X", "Y", "Z" } do
-				assert(ocupado[nome] % 4 == 0 and ocupado[nome] >= extensao[nome] * 2 - 0.0001)
+				assert(ocupado[nome] % 3 == 0 and ocupado[nome] >= extensao[nome] * 2 - 0.0001)
 			end
 		end
 	end

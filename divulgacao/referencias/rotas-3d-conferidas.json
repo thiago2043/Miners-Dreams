@@ -1,0 +1,321 @@
+{
+  "nodes": [
+    {
+      "model": "MineradoraBasica",
+      "x": -18,
+      "y": 24,
+      "z": -12.0,
+      "kind": "miner"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": -18,
+      "y": 12,
+      "z": -6,
+      "kind": "belt"
+    },
+    {
+      "model": "CamaraMagnetica",
+      "x": -18,
+      "y": 11.999992370605469,
+      "z": 0.0,
+      "kind": "modifier"
+    },
+    {
+      "model": "RefinadorMolecular",
+      "x": -18,
+      "y": 11.999992370605469,
+      "z": 7.5,
+      "kind": "modifier"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": -18,
+      "y": 6,
+      "z": 15,
+      "kind": "descent"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": -18,
+      "y": 0,
+      "z": 21,
+      "kind": "descent"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": -18,
+      "y": 0,
+      "z": 27,
+      "kind": "belt"
+    },
+    {
+      "model": "FornalhaReforcada",
+      "x": -18,
+      "y": 0.0,
+      "z": 33.0,
+      "kind": "furnace"
+    },
+    {
+      "model": "MineradoraCobre",
+      "x": 0,
+      "y": 24,
+      "z": -12.0,
+      "kind": "miner"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": 0,
+      "y": 12,
+      "z": -6,
+      "kind": "belt"
+    },
+    {
+      "model": "ProcessadorTermico",
+      "x": 0,
+      "y": 11.999992370605469,
+      "z": 1.5,
+      "kind": "modifier"
+    },
+    {
+      "model": "RessonadorPlasma",
+      "x": 0,
+      "y": 11.999992370605469,
+      "z": 12.0,
+      "kind": "modifier"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": 0,
+      "y": 6,
+      "z": 21,
+      "kind": "descent"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": 0,
+      "y": 0,
+      "z": 27,
+      "kind": "descent"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": 0,
+      "y": 0,
+      "z": 33,
+      "kind": "belt"
+    },
+    {
+      "model": "FornalhaTermica",
+      "x": 0,
+      "y": 0.0,
+      "z": 40.5,
+      "kind": "furnace"
+    },
+    {
+      "model": "MineradoraQuantica",
+      "x": 18,
+      "y": 24,
+      "z": -24.0,
+      "kind": "miner"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": 18,
+      "y": 12,
+      "z": -6,
+      "kind": "belt"
+    },
+    {
+      "model": "LaserDuplo",
+      "x": 18,
+      "y": 11.999992370605469,
+      "z": 1.5,
+      "kind": "modifier"
+    },
+    {
+      "model": "CamaraPlasma",
+      "x": 16.5,
+      "y": 8.999992370605469,
+      "z": 12.0,
+      "kind": "modifier"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": 18,
+      "y": 6,
+      "z": 21,
+      "kind": "descent"
+    },
+    {
+      "model": "EsteiraDescida",
+      "x": 18,
+      "y": 0,
+      "z": 27,
+      "kind": "descent"
+    },
+    {
+      "model": "Esteira2x2",
+      "x": 18,
+      "y": 0,
+      "z": 33,
+      "kind": "belt"
+    },
+    {
+      "model": "FornalhaMolecular",
+      "x": 18,
+      "y": 0.0,
+      "z": 42.0,
+      "kind": "furnace"
+    }
+  ],
+  "routes": [
+    {
+      "x": -18,
+      "source": "MineradoraBasica",
+      "segments": [
+        {
+          "z0": -9,
+          "z1": -3,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "Esteira2x2"
+        },
+        {
+          "z0": -3,
+          "z1": 3,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "CamaraMagnetica"
+        },
+        {
+          "z0": 3,
+          "z1": 12,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "RefinadorMolecular"
+        },
+        {
+          "z0": 12,
+          "z1": 18,
+          "h0": 12.9375,
+          "h1": 6.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 18,
+          "z1": 24,
+          "h0": 6.9375,
+          "h1": 0.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 24,
+          "z1": 30,
+          "h0": 0.9375,
+          "h1": 0.9375,
+          "model": "Esteira2x2"
+        }
+      ],
+      "furnace": "FornalhaReforcada"
+    },
+    {
+      "x": 0,
+      "source": "MineradoraCobre",
+      "segments": [
+        {
+          "z0": -9,
+          "z1": -3,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "Esteira2x2"
+        },
+        {
+          "z0": -3,
+          "z1": 6,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "ProcessadorTermico"
+        },
+        {
+          "z0": 6,
+          "z1": 18,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "RessonadorPlasma"
+        },
+        {
+          "z0": 18,
+          "z1": 24,
+          "h0": 12.9375,
+          "h1": 6.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 24,
+          "z1": 30,
+          "h0": 6.9375,
+          "h1": 0.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 30,
+          "z1": 36,
+          "h0": 0.9375,
+          "h1": 0.9375,
+          "model": "Esteira2x2"
+        }
+      ],
+      "furnace": "FornalhaTermica"
+    },
+    {
+      "x": 18,
+      "source": "MineradoraQuantica",
+      "segments": [
+        {
+          "z0": -9,
+          "z1": -3,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "Esteira2x2"
+        },
+        {
+          "z0": -3,
+          "z1": 6,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "LaserDuplo"
+        },
+        {
+          "z0": 6,
+          "z1": 18,
+          "h0": 12.9375,
+          "h1": 12.9375,
+          "model": "CamaraPlasma"
+        },
+        {
+          "z0": 18,
+          "z1": 24,
+          "h0": 12.9375,
+          "h1": 6.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 24,
+          "z1": 30,
+          "h0": 6.9375,
+          "h1": 0.9375,
+          "model": "EsteiraDescida"
+        },
+        {
+          "z0": 30,
+          "z1": 36,
+          "h0": 0.9375,
+          "h1": 0.9375,
+          "model": "Esteira2x2"
+        }
+      ],
+      "furnace": "FornalhaMolecular"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ function Botao.new(pai, nome, aoAtivar)
 	-- Cria o elemento visual. Name permite encontra-lo; Parent o insere na hierarquia da interface.
 	local instancia = Instance.new("TextButton")
 	instancia.Name = nome
+	instancia.Selectable = true
 	instancia.Parent = pai
 	-- Cada botao guarda seu proprio elemento e estado; setmetatable liga essa tabela aos metodos de Botao.
 	-- Assim, self:Destruir() encontra Botao.Destruir por __index e recebe esta instancia em self.

@@ -2,6 +2,7 @@
 local fs=require("@lune/fs")
 local r=require("@lune/roblox")
 local serde=require("@lune/serde")
+local Escala=require("../escala")
 local V,CF,C,E=r.Vector3,r.CFrame,r.Color3,r.Enum
 local destino="modelos/mineradoras"
 for _,path in {destino,destino.."/assets"} do if not fs.isDir(path) then fs.writeDir(path) end end
@@ -665,13 +666,14 @@ for n,def in defs do
  m:chassi()
  formas[def.forma](m)
  m:definirHitbox()
- local bytes=r.serializeModel({m.modelo})
+ local bytes=Escala.Serializar(m.modelo)
  local relido=r.deserializeModel(bytes)[1]
  assert(relido.Name==def.id and relido.PrimaryPart.Name=="BaseModelo")
  assert(relido:FindFirstChild("SaidaMinerio",true) and #relido:GetDescendants()==#m.modelo:GetDescendants())
  fs.writeFile(destino .. "/assets/" .. def.id .. ".rbxm",bytes)
- table.insert(modelos,relido)
- table.insert(manifesto,{id=def.id,nome=def.nome,nivel=n,blocos={def.bx,def.bz},altura=def.by,larguraCabecote=relido:GetAttribute("LarguraCabecoteBlocos"),avanco=relido:GetAttribute("AvancoSaidaBlocos"),partes=extrair(relido),saida={m.saida.X,m.saida.Y,m.saida.Z}})
+ table.insert(modelos,m.modelo)
+ local saida=m.saida*Escala.Fator
+ table.insert(manifesto,{id=def.id,nome=def.nome,nivel=n,blocos={def.bx,def.bz},altura=def.by,larguraCabecote=relido:GetAttribute("LarguraCabecoteBlocos"),avanco=relido:GetAttribute("AvancoSaidaBlocos"),partes=extrair(relido),saida={saida.X,saida.Y,saida.Z}})
 end
 fs.writeFile(destino .. "/geometria.json",serde.encode("json",manifesto,true))
 
@@ -722,7 +724,7 @@ local function limites(modelo)
  end end
  return minimo,maximo
 end
-local esteiraOriginal=r.deserializeModel(fs.readFile("modelos/rojo/EsteiraBasica.rbxm"))[1]
+local esteiraOriginal=Escala.Autoria(r.deserializeModel(fs.readFile("modelos/esteiras/assets/Esteira2x2.rbxm"))[1])
 local function receptor(x,z,saida,nivel)
  local esteira=esteiraOriginal:Clone()
  esteira.Name="Receptora_"..nivel
@@ -778,5 +780,9 @@ for _,faixa in {{1,7,80},{8,13,12}} do
   x+=def.bx*2+8
  end
 end
+referencia.Name="ReferenciaDeEscala_3Studs"
+Escala.Aplicar(workspace,require("../../src/shared/Medidas").Bloco)
 fs.writeFile(destino .. "/GaleriaMineradoras.rbxlx",r.serializePlace(mundo,"xml"))
 print("Gerados e relidos:",#modelos,"modelos editaveis, manifesto e galeria independente.")
+
+require("../ajustar_hitboxes").Executar()

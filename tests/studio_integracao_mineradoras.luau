@@ -22,16 +22,16 @@ do
 		end
 		local modelos, geracoes, total = {}, {}, 0
 		for id, definicao in catalogo do
-			if definicao.Componentes[1].Tipo ~= "Soltador" then continue end
+			if not definicao.Componentes[1] or definicao.Componentes[1].Tipo ~= "Soltador" then continue end
 			total += 1
 			local modelo = replicado.ModelosMaquinas[id]:Clone()
 			local caixa, tamanho = geometria.CaixaDeConstrucao(modelo)
-			assert(tamanho == Vector3.new(table.unpack(definicao.Blocos)) * 4)
+			assert(tamanho == Vector3.new(table.unpack(definicao.Blocos)) * 3)
 			modelo:PivotTo(CFrame.new(total * 80, 500, 500) * caixa:ToObjectSpace(modelo:GetPivot()))
 			modelo:SetAttribute("DonoUserId", jogador.UserId); modelo:SetAttribute("TerrenoId", -1)
 			modelo.Parent, modelos[id], geracoes[id] = terreno.Maquinas, modelo, {}
 		end
-		assert(total == 13 and #replicado.ModelosMaquinas:GetChildren() == 16)
+		assert(total == 13 and #replicado.ModelosMaquinas:GetChildren() == 91)
 		fabrica = Fabrica.new(pasta)
 		for id, modelo in modelos do
 			local maquina = Maquina.new(modelo, terreno, catalogo[id], fabrica._simulacao)
@@ -46,7 +46,7 @@ do
 				local saida = modelo:FindFirstChild("SaidaMinerio", true)
 				if (parte.CFrame.Position - saida.WorldCFrame.Position).Magnitude > .001 then continue end
 				assert(parte:GetAttribute("Valor") == catalogo[id].Componentes[1].Minerio.Valor)
-				assert(configuracao.Valor == parte:GetAttribute("Valor") and vida == 10)
+				assert(configuracao.Valor == parte:GetAttribute("Valor") and vida == nil)
 				table.insert(geracoes[id], simulacao._tempo)
 				encontrado = true
 				break

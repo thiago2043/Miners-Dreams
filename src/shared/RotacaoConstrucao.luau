@@ -1,7 +1,47 @@
--- Valida orientacoes e encaixa novas colocacoes nos 24 giros de 90 graus; restauracao preserva orientacoes
--- antigas validas.
+-- Conserva giros ortogonais e permite inclinacao de 45 graus no X local das esteiras.
 local RotacaoConstrucao = { Passo = math.pi / 2 }
 local eixosGrade = { Vector3.xAxis, Vector3.yAxis, Vector3.zAxis, -Vector3.xAxis, -Vector3.yAxis, -Vector3.zAxis }
+
+function RotacaoConstrucao.PermiteInclinar(definicao)
+	if not definicao or not definicao.Componentes or #definicao.Componentes == 0 then return false end
+	for _, componente in definicao.Componentes do
+		if componente.Tipo ~= "Transportador" then return false end
+	end
+	return true
+end
+
+local cacheOrientacoes={}
+local function orientacoes(definicao)
+	local inclinavel=RotacaoConstrucao.PermiteInclinar(definicao)
+	if cacheOrientacoes[inclinavel] then return cacheOrientacoes[inclinavel] end
+	local resultado = {}
+	for _, direita in eixosGrade do for _, cima in eixosGrade do
+		if direita:Dot(cima) ~= 0 then continue end
+		local base = CFrame.fromMatrix(Vector3.zero, direita, cima, direita:Cross(cima))
+		table.insert(resultado, { Base = base, Angulo = 0, Rotacao = base })
+		if inclinavel then
+			for _, angulo in { -math.pi/4, math.pi/4 } do
+				table.insert(resultado, { Base = base, Angulo = angulo, Rotacao = base*CFrame.Angles(angulo,0,0) })
+			end
+		end
+	end end
+	cacheOrientacoes[inclinavel]=resultado
+	return resultado
+end
+
+function RotacaoConstrucao.DecomporEsteira(rotacao, definicao)
+	if RotacaoConstrucao.PermiteInclinar(definicao) then
+		if RotacaoConstrucao.ValidarNaGrade(rotacao) then return rotacao,0 end
+		local melhor
+		for _, item in orientacoes(definicao) do
+			if (item.Rotacao.RightVector-rotacao.RightVector).Magnitude < .0001
+				and (item.Rotacao.UpVector-rotacao.UpVector).Magnitude < .0001
+				and (not melhor or item.Base.UpVector.Y > melhor.Base.UpVector.Y) then melhor=item end
+		end
+		if melhor then return melhor.Base, melhor.Angulo end
+	end
+	return rotacao, 0
+end
 
 -- Aproxima de inteiros somente os componentes que ja estao quase inteiros. Isso remove residuos como
 -- 0.00000001 depois de giros, sem transformar um angulo antigo valido em outro.
@@ -46,30 +86,30 @@ function RotacaoConstrucao.Validar(rotacao)
 	return CFrame.fromMatrix(Vector3.zero, direita, cima, direita:Cross(cima))
 end
 
--- Escolhe, entre as 24 orientacoes de uma caixa na grade, a que mais se aproxima do CFrame recebido. Devolve
--- essa orientacao exata para que um arraste termine em passos de 90 graus.
-function RotacaoConstrucao.EncaixarNaGrade(rotacao)
+-- Escolhe a orientacao permitida mais proxima sem acumular residuos dos gestos.
+function RotacaoConstrucao.EncaixarNaGrade(rotacao, definicao)
 	local melhor, pontuacao = nil, -math.huge
-	-- Ha seis escolhas de direita e quatro escolhas perpendiculares de cima: 24 orientacoes. A soma dos
-	-- alinhamentos dos tres eixos escolhe a mais proxima.
-	for _, direita in eixosGrade do
-		for _, cima in eixosGrade do
-			if direita:Dot(cima) ~= 0 then continue end
-			local tras = direita:Cross(cima)
-			local proximidade = direita:Dot(rotacao.RightVector) + cima:Dot(rotacao.UpVector) - tras:Dot(rotacao.LookVector)
-			if proximidade > pontuacao then
-				melhor, pontuacao = CFrame.fromMatrix(Vector3.zero, direita, cima, tras), proximidade
-			end
+	for _, item in orientacoes(definicao) do
+		local candidata = item.Rotacao
+		local proximidade = candidata.RightVector:Dot(rotacao.RightVector) + candidata.UpVector:Dot(rotacao.UpVector)
+			+ candidata.LookVector:Dot(rotacao.LookVector)
+		if proximidade > pontuacao then
+			melhor, pontuacao = candidata, proximidade
 		end
 	end
 	return melhor
 end
 
--- Valida uma nova colocacao e aceita somente matrizes cujos componentes de rotacao ja correspondem a giros de
--- 90 graus. Devolve o CFrame exato ou nil, sem converter uma rotacao arbitraria enviada pelo cliente.
-function RotacaoConstrucao.ValidarNaGrade(rotacao)
+-- Recusa matrizes fora dos giros permitidos; a validacao nao arredonda um pedido arbitrario do cliente.
+function RotacaoConstrucao.ValidarNaGrade(rotacao, definicao)
 	local validada = RotacaoConstrucao.Validar(rotacao)
 	if not validada then return nil end
+	if RotacaoConstrucao.PermiteInclinar(definicao) then
+		local candidata = RotacaoConstrucao.EncaixarNaGrade(validada, definicao)
+		if (candidata.RightVector-validada.RightVector).Magnitude < .0001
+			and (candidata.UpVector-validada.UpVector).Magnitude < .0001 then return candidata end
+		return nil
+	end
 	local componentes = { validada:GetComponents() }
 	-- Os indices 1 a 3 sao a posicao; 4 a 12 formam a matriz de rotacao. Numa orientacao de 90 graus esses
 	-- valores sao -1, 0 ou 1, com pequena tolerancia numerica.

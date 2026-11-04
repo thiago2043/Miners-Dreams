@@ -1,59 +1,93 @@
 local Botao = require(script.Parent.Botao)
-
+local Icones = require(script.Parent.IconesAbas)
 local PainelProgressao = {}
 PainelProgressao.__index = PainelProgressao
+local cores = {Blueprints=Color3.fromRGB(49,211,240), Upgrades=Color3.fromRGB(176,137,255), Configuracoes=Color3.fromRGB(255,214,78), Classificacao=Color3.fromRGB(255,190,86),Administracao=Color3.fromRGB(112,198,255),Tutorial=Color3.fromRGB(101,228,196)}
 
--- As abas centrais compartilham a janela; tecla e opcional para abas abertas apenas por botao.
-function PainelProgressao.new(pai, navegacao, nome, titulo, tecla, mensagem)
-	local self = setmetatable({ _navegacao = navegacao, _nome = nome }, PainelProgressao)
-	local atalho = tecla and (" [" .. tecla .. "]") or ""
-	self._grupo = Instance.new("Frame")
-	self._grupo.Name, self._grupo.AnchorPoint = nome, Vector2.new(0.5, 0.5)
-	self._grupo.Position, self._grupo.Size = UDim2.fromScale(0.5, 0.5), UDim2.fromScale(0.4, 0.5)
-	self._grupo.BackgroundColor3, self._grupo.BorderSizePixel = Color3.fromRGB(25, 25, 25), 0
-	self._grupo.Active, self._grupo.Visible, self._grupo.Parent = true, false, pai
-	local limite = Instance.new("UISizeConstraint")
-	limite.MinSize, limite.MaxSize = Vector2.new(260, 160), Vector2.new(460, 360)
-	limite.Parent = self._grupo
+local function arredondar(objeto, raio)
+	local canto=Instance.new("UICorner")
+	canto.CornerRadius,canto.Parent=UDim.new(0,raio),objeto
+end
 
-	self._titulo = Instance.new("TextLabel")
-	self._titulo.Name, self._titulo.Text = "Titulo", titulo .. atalho
-	self._titulo.Position, self._titulo.Size = UDim2.fromOffset(16, 10), UDim2.new(1, -120, 0, 36)
-	self._titulo.BackgroundTransparency, self._titulo.Font = 1, Enum.Font.SourceSansBold
-	self._titulo.TextColor3, self._titulo.TextSize = Color3.fromRGB(255, 255, 255), 20
-	self._titulo.TextXAlignment, self._titulo.Parent = Enum.TextXAlignment.Left, self._grupo
-
-	-- Fechar remove somente esta aba da pilha; Q usa a mesma navegacao e preserva os paineis laterais.
-	self._fechar = Botao.new(self._grupo, "Fechar", function() navegacao:Fechar(nome) end)
-	local botao = self._fechar:ObterInstancia()
-	botao.Position, botao.Size = UDim2.new(1, -88, 0, 10), UDim2.fromOffset(72, 34)
-	botao.Text, botao.TextWrapped = "Fechar" .. atalho, true
-	botao.BackgroundColor3, botao.BorderSizePixel = Color3.fromRGB(55, 55, 55), 0
-	botao.Font, botao.TextColor3, botao.TextSize = Enum.Font.SourceSansBold, Color3.fromRGB(255, 255, 255), 16
-	botao.Selectable = true
-	self._fechar:DefinirDisponivel(true)
-
-	-- Estado vazio: nenhuma compra ou reinicio e oferecido antes de existir uma regra correspondente.
-	self._mensagem = Instance.new("TextLabel")
-	self._mensagem.Name, self._mensagem.Text = "Vazio", mensagem
-	self._mensagem.Position, self._mensagem.Size = UDim2.fromOffset(16, 64), UDim2.new(1, -32, 1, -80)
-	self._mensagem.BackgroundTransparency, self._mensagem.Font = 1, Enum.Font.SourceSans
-	self._mensagem.TextColor3, self._mensagem.TextSize = Color3.fromRGB(220, 220, 220), 18
-	self._mensagem.TextWrapped, self._mensagem.Parent = true, self._grupo
+function PainelProgressao.new(pai, navegacao, nome, titulo, tecla, mensagem, altura,jogador)
+	local self=setmetatable({_navegacao=navegacao,_nome=nome,_botoes={},Cor=cores[nome],_tecla=tecla,_jogador=jogador},PainelProgressao)
+	local g=Instance.new("Frame")
+	g.Name,g.AnchorPoint=nome,Vector2.new(.5,.5)
+	g.Position,g.Size=UDim2.fromScale(.5,.5),UDim2.new(1,-32,1,-48)
+	g.BackgroundColor3,g.BorderSizePixel=Color3.fromRGB(22,23,29),0
+	g.ZIndex=2
+	g.Active,g.Visible,g.Parent=true,false,pai
+	arredondar(g,12)
+	self._grupo=g
+	local limite=Instance.new("UISizeConstraint")
+	limite.MaxSize,limite.Parent=Vector2.new(540,altura or 340),g
+	local borda=Instance.new("UIStroke")
+	borda.Color,borda.Transparency,borda.Parent=self.Cor,.55,g
+	local icone=Instance.new("Frame")
+	icone.Name,icone.Position,icone.Size="IconeAba",UDim2.fromOffset(12,7),UDim2.fromOffset(56,56)
+	icone.BackgroundTransparency,icone.ZIndex,icone.Parent=1,1,g
+	Icones.Criar(icone,nome)
+	local escala=Instance.new("UIScale")
+	escala.Scale,escala.Parent=.8,icone
+	self._titulo=self:Texto(g,"Titulo",titulo,UDim2.fromOffset(66,10),UDim2.new(1,-120,0,28),23,true)
+	self._titulo.TextColor3=self.Cor
+	self._titulo.TextScaled=true
+	local fonteTitulo=Instance.new("UITextSizeConstraint")
+	fonteTitulo.MinTextSize,fonteTitulo.MaxTextSize,fonteTitulo.Parent=14,23,self._titulo
+	self._fechar=self:Botao(g,"Fechar",UDim2.new(1,-44,0,16),UDim2.fromOffset(28,28),function() navegacao:Fechar(nome) end)
+	local fechar=self._fechar:ObterInstancia()
+	fechar.Text,fechar.TextSize,fechar.BackgroundColor3,fechar.TextColor3="×",26,self.Cor,Color3.fromRGB(22,23,29)
+	arredondar(fechar,14)
+	self.Conteudo=Instance.new("ScrollingFrame")
+	self.Conteudo.Name,self.Conteudo.Position,self.Conteudo.Size="Conteudo",UDim2.fromOffset(16,56),UDim2.new(1,-32,1,-72)
+	self.Conteudo.BackgroundTransparency,self.Conteudo.BorderSizePixel=1,0
+	self.Conteudo.CanvasSize,self.Conteudo.ScrollBarThickness=UDim2.new(),4
+	self.Conteudo.ScrollingDirection,self.Conteudo.Active,self.Conteudo.Parent=Enum.ScrollingDirection.Y,true,g
+	self.Conteudo.ScrollBarImageColor3=self.Cor
+	if mensagem then
+		local estado=Instance.new("Frame")
+		estado.Name,estado.Position,estado.Size="EstadoVazio",UDim2.fromOffset(0,8),UDim2.new(1,-8,0,176)
+		estado.BackgroundColor3,estado.BorderSizePixel,estado.Parent=Color3.fromRGB(29,31,39),0,self.Conteudo
+		arredondar(estado,10)
+		self._mensagem=self:Texto(estado,"Vazio",mensagem,UDim2.fromOffset(20,24),UDim2.new(1,-40,0,56),21,true)
+		self._mensagem.TextXAlignment=Enum.TextXAlignment.Center
+		self.Conteudo.CanvasSize=UDim2.fromOffset(0,192)
+	end
 	return self
 end
 
--- A pilha e a fonte de verdade: atalhos, Q e o botao Fechar atualizam a mesma visibilidade.
-function PainelProgressao:Atualizar()
-	if self._destruido then return end
-	self._grupo.Visible = self._navegacao:Contem(self._nome)
+function PainelProgressao:Texto(pai,nome,conteudo,posicao,tamanho,fonte,negrito)
+	local label=Instance.new("TextLabel")
+	label.Name,label.Text,label.Position,label.Size=nome,conteudo,posicao,tamanho
+	label.BackgroundTransparency,label.BorderSizePixel=1,0
+	label.Font=negrito and Enum.Font.SourceSansBold or Enum.Font.SourceSans
+	label.TextColor3,label.TextSize,label.TextWrapped=Color3.fromRGB(225,229,239),fonte,true
+	label.TextXAlignment,label.Parent=Enum.TextXAlignment.Left,pai
+	return label
 end
 
--- Desliga o callback antes de destruir os elementos, impedindo acoes depois de encerrar a interface.
+function PainelProgressao:Botao(pai,nome,posicao,tamanho,callback)
+	local botao=Botao.new(pai,nome,callback)
+	local b=botao:ObterInstancia()
+	b.Position,b.Size,b.Text=posicao,tamanho,nome
+	b.BackgroundColor3,b.BorderSizePixel=Color3.fromRGB(34,37,46),0
+	b.Font,b.TextColor3,b.TextSize=Enum.Font.SourceSansBold,Color3.fromRGB(240,243,250),17
+	b.TextWrapped,b.Selectable=true,true
+	arredondar(b,7)
+	botao:DefinirDisponivel(true)
+	table.insert(self._botoes,botao)
+	return botao
+end
+
+function PainelProgressao:Atualizar()
+	if not self._destruido then self._grupo.Visible=self._navegacao:Contem(self._nome) end
+end
+
 function PainelProgressao:Destruir()
 	if self._destruido then return end
-	self._destruido = true
-	self._fechar:Destruir()
+	self._destruido=true
+	for _,botao in self._botoes do botao:Destruir() end
+	table.clear(self._botoes)
 	self._grupo:Destroy()
 end
 

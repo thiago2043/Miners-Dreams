@@ -1,4 +1,4 @@
--- Converte o movimento do cursor em passos de 90 graus, mantendo o eixo durante pequenas oscilacoes do gesto.
+-- Converte o gesto em passos permitidos para a peca, conservando o eixo durante pequenas oscilacoes.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RotacaoConstrucao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 
@@ -10,13 +10,15 @@ local mesmaDirecao = math.cos(math.rad(25))
 
 -- Recebe a posicao inicial do mouse, a orientacao da camera no terreno, a rotacao atual e a esfera projetada
 -- na tela. Inicializa os acumuladores do gesto sem aplicar nenhum giro.
-function RotacaoArraste.new(mouse, cameraNoTerreno, rotacao, centroTela, raioTela)
+function RotacaoArraste.new(mouse, cameraNoTerreno, rotacao, centroTela, raioTela, definicao, permitirInclinar)
 	-- Guarda a camera no inicio do gesto, a posicao anterior do cursor e acumuladores: um confirma mudanca de
 	-- direcao, outro determina quantos giros completos foram pedidos.
 	local self = setmetatable({
 		_camera = cameraNoTerreno,
 		_centroTela = centroTela, _raioTela = raioTela,
 		_rotacao = rotacao, _mouseAnterior = mouse,
+		_definicao = definicao,
+		_permitirInclinar = permitirInclinar ~= false,
 		_movimentoDirecao = Vector2.zero,
 		_pixelsRepeticao = 0, _pixelsPendentes = 0,
 	}, RotacaoArraste)
@@ -95,10 +97,12 @@ function RotacaoArraste:Atualizar(mouse)
 		self._pixelsRepeticao -= (passos - 1) * pixelsParaRepetir
 	end
 	-- Aplica os quartos de volta completos em uma matriz, preservando os pixels restantes. A validacao mantem a
-	-- orientacao exatamente na grade de 90 graus.
+	-- orientacao exatamente nos giros permitidos para a peca.
 	if passos > 0 then
+		local passo = if self._permitirInclinar and RotacaoConstrucao.PermiteInclinar(self._definicao)
+			and math.abs(self._eixo:Dot(self._rotacao.RightVector))>.999 then math.pi/4 else RotacaoConstrucao.Passo
 		self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(
-			CFrame.fromAxisAngle(self._eixo, passos * RotacaoConstrucao.Passo) * self._rotacao
+			CFrame.fromAxisAngle(self._eixo, passos * passo) * self._rotacao, self._definicao
 		))
 	end
 	return self._rotacao

@@ -1,6 +1,24 @@
 -- Completa os objetos do runtime local com os metodos usados nos testes; nao reproduz o motor fisico do Studio.
 local roblox = require("@lune/roblox")
 local Instance, CFrame, Vector3 = roblox.Instance, roblox.CFrame, roblox.Vector3
+local sinal = require("./interface").Sinal
+local sinais = {}
+local function obterSinal(objeto, nome)
+	sinais[objeto] = sinais[objeto] or {}
+	sinais[objeto][nome] = sinais[objeto][nome] or sinal()
+	return sinais[objeto][nome]
+end
+-- O Lune nao emite eventos de arvore/propriedades; testes de invalidacao os disparam explicitamente.
+for _, nome in { "ChildAdded", "ChildRemoved", "DescendantAdded" } do
+	roblox.implementProperty("Instance", nome, function(objeto) return obterSinal(objeto, nome) end)
+end
+roblox.implementMethod("Instance", "GetPropertyChangedSignal", function(objeto, nome) return obterSinal(objeto,"Propriedade:"..nome) end)
+roblox.implementMethod("Instance", "GetAttributeChangedSignal", function(objeto, nome) return obterSinal(objeto,"Atributo:"..nome) end)
+roblox.implementMethod("Workspace", "GetServerTimeNow", function(mundo) return mundo:GetAttribute("TempoServidorTeste") or 0 end)
+roblox.implementMethod("Workspace", "BulkMoveTo", function(mundo, partes, poses)
+	mundo:SetAttribute("LotesMovimentoTeste", (mundo:GetAttribute("LotesMovimentoTeste") or 0) + 1)
+	for i, parte in partes do parte.CFrame = poses[i] end
+end)
 
 -- O runtime de testes nao aguarda replicacao. Esta versao exige que o filho ja exista e falha por assert se
 -- o cenario esqueceu de cria-lo.

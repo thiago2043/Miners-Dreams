@@ -1,0 +1,27 @@
+[
+  [
+    "mineradoras",
+    "MineradoraBasica",
+    0
+  ],
+  [
+    "esteiras",
+    "Esteira2x2",
+    6
+  ],
+  [
+    "modificadores",
+    "RefinadorMolecular",
+    13.5
+  ],
+  [
+    "modificadores",
+    "ProcessadorTermico",
+    22.5
+  ],
+  [
+    "fornalhas",
+    "FornalhaReforcada",
+    30
+  ]
+]

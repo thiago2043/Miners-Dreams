@@ -8,7 +8,9 @@ local RotacaoConstrucao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
+local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
+local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
 local DataManager = require(ServerScriptService.Data.DataManager)
 local Maquina = require(script.Parent.Maquinas.Maquina)
 
@@ -31,7 +33,7 @@ function ServicoConstrucao.new()
 		local modelo = modelos:WaitForChild(maquinaId)
 		local caixaOriginal, tamanho = Geometria.CaixaDeConstrucao(modelo)
 		self._modelos[maquinaId] = {
-			Modelo = modelo, Volume = VolumeConstrucao.new(tamanho, CatalogoMaquinas[maquinaId].Blocos),
+			Modelo = modelo, Volume = VolumeConstrucao.new(tamanho, CatalogoMaquinas[maquinaId].Blocos, CatalogoMaquinas[maquinaId]),
 			CaixaParaPivo = caixaOriginal:ToObjectSpace(modelo:GetPivot()),
 		}
 	end
@@ -39,8 +41,7 @@ function ServicoConstrucao.new()
 end
 
 -- O saldo de pedidos permite rajadas de cliques e se recupera com o tempo, limitando spam continuo.
--- Mantem por jogador um saldo maximo de 60 pedidos, recuperado a 30 por segundo. Cada pedido aceito consome
--- um; devolve false quando a rajada esgotou esse saldo.
+-- Lotes maiores mantem o custo da maior rajada anterior, sem aumentar o orcamento de cliques individuais.
 function ServicoConstrucao:_PermitirPedido(jogador, custo)
 	local agora = os.clock()
 	local limite = self._limites[jogador] or { tempo = agora, tokens = 60 }
@@ -52,7 +53,9 @@ function ServicoConstrucao:_PermitirPedido(jogador, custo)
 	limite.tempo = agora
 	self._limites[jogador] = limite
 
-	if type(custo) ~= "number" or custo < 1 or custo % 1 ~= 0 or limite.tokens < custo then return false end
+	if type(custo) ~= "number" or custo < 1 or custo % 1 ~= 0 or custo > Limites.PecasPorGrupo then return false end
+	custo = math.min(custo, 60)
+	if limite.tokens < custo then return false end
 
 	limite.tokens -= custo
 	return true
@@ -114,22 +117,20 @@ end
 -- testar uma personalizacao no lugar da propria maquina. Devolve o CFrame do pivo no mundo ou nil se o destino
 -- nao for permitido.
 local function destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo, ignorar)
-	if typeof(minimo) ~= "Vector3" then return nil end
+	if typeof(minimo) ~= "Vector3" then return nil, "Posicao invalida." end
 
 	-- O canto recebido deve estar em multiplos exatos do passo da grade e nao pode conter NaN ou infinito. A
 	-- verificacao do servidor independe do que a previa mostrou.
 	for _, v in { minimo.X, minimo.Y, minimo.Z } do
 		if not finito(v) or v % Geometria.Passo ~= 0 then
-			return nil
+			return nil, "Posicao invalida."
 		end
 	end
 
 	local extensao, ocupado = dadosModelo.Volume:Calcular(rotacao)
 	local maximo = minimo + ocupado
 
-	if minimo.X < 0 or minimo.Y < 0 or minimo.Z < 0
-		or maximo.X > piso.Size.X or maximo.Z > piso.Size.Z
-	then
+	if not Geometria.DentroDoTerreno(minimo, ocupado, piso.Size) then
 		return nil
 	end
 
@@ -153,7 +154,7 @@ local function destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo, ignora
 
 	local caixaDestino = origem * CFrame.new(
 		minimo + Vector3.new(ocupado.X / 2, extensao.Y, ocupado.Z / 2)
-	) * rotacao
+	) * RotacaoConstrucao.DecomporEsteira(rotacao,dadosModelo.Definicao)
 
 	for _, v in { caixaDestino:GetComponents() } do
 		if not finito(v) then return nil end
@@ -164,10 +165,12 @@ end
 
 -- Recebe um tipo e suas diferencas. Reutiliza a referencia base quando nao ha alteracoes; caso contrario, cria
 -- uma copia temporaria, aplica a configuracao e valida seus componentes e dimensoes.
-function ServicoConstrucao:_PrepararModelo(maquinaId, modificacoes)
+function ServicoConstrucao:_PrepararModelo(maquinaId, modificacoes, rotacao, encaixeGrade)
 	local base = assert(self._modelos[maquinaId], "Maquina invalida.")
 	local personalizacao = PersonalizacaoMaquina.new(modificacoes)
-	if next(personalizacao:ObterDados()) == nil then return base end
+	rotacao = rotacao or CFrame.identity
+	local _,angulo = RotacaoConstrucao.DecomporEsteira(rotacao,CatalogoMaquinas[maquinaId])
+	if next(personalizacao:ObterDados()) == nil and angulo==0 then return base end
 	-- Uma configuracao diferente precisa de uma copia temporaria para ser aplicada e medida. Construir Maquina
 	-- valida seus componentes; Destruir encerra esse objeto de validacao.
 	local modelo = base.Modelo:Clone()
@@ -175,10 +178,14 @@ function ServicoConstrucao:_PrepararModelo(maquinaId, modificacoes)
 		personalizacao:Aplicar(modelo)
 		local caixa, tamanho = Geometria.CaixaDeConstrucao(modelo)
 		local definicao = personalizacao:ObterDefinicao(CatalogoMaquinas[maquinaId])
+		if encaixeGrade~=false then EsteiraInclinada.Aplicar(modelo,definicao,rotacao)
+		else modelo:SetAttribute("OrientacaoEsteiraLegada",true) end
+		caixa = Geometria.CaixaDeConstrucao(modelo)
 		local validacao = Maquina.new(modelo, nil, definicao)
 		validacao:Destruir()
 		return {
-			Modelo = modelo, Volume = VolumeConstrucao.new(tamanho, definicao.Blocos),
+			Modelo = modelo, Volume = VolumeConstrucao.new(tamanho, definicao.Blocos, if encaixeGrade~=false then definicao else nil),
+			Definicao = if encaixeGrade~=false then definicao else nil,
 			CaixaParaPivo = caixa:ToObjectSpace(modelo:GetPivot()), Temporario = true,
 		}
 	end)
@@ -200,6 +207,7 @@ function ServicoConstrucao:_CriarMaquina(jogador, terreno, maquinas, destino, re
 	minimoAlvo, rotacaoAlvo, totalRecebido)
 	dadosModelo = dadosModelo or self._modelos[registro.MaquinaId]
 	local maquina = dadosModelo.Modelo:Clone()
+	registro.Id=registro.Id or game:GetService("HttpService"):GenerateGUID(false)
 
 	maquina:SetAttribute("DonoUserId", jogador.UserId)
 	maquina:SetAttribute("TerrenoId", terreno:GetAttribute("TerrenoId"))
@@ -241,6 +249,7 @@ function ServicoConstrucao:Restaurar(jogador)
 	local dados, terreno, piso, maquinas = contexto(jogador)
 
 	if not dados then return false end
+	require(script.Parent.ExpansaoPlot).Aplicar(terreno,dados:ObterUpgrade("Expansao"))
 	-- Restaurar pode ser chamado por caminhos diferentes. Este cache evita duplicar construcoes quando o mesmo
 	-- objeto de dados ja foi carregado nesta plot.
 	if self._carregados[terreno] == dados then return true end
@@ -252,7 +261,7 @@ function ServicoConstrucao:Restaurar(jogador)
 		return false
 	end
 
-	for indice, registro in registros do
+	for indice, registro in table.clone(registros) do
 		local destino
 		local dadosModelo
 
@@ -281,7 +290,7 @@ function ServicoConstrucao:Restaurar(jogador)
 				)
 
 				if rotacao then
-					local preparou, preparado = pcall(self._PrepararModelo, self, registro.MaquinaId, registro.Modificacoes)
+					local preparou, preparado = pcall(self._PrepararModelo, self, registro.MaquinaId, registro.Modificacoes, rotacao,registro.InclinacaoGrade==true)
 					if preparou then
 						dadosModelo = preparado
 						destino = destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo)
@@ -292,6 +301,8 @@ function ServicoConstrucao:Restaurar(jogador)
 
 		if destino then
 			self:_CriarMaquina(jogador, terreno, maquinas, destino, registro, dadosModelo)
+		elseif dadosModelo and dados:RegistrarRecolhimento(registro) then
+			warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao cabe no terreno e voltou ao inventario.")
 		else
 			warn("Nao foi possivel restaurar a maquina " .. tostring(indice)
 				.. " de " .. jogador.Name .. "; o registro foi preservado.")
@@ -315,7 +326,7 @@ function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCop
 		return false, "Maquina invalida."
 	end
 
-	rotacao = RotacaoConstrucao.ValidarNaGrade(rotacao)
+	rotacao = RotacaoConstrucao.ValidarNaGrade(rotacao,CatalogoMaquinas[maquinaId])
 
 	if not rotacao then
 		return false, "Rotacao invalida."
@@ -347,7 +358,7 @@ function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCop
 	else
 		modificacoes = dados:ObterModificacoesInventario(maquinaId)
 	end
-	local preparou, preparado = pcall(self._PrepararModelo, self, maquinaId, modificacoes)
+	local preparou, preparado = pcall(self._PrepararModelo, self, maquinaId, modificacoes, rotacao)
 	if not preparou then return false, "Configuracao da peca invalida." end
 	dadosModelo = preparado
 
@@ -366,6 +377,7 @@ function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCop
 		MaquinaId = maquinaId,
 		Posicao = { minimo.X, minimo.Y, minimo.Z },
 		Rotacao = { table.unpack(componentes, 4, 12) },
+		InclinacaoGrade = if dadosModelo.Modelo:GetAttribute("InclinacaoEsteira") then true else nil,
 	}
 	if modificacoes and next(modificacoes) then
 		registro.Modificacoes = PersonalizacaoMaquina.new(modificacoes):ObterDados()
@@ -416,7 +428,7 @@ function ServicoConstrucao:Copiar(jogador, maquina)
 	end
 	rotacao = RotacaoConstrucao.Validar(rotacao)
 	if not rotacao then return false, "Rotacao da peca invalida." end
-	rotacao = RotacaoConstrucao.EncaixarNaGrade(rotacao)
+	rotacao = RotacaoConstrucao.EncaixarNaGrade(rotacao,CatalogoMaquinas[maquina.Name])
 	-- Cada captura recebe outro numero para invalidar selecoes de copia anteriores. Os dados completos ficam no
 	-- servidor e uma copia deles e enviada para a exibicao da previa.
 	self._sequenciaCopia += 1
@@ -437,12 +449,12 @@ function ServicoConstrucao:CopiarGrupo(jogador, maquinasSelecionadas)
 	if type(maquinasSelecionadas) ~= "table" then return false, "Selecao de copia invalida." end
 	local quantidade = 0
 	for indice in maquinasSelecionadas do
-		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > 60 then
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo then
 			return false, "Selecao de copia invalida."
 		end
 		quantidade += 1
 	end
-	if quantidade < 1 or quantidade > 60 then return false, "Quantidade de pecas invalida." end
+	if quantidade < 1 or quantidade > Limites.PecasPorGrupo then return false, "Quantidade de pecas invalida." end
 	for indice = 1, quantidade do
 		if maquinasSelecionadas[indice] == nil then return false, "Selecao de copia invalida." end
 	end
@@ -484,7 +496,7 @@ function ServicoConstrucao:CopiarGrupo(jogador, maquinasSelecionadas)
 		if not rotacao then
 			rotacao = origem:ToObjectSpace(maquina:GetPivot() * self._modelos[registro.MaquinaId].CaixaParaPivo:Inverse()).Rotation
 		end
-		rotacao = RotacaoConstrucao.ValidarNaGrade(rotacao)
+		rotacao = RotacaoConstrucao.ValidarNaGrade(rotacao,CatalogoMaquinas[registro.MaquinaId])
 		if not rotacao then return false, "Rotacao de uma peca invalida." end
 
 		local minimo, ocupado = maquina:GetAttribute("VolumeMinimo"), maquina:GetAttribute("VolumeOcupado")
@@ -520,7 +532,7 @@ function ServicoConstrucao:ListarBlueprints(jogador)
 	local resposta = {}
 	for _, blueprint in blueprints do
 		if type(blueprint) ~= "table" or type(blueprint.Id) ~= "string" or type(blueprint.Nome) ~= "string"
-			or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > 60
+			or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
 		then return false, "Os dados de um blueprint estao invalidos." end
 		table.insert(resposta, { Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #blueprint.Pecas })
 	end
@@ -567,7 +579,7 @@ function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
 	return true, "Blueprint salvo.", { Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #pecas }
 end
 
--- Recria um token de grupo a partir do blueprint persistido; a confirmacao segue o fluxo de compra atomica existente.
+-- Recria um token de grupo a partir do blueprint persistido; a confirmacao usa a colocacao parcial das copias.
 function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
 	if type(identificador) ~= "string" then return false, "Blueprint invalido." end
 	local dados = DataManager.ObterDados(jogador)
@@ -577,7 +589,7 @@ function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
 	for _, item in blueprints do
 		if type(item) == "table" and item.Id == identificador then blueprint = item; break end
 	end
-	if not blueprint or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > 60 then
+	if not blueprint or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo then
 		return false, "Esse blueprint nao esta disponivel."
 	end
 	if not self:_PermitirPedido(jogador, #blueprint.Pecas) then
@@ -594,7 +606,7 @@ function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
 		then return false, "Os dados de uma peca do blueprint estao invalidos." end
 		for _, numero in deslocamento do if not finito(numero) then return false, "Deslocamento de blueprint invalido." end end
 		for _, numero in matriz do if not finito(numero) then return false, "Rotacao de blueprint invalida." end end
-		local rotacao = RotacaoConstrucao.ValidarNaGrade(CFrame.new(0, 0, 0, table.unpack(matriz)))
+		local rotacao = RotacaoConstrucao.ValidarNaGrade(CFrame.new(0, 0, 0, table.unpack(matriz)),CatalogoMaquinas[item.MaquinaId])
 		if not rotacao then return false, "Rotacao de blueprint invalida." end
 		local capturaValida, modificacoes = pcall(function()
 			return PersonalizacaoMaquina.new(item.Modificacoes):ObterDados()
@@ -613,13 +625,53 @@ function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
 	return true, "Blueprint pronto para colocar.", resposta
 end
 
--- Valida todos os destinos, cria todas as replicas e so entao consome o inventario em lote. Uma falha em
--- geometria, clonagem ou saldo descarta as novas instancias sem remover as fontes nem deixar colocacao parcial.
+-- Confirma as copias disponiveis; obstaculos e saldo insuficiente nao bloqueiam as demais.
 function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
 	local copia = self._copiasGrupo[jogador]
 	if not copia or type(token) ~= "number" or copia.Token ~= token then
 		return false, "A copia selecionada nao esta mais disponivel."
 	end
+	return self:_ColocarCaptura(jogador, copia, pedidos)
+end
+
+-- A linha repete uma configuracao escolhida pelo servidor, sem substituir tokens de grupos ou aceitar melhorias do cliente.
+function ServicoConstrucao:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
+	if type(maquinaId) ~= "string" or not self._modelos[maquinaId] then return false, "Maquina invalida." end
+	if type(pedidos) ~= "table" then return false, "Destinos invalidos." end
+	local quantidade = 0
+	for indice in pedidos do
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo then
+			return false, "Destinos invalidos."
+		end
+		quantidade += 1
+	end
+	if quantidade < 1 or quantidade ~= #pedidos then return false, "Quantidade de pecas invalida." end
+	if usarPadrao ~= nil and type(usarPadrao) ~= "boolean" then return false, "Origem da colocacao invalida." end
+	if usarPadrao and tokenCopia ~= nil then return false, "Origem da colocacao invalida." end
+	if not self:Restaurar(jogador) then return false, "Seus dados ou seu terreno ainda nao estao disponiveis." end
+	local dados = contexto(jogador)
+	if not dados or dados:ObterQuantidade(maquinaId) == nil then return false, "Quantidade invalida no inventario." end
+	local modificacoes
+	if tokenCopia ~= nil then
+		local copia = self._copias[jogador]
+		if not copia or copia.Token ~= tokenCopia then
+			local grupo = self._copiasGrupo[jogador]
+			copia = if grupo and grupo.Token == tokenCopia and #grupo.Pecas == 1 then grupo.Pecas[1] else nil
+		end
+		if not copia or copia.MaquinaId ~= maquinaId then
+			return false, "A copia selecionada nao esta mais disponivel."
+		end
+		modificacoes = copia.Modificacoes
+	else
+		modificacoes = if usarPadrao then {} else dados:ObterModificacoesInventario(maquinaId)
+	end
+	local pecas = {}
+	for indice = 1, quantidade do pecas[indice] = {MaquinaId=maquinaId, Modificacoes=modificacoes} end
+	return self:_ColocarCaptura(jogador, {Pecas=pecas}, pedidos)
+end
+
+-- Copias e linhas compartilham a validacao, a colocacao parcial e a recuperacao de falhas internas.
+function ServicoConstrucao:_ColocarCaptura(jogador, copia, pedidos)
 	if type(pedidos) ~= "table" then
 		return false, "Destinos da copia invalidos."
 	end
@@ -650,25 +702,29 @@ function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
 			return false, "Destino da copia invalido."
 		end
 		local minimo = pedido.Minimo
-		local rotacao = RotacaoConstrucao.ValidarNaGrade(pedido.Rotacao)
+		local peca = copia.Pecas[indice]
+		local rotacao = RotacaoConstrucao.ValidarNaGrade(pedido.Rotacao,CatalogoMaquinas[peca.MaquinaId])
 		if not rotacao then
 			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
 			return false, "Rotacao invalida."
 		end
-		local peca = copia.Pecas[indice]
-		local preparou, dadosModelo = pcall(self._PrepararModelo, self, peca.MaquinaId, peca.Modificacoes)
+		local preparou, dadosModelo = pcall(self._PrepararModelo, self, peca.MaquinaId, peca.Modificacoes, rotacao)
 		if not preparou then
 			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
 			return false, "Configuracao de uma peca invalida."
 		end
-		local destino = destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo)
+		local destino, erroDestino = destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo)
 		local _, ocupado = dadosModelo.Volume:Calcular(rotacao)
 		if not destino then
 			liberarModelo(dadosModelo)
-			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
-			return false, "Essa posicao esta ocupada ou fora da grade do terreno."
+			if erroDestino then
+				for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+				return false, erroDestino
+			end
+			continue
 		end
 		local maximo = minimo + ocupado
+		local sobrepoe = false
 		for _, anterior in alvos do
 			local a, b = anterior.Minimo, anterior.Minimo + anterior.Ocupado
 			local erro = Geometria.Tolerancia
@@ -676,16 +732,17 @@ function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
 				and minimo.Y < b.Y - erro and maximo.Y > a.Y + erro
 				and minimo.Z < b.Z - erro and maximo.Z > a.Z + erro
 			then
-				liberarModelo(dadosModelo)
-				for _, item in alvos do liberarModelo(item.DadosModelo) end
-				return false, "As copias nao podem se sobrepor."
+				sobrepoe = true
+				break
 			end
 		end
+		if sobrepoe then liberarModelo(dadosModelo); continue end
 		local componentes = { rotacao:GetComponents() }
 		local registro = {
 			MaquinaId = peca.MaquinaId,
 			Posicao = { minimo.X, minimo.Y, minimo.Z },
 			Rotacao = { table.unpack(componentes, 4, 12) },
+			InclinacaoGrade = if dadosModelo.Modelo:GetAttribute("InclinacaoEsteira") then true else nil,
 		}
 		if next(peca.Modificacoes) then
 			registro.Modificacoes = PersonalizacaoMaquina.new(peca.Modificacoes):ObterDados()
@@ -695,6 +752,7 @@ function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
 			Destino = destino, DadosModelo = dadosModelo, Registro = registro,
 		})
 	end
+	if #alvos == 0 then return false, "Nenhuma posicao esta livre no terreno." end
 
 	local criadas = {}
 	local criacaoValida = pcall(function()
@@ -713,14 +771,20 @@ function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
 
 	local registros = {}
 	for _, alvo in alvos do table.insert(registros, alvo.Registro) end
-	local sucesso, mensagem = dados:RegistrarColocacoes(registros)
+	local sucesso, mensagem, registrosAceitos = dados:RegistrarColocacoes(registros)
 	if not sucesso then
 		for _, maquina in criadas do self._registrosPorMaquina[maquina] = nil; maquina:Destroy() end
 		for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
 		return false, mensagem
 	end
+	local aceitos, colocadas = {}, {}
+	for _, registro in registrosAceitos do aceitos[registro] = true end
+	for indice, maquina in criadas do
+		if aceitos[alvos[indice].Registro] then table.insert(colocadas, maquina)
+		else self._registrosPorMaquina[maquina] = nil; maquina:Destroy() end
+	end
 	for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
-	return true, mensagem, criadas
+	return true, string.format("%d de %d pecas colocadas.", #colocadas, quantidade), colocadas
 end
 
 -- API de servidor que prepara uma configuracao nova e verifica se ela cabe na mesma posicao, desconsiderando o
@@ -733,10 +797,10 @@ function ServicoConstrucao:Personalizar(jogador, maquina, modificacoes)
 		return false, "Peca indisponivel para personalizacao."
 	end
 	local registro = vinculo.registro
-	local preparou, dadosModelo = pcall(self._PrepararModelo, self, registro.MaquinaId, modificacoes)
+	local rotacao = CFrame.new(0, 0, 0, table.unpack(registro.Rotacao))
+	local preparou, dadosModelo = pcall(self._PrepararModelo, self, registro.MaquinaId, modificacoes, rotacao,registro.InclinacaoGrade==true)
 	if not preparou then return false, "Personalizacao invalida." end
 	local minimo = Vector3.new(table.unpack(registro.Posicao))
-	local rotacao = CFrame.new(0, 0, 0, table.unpack(registro.Rotacao))
 	-- A personalizacao pode aumentar o visual ou a reserva, por isso testa novamente o espaco. Ignorar a
 	-- maquina antiga evita considera-la uma colisao contra sua substituta.
 	local destino = destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo, maquina)
@@ -754,11 +818,22 @@ end
 -- Valida e captura o grupo antes de destruir suas instancias. O perfil conserva os registros na origem ate a
 -- confirmacao, assim uma sessao interrompida ainda pode restaurar as pecas no ponto anterior.
 function ServicoConstrucao:IniciarMovimento(jogador, maquinasSelecionadas)
-	if type(maquinasSelecionadas) ~= "table" or #maquinasSelecionadas < 1 or #maquinasSelecionadas > 60 then
+	if type(maquinasSelecionadas) ~= "table" then
 		return false, "Selecao de movimento invalida."
 	end
+	local quantidade = 0
+	for indice in maquinasSelecionadas do
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo then
+			return false, "Selecao de movimento invalida."
+		end
+		quantidade += 1
+	end
+	if quantidade < 1 or quantidade > Limites.PecasPorGrupo then return false, "Quantidade de pecas invalida." end
+	for indice = 1, quantidade do
+		if maquinasSelecionadas[indice] == nil then return false, "Selecao de movimento invalida." end
+	end
 	if self._movimentosPendentes[jogador] then return false, "Ja existe um movimento em andamento." end
-	if not self:_PermitirPedido(jogador, #maquinasSelecionadas) then
+	if not self:_PermitirPedido(jogador, quantidade) then
 		return false, "Muitas pecas para mover agora. Aguarde um instante."
 	end
 	if not self:Restaurar(jogador) then return false, "Seus dados ou seu terreno ainda nao estao disponiveis." end
@@ -809,27 +884,39 @@ function ServicoConstrucao:IniciarMovimento(jogador, maquinasSelecionadas)
 	return true, "Peca removida para movimentacao.", token
 end
 
--- Confirma um movimento pendente. Todos os destinos e modelos substitutos sao preparados antes de publicar
--- novas instancias, e os registros so mudam depois que o lote inteiro foi criado.
+-- Move as pecas livres do grupo e devolve as bloqueadas ao inventario, preservando suas personalizacoes.
 function ServicoConstrucao:_ConcluirMovimento(jogador, token, movimentos, grupo)
 	local pendente = self._movimentosPendentes[jogador]
 	if not pendente or pendente.Token ~= token then return false, "Movimento nao esta mais disponivel." end
 	if type(movimentos) ~= "table" or #movimentos ~= #pendente.Pecas
 		or (grupo and #movimentos < 2) or (not grupo and #movimentos ~= 1)
 	then return false, "Destinos do movimento invalidos." end
+	local quantidade = 0
+	for indice in movimentos do
+		if type(indice) ~= "number" or indice%1 ~= 0 or indice < 1 or indice > #pendente.Pecas then
+			return false, "Destinos do movimento invalidos."
+		end
+		quantidade += 1
+	end
+	if quantidade ~= #pendente.Pecas then return false, "Destinos do movimento invalidos." end
 	local dados, terreno, piso, maquinas = contexto(jogador)
 	if dados ~= pendente.Dados or terreno ~= pendente.Terreno or piso ~= pendente.Piso or maquinas ~= pendente.Maquinas then
 		return false, "Terreno indisponivel para concluir o movimento."
 	end
 
-	local alvos = {}
-	local origem = Geometria.Origem(piso)
+	local alvos, devolucoes = {}, {}
 	for indice, movimento in movimentos do
-		if type(movimento) ~= "table" then return false, "Destino do movimento invalido." end
-		local rotacao = RotacaoConstrucao.ValidarNaGrade(movimento.Rotacao)
-		if not rotacao then return false, "Rotacao invalida." end
+		if type(movimento) ~= "table" then
+			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+			return false, "Destino do movimento invalido."
+		end
 		local peca = pendente.Pecas[indice]
-		local preparou, dadosModelo = pcall(self._PrepararModelo, self, peca.MaquinaId, peca.Modificacoes)
+		local rotacao = RotacaoConstrucao.ValidarNaGrade(movimento.Rotacao,CatalogoMaquinas[peca.MaquinaId])
+		if not rotacao then
+			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+			return false, "Rotacao invalida."
+		end
+		local preparou, dadosModelo = pcall(self._PrepararModelo, self, peca.MaquinaId, peca.Modificacoes, rotacao)
 		if not preparou then
 			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
 			return false, "Configuracao de uma peca invalida."
@@ -837,16 +924,21 @@ function ServicoConstrucao:_ConcluirMovimento(jogador, token, movimentos, grupo)
 		local alvo = {
 			Peca = peca, Minimo = movimento.Minimo, Rotacao = rotacao, DadosModelo = dadosModelo,
 		}
-		local destino = destinoLivre(piso, maquinas, alvo.Minimo, rotacao, dadosModelo)
+		local destino, erroDestino = destinoLivre(piso, maquinas, alvo.Minimo, rotacao, dadosModelo)
 		local _, ocupado = dadosModelo.Volume:Calcular(rotacao)
 		alvo.Destino, alvo.Ocupado = destino, ocupado
 		if not destino then
 			liberarModelo(dadosModelo)
-			for _, anterior in alvos do liberarModelo(anterior.DadosModelo) end
-			return false, "Essa posicao esta ocupada ou fora da grade do terreno."
+			if not grupo or erroDestino then
+				for _, anterior in alvos do liberarModelo(anterior.DadosModelo) end
+				return false, erroDestino or "Essa posicao esta ocupada ou fora da grade do terreno."
+			end
+			table.insert(devolucoes, {Registro=peca.Registro, Modificacoes=peca.Modificacoes})
+			continue
 		end
 
 		local maximo = alvo.Minimo + ocupado
+		local sobrepoe = false
 		for _, anterior in alvos do
 			local anteriorMaximo = anterior.Minimo + anterior.Ocupado
 			local erro = Geometria.Tolerancia
@@ -854,13 +946,18 @@ function ServicoConstrucao:_ConcluirMovimento(jogador, token, movimentos, grupo)
 				and alvo.Minimo.Y < anteriorMaximo.Y - erro and maximo.Y > anterior.Minimo.Y + erro
 				and alvo.Minimo.Z < anteriorMaximo.Z - erro and maximo.Z > anterior.Minimo.Z + erro
 			then
-				liberarModelo(dadosModelo)
-				for _, item in alvos do liberarModelo(item.DadosModelo) end
-				return false, "As pecas do grupo nao podem se sobrepor."
+				sobrepoe = true
+				break
 			end
+		end
+		if sobrepoe then
+			liberarModelo(dadosModelo)
+			table.insert(devolucoes, {Registro=peca.Registro, Modificacoes=peca.Modificacoes})
+			continue
 		end
 		table.insert(alvos, alvo)
 	end
+	if #alvos == 0 then return false, "Nenhuma posicao esta livre no terreno." end
 
 	local criadas = {}
 	local criacaoValida = pcall(function()
@@ -880,16 +977,27 @@ function ServicoConstrucao:_ConcluirMovimento(jogador, token, movimentos, grupo)
 		return false, "Nao foi possivel recriar todas as pecas do movimento."
 	end
 
+	if #devolucoes > 0 then
+		local sucesso, mensagem
+		if #devolucoes == 1 then sucesso, mensagem = dados:RegistrarRecolhimento(devolucoes[1].Registro)
+		else sucesso, mensagem = dados:RegistrarRecolhimentos(devolucoes) end
+		if not sucesso then
+			for _, maquina in criadas do self._registrosPorMaquina[maquina] = nil; maquina:Destroy() end
+			for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+			return false, mensagem
+		end
+	end
 	for _, alvo in alvos do
 		local componentes = { alvo.Rotacao:GetComponents() }
 		local registro = alvo.Peca.Registro
 		registro.Posicao = { alvo.Minimo.X, alvo.Minimo.Y, alvo.Minimo.Z }
 		registro.Rotacao = { table.unpack(componentes, 4, 12) }
+		registro.InclinacaoGrade = if alvo.DadosModelo.Modelo:GetAttribute("InclinacaoEsteira") then true else nil
 		registro.Modificacoes = next(alvo.Peca.Modificacoes) and alvo.Peca.Modificacoes or nil
 		liberarModelo(alvo.DadosModelo)
 	end
 	self._movimentosPendentes[jogador] = nil
-	return true, "Pecas movidas.", criadas
+	return true, string.format("%d pecas movidas; %d devolvidas ao inventario.", #criadas, #devolucoes), criadas
 end
 
 function ServicoConstrucao:Mover(jogador, token, minimo, rotacao)
@@ -993,20 +1101,21 @@ function ServicoConstrucao:Recolher(jogador, maquina)
 end
 
 -- Valida e devolve o grupo inteiro antes de destruir seus modelos; uma falha preserva todas as pecas no terreno.
-function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas)
+function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas, plotInteira)
 	if type(maquinasSelecionadas) ~= "table" then return false, "Maquinas invalidas." end
+	local maximo=plotInteira and math.huge or Limites.PecasPorGrupo
 	local quantidade = 0
 	for indice in maquinasSelecionadas do
-		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > 60 then
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > maximo then
 			return false, "Maquinas invalidas."
 		end
 		quantidade += 1
 	end
-	if quantidade < 2 or quantidade > 60 then return false, "Quantidade de maquinas invalida." end
+	if quantidade < 2 or quantidade > maximo then return false, "Quantidade de maquinas invalida." end
 	for indice = 1, quantidade do
 		if maquinasSelecionadas[indice] == nil then return false, "Maquinas invalidas." end
 	end
-	if not self:_PermitirPedido(jogador, quantidade) then
+	if not self:_PermitirPedido(jogador, math.min(quantidade,Limites.PecasPorGrupo)) then
 		return false, "Muitos pedidos de construcao. Aguarde um instante."
 	end
 	if not self:Restaurar(jogador) then
@@ -1042,7 +1151,7 @@ function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas)
 		table.insert(devolucoes, { Registro = registro, Modificacoes = modificacoes })
 	end
 
-	local sucesso, mensagem = dados:RegistrarRecolhimentos(devolucoes)
+	local sucesso, mensagem = dados:RegistrarRecolhimentos(devolucoes, plotInteira)
 	if not sucesso then return false, mensagem end
 	for _, maquina in maquinasSelecionadas do
 		self._registrosPorMaquina[maquina] = nil
@@ -1051,18 +1160,33 @@ function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas)
 	return true, mensagem or "Pecas devolvidas ao inventario."
 end
 
+function ServicoConstrucao:RecolherTudo(jogador)
+	if self._movimentosPendentes[jogador] then return false,"Conclua ou cancele a movimentação antes de limpar a plot." end
+	if not self:Restaurar(jogador) then return false,"Sua plot ainda não está disponível." end
+	local dados,_,_,pasta=contexto(jogador)
+	if not dados then return false,"Plot indisponível." end
+	local lista={}
+	for _,modelo in pasta:GetChildren() do
+		local vinculo=self._registrosPorMaquina[modelo]
+		if vinculo and vinculo.jogador==jogador then table.insert(lista,modelo) end
+	end
+	if #lista==0 then return false,"A plot já está vazia." end
+	if #lista==1 then return self:Recolher(jogador,lista[1]) end
+	return self:RecolherGrupo(jogador,lista,true)
+end
+
 -- Vende uma ou varias pecas da plot como lote. O servidor resolve cada registro e o preco no catalogo; so apaga
 -- os modelos depois de o perfil remover todos os registros e creditar o total com sucesso.
 function ServicoConstrucao:VenderMaquinasColocadas(jogador, maquinasSelecionadas)
 	if type(maquinasSelecionadas) ~= "table" then return false, "Selecao de venda invalida." end
 	local quantidade = 0
 	for indice in maquinasSelecionadas do
-		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > 60 then
+		if type(indice) ~= "number" or indice % 1 ~= 0 or indice < 1 or indice > Limites.PecasPorGrupo then
 			return false, "Selecao de venda invalida."
 		end
 		quantidade += 1
 	end
-	if quantidade < 1 or quantidade > 60 then return false, "Quantidade de pecas invalida." end
+	if quantidade < 1 or quantidade > Limites.PecasPorGrupo then return false, "Quantidade de pecas invalida." end
 	for indice = 1, quantidade do
 		if maquinasSelecionadas[indice] == nil then return false, "Selecao de venda invalida." end
 	end
@@ -1133,6 +1257,7 @@ function ServicoConstrucao:ReiniciarProgresso(jogador, alterarDados)
 	local dados, terreno, _, maquinas = contexto(jogador)
 	local minerios = terreno and terreno:FindFirstChild("Minerios")
 	if not dados or not minerios then return false, "Seus dados ou seu terreno ainda nao estao disponiveis." end
+	self:Sincronizar(jogador)
 	local sucesso, mensagem, resultado = alterarDados(dados)
 	if not sucesso then return false, mensagem end
 	-- Tokens antigos nao podem recriar pecas, devolver variantes ou aplicar melhorias depois do reinicio.
@@ -1143,8 +1268,99 @@ function ServicoConstrucao:ReiniciarProgresso(jogador, alterarDados)
 	maquinas:ClearAllChildren()
 	minerios:ClearAllChildren()
 	self._carregados[terreno] = dados
+	require(script.Parent.ExpansaoPlot).Aplicar(terreno,dados:ObterUpgrade("Expansao"),true)
 	dados:Sincronizar()
 	return true, mensagem, resultado
+end
+
+-- Chamado somente pelo administrador no servidor; conserva as mesmas validacoes de grade e ocupacao.
+function ServicoConstrucao:Administrar(jogador,pedido)
+	if self._movimentosPendentes[jogador] then return false,"Aguarde o jogador terminar a movimentação." end
+	if not self:Restaurar(jogador) then return false,"Plot indisponível." end
+	local dados,terreno,piso,maquinas=contexto(jogador)
+	if not dados then return false,"Plot indisponível." end
+	self:Sincronizar(jogador)
+	local registros=dados._perfil.Data.MaquinasColocadas
+	local indice,anterior,modeloAnterior
+	if pedido.Tipo~="Adicionar" then
+		for i,r in registros do if r.Id==pedido.PecaId then indice,anterior=i,r; break end end
+		if not anterior then return false,"A peça mudou ou não existe mais." end
+		if #game:GetService("HttpService"):JSONEncode(anterior)>32000 then return false,"A personalização é grande demais para registrar essa edição com segurança." end
+		for _,eixo in {1,2,3} do
+			if anterior.Posicao[eixo]~=pedido.PosicaoAnterior[eixo] then return false,"A posição mudou. Atualize o painel." end
+		end
+		for modelo,vinculo in self._registrosPorMaquina do
+			if vinculo.registro==anterior and vinculo.jogador==jogador then modeloAnterior=modelo; break end
+		end
+		if not modeloAnterior then return false,"Modelo indisponível; nenhuma alteração aplicada." end
+	end
+	if pedido.Tipo=="Remover" or pedido.Tipo=="Recolher" then
+		if pedido.Tipo=="Recolher" then
+			local ok,msg=dados:RegistrarRecolhimento(anterior)
+			if not ok then return false,msg end
+		else table.remove(registros,indice) end
+		self._registrosPorMaquina[modeloAnterior]=nil; modeloAnterior:Destroy()
+		self._copias[jogador],self._copiasGrupo[jogador]=nil,nil
+		return true,"Peça "..(pedido.Tipo=="Recolher" and "recolhida." or "removida."),anterior,nil
+	end
+	local id=anterior and anterior.MaquinaId or pedido.MaquinaId
+	local g=pedido.Giro
+	local rotacao=RotacaoConstrucao.ValidarNaGrade(CFrame.Angles(math.rad(g[1]),math.rad(g[2]),math.rad(g[3])),CatalogoMaquinas[id])
+	if not rotacao then return false,"Rotação não permitida para essa peça." end
+	local ok,preparado=pcall(self._PrepararModelo,self,id,anterior and anterior.Modificacoes,rotacao)
+	if not ok then return false,"Modelo inválido." end
+	local p=pedido.Posicao
+	local minimo=Vector3.new(p[1],p[2],p[3])*Geometria.Passo
+	local destino=destinoLivre(piso,maquinas,minimo,rotacao,preparado,modeloAnterior)
+	if not destino then liberarModelo(preparado); return false,"Posição ocupada, fora da grade ou dos limites." end
+	local componentes={rotacao:GetComponents()}
+	local novo={Id=anterior and anterior.Id,MaquinaId=id,Posicao={minimo.X,minimo.Y,minimo.Z},
+		Rotacao={table.unpack(componentes,4,12)},InclinacaoGrade=preparado.Modelo:GetAttribute("InclinacaoEsteira") and true or nil,
+		Modificacoes=anterior and anterior.Modificacoes}
+	local criou,modelo=pcall(self._CriarMaquina,self,jogador,terreno,maquinas,destino,novo,preparado,nil,nil,
+		modeloAnterior and modeloAnterior:GetAttribute("TotalRecebido"))
+	liberarModelo(preparado)
+	if not criou then return false,"Não foi possível criar a peça; o registro anterior foi preservado." end
+	if anterior then
+		registros[indice]=novo; self._registrosPorMaquina[modeloAnterior]=nil; modeloAnterior:Destroy()
+	else table.insert(registros,novo) end
+	self._copias[jogador],self._copiasGrupo[jogador]=nil,nil
+	return true,"Peça "..(anterior and "reposicionada." or "adicionada sem custo."),anterior,novo
+end
+
+function ServicoConstrucao:RedimensionarAdministrativo(jogador,nivel)
+	if self._movimentosPendentes[jogador] then return false,"Aguarde o jogador terminar a movimentação." end
+	local dados,terreno,piso=contexto(jogador)
+	if not dados then return false,"Plot indisponível." end
+	local lado=require(ReplicatedStorage.Shared.Upgrades).TamanhosPlot[nivel+1]*Geometria.Passo
+	local tamanho=Vector3.new(lado,piso.Size.Y,lado)
+	local devolucoes,modelos={},{}
+	self:Sincronizar(jogador)
+	for modelo,vinculo in self._registrosPorMaquina do
+		if vinculo.jogador~=jogador then continue end
+		local r=vinculo.registro
+		local minimo=modelo:GetAttribute("VolumeMinimo")
+		local ocupado=modelo:GetAttribute("VolumeOcupado")
+		if not Geometria.DentroDoTerreno(minimo,ocupado,tamanho) then
+			table.insert(devolucoes,{Registro=r,Modificacoes=r.Modificacoes or {}})
+			table.insert(modelos,modelo)
+		end
+	end
+	if #devolucoes>0 then
+		local ok,msg
+		if #devolucoes==1 then ok,msg=dados:RegistrarRecolhimento(devolucoes[1].Registro)
+		else ok,msg=dados:RegistrarRecolhimentos(devolucoes) end
+		if not ok then return false,msg end
+	end
+	require(script.Parent.ExpansaoPlot).Aplicar(terreno,nivel,true)
+	for _,modelo in modelos do self._registrosPorMaquina[modelo]=nil; modelo:Destroy() end
+	self._copias[jogador],self._copiasGrupo[jogador]=nil,nil
+	local devolvidas={}
+	for _,d in devolucoes do
+		local r=d.Registro
+		table.insert(devolvidas,{Id=r.Id,MaquinaId=r.MaquinaId,Posicao=table.clone(r.Posicao),Rotacao=table.clone(r.Rotacao)})
+	end
+	return true,"Plot redimensionada; peças que não couberam voltaram ao inventário.",devolvidas
 end
 
 return ServicoConstrucao

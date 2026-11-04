@@ -46,6 +46,8 @@ Tipos sem limite numérico podem repetir enquanto sua condição monetária cont
 
 ## Modificadores, em ordem de preço
 
+**Referência histórica:** os valores e efeitos desta tabela foram preservados, mas seis pares de modelos receberam configurações econômicas trocadas. Para o mapeamento atual, consulte `modelos/modificadores/README.md` e o catálogo do jogo.
+
 IDs N são os 40 tipos limitados apenas por usos; V são os dez apenas por valor; H são os quatro híbridos; A0 é o aditivo ilimitado. Os IDs dos modificadores foram reorganizados por preço nesta proposta, que ainda não está implementada.
 
 ```text

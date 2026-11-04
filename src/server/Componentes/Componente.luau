@@ -22,10 +22,41 @@ function Componente:EstaAtivo()
 	return not self._destruido and self._maquina:EstaNoTerreno()
 end
 
+-- Renomear uma parte tambem pode trocar qual objeto atende ao nome configurado.
+function Componente:ObservarPartes(atributo)
+	local modelo = self._maquina:ObterModelo()
+	self._reverPartes, self._observadoresPartes = true, {}
+	local function marcar() self._reverPartes = true end
+	local function adicionar(parte)
+		if self._destruido then return end
+		marcar()
+		local conexoes = { parte:GetPropertyChangedSignal("Name"):Connect(marcar) }
+		if atributo and parte:IsA("BasePart") then
+			table.insert(conexoes, parte:GetAttributeChangedSignal(atributo):Connect(marcar))
+		end
+		self._observadoresPartes[parte] = conexoes
+	end
+	for _, parte in modelo:GetChildren() do adicionar(parte) end
+	self._conexoesPartes = {
+		modelo.ChildAdded:Connect(adicionar),
+		modelo.ChildRemoved:Connect(function(parte)
+			if self._destruido then return end
+			for _, conexao in self._observadoresPartes[parte] or {} do conexao:Disconnect() end
+			self._observadoresPartes[parte] = nil
+			marcar()
+		end),
+	}
+end
+
 -- Marca o comportamento como encerrado. Classes com sensores ou transporte complementam esta limpeza,
 -- removendo seus registros da simulacao.
 function Componente:Destruir()
 	self._destruido = true
+	for _, conexao in self._conexoesPartes or {} do conexao:Disconnect() end
+	for _, conexoes in self._observadoresPartes or {} do
+		for _, conexao in conexoes do conexao:Disconnect() end
+	end
+	self._conexoesPartes, self._observadoresPartes = nil, nil
 end
 
 return Componente

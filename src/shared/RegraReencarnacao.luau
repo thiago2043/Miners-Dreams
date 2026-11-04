@@ -2,9 +2,9 @@ local ProgressaoLogaritmica = require(script.Parent.ProgressaoLogaritmica)
 local RegraReencarnacao = {}
 RegraReencarnacao.__index = RegraReencarnacao
 
--- 1qd usa a escala curta: 10^15. A escala nao depende dos dados nem dos elementos da interface.
+-- 1Sx = 10^21; cada marco seguinte multiplica o requisito por mil.
 function RegraReencarnacao.new()
-	return setmetatable({ _escala = ProgressaoLogaritmica.new("1000000000000000") }, RegraReencarnacao)
+	return setmetatable({ _escala = ProgressaoLogaritmica.new("1000000000000000000000") }, RegraReencarnacao)
 end
 
 local function inteiro(valor, minimo)
@@ -17,15 +17,16 @@ function RegraReencarnacao:Calcular(saldo, reencarnacoes, vidas)
 	if not inteiro(reencarnacoes, 0) or not inteiro(vidas, 1) then return nil, "Progressao indisponivel." end
 	local avaliacao, erro = self._escala:Avaliar(saldo)
 	if not avaliacao then return nil, erro end
-	local disponiveis = math.max(0, avaliacao.MarcosAtingidos - reencarnacoes)
+	local marcos=avaliacao.MarcosAtingidos>0 and math.floor((avaliacao.MarcosAtingidos-1)/3)+1 or 0
+	local disponiveis = math.max(0, marcos - reencarnacoes)
 	if vidas + disponiveis >= 2 ^ 53 - 1 then return nil, "Limite de vidas atingido." end
-	local expoente = 15 + reencarnacoes
+	local expoente = 21 + reencarnacoes*3
 	return {
 		Reencarnacoes = reencarnacoes, Vidas = vidas, VidasDisponiveis = disponiveis,
 		VidasPuladas = math.max(0, disponiveis - 1), VidaDestino = vidas + disponiveis,
-		ExpoenteRequisito = expoente, ExpoenteMarcoAtual = disponiveis > 0 and expoente + disponiveis - 1 or 0,
-		ExpoenteProximoMarco = disponiveis > 0 and expoente + disponiveis or expoente,
-		Fracao = disponiveis > 0 and avaliacao.Fracao or self._escala:FracaoAteMarco(saldo, reencarnacoes),
+		ExpoenteRequisito = expoente, ExpoenteMarcoAtual = disponiveis > 0 and expoente + (disponiveis - 1)*3 or 0,
+		ExpoenteProximoMarco = disponiveis > 0 and expoente + disponiveis*3 or expoente,
+		Fracao = disponiveis > 0 and ((avaliacao.MarcosAtingidos-1)%3+avaliacao.Fracao)/3 or self._escala:FracaoAteMarco(saldo, reencarnacoes*3),
 	}
 end
 

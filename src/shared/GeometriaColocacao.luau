@@ -5,6 +5,19 @@ local Geometria = {}
 
 Geometria.Passo = VolumeConstrucao.Passo
 Geometria.Tolerancia = VolumeConstrucao.Tolerancia
+Geometria.AlturaMaxima = require(script.Parent.LimitesConstrucao).AlturaPlot * Geometria.Passo
+
+function Geometria.AlturaDoTerreno(tamanhoPiso)
+	return tamanhoPiso and math.min(tamanhoPiso.X,tamanhoPiso.Z,Geometria.AlturaMaxima) or Geometria.AlturaMaxima
+end
+
+function Geometria.DentroDoTerreno(minimo, ocupado, tamanhoPiso)
+	local maximo = minimo + ocupado
+	local erro = Geometria.Tolerancia
+	return minimo.X >= 0 and minimo.Y >= 0 and minimo.Z >= 0
+		and maximo.X <= tamanhoPiso.X + erro and maximo.Z <= tamanhoPiso.Z + erro
+		and maximo.Y <= Geometria.AlturaDoTerreno(tamanhoPiso) + erro
+end
 
 -- A reserva mede o corpo; cabecotes e brocas podem avancar sobre a linha de transporte.
 function Geometria.CaixaDeConstrucao(modelo)
@@ -31,20 +44,21 @@ end
 function Geometria.ParedeDoTerreno(inicio, direcao, tamanhoPiso, alcance)
 	local ponto, normal, distancia
 	local erro = Geometria.Tolerancia
+	local altura = Geometria.AlturaDoTerreno(tamanhoPiso)
 
-	-- As bordas laterais sao planos X/Z; nao ha teto virtual. Resolver inicio+direcao*t=limite encontra a
-	-- distancia ate cada parede candidata.
-	for _, eixo in { "X", "Z" } do
+	-- O raio considera as faces de saida para nao ocultar o interior visto de fora.
+	for _, eixo in { "X", "Y", "Z" } do
 		local componente = direcao[eixo]
 		if math.abs(componente) < erro then continue end
+		if eixo == "Y" and componente < 0 then continue end
 
 		-- A face de entrada nao pode esconder o interior quando a camera esta fora.
-		local limite = componente > 0 and tamanhoPiso[eixo] or 0
+		local limite = if eixo == "Y" then altura else componente > 0 and tamanhoPiso[eixo] or 0
 		local t = (limite - inicio[eixo]) / componente
 		if t < 0 or t > alcance or (distancia and t >= distancia) then continue end
 
 		local candidato = inicio + direcao * t
-		if candidato.Y < -erro
+		if candidato.Y < -erro or candidato.Y > altura + erro
 			or candidato.X < -erro or candidato.X > tamanhoPiso.X + erro
 			or candidato.Z < -erro or candidato.Z > tamanhoPiso.Z + erro
 		then
@@ -52,7 +66,7 @@ function Geometria.ParedeDoTerreno(inicio, direcao, tamanhoPiso, alcance)
 		end
 
 		ponto, distancia = candidato, t
-		normal = (eixo == "X" and Vector3.xAxis or Vector3.zAxis)
+		normal = (eixo == "X" and Vector3.xAxis or eixo == "Y" and Vector3.yAxis or Vector3.zAxis)
 			* -math.sign(componente)
 	end
 

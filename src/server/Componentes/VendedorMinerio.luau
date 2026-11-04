@@ -1,6 +1,7 @@
 -- Credita o dono e consome o minerio apenas apos confirmar o pagamento, evitando destruir valor sem credita-lo.
 local ServerScriptService = game:GetService("ServerScriptService")
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
+local Efeitos=require(game:GetService("ReplicatedStorage").Shared.EfeitosUpgrades)
 local ContatoMinerio = require(script.Parent.ContatoMinerio)
 local VendedorMinerio = setmetatable({}, { __index = ContatoMinerio })
 VendedorMinerio.__index = VendedorMinerio
@@ -31,13 +32,13 @@ function VendedorMinerio:AoTocar(minerio)
 		return
 	end
 	local dados = self._maquina:ObterDadosDono()
+	if valor then valor=Efeitos.Fundicao(valor,self._maquina:ObterNivelUpgrade("Fundicao")) end
 	if not dados or not dados:AdicionarDinheiro(valor) then return end
 	-- O credito ja foi aceito pelos dados do dono. Agora calcula o total da fornalha e consome a unidade; a
 	-- marca Processado e a destruicao impedem uma segunda venda.
 	local novoTotal = InteiroGrande.somar(total, valor)
-	minerio:Consumir()
+	minerio:Consumir(true)
 	modelo:SetAttribute("TotalRecebido", novoTotal)
-	print(self._maquina:ObterTerreno().Name .. " | Minerio processado: " .. valor .. " | Total: " .. novoTotal)
 end
 
 return VendedorMinerio

@@ -1,6 +1,8 @@
 -- Possui a plot, seu dono e o spawn; atribuir/liberar controla o acesso do jogador e a limpeza dos objetos
 -- desse terreno.
 local Terreno = {}
+local bloco = require(game:GetService("ReplicatedStorage").Shared.Medidas).Bloco
+local ladoInicial = require(game:GetService("ReplicatedStorage").Shared.Upgrades).TamanhosPlot[1]*bloco
 Terreno.__index = Terreno
 
 -- Recebe identificador, CFrame do piso e pasta pai. Cria uma plot vazia com piso, spawn desativado e pastas
@@ -17,11 +19,11 @@ function Terreno.new(id, cframe, pastaTerrenos)
 
 	local piso = Instance.new("Part")
 	piso.Name = "Piso"
-	piso.Size = Vector3.new(64, 1, 64)
+	piso.Size = Vector3.new(ladoInicial, 1, ladoInicial)
 	piso.CFrame = cframe
 	piso.Anchored = true
 	piso.Material = Enum.Material.SmoothPlastic
-	piso.Color = Color3.fromRGB(110, 110, 110)
+	piso.Color = Color3.fromRGB(145, 145, 145)
 	piso.Parent = modelo
 
 	-- O spawn comeca desativado porque ainda nao ha dono. Seu CFrame e relativo ao piso; a atribuicao define
@@ -29,11 +31,13 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "Spawn"
 	spawn.Size = Vector3.new(6, 1, 6)
-	spawn.CFrame = piso.CFrame * CFrame.new(16, 1, -16)
+	spawn.CFrame = piso.CFrame * CFrame.new(ladoInicial/4, 1, -ladoInicial/4)
 	spawn.Anchored = true
 	spawn.Neutral = true
 	spawn.AllowTeamChangeOnTouch = false
 	spawn.Enabled = false
+	spawn.Transparency, spawn.CastShadow = 1, false
+	spawn.CanCollide, spawn.CanTouch, spawn.CanQuery = false, false, false
 	spawn.Parent = modelo
 
 	-- As pastas separam as construcoes persistentes dos minerios temporarios. Criar uma plot nao coloca
@@ -47,7 +51,7 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	modelo.PrimaryPart = piso
 	modelo.Parent = pastaTerrenos
 
-	return setmetatable({ _modelo = modelo }, Terreno)
+	return setmetatable({ _modelo = modelo, _pisoInicial=cframe }, Terreno)
 end
 
 -- Devolve true quando nao ha jogador associado e DonoUserId continua igual a zero. As duas verificacoes evitam
@@ -65,7 +69,7 @@ function Terreno:Atribuir(jogador)
 	self._modelo:SetAttribute("DonoNome", jogador.Name)
 	jogador:SetAttribute("TerrenoId", self._modelo:GetAttribute("TerrenoId"))
 
-	self._modelo.Piso.Color = Color3.fromRGB(80, 150, 100)
+	self._modelo.Piso.Color = Color3.fromRGB(145, 145, 145)
 	self._modelo.Spawn.Enabled = true
 	jogador.RespawnLocation = self._modelo.Spawn
 	print(jogador.Name .. " recebeu " .. self._modelo.Name)
@@ -95,8 +99,10 @@ function Terreno:Liberar()
 	-- que e tratado pelos servicos de dados e construcao.
 	self._modelo.Maquinas:ClearAllChildren()
 	self._modelo.Minerios:ClearAllChildren()
+	self._modelo.Piso.CFrame=self._pisoInicial
+	self._modelo.Piso.Size=Vector3.new(ladoInicial,1,ladoInicial)
 	self._modelo.Spawn.Enabled = false
-	self._modelo.Piso.Color = Color3.fromRGB(110, 110, 110)
+	self._modelo.Piso.Color = Color3.fromRGB(145, 145, 145)
 	self._modelo:SetAttribute("DonoUserId", 0)
 	self._modelo:SetAttribute("DonoNome", "")
 	print(self._modelo.Name .. " foi liberado.")

@@ -109,14 +109,14 @@ def render(parts, width=720, height=600, grid=False, camera=None, reserva=None):
     shadow=shadow.filter(ImageFilter.GaussianBlur(6))
     image=Image.composite(Image.new('RGB',image.size,(61,74,91)),image,shadow)
     if reserva:
-        w,d=reserva[0]*4,reserva[1]*4
+        w,d=reserva[0]*3,reserva[1]*3
         cantos=np.array([[-w/2,.03,-d/2],[w/2,.03,-d/2],[w/2,.03,d/2],[-w/2,.03,d/2],[-w/2,.03,-d/2]])
         ImageDraw.Draw(image).line([tuple(p) for p in project(cantos)],fill=(207,116,41),width=2)
     if grid:
         draw=ImageDraw.Draw(image)
         offset_x=allv[:,0].min()%4
         offset_z=allv[:,2].min()%4
-        for n in range(-24,25,4):
+        for n in range(-24,25,3):
             for axis in [0,2]:
                 pts=np.array([[n+offset_x,0,-24],[n+offset_x,0,24]] if axis==0 else [[-24,0,n+offset_z],[24,0,n+offset_z]])
                 draw.line([tuple(p) for p in project(pts)],fill=(203,212,222),width=1)
@@ -228,12 +228,12 @@ def main():
             parte['cf'][0]+=centro
             parte['cf'][2]-=m['blocos'][1]*2
             conjunto.append(parte)
-        cursor+=m['blocos'][0]*4+12
+        cursor+=m['blocos'][0]*3+9
     escala=Image.new('RGB',(2400,965),(239,242,246))
     escala.paste(render(conjunto,2400,870,grid=True,camera=(.25,.45,2)),(0,50))
     texto=ImageDraw.Draw(escala)
     texto.text((25,12),'BÁSICA E AVANÇADAS · MESMA ESCALA FÍSICA',font=font(28,True),fill=(30,41,57))
-    texto.text((25,920),'Da esquerda para a direita: Básica, Quântica, Singularidade, Estelar e Galáctica. Grade de 4 studs.',font=font(23),fill=(30,41,57))
+    texto.text((25,920),'Da esquerda para a direita: Básica, Quântica, Singularidade, Estelar e Galáctica. Grade de 3 studs.',font=font(23),fill=(30,41,57))
     escala.save(PREVIAS/'PreviaEscala.png')
     escala.save(ROOT/'PreviaEscala.png')
     names=['Básica','Cobre','Ferro','Industrial','Pressurizada','Cristalina','Ressonante','Plasma','Atômica','Quântica','Singularidade','Estelar','Galáctica']
@@ -254,7 +254,7 @@ def main():
     board.paste(hero.resize((620,434),Image.Resampling.LANCZOS),(25,1470))
     draw.text((675,1530),'13  Galáctica',font=font(34,True),fill=(32,44,61))
     draw.text((675,1590),f"{models[-1]['blocos'][0]} × {models[-1]['blocos'][1]} blocos · corpo, broca e saída",font=font(23),fill=(74,91,112))
-    draw.text((675,1645),'Grade do projeto: 1 bloco = 4 studs',font=font(23),fill=(32,44,61))
+    draw.text((675,1645),'Grade do projeto: 1 bloco = 3 studs',font=font(23),fill=(32,44,61))
     draw.text((675,1695),'Cada quadro tem enquadramento próprio para mostrar detalhes.',font=font(20),fill=(82,98,119))
     draw.text((675,1730),'A galeria no Roblox Studio conserva a escala entre as máquinas.',font=font(20),fill=(82,98,119))
     draw.text((675,1795),'Prévia da geometria real, renderizada fora do Roblox Studio.',font=font(20),fill=(82,98,119))

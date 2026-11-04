@@ -2,7 +2,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
+local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
+local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
 local passoGrade = Geometria.Passo
+local Config = require(ReplicatedStorage.Shared.Configuracoes)
+local Players = game:GetService("Players")
+local SetasTransporte = require(script.Parent.SetasTransporte)
 local velocidadeSuavizacao = 45
 -- A folga evita contar o contato entre duas faces como uma sobreposicao.
 local folgaConsulta = Vector3.new(0.01, 0.01, 0.01)
@@ -14,10 +19,28 @@ export type Alvo = {
 local PreviaConstrucao = {}
 PreviaConstrucao.__index = PreviaConstrucao
 
+local function prepararVisual(modelo)
+	for _, parte in modelo:GetDescendants() do
+		if parte:IsA("ParticleEmitter") or parte:IsA("Beam") then
+			parte.Enabled = false
+			continue
+		end
+		if not parte:IsA("BasePart") then continue end
+		parte.Anchored, parte.CanCollide, parte.CanTouch, parte.CanQuery = true, false, false, false
+		if parte:GetAttribute("GuiaPosicionamento") then
+			parte.Transparency = parte:GetAttribute("TransparenciaPrevia") or .65
+		elseif parte:GetAttribute("EfeitoOperacao") then
+			parte.Transparency = 1
+		else
+			parte.Transparency = math.max(parte.Transparency, Config.Obter(Players.LocalPlayer,"TransparenciaPrevia"))
+		end
+	end
+end
+
 -- Recebe o modelo original, a personalizacao, a definicao de comportamentos e a pasta das maquinas vizinhas.
 -- Clona o visual, calcula seu volume e cria as caixas auxiliares; devolve o objeto que passa a possuir esses
--- recursos temporarios. ignorar e a peca movida: sua ocupacao antiga nao bloqueia o novo destino.
-function PreviaConstrucao.new(original, personalizacao, definicao, maquinas, ignorar)
+-- recursos temporarios. compartilhar reutiliza os volumes do grupo; ignorar exclui a ocupacao da peca movida.
+function PreviaConstrucao.new(original, personalizacao, definicao, maquinas, ignorar, compartilhar)
 	-- Clonar separa o recurso reutilizavel do visual temporario. A personalizacao e aplicada antes de medir,
 	-- pois uma variante pode mudar o tamanho das partes.
 	local modelo = original:Clone()
@@ -27,26 +50,29 @@ function PreviaConstrucao.new(original, personalizacao, definicao, maquinas, ign
 	-- Guarda o deslocamento entre o centro da caixa e o pivo do Model. Ele sera reaplicado ao mover a previa,
 	-- pois o pivo nem sempre coincide com o centro visual.
 	local self = setmetatable({
-		_modelo = modelo, _maquinas = maquinas, _caixasMaquinas = {}, _tempoCaixas = 0.2, _ignorar = ignorar,
+		_modelo = modelo,
 		_tamanho = tamanho, _caixaParaPivo = caixa:ToObjectSpace(modelo:GetPivot()),
-		_volume = VolumeConstrucao.new(tamanho, definicao.Blocos),
+		_volume = VolumeConstrucao.new(tamanho, definicao.Blocos, definicao),
+		_original = original, _personalizacao = personalizacao, _definicao = definicao, _inclinacao = 0,
+		_piso = maquinas.Parent and maquinas.Parent:FindFirstChild("Piso"),
 	}, PreviaConstrucao)
-	-- A previa fica ancorada, sem toque, colisao ou consulta por raios. A transparencia minima a diferencia da
-	-- maquina real e impede que intercepte o proprio apontamento.
-	for _, parte in modelo:GetDescendants() do
-		if not parte:IsA("BasePart") then continue end
-		parte.Anchored, parte.CanCollide, parte.CanTouch, parte.CanQuery = true, false, false, false
-		parte.Transparency = math.max(parte.Transparency, 0.55)
+	-- A previa fica sem toque ou consulta; a transparencia e o contorno a distinguem da maquina colocada.
+	prepararVisual(modelo)
+	SetasTransporte.Criar(modelo, definicao)
+	if compartilhar then
+		assert(not compartilhar._destruida and compartilhar._volumes.Maquinas == maquinas, "Volumes de outra plot ou previa encerrada.")
+		self._volumes = compartilhar._volumes
+	else
+		local pasta = Instance.new("Folder")
+		pasta.Name, pasta.Parent = "VolumesColocacao", workspace
+		local consulta = OverlapParams.new()
+		consulta.FilterType = Enum.RaycastFilterType.Include
+		consulta.RespectCanCollide, consulta.MaxParts = false, 1
+		consulta.FilterDescendantsInstances = { pasta }
+		self._volumes = {Pasta=pasta, Consulta=consulta, Caixas={}, Tempo=.2, Usuarios=0, Maquinas=maquinas, Ignorar=ignorar}
 	end
-	self._pastaVolumes = Instance.new("Folder")
-	self._pastaVolumes.Name, self._pastaVolumes.Parent = "VolumesColocacao", workspace
-	-- A consulta considera so as caixas auxiliares das maquinas. MaxParts=1 basta para responder se existe
-	-- algum bloqueio, sem listar todos os vizinhos.
-	self._sobreposicao = OverlapParams.new()
-	self._sobreposicao.FilterType = Enum.RaycastFilterType.Include
-	self._sobreposicao.RespectCanCollide, self._sobreposicao.MaxParts = false, 1
-	self._sobreposicao.FilterDescendantsInstances = { self._pastaVolumes }
 	self._caixaPrevia = self:_CriarCaixa("VolumePrevia", Color3.fromRGB(255, 210, 70))
+	self._volumes.Usuarios += 1
 	return self
 end
 
@@ -55,13 +81,30 @@ end
 function PreviaConstrucao:ObterModelo() return self._modelo end
 -- Devolve o objeto VolumeConstrucao usado para calcular as dimensoes visuais e os blocos ocupados sob cada
 -- rotacao.
-function PreviaConstrucao:ObterVolume() return self._volume end
+function PreviaConstrucao:ObterVolume(rotacao)
+	if rotacao then
+		local _,angulo = Rotacao.DecomporEsteira(rotacao,self._definicao)
+		if angulo ~= self._inclinacao then
+			local modelo = self._original:Clone()
+			modelo.Name = "Previa" .. self._original.Name
+			self._personalizacao:Aplicar(modelo)
+			EsteiraInclinada.Aplicar(modelo,self._definicao,rotacao)
+			local caixa,tamanho = Geometria.CaixaDeConstrucao(modelo)
+			prepararVisual(modelo)
+			SetasTransporte.Criar(modelo, self._definicao)
+			self._modelo:Destroy()
+			self._modelo,self._tamanho,self._caixaParaPivo = modelo,tamanho,caixa:ToObjectSpace(modelo:GetPivot())
+			self._inclinacao = angulo
+		end
+	end
+	return self._volume
+end
 -- Devolve as dimensoes visuais originais da copia, antes do giro; o gesto de rotacao usa esse tamanho para
 -- testar o apontamento e projetar sua esfera.
 function PreviaConstrucao:ObterTamanho() return self._tamanho end
 -- Devolve a pasta das caixas auxiliares para que o raio de apontamento inclua esses volumes reservados, em vez
 -- de depender apenas do visual das maquinas.
-function PreviaConstrucao:ObterPastaVolumes() return self._pastaVolumes end
+function PreviaConstrucao:ObterPastaVolumes() return self._volumes.Pasta end
 -- Devolve a Part auxiliar que representa o volume reservado da propria previa. Seu contorno, tamanho e CFrame
 -- acompanham a animacao.
 function PreviaConstrucao:ObterCaixa() return self._caixaPrevia end
@@ -94,7 +137,7 @@ function PreviaConstrucao:_CriarCaixa(nome, cor)
 	contorno.Visible = false
 	contorno.Parent = caixa
 
-	caixa.Parent = self._pastaVolumes
+	caixa.Parent = self._volumes.Pasta
 	return caixa
 end
 
@@ -109,20 +152,21 @@ end
 -- Remove caixas cujos modelos sairam da pasta e cria ou reposiciona as caixas das maquinas presentes. A origem
 -- recebida converte os cantos locais da plot para o espaco do mundo.
 function PreviaConstrucao:_AtualizarCaixasMaquinas(origem)
-	for maquina, caixa in self._caixasMaquinas do
-		if maquina.Parent ~= self._maquinas then
+	local volumes = self._volumes
+	for maquina, caixa in volumes.Caixas do
+		if maquina.Parent ~= volumes.Maquinas then
 			caixa:Destroy()
-			self._caixasMaquinas[maquina] = nil
+			volumes.Caixas[maquina] = nil
 		end
 	end
 
-	for _, maquina in self._maquinas:GetChildren() do
-		if maquina == self._ignorar or not maquina:IsA("Model") then continue end
+	for _, maquina in volumes.Maquinas:GetChildren() do
+		if maquina == volumes.Ignorar or not maquina:IsA("Model") then continue end
 
 		local minimo, maximo = Geometria.VolumeDoModelo(maquina, origem)
 		if not minimo then continue end
 
-		local caixa = self._caixasMaquinas[maquina]
+		local caixa = volumes.Caixas[maquina]
 
 		if not caixa then
 			caixa = self:_CriarCaixa(
@@ -131,7 +175,7 @@ function PreviaConstrucao:_AtualizarCaixasMaquinas(origem)
 			)
 
 			caixa.CanQuery = true
-			self._caixasMaquinas[maquina] = caixa
+			volumes.Caixas[maquina] = caixa
 		end
 
 		self:_AtualizarCaixa(
@@ -145,10 +189,11 @@ end
 -- Testa um canto minimo e um tamanho de ocupacao no referencial da plot. Consulta apenas as caixas vizinhas;
 -- true indica ausencia de sobreposicao, e a folga permite encostar duas faces.
 function PreviaConstrucao:VolumeLivre(origem: CFrame, minimo: Vector3, ocupado: Vector3): boolean
+	if minimo.Y < 0 or minimo.Y + ocupado.Y > Geometria.AlturaDoTerreno(self._piso and self._piso.Size) + Geometria.Tolerancia then return false end
 	return #workspace:GetPartBoundsInBox(
 		Geometria.CFrameDoVolume(origem, minimo, ocupado),
 		ocupado - folgaConsulta,
-		self._sobreposicao
+		self._volumes.Consulta
 	) == 0
 end
 
@@ -156,6 +201,7 @@ end
 -- Recebe a posicao desejada e os limites horizontais. Tenta essa celula e depois aneis de vizinhas na mesma
 -- altura, devolvendo o canto livre de menor distancia ou nil quando nao encontra espaco.
 function PreviaConstrucao:EncaixarLivre(origem: CFrame, desejado: Vector3, ocupado: Vector3, maxX: number, maxZ: number): Vector3?
+	if desejado.Y < 0 or desejado.Y + ocupado.Y > Geometria.AlturaDoTerreno(self._piso and self._piso.Size) + Geometria.Tolerancia then return nil end
 	if self:VolumeLivre(origem, desejado, ocupado) then
 		return desejado
 	end
@@ -217,7 +263,7 @@ function PreviaConstrucao:Animar(alvo: Alvo, deltaTime: number, cframeGrupo: CFr
 		local deslocamentoVolume = destino:PointToObjectSpace(volumeVisual.Position)
 		volumeVisual = CFrame.new(cframeGrupo:PointToWorldSpace(deslocamentoVolume)) * volumeVisual.Rotation
 	elseif self._cframeVisual then
-		-- A orientacao visual tambem percorre o giro; o alvo logico continua valido em passos de 90 graus.
+		-- A orientacao visual percorre o giro; o alvo logico continua encaixado para o tipo da peca.
 		self._cframeVisual = self._cframeVisual:Lerp(destino, alpha)
 		volumeVisual = self._caixaPrevia.CFrame:Lerp(volumeVisual, alpha)
 	else
@@ -240,16 +286,17 @@ end
 -- Acumula deltaTime e renova as caixas das maquinas vizinhas a cada 0,2 segundo. Essa consulta mais espaçada
 -- nao reduz a frequencia da animacao da propria previa.
 function PreviaConstrucao:AtualizarVolumes(origem: CFrame, deltaTime: number)
-	self._tempoCaixas += deltaTime
-	if self._tempoCaixas < 0.2 then return end
-	self._tempoCaixas = 0
+	local volumes = self._volumes
+	volumes.Tempo += deltaTime
+	if volumes.Tempo < 0.2 then return end
+	volumes.Tempo = 0
 	self:_AtualizarCaixasMaquinas(origem)
 end
 
 -- Adianta o contador para que a proxima atualizacao por quadro revise as maquinas vizinhas, por exemplo apos
 -- confirmar uma colocacao no servidor.
 function PreviaConstrucao:ForcarAtualizacao()
-	self._tempoCaixas = 0.2
+	self._volumes.Tempo = 0.2
 end
 
 -- Retira temporariamente o modelo da cena, esconde o contorno e descarta a posicao visual interpolada. Os
@@ -260,12 +307,18 @@ function PreviaConstrucao:Ocultar()
 	self._cframeVisual = nil
 end
 
--- Remove o modelo clonado e a pasta de caixas, e libera as referencias aos volumes vizinhos. E a limpeza
--- definitiva da previa ao encerrar ou substituir a colocacao.
+-- A ultima previa libera os vizinhos; encerrar a ancora primeiro nao pode apagar as caixas das demais.
 function PreviaConstrucao:Destruir()
+	if self._destruida then return end
+	self._destruida = true
 	self._modelo:Destroy()
-	self._pastaVolumes:Destroy()
-	table.clear(self._caixasMaquinas)
+	self._caixaPrevia:Destroy()
+	local volumes = self._volumes
+	volumes.Usuarios -= 1
+	if volumes.Usuarios == 0 then
+		volumes.Pasta:Destroy()
+		table.clear(volumes.Caixas)
+	end
 end
 
 return PreviaConstrucao

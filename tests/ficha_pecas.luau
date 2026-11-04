@@ -31,26 +31,26 @@ assert(ficha:Atualizar("MineradoraBasica","Mineradora básica",3,false,Catalogo.
 assert(#miniaturas==0)
 ficha:ObterInstancia().Visible=true
 assert(ficha:Atualizar("MineradoraBasica","Mineradora básica",3,false,Catalogo.MineradoraBasica,nil))
-assert(#miniaturas==1 and ficha._quantidade.Text=="x3" and ficha._tipo.Text=="Geração")
+assert(#miniaturas==1 and ficha._quantidade.Text=="x3" and ficha._raridade.Text=="Comum")
 ficha:Atualizar("MineradoraBasica","Mineradora básica",2,false,Catalogo.MineradoraBasica,nil)
 assert(#miniaturas==1 and ficha._quantidade.Text=="x2")
 
 -- Uma troca de unidade ou personalizacao substitui somente o retrato. A copia conserva seus metadados.
 local dados={Configuracao={Componentes={{Velocidade=17}}},Dados={Melhoria=3}}
-assert(ficha:Atualizar("EsteiraBasica","Esteira básica",1,true,Catalogo.EsteiraBasica,dados))
+assert(ficha:Atualizar("Esteira2x2","Esteira básica",1,true,Catalogo.Esteira2x2,dados))
 assert(#miniaturas==2 and miniaturas[1].destruido and miniaturas[2].Dados.Dados.Melhoria==3)
-assert(ficha._nome.Text=="Esteira básica (cópia)" and ficha._tipo.Text=="Transporte")
-ficha:Atualizar("EsteiraBasica","Esteira básica",1,true,Catalogo.EsteiraBasica,dados)
+assert(ficha._nome.Text=="Esteira básica (cópia)" and ficha._raridade.Text=="Comum")
+ficha:Atualizar("Esteira2x2","Esteira básica",1,true,Catalogo.Esteira2x2,dados)
 assert(#miniaturas==2)
 local novaChave='{"Dados":{"Melhoria":4}}'
-assert(ficha:Atualizar("EsteiraBasica","Esteira básica",1,false,Catalogo.EsteiraBasica,novaChave))
+assert(ficha:Atualizar("Esteira2x2","Esteira básica",1,false,Catalogo.Esteira2x2,novaChave))
 assert(#miniaturas==3 and miniaturas[2].destruido and miniaturas[3].Dados.Dados.Melhoria==4)
 
 -- Dados malformados ficam explicitos; uma selecao nova valida se recupera, sem reutilizar o modelo anterior.
-assert(not ficha:Atualizar("EsteiraBasica","Esteira básica",1,false,Catalogo.EsteiraBasica,"json invalido"))
+assert(not ficha:Atualizar("Esteira2x2","Esteira básica",1,false,Catalogo.Esteira2x2,"json invalido"))
 assert(ficha._erroRetrato.Visible and miniaturas[3].destruido)
 assert(ficha:Atualizar("FornalhaBasica","Fornalha básica",1,false,Catalogo.FornalhaBasica,nil))
-assert(ficha._tipo.Text=="Transporte • Venda" and not ficha._erroRetrato.Visible)
+assert(ficha._raridade.Text=="Comum" and not ficha._erroRetrato.Visible)
 ficha:Atualizar("FornalhaBasica","Fornalha básica",nil,false,nil,nil)
 assert(ficha._miniatura==nil and ficha._erroRetrato.Visible and ficha._quantidade.Text=="…")
 
@@ -108,13 +108,20 @@ assert(#miniaturas==quantidadeMiniaturas, "Alterar estoque/configuracao do inven
 local gigante=table.clone(Catalogo.MineradoraBasica)
 gigante.Preco="100000000000000000001"
 loja:Atualizar("MineradoraBasica","Mineradora básica",7,false,gigante,nil)
-assert(loja._quantidade.Text=="$100qn" and gigante.Preco=="100000000000000000001")
+assert(loja._quantidade.Text=="$100Qn" and gigante.Preco=="100000000000000000001")
 camposLoja.Acoes.Comprar:DefinirDisponivel(false); loja:AtualizarDisponibilidade()
 camposLoja.Acoes.Comprar:ObterInstancia().Activated:Fire(); assert(compras==0)
 camposLoja.Acoes.Comprar:DefinirDisponivel(true); loja:AtualizarDisponibilidade()
 assert(camposLoja.Acoes.Comprar:ObterInstancia().BackgroundColor3==roblox.Color3.fromRGB(45,245,163))
 camposLoja.Acoes.Comprar:ObterInstancia().Activated:Fire(); assert(compras==1)
 assert(ficha:ObterInstancia().AnchorPoint.X==1 and ficha._nome.Text=="Fornalha básica", "A ficha do inventario permanece independente.")
+for nome, estilo in carregar("src/client/Raridades").Estilos do
+	local definicao=table.clone(Catalogo.FornalhaBasica); definicao.Raridade=nome
+	ficha:Atualizar("FornalhaBasica","Fornalha básica",2,false,definicao,nil)
+	local gradiente=ficha._bordaRetrato:FindFirstChild("Raridade")
+	assert(ficha._raridade.Text==nome and ficha._faixaRaridade.Color==estilo.Cores)
+	assert(gradiente.Color==estilo.Cores and #ficha._bordaRetrato:GetChildren()==1,"Faixa e borda devem combinar sem acumular gradientes.")
+end
 loja:Destruir(); loja:Destruir()
 for _, b in loja._botoes do assert(b._destruido and not b._conexao.ativa) end
 ficha:Destruir(); ficha:Destruir()

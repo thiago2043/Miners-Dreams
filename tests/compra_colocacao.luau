@@ -17,18 +17,18 @@ local modelos = Instance.new("Folder")
 modelos.Name = "ModelosMaquinas"
 local replicado = { ModelosMaquinas = modelos }
 function replicado:WaitForChild(nome) return assert(self[nome]) end
-local catalogo = luau.load(fs.readFile("src/shared/CatalogoMaquinas.luau"))()
+local catalogo = require("./suporte/carregador")({}, {})("src/shared/CatalogoMaquinas")
 require("./suporte/catalogo_modelos")(modelos)
-local modificador = modelos.ModificadorBasico
-local caixaModificador, tamanhoModificador = modificador:GetBoundingBox()
-assert(tamanhoModificador == Vector3.new(4, 8, 4))
-local caixaEsteira, tamanhoEsteira = modelos.EsteiraBasica:GetBoundingBox()
+local modificador = modelos.PrensaMinerio
+local caixaModificador, tamanhoModificador = modificador.HitboxConstrucao.CFrame, modificador.HitboxConstrucao.Size
+assert(tamanhoModificador == Vector3.new(table.unpack(catalogo.PrensaMinerio.Blocos))*3)
+local caixaEsteira, tamanhoEsteira = modelos.Esteira2x2:GetBoundingBox()
 local topoModificador = modificador.Correia.CFrame.Position.Y + modificador.Correia.Size.Y / 2
 	- (caixaModificador.Position.Y - tamanhoModificador.Y / 2)
-local topoEsteira = modelos.EsteiraBasica.Correia.CFrame.Position.Y + modelos.EsteiraBasica.Correia.Size.Y / 2
+local topoEsteira = modelos.Esteira2x2.Correia.CFrame.Position.Y + modelos.Esteira2x2.Correia.Size.Y / 2
 	- (caixaEsteira.Position.Y - tamanhoEsteira.Y / 2)
 assert(math.abs(topoModificador - topoEsteira) < 0.0001)
-assert(modificador.Correia.Size.X == modelos.EsteiraBasica.Correia.Size.X)
+assert(modificador.Correia.Size.X == modelos.Esteira2x2.Correia.Size.X)
 assert(modificador.SensorEntrada.CanTouch and not modificador.SensorEntrada.CanCollide)
 assert(not modificador.SensorEntrada.CanQuery and modificador.SensorEntrada.Transparency == 1)
 assert(math.abs(modificador.SensorEntrada.CFrame.Position.Y - modificador.SensorEntrada.Size.Y / 2
@@ -37,7 +37,7 @@ for _, instancia in modificador:GetDescendants() do
 	if instancia:IsA("BasePart") then assert(instancia.Anchored) end
 	assert(not instancia:IsA("LuaSourceContainer"))
 end
-print("PASS: modificador real de 4x8x4, correia alinhada a esteira, sensor atravessavel e sem scripts internos.")
+print("PASS: prensa real com reserva declarada, correia de dois blocos, sensor atravessavel e sem scripts internos.")
 
 local terrenos = Instance.new("Folder")
 terrenos.Name = "Terrenos"
@@ -48,7 +48,7 @@ terreno:SetAttribute("TerrenoId", 1)
 terreno.Parent = terrenos
 local piso = Instance.new("Part")
 piso.Name = "Piso"
-piso.Size = Vector3.new(64, 1, 64)
+piso.Size = Vector3.new(48, 0.75, 48)
 piso.Parent = terreno
 local maquinas = Instance.new("Folder")
 maquinas.Name = "Maquinas"
@@ -60,7 +60,7 @@ local jogador = { Parent = Players, UserId = 123, Name = "Teste" }
 function jogador:GetAttribute(nome) return atributos[nome] end
 function jogador:SetAttribute(nome, valor) atributos[nome] = valor end
 local profile = {
-	Data = { Dinheiro = "300", Inventory = { MineradoraBasica = 2, EsteiraBasica = 0, FornalhaBasica = 0, ModificadorBasico = 0 }, MaquinasColocadas = {} },
+	Data = { Dinheiro = "300", Inventory = { MineradoraBasica = 2, Esteira2x2 = 0, FornalhaBasica = 0, PrensaMinerio = 0 }, MaquinasColocadas = {} },
 }
 function profile:IsActive() return true end
 
@@ -70,17 +70,18 @@ local carregar, no = require("./suporte/carregador")({
 	os = { clock = function() return tempo end },
 }, { Players = Players, ReplicatedStorage = replicado, Debris = { AddItem = function() end } }, {
 	["Packages/Networker"] = { server = { new = function(_, moduloServidor, acesso)
-		assert(#acesso == 13 and acesso[3] == moduloServidor.Copiar and acesso[1] == moduloServidor.Colocar
+		assert(#acesso == 15 and acesso[3] == moduloServidor.Copiar and acesso[1] == moduloServidor.Colocar
 			and acesso[2] == moduloServidor.Recolher and acesso[4] == moduloServidor.CopiarGrupo
 			and acesso[5] == moduloServidor.ColocarGrupoCopia and acesso[6] == moduloServidor.CriarBlueprint
 			and acesso[7] == moduloServidor.ListarBlueprints and acesso[8] == moduloServidor.PrepararBlueprint
 			and acesso[9] == moduloServidor.IniciarMovimento and acesso[10] == moduloServidor.Mover
 			and acesso[11] == moduloServidor.MoverGrupo and acesso[12] == moduloServidor.CancelarMovimento
-			and acesso[13] == moduloServidor.VenderColocadas)
+			and acesso[13] == moduloServidor.VenderColocadas and acesso[14] == moduloServidor.ColocarMultiplos
+			and acesso[15] == moduloServidor.RecolherTudo)
 	end } },
 })
 replicado.Shared, replicado.Packages = no("src/shared"), no("Packages")
-assert(not mundo:FindFirstChild("MineradoraBasica") and not mundo:FindFirstChild("ModificadorBasico"))
+assert(not mundo:FindFirstChild("MineradoraBasica") and not mundo:FindFirstChild("PrensaMinerio"))
 local inteiro = carregar("src/server/InteiroGrande")
 local manager = carregar("src/server/Data/DataManager")
 manager.RegistrarPerfil(jogador, profile)
@@ -99,7 +100,7 @@ local function recusar(posicao, rotacao)
 	assert(#maquinas:GetChildren() == quantidade)
 end
 
-for i, x in { 0, 12, 24, 36, 48 } do
+for i, x in { 0, 9, 18, 27, 36 } do
 	assert(colocar(Vector3.new(x, 0, 0)))
 	assert(profile.Data.Inventory.MineradoraBasica == math.max(0, 2 - i))
 	assert(profile.Data.Dinheiro == tostring(300 - math.max(0, i - 2) * 100))
@@ -107,30 +108,30 @@ for i, x in { 0, 12, 24, 36, 48 } do
 	recusar(Vector3.new(x, 0, 0))
 end
 assert(profile.Data.Dinheiro == "0")
-recusar(Vector3.new(0, 0, 16))
+recusar(Vector3.new(0, 0, 12))
 profile.Data.Dinheiro = "99"
-recusar(Vector3.new(0, 0, 16))
+recusar(Vector3.new(0, 0, 12))
 profile.Data.Dinheiro = "100"
-recusar(Vector3.new(-4, 0, 16))
-recusar(Vector3.new(1, 0, 16))
-recusar(Vector3.new(60, 0, 16))
-recusar(Vector3.new(0, -4, 16))
-recusar(Vector3.new(0, 0, 16), CFrame.new(0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1))
-recusar(Vector3.new(0, 0, 16), CFrame.Angles(0, math.rad(22.5), 0))
-recusar(Vector3.new(0, 0, 16), CFrame.fromAxisAngle(Vector3.new(1, 1, 0).Unit, math.pi / 2))
+recusar(Vector3.new(-3, 0, 12))
+recusar(Vector3.new(0.75, 0, 12))
+recusar(Vector3.new(45, 0, 12))
+recusar(Vector3.new(0, -3, 12))
+recusar(Vector3.new(0, 0, 12), CFrame.new(0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1))
+recusar(Vector3.new(0, 0, 12), CFrame.Angles(0, math.rad(22.5), 0))
+recusar(Vector3.new(0, 0, 12), CFrame.fromAxisAngle(Vector3.new(1, 1, 0).Unit, math.pi / 2))
 terreno:SetAttribute("DonoUserId", 999)
-recusar(Vector3.new(0, 0, 16))
+recusar(Vector3.new(0, 0, 12))
 terreno:SetAttribute("DonoUserId", 123)
 for _, quantidade in { -1, 0.5, 2 ^ 53 } do
 	profile.Data.Inventory.MineradoraBasica = quantidade
-	recusar(Vector3.new(0, 0, 16))
+	recusar(Vector3.new(0, 0, 12))
 end
 profile.Data.Inventory.MineradoraBasica = 0
 profile.Data.Dinheiro = "0"
 tempo += 1
 assert(construcao:Recolher(jogador, maquinas:GetChildren()[1]))
 assert(profile.Data.Inventory.MineradoraBasica == 1 and profile.Data.Dinheiro == "0")
-assert(colocar(Vector3.new(0, 0, 16)))
+assert(colocar(Vector3.new(0, 0, 12)))
 assert(profile.Data.Inventory.MineradoraBasica == 0 and profile.Data.Dinheiro == "0")
 
 local dadosSalvos = serde.decode("json", serde.encode("json", profile.Data))
@@ -146,12 +147,13 @@ print("PASS: sobreposicao, saldo, limites, grade, rotacao, dono e quantidade inv
 print("PASS: recolher/recolocar e restaurar nao cobram novamente.")
 
 local template = carregar("src/server/Data/Template")
-local kitInicial = { MineradoraBasica = 1, EsteiraBasica = 1, FornalhaBasica = 1 }
+local kitInicial = { MineradoraBasica = 1, Esteira2x2 = 10, FornalhaBasica = 1 }
 for maquinaId in catalogo do assert(template.Inventory[maquinaId] == (kitInicial[maquinaId] or 0)) end
-profile.Data.Dinheiro = "100000"
+profile.Data.Dinheiro = "1000000"
 local saldoEsperado = profile.Data.Dinheiro
-local tipos = { "MineradoraBasica", "EsteiraBasica", "FornalhaBasica", "ModificadorBasico" }
+local tipos = { "MineradoraBasica", "Esteira2x2", "FornalhaBasica", "PrensaMinerio" }
 local testadas = 0
+piso.Size = Vector3.new(144, 0.75, 144)
 for _, maquinaId in tipos do
 	local rotacoes = {}
 	for x = 0, 3 do
@@ -163,7 +165,7 @@ for _, maquinaId in tipos do
 				if rotacoes[chave] then continue end
 				rotacoes[chave] = true
 				testadas += 1
-				local posicao = Vector3.new(0, testadas * 32, 0)
+				local posicao = Vector3.new((testadas - 1) % 10 * 12, 24, math.floor((testadas - 1) / 10) * 12)
 				local antes = #profile.Data.MaquinasColocadas
 				tempo += 1
 				assert(construcao:Colocar(jogador, maquinaId, posicao, rotacao))
@@ -179,7 +181,7 @@ for _, maquinaId in tipos do
 				local extensaoReal = geometria.CalcularVolume(caixaLocal, tamanhoReal)
 				local minimoReal = caixaLocal.Position - extensaoReal
 				for _, eixo in { "X", "Y", "Z" } do
-					assert(math.abs(math.floor(minimoReal[eixo] / 4 + geometria.Tolerancia) * 4 - posicao[eixo]) < 0.001)
+					assert(math.abs(math.floor(minimoReal[eixo] / 3 + geometria.Tolerancia) * 3 - posicao[eixo]) < 0.001)
 				end
 				local snapshot = serde.encode("json", profile.Data)
 				tempo += 1
@@ -215,11 +217,11 @@ print("PASS: registros antigos e novos restaurados juntos, sem duplicacao ou nov
 local dados = manager.ObterDados(jogador)
 assert(dados == manager.ObterDados(jogador))
 local outroJogador = { Name = "Outro", SetAttribute = function() end }
-local outroPerfil = { Data = { Dinheiro = "50", Inventory = { EsteiraBasica = 0 } } }
+local outroPerfil = { Data = { Dinheiro = "50", Inventory = { Esteira2x2 = 0 } } }
 function outroPerfil:IsActive() return true end
 local outrosDados = manager.RegistrarPerfil(outroJogador, outroPerfil)
 assert(outrosDados ~= dados)
-assert(outrosDados:ComprarMaquina("EsteiraBasica"))
+assert(outrosDados:ComprarMaquina("Esteira2x2"))
 assert(outroPerfil.Data.Dinheiro == "25" and profile.Data.Dinheiro == saldoEsperado)
 local copia = dados:ObterConstrucoes()
 table.clear(copia)
@@ -233,10 +235,10 @@ assert(manager.ObterDados(jogador) == nil)
 print("PASS: dados por jogador, copia da lista e limite seguro do inventario.")
 
 local Volume = carregar("src/shared/VolumeConstrucao")
-local volume = Volume.new(Vector3.new(5, 6, 7), { 4, 3, 2 })
+local volume = Volume.new(Vector3.new(3.75, 4.5, 5.25), { 4, 3, 2 })
 assert(volume:ObterBlocos() == Vector3.new(4, 3, 2))
 assert(volume:ObterBlocos(CFrame.Angles(0, math.pi / 2, 0)) == Vector3.new(2, 3, 4))
-assert(not pcall(Volume.new, Vector3.new(9, 1, 1), { 2, 1, 1 }))
+assert(not pcall(Volume.new, Vector3.new(6.75, 0.75, 0.75), { 2, 1, 1 }))
 local copiaModelo = modelos.MineradoraBasica:Clone()
 copiaModelo.Name = "MineradoraGrande"
 copiaModelo.Parent = modelos
@@ -265,7 +267,7 @@ local novoServico = carregar("src/server/ServicoConstrucao").new()
 assert(novoServico:Colocar(jogador2, "MineradoraGrande", Vector3.zero, CFrame.identity))
 local construida = maquinas2:GetChildren()[1]
 local a, b = geometria.VolumeDoModelo(construida, geometria.Origem(piso2))
-assert(a == Vector3.zero and b == Vector3.new(16, 12, 16))
+assert(a == Vector3.zero and b == Vector3.new(12, 9, 12))
 local Maquina = carregar("src/server/Maquinas/Maquina")
 local definicaoAssimetrica = table.clone(catalogo.MineradoraGrande)
 definicaoAssimetrica.Blocos = { 5, 3, 4 }
@@ -278,7 +280,7 @@ local objeto = Maquina.new(modeloGirado, terreno2, definicaoAssimetrica)
 assert(objeto:ObterVolume():ObterBlocos() == Vector3.new(5, 3, 4))
 objeto:Destruir()
 local saldoAntes = perfil2.Data.Dinheiro
-assert(not novoServico:Colocar(jogador2, "MineradoraGrande", Vector3.new(12, 0, 0), CFrame.identity))
+assert(not novoServico:Colocar(jogador2, "MineradoraGrande", Vector3.new(9, 0, 0), CFrame.identity))
 assert(perfil2.Data.Dinheiro == saldoAntes)
 print("PASS: classe de volume, rotacao dos blocos declarados e bloqueio pelo volume configurado.")
 
@@ -291,7 +293,7 @@ for i, rotacao in {
 	CFrame.Angles(math.pi / 2, math.pi, -math.pi / 2),
 } do
 	tempo += 1
-	assert(novoServico:Colocar(jogador2, "MineradoraGrande", Vector3.new(0, i * 40, 0), rotacao))
+	assert(novoServico:Colocar(jogador2, "MineradoraGrande", Vector3.new((i - 1) * 24, 24, 24), rotacao))
 	esperadas[i + 1] = rotacao
 end
 local dadosAngulados = serde.decode("json", serde.encode("json", perfil2.Data))
@@ -344,7 +346,7 @@ assert(copiou, mensagemCopia)
 assert(copiaPeca.Modificacoes.Dados.Melhorias.Nivel == 4)
 assert(novoServico:Copiar(jogador, personalizada) == false)
 local saldoCopia = perfil2.Data.Dinheiro
-local posCopia = Vector3.new(32, 0, 32)
+local posCopia = Vector3.new(24, 0, 24)
 assert(novoServico:Colocar(jogador2, "MineradoraGrande", posCopia, CFrame.identity, copiaPeca.Token + 1) == false)
 assert(perfil2.Data.Dinheiro == saldoCopia)
 copiaPeca.Modificacoes.Configuracao.Componentes[1].Intervalo = 999
@@ -360,7 +362,7 @@ local vinculoMovido = novoServico._registrosPorMaquina[personalizada]
 local registroMovido = assert(vinculoMovido and vinculoMovido.registro)
 local quantidadeMovida = #perfil2.Data.MaquinasColocadas
 local dinheiroMovido, estoqueMovido = perfil2.Data.Dinheiro, perfil2.Data.Inventory.MineradoraGrande
-local destinoMovido = Vector3.new(48, 0, 48)
+local destinoMovido = Vector3.new(36, 0, 36)
 local rotacaoMovida = CFrame.Angles(0, math.pi / 2, 0)
 personalizada:SetAttribute("TotalRecebido", "321")
 tempo += 1
@@ -373,7 +375,7 @@ local antesMovimentoInvalido = serde.encode("json", perfil2.Data)
 tempo += 1
 assert(not novoServico:Mover(jogador2, tokenMovimento, posCopia, CFrame.identity), "Nao deve sobrepor outra maquina.")
 assert(not novoServico:Mover(jogador2, tokenMovimento, Vector3.new(1, 0, 0), CFrame.identity), "Nao deve sair da grade.")
-assert(not novoServico:Mover(jogador, tokenMovimento, Vector3.new(40, 0, 40), CFrame.identity), "Outro jogador nao pode concluir o movimento.")
+assert(not novoServico:Mover(jogador, tokenMovimento, Vector3.new(30, 0, 30), CFrame.identity), "Outro jogador nao pode concluir o movimento.")
 assert(serde.encode("json", perfil2.Data) == antesMovimentoInvalido)
 local moveu, mensagemMoveu, novasInstancias = novoServico:Mover(jogador2, tokenMovimento, destinoMovido, rotacaoMovida)
 assert(moveu, mensagemMoveu)
@@ -383,7 +385,7 @@ assert(personalizada ~= instanciaAntiga and instanciaAntiga.Parent == nil and pe
 assert(personalizada:GetAttribute("VolumeMinimo") == destinoMovido)
 assert((personalizada:GetAttribute("RotacaoConstrucao").LookVector - rotacaoMovida.LookVector).Magnitude < 0.0001)
 assert(personalizada:GetAttribute("TotalRecebido") == "321")
-assert(registroMovido.Posicao[1] == 48 and registroMovido.Posicao[2] == 0 and registroMovido.Posicao[3] == 48)
+assert(registroMovido.Posicao[1] == 36 and registroMovido.Posicao[2] == 0 and registroMovido.Posicao[3] == 36)
 local componentesMovidos = { rotacaoMovida:GetComponents() }
 for indice = 4, 12 do assert(math.abs(registroMovido.Rotacao[indice - 3] - componentesMovidos[indice]) < 0.0001) end
 assert(#perfil2.Data.MaquinasColocadas == quantidadeMovida and perfil2.Data.Dinheiro == dinheiroMovido
@@ -393,7 +395,7 @@ assert(estadoMovido.Dados.Melhorias.Nivel == 4 and estadoMovido.Configuracao.Com
 assert(Personalizacao.Iguais(estadoMovido.Partes, modificacoes.Partes))
 print("PASS: iniciar movimento destroi a instancia; concluir recria a peca, preserva dados e recusa token/destino invalidos.")
 
--- O lote move ambos os modelos somente quando todos os destinos cabem, e R preserva o centro da ancora.
+-- O lote totalmente livre conserva a formacao; destinos inteiramente bloqueados mantem a previa.
 local rotacaoGrupo = CFrame.Angles(0, math.pi / 2, 0)
 tempo += 1
 local inicioGrupo, mensagemGrupo, tokenGrupo = novoServico:IniciarMovimento(jogador2, { personalizada, novaCopia })
@@ -403,25 +405,25 @@ assert(foiDestruida(personalizada, maquinas2) and foiDestruida(novaCopia, maquin
 local antesLoteInvalido = serde.encode("json", perfil2.Data)
 assert(not novoServico:MoverGrupo(jogador2, tokenGrupo, {
 	{ Minimo = Vector3.zero, Rotacao = CFrame.identity },
-	{ Minimo = Vector3.zero, Rotacao = CFrame.identity },
-}), "Duas pecas nao podem ocupar o mesmo volume no lote.")
+	{ Minimo = Vector3.zero, Rotacao = CFrame.Angles(.1,0,0) },
+}), "Uma rotacao invalida deve preservar todo o movimento pendente.")
 assert(serde.encode("json", perfil2.Data) == antesLoteInvalido and novoServico._movimentosPendentes[jogador2])
 local rotacaoGrupoGirado = CFrame.Angles(0, math.pi, 0)
 tempo += 1
 local moveuGrupo, mensagemMoveuGrupo, pecasRecriadas = novoServico:MoverGrupo(jogador2, tokenGrupo, {
-	{ Minimo = Vector3.new(16, 0, 16), Rotacao = rotacaoGrupoGirado },
-	{ Minimo = Vector3.new(0, 0, 32), Rotacao = rotacaoGrupoGirado },
+	{ Minimo = Vector3.new(12, 0, 12), Rotacao = rotacaoGrupoGirado },
+	{ Minimo = Vector3.new(0, 0, 24), Rotacao = rotacaoGrupoGirado },
 })
 assert(moveuGrupo, mensagemMoveuGrupo)
 personalizada, novaCopia = pecasRecriadas[1], pecasRecriadas[2]
-assert(personalizada:GetAttribute("VolumeMinimo") == Vector3.new(16, 0, 16)
-	and novaCopia:GetAttribute("VolumeMinimo") == Vector3.new(0, 0, 32))
+assert(personalizada:GetAttribute("VolumeMinimo") == Vector3.new(12, 0, 12)
+	and novaCopia:GetAttribute("VolumeMinimo") == Vector3.new(0, 0, 24))
 assert((personalizada:GetAttribute("RotacaoConstrucao").RightVector - rotacaoGrupoGirado.RightVector).Magnitude < 0.0001)
 assert((novaCopia:GetAttribute("RotacaoConstrucao").RightVector - rotacaoGrupoGirado.RightVector).Magnitude < 0.0001)
-destinoMovido, rotacaoMovida = Vector3.new(16, 0, 16), rotacaoGrupoGirado
-print("PASS: mover grupo preserva a formacao, gira ao redor da ancora e rejeita destinos parcialmente sobrepostos.")
+destinoMovido, rotacaoMovida = Vector3.new(12, 0, 12), rotacaoGrupoGirado
+print("PASS: mover grupo preserva a formacao, gira ao redor da ancora e conserva o token se nenhuma peca couber.")
 
--- Copiar grupo captura configuracoes sem apagar as fontes e confirma o lote sem resultados parciais.
+-- Copiar grupo captura configuracoes sem apagar as fontes; um destino inteiramente ocupado nao cobra.
 tempo += 1
 local contagemAntesCopiaGrupo = #perfil2.Data.MaquinasColocadas
 local sucessoCapturaGrupo, mensagemCapturaGrupo, dadosCopiaGrupo = novoServico:CopiarGrupo(
@@ -434,21 +436,21 @@ local dadosCliente = dadosCopiaGrupo.Pecas[1].Modificacoes
 dadosCliente.Dados.Melhorias.Nivel = 999
 local estadoAntesCopiaInvalida = serde.encode("json", perfil2.Data)
 assert(not novoServico:ColocarGrupoCopia(jogador2, dadosCopiaGrupo.Token, {
-	{ Minimo = Vector3.new(16, 0, 16), Rotacao = rotacaoGrupoGirado },
-	{ Minimo = Vector3.new(16, 0, 16), Rotacao = rotacaoGrupoGirado },
-}), "Uma copia sobreposta deve recusar o grupo todo.")
+	{ Minimo = Vector3.new(12, 0, 12), Rotacao = rotacaoGrupoGirado },
+	{ Minimo = Vector3.new(12, 0, 12), Rotacao = rotacaoGrupoGirado },
+}), "Nenhuma copia deve ser colocada quando todos os destinos estao ocupados.")
 assert(serde.encode("json", perfil2.Data) == estadoAntesCopiaInvalida
 	and personalizada.Parent == maquinas2 and novaCopia.Parent == maquinas2)
 tempo += 1
 local copiouGrupo, mensagemCopiaGrupo, pecasCopiadas = novoServico:ColocarGrupoCopia(jogador2, dadosCopiaGrupo.Token, {
-	{ Minimo = Vector3.new(16, 160, 16), Rotacao = rotacaoGrupoGirado },
-	{ Minimo = Vector3.new(0, 160, 32), Rotacao = rotacaoGrupoGirado },
+	{ Minimo = Vector3.new(108, 0, 72), Rotacao = rotacaoGrupoGirado },
+	{ Minimo = Vector3.new(96, 0, 84), Rotacao = rotacaoGrupoGirado },
 })
 assert(copiouGrupo, mensagemCopiaGrupo)
 assert(#pecasCopiadas == 2 and #perfil2.Data.MaquinasColocadas == contagemAntesCopiaGrupo + 2)
 assert(personalizada.Parent == maquinas2 and novaCopia.Parent == maquinas2)
-assert(pecasCopiadas[1]:GetAttribute("VolumeMinimo") == Vector3.new(16, 160, 16)
-	and pecasCopiadas[2]:GetAttribute("VolumeMinimo") == Vector3.new(0, 160, 32))
+assert(pecasCopiadas[1]:GetAttribute("VolumeMinimo") == Vector3.new(108, 0, 72)
+	and pecasCopiadas[2]:GetAttribute("VolumeMinimo") == Vector3.new(96, 0, 84))
 assert(Personalizacao.DoModelo(pecasCopiadas[1]):ObterDados().Dados.Melhorias.Nivel == 4,
 	"A resposta do cliente nao pode alterar as melhorias capturadas pelo servidor.")
 print("PASS: copia em grupo conserva as fontes, a formacao e as personalizacoes; destinos invalidos nao cobram.")
@@ -479,7 +481,7 @@ for _, modelo in maquinas2:GetChildren() do
 		if modelo:GetAttribute("VolumeMinimo") == destinoMovido then
 			assert((modelo:GetAttribute("RotacaoConstrucao").LookVector - rotacaoMovida.LookVector).Magnitude < 0.0001,
 				"O novo giro deve sobreviver ao restauro.")
-		elseif modelo:GetAttribute("VolumeMinimo").Y == 160 then
+		elseif modelo:GetAttribute("VolumeMinimo") == Vector3.new(108, 0, 72) then
 			encontrouGrupoCopiado = true
 		end
 	end
@@ -519,12 +521,10 @@ perfilLote.Data.Dinheiro = "100"
 perfilLote.Data.Inventory.MineradoraGrande = 0
 perfilLote.Data.MaquinasColocadas = {}
 perfilLote.Data.InventarioPersonalizado = {}
-local antesColocacaoLoteInvalido = serde.encode("json", perfilLote.Data)
-assert(not dadosLote:RegistrarColocacoes({ { MaquinaId = "MineradoraGrande" }, { MaquinaId = "MineradoraGrande" } }))
-assert(serde.encode("json", perfilLote.Data) == antesColocacaoLoteInvalido,
-	"Se faltar saldo para uma das copias, o perfil deve voltar ao estado anterior ao grupo.")
-assert(jogadorLote.Atributos.Dinheiro == "100" and jogadorLote.Atributos.Inventario_MineradoraGrande == 0,
-	"O cliente deve receber os valores restaurados junto com o perfil.")
+local colocouParte,_,registrosAceitos = dadosLote:RegistrarColocacoes({ { MaquinaId = "MineradoraGrande" }, { MaquinaId = "MineradoraGrande" } })
+assert(colocouParte and #registrosAceitos == 1 and #perfilLote.Data.MaquinasColocadas == 1,
+	"Saldo para uma copia deve colocar essa unidade e recusar somente a segunda.")
+assert(jogadorLote.Atributos.Dinheiro == "0" and jogadorLote.Atributos.Inventario_MineradoraGrande == 0)
 print("PASS: recolhimento em lote valida primeiro, preserva variantes e atualiza inventario sem resultados parciais.")
 print("PASS: personalizacoes preservadas no save, no inventario e na recolocacao sem nova cobranca.")
 
@@ -540,17 +540,17 @@ local jogadorLinha = { Name = "Alinhamento", UserId = 789, Parent = Players }
 function jogadorLinha:GetAttribute() return 3 end
 function jogadorLinha:SetAttribute() end
 local perfilLinha = { Data = { Dinheiro = "0", MaquinasColocadas = {},
-	Inventory = { EsteiraBasica = 1, ModificadorBasico = 1, FornalhaBasica = 1 } } }
+	Inventory = { Esteira2x2 = 1, PrensaTripla = 1, FornalhaReforcada = 1 } } }
 function perfilLinha:IsActive() return true end
 manager.RegistrarPerfil(jogadorLinha, perfilLinha)
 local servicoLinha = carregar("src/server/ServicoConstrucao").new()
-for i, item in { { "EsteiraBasica", 0 }, { "ModificadorBasico", 12 }, { "FornalhaBasica", 16 } } do
+for i, item in { { "Esteira2x2", 3, 0 }, { "PrensaTripla", 0, 6 }, { "FornalhaReforcada", 3, 18 } } do
 	tempo += 1
-	assert(servicoLinha:Colocar(jogadorLinha, item[1], Vector3.new(0, 0, item[2]), CFrame.identity))
+	assert(servicoLinha:Colocar(jogadorLinha, item[1], Vector3.new(item[2], 0, item[3]), CFrame.identity))
 end
 local esteiraLinha, modificadorLinha, fornalhaLinha = table.unpack(maquinasLinha:GetChildren())
-assert(esteiraLinha:GetAttribute("VolumeOcupado") == Vector3.new(8, 4, 12))
-assert(modificadorLinha:GetAttribute("VolumeOcupado") == Vector3.new(8, 8, 4))
+assert(esteiraLinha:GetAttribute("VolumeOcupado") == Vector3.new(6, 3, 6))
+assert(modificadorLinha:GetAttribute("VolumeOcupado") == Vector3.new(12, 6, 12))
 local function conferirLinha()
 	local x = esteiraLinha.Correia.CFrame.Position.X
 	local y = esteiraLinha.Correia.CFrame.Position.Y + esteiraLinha.Correia.Size.Y / 2
@@ -577,3 +577,15 @@ esteiraLinha, modificadorLinha, fornalhaLinha = table.unpack(maquinasLinha:GetCh
 assert(#maquinasLinha:GetChildren() == 3 and perfilLinha.Data.Dinheiro == "0")
 conferirLinha()
 print("PASS: esteira de dois blocos, modificador e fornalha alinhados, sem vao entre correias, antes/depois de restaurar.")
+do
+	local quantidadeAlheia=#maquinas:GetChildren()
+	local saldo=perfilLinha.Data.Dinheiro
+	tempo+=10
+	assert(servicoLinha:RecolherTudo(jogadorLinha))
+	assert(#maquinasLinha:GetChildren()==0 and #perfilLinha.Data.MaquinasColocadas==0)
+	assert(perfilLinha.Data.Inventory.Esteira2x2==1 and perfilLinha.Data.Inventory.PrensaTripla==1
+		and perfilLinha.Data.Inventory.FornalhaReforcada==1 and perfilLinha.Data.Dinheiro==saldo)
+	assert(#maquinas:GetChildren()==quantidadeAlheia,"Limpar uma plot não pode afetar outra.")
+	assert(not servicoLinha:RecolherTudo(jogadorLinha),"Repetir não duplica peças.")
+end
+print("PASS: limpeza integral recolhe só a própria plot, preserva saldo e não permite duplicação.")

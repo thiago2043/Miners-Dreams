@@ -6,10 +6,10 @@ local mundo = Instance.new("Workspace")
 local inverterConsulta = false
 r.implementMethod("Workspace", "GetPartBoundsInBox", function(_, cf, tamanho, consulta)
 	local partes = {}
-	for _, raiz in consulta.FilterDescendantsInstances do
+	for _, raiz in (if consulta.FilterType==r.Enum.RaycastFilterType.Exclude then {mundo} else consulta.FilterDescendantsInstances) do
 		local candidatos = raiz:IsA("BasePart") and { raiz } or raiz:GetDescendants()
 		for _, p in candidatos do
-			if not p:IsA("BasePart") or not p.CanQuery then continue end
+			if not p:IsA("BasePart") or not (if consulta.RespectCanCollide then p.CanCollide else p.CanQuery) then continue end
 			if (p.CFrame.Position - cf.Position).Magnitude <= (p.Size.Magnitude + tamanho.Magnitude) / 2 then
 				table.insert(partes, p)
 			end
@@ -94,6 +94,7 @@ local function repetir(fps, inversa, duplicar)
 	local trajetoria, quicou, girou = {}, false, false
 	for _ = 1, fps * 2 do
 		sim:Avancar(1 / fps, function()
+			corpo = sim:ObterCorpo(minerio:ObterParte())
 			table.insert(trajetoria, estado(corpo))
 			quicou = quicou or corpo.Velocidade.Y > 1
 			girou = girou or corpo:VelocidadeAngular().Magnitude > 0.1
@@ -122,20 +123,94 @@ local rapido = criarMinerio(terreno, CFrame.new(-2, 0, 0))
 sim:RegistrarMinerio(rapido, 1, { Elasticidade = 0 })
 sim._minerios[1].Corpo.Velocidade = Vector3.new(1000, 0, 0)
 sim:Avancar(1 / 60)
-assert(rapido:ObterParte().CFrame.Position.X < -0.49, "Minerio rapido nao pode atravessar uma parede fina.")
+assert(sim:ObterCorpo(rapido:ObterParte()).CFrame.Position.X < -0.49, "Minerio rapido nao pode atravessar uma parede fina.")
 sim:Avancar(1)
-assert(rapido:ObterParte().Parent == nil and #sim._minerios == 0)
+assert(sim._passos == 2 + Simulacao.MaximoPassos and sim._acumulado > .9, "O atraso deve permanecer pendente sem bloquear a chamada.")
+while sim._acumulado + .000000001 >= Simulacao.Passo do sim:Avancar(0) end
+assert(rapido:ObterParte().Parent ~= nil, "O minerio nao deve expirar sem pagamento.")
+sim:Destruir()
 mundo.Gravity = 196.2
-print("PASS: subpassos evitam atravessar parede de 0.05 stud a 1000 studs/s; tempo de vida usa a simulacao.")
+print("PASS: subpassos evitam atravessar parede de 0.05 stud a 1000 studs/s; nao ha expiracao por tempo.")
 local descartado = criarMinerio(terreno, CFrame.new(0, 4, 0))
 sim:RegistrarMinerio(descartado, 10, {})
 descartado:ObterParte():SetAttribute("DonoUserId", 999)
 sim:Avancar(1 / 120)
 assert(descartado:ObterParte().Parent == nil and #sim._minerios == 0)
 
+local _, plotVenda = cenario()
+local dono = { UserId = 123, Parent = jogadores, atributos = {} }
+function dono:SetAttribute(k, v) self.atributos[k] = v end
+jogadores[123] = dono
+local perfilVenda = { Data = { Dinheiro = "0" }, ativo = true, IsActive = function(self) return self.ativo end }
+carregar("src/server/Data/DataManager").RegistrarPerfil(dono, perfilVenda)
+caixa("Piso", CFrame.new(0, -0.5, 0), Vector3.new(100, 1, 100), plotVenda)
+local simVenda = Simulacao.new()
+local caiu = criarMinerio(plotVenda, CFrame.new(0, 3, 0))
+caiu:DefinirValor("250")
+simVenda:RegistrarMinerio(caiu, 10, {})
+for _ = 1, 120 do simVenda:Avancar(1/120) end
+assert(not caiu:ObterParte().Parent and perfilVenda.Data.Dinheiro == "25", "O contato com o piso deve pagar 10% do valor atual.")
+caixa("Apoio", CFrame.new(0, 5, 0), Vector3.new(20, 1, 20), plotVenda.Maquinas)
+local parado = criarMinerio(plotVenda, CFrame.new(0, 6.001, 0))
+simVenda:RegistrarMinerio(parado, 10, {})
+for _ = 1, 480 do simVenda:Avancar(1/120) end
+assert(parado:ObterParte().Parent and perfilVenda.Data.Dinheiro == "25", "O minerio parado nao deve ser vendido antes de cinco segundos.")
+for _ = 1, 300 do simVenda:Avancar(1/120) end
+assert(not parado:ObterParte().Parent and perfilVenda.Data.Dinheiro == "26", "O repouso deve vender uma unica vez.")
+local correia = caixa("Correia", CFrame.new(25, 5, 0), Vector3.new(5, 1, 10), plotVenda.Maquinas)
+caixa("Bloqueio", CFrame.new(25, 7, 2), Vector3.new(5, 4, 1), plotVenda.Maquinas)
+simVenda:RegistrarTransportador({EstaAtivo=function() return true end}, correia, Vector3.new(0, 0, 6), 1.2)
+local preso = criarMinerio(plotVenda, CFrame.new(25, 6.001, 0))
+simVenda:RegistrarMinerio(preso, 10, {})
+for _ = 1, 480 do simVenda:Avancar(1/120) end
+assert(preso:ObterParte().Parent, "A contagem comeca quando o minerio para na esteira.")
+for _ = 1, 420 do simVenda:Avancar(1/120) end
+assert(not preso:ObterParte().Parent and perfilVenda.Data.Dinheiro == "27", "Minerio bloqueado sobre a esteira deve ser vendido.")
+perfilVenda.ativo = false
+local semCredito = criarMinerio(plotVenda, CFrame.new(0, 1, 30))
+simVenda:RegistrarMinerio(semCredito, 10, {})
+for _ = 1, 120 do simVenda:Avancar(1/120) end
+assert(semCredito:ObterParte().Parent and perfilVenda.Data.Dinheiro == "27", "Sem credito, nao pode consumir o minerio.")
+perfilVenda.ativo = true
+simVenda:Avancar(1/120)
+assert(not semCredito:ObterParte().Parent and perfilVenda.Data.Dinheiro == "28", "A venda deve ser retomada apos recuperar o credito.")
+local correiaLonga = caixa("CorreiaLonga", CFrame.new(-30, 5, 0), Vector3.new(5, 1, 100), plotVenda.Maquinas)
+simVenda:RegistrarTransportador({EstaAtivo=function() return true end}, correiaLonga, Vector3.new(0, 0, 1), 1.2)
+local viajando = criarMinerio(plotVenda, CFrame.new(-30, 6.001, -30))
+simVenda:RegistrarMinerio(viajando, nil, {})
+for _ = 1, 660 do simVenda:Avancar(1/60) end
+assert(viajando:ObterParte().Parent and perfilVenda.Data.Dinheiro == "28", "O transporte otimizado nao deve parecer repouso.")
+mundo.Gravity = 0
+local oscilando = criarMinerio(plotVenda, CFrame.new(0, 30, 20))
+simVenda:RegistrarMinerio(oscilando, nil, {})
+local corpoOscilando = simVenda:ObterCorpo(oscilando:ObterParte())
+for i = 1, 600 do
+	corpoOscilando.CFrame = CFrame.new(if i % 2 == 0 then .2 else -.2, 30, 20)
+	simVenda:Avancar(1/120)
+end
+assert(not oscilando:ObterParte().Parent and perfilVenda.Data.Dinheiro == "29", "Oscilacao sem deslocamento deve ser vendida apos cinco segundos.")
+local movel = criarMinerio(plotVenda, CFrame.new(0, 30, 0))
+simVenda:RegistrarMinerio(movel, 10, {})
+simVenda:ObterCorpo(movel:ObterParte()).Velocidade = Vector3.new(1, 0, 0)
+for _ = 1, 1320 do simVenda:Avancar(1/120) end
+assert(movel:ObterParte().Parent and perfilVenda.Data.Dinheiro == "29", "Movimento por mais de dez segundos nao deve vender.")
+simVenda:Destruir()
+mundo.Gravity = 196.2
+do
+	local sim=Simulacao.new()
+	local inteiro=carregar("src/server/InteiroGrande")
+	for _,caso in {{"4","0"},{"5","1"},{"15","2"},{"123456789012345678901234567890","12345678901234567890123456789"}} do
+		local saldo=perfilVenda.Data.Dinheiro
+		local m=criarMinerio(plotVenda,CFrame.new(0,1,35)); m:DefinirValor(caso[1]); sim:RegistrarMinerio(m,nil,{})
+		for _=1,120 do sim:Avancar(1/120) end
+		assert(not m:ObterParte().Parent and inteiro.subtrair(perfilVenda.Data.Dinheiro,saldo)==caso[2],"Venda automatica deve pagar 10%, com arredondamento decimal exato.")
+	end
+	sim:Destruir()
+end
+
 local catalogo = carregar("src/shared/CatalogoMaquinas")
 catalogo.TesteTransporte = { Componentes = { { Tipo = "Transportador", Parte = "Correia", Velocidade = 6 } } }
-catalogo.TesteModificador = { Componentes = { { Tipo = "Modificador", Sensor = "Sensor", Multiplicador = "2" } } }
+catalogo.TesteModificador = { Componentes = { { Tipo = "Modificador", TipoModificador = "N99", Etapas = 1, LimiteUsos = 1, Sensor = "Sensor", Multiplicador = "2" } } }
 catalogo.TesteVenda = { Componentes = { { Tipo = "Vendedor", Sensor = "Sensor" } } }
 local function modelo(nome, terreno)
 	local m = Instance.new("Model")
@@ -177,6 +252,95 @@ local outroSaldo, outrosCorpos = circuito(30)
 assert(saldo == outroSaldo and #corpos == #outrosCorpos)
 for i, valores in corpos do iguais(valores, outrosCorpos[i]) end
 print("PASS: fabrica real gera, transporta, modifica por sensor fino e vende sem Touched; saldo repetivel: " .. saldo)
+do
+	local _,plot=cenario()
+	caixa("Superficie",CFrame.new(0,-.5,0),Vector3.new(10,1,10),plot.Maquinas)
+	local sim=Simulacao.new()
+	local minerio=criarMinerio(plot,CFrame.new(0,5,0),{Valor="10",Tamanho={.75,.75,.75}})
+	sim:RegistrarMinerio(minerio,nil,{}); sim:Avancar(1/120)
+	local movimento=carregar("src/shared/MovimentoMinerio")
+	local amostra=assert(movimento.Decodificar(minerio:ObterParte():GetAttribute("MovimentoMinerio")))
+	assert(amostra.Duracao>0 and amostra.Duracao<.25,"A previsao deve terminar antes da superficie.")
+	local futura=movimento.Avaliar(amostra,amostra.Inicio+.25)
+	assert(futura.Position.Y>=.375,"A previsao visual nao pode atravessar a superficie de impacto.")
+	local corpo=sim:ObterCorpo(minerio:ObterParte())
+	corpo.CFrame=CFrame.new(0,.3751,0); corpo.Velocidade=Vector3.zero
+	assert(sim:_DuracaoQueda(sim._minerios[1],.25)<.001,"Falso intervalo de queda junto a superficie deve ser curto.")
+	corpo.CFrame=CFrame.new(30,5,0)
+	assert(sim:_DuracaoQueda(sim._minerios[1],.25)==.25,"Sem obstaculo no trajeto, deve preservar a previsao.")
+	local pose=CFrame.Angles(math.pi/4,0,0)
+	local tamanho=Vector3.new(6,.3,8)
+	local minimo,maximo=Corpo.Limites(pose,tamanho)
+	local rampa={CFrame=pose,Tamanho=tamanho,Minimo=minimo,Maximo=maximo,PriorizarTopo=true}
+	local busca=sim._Candidatos
+	sim._Candidatos=function() return {rampa},{} end
+	corpo.CFrame=CFrame.new(pose:PointToWorldSpace(Vector3.new(0,1.18,0)))
+	corpo.Velocidade=pose:VectorToWorldSpace(Vector3.new(0,0,6)); corpo.MomentoAngular=Vector3.zero
+	local limite=sim:_DuracaoQueda(sim._minerios[1],.25)
+	assert(limite>.02,"A caixa envolvente da rampa nao deve congelar o minerio antes da superficie.")
+	for i=0,math.floor(limite*120) do
+		local t=i/120
+		local pos=corpo.CFrame.Position+corpo.Velocidade*t+Vector3.new(0,-mundo.Gravity*t*t/2,0)
+		assert(not Corpo.Intersecao(CFrame.new(pos),corpo.Tamanho,pose,tamanho),"O limite ainda deve preceder o impacto real.")
+	end
+	local gravidade=mundo.Gravity; mundo.Gravity=0
+	assert(sim:_DuracaoQueda(sim._minerios[1],.25)==.25,"Movimento paralelo sem gravidade nao deve congelar na rampa.")
+	corpo.Velocidade=-pose.UpVector*10
+	assert(sim:_DuracaoQueda(sim._minerios[1],.25)<.2,"Aproximar da rampa ainda deve limitar o impacto.")
+	mundo.Gravity=gravidade
+	corpo.CFrame=CFrame.new(pose:PointToWorldSpace(Vector3.new(0,.15+.375*math.sqrt(2)+.05,0)))
+	corpo.Velocidade=pose:VectorToWorldSpace(Vector3.new(0,0,6))
+	local continua,apoio=sim:_DuracaoQueda(sim._minerios[1],.25)
+	assert(continua==.25 and apoio==pose.UpVector,"Perto da rampa, o movimento paralelo deve continuar.")
+	local paredePose=CFrame.new(corpo.CFrame.Position+corpo.Velocidade.Unit*1.3)
+	local paredeTamanho=Vector3.new(2,2,.2)
+	local paredeMin,paredeMax=Corpo.Limites(paredePose,paredeTamanho)
+	local parede={CFrame=paredePose,Tamanho=paredeTamanho,Minimo=paredeMin,Maximo=paredeMax}
+	sim._Candidatos=function() return {rampa,parede},{} end
+	local bloqueio=sim:_DuracaoQueda(sim._minerios[1],.25)
+	assert(bloqueio<.25,"Mesmo perto de uma rampa, uma parede deve limitar a previsao.")
+	sim._Candidatos=function() return {rampa},{} end
+	sim._Simular=function() end
+	corpo._emContato=false; sim._minerios[1].Movimento=nil
+	sim:Avancar(1/120)
+	local previsao=assert(movimento.Decodificar(minerio:ObterParte():GetAttribute("MovimentoMinerio")))
+	assert(previsao.Aceleracao==Vector3.zero and previsao.Duracao==.25)
+	local adiante=movimento.Avaliar(previsao,previsao.Inicio+.1)
+	assert((adiante.Position-corpo.CFrame.Position).Magnitude>.5,"A visualizacao deve continuar pela rampa.")
+	sim._Candidatos=busca
+	sim:Destruir()
+end
+print("PASS: previsao da queda para antes do impacto e nao inventa queda perto da superficie.")
+
+do
+	local avancar=Corpo.Avancar
+	local chamadas=0
+	Corpo.Avancar=function(self,...) chamadas+=1; return avancar(self,...) end
+	local function percursos(reutilizar)
+		local _,plot=cenario()
+		caixa("Correia",CFrame.new(0,-.5,0),Vector3.new(8,1,20),plot.Maquinas)
+		local sim=Simulacao.new(); local origem={}
+		local trajetos={}
+		for i=1,3 do
+			local minerio=criarMinerio(plot,CFrame.new(0,1,0))
+			sim:RegistrarMinerio(minerio,nil,{},if reutilizar then origem else nil)
+			local etapas={}; trajetos[i]=etapas
+			for _=1,60 do
+				sim:Avancar(1/120)
+				table.insert(etapas,estado(sim:ObterCorpo(minerio:ObterParte())))
+			end
+			minerio:Consumir(); sim:Avancar(1/120)
+		end
+		sim:Destruir()
+		return trajetos
+	end
+	local original=percursos(false); local antes=chamadas
+	local reutilizado=percursos(true); local novas=chamadas-antes
+	Corpo.Avancar=avancar
+	for i,etapas in original do for j,v in etapas do iguais(v,reutilizado[i][j]) end end
+	assert(novas<antes,"Minérios sucessivos devem reutilizar impactos da mesma origem.")
+	print("PASS: trajetos reais iguais passo a passo; calculos fisicos reduzidos de "..antes.." para "..novas..".")
+end
 
 local _, conjunto = cenario()
 local comum = modelo("SensorComposto", conjunto)
@@ -187,15 +351,39 @@ local ordem = {}
 for _, tipo in { 2, 1 } do
 	local componente = {
 		EstaAtivo = function() return true end, TipoContato = function() return tipo end,
+		PrecisaReceber = function() return true end,
 		Receber = function() table.insert(ordem, tipo) end,
 	}
-	simComposta:RegistrarSensor(componente, sensorComum)
+	simComposta:RegistrarSensor(componente, sensorComum, conjunto)
 end
 simComposta:RegistrarMinerio(criarMinerio(conjunto, CFrame.new(0, 3, 0)), 1, {})
 simComposta:Avancar(1 / 120)
 assert(#ordem == 2 and ordem[1] == 1 and ordem[2] == 2)
 simComposta:Destruir()
 print("PASS: dois componentes no mesmo sensor continuam ativos; modificacao precede venda.")
+do
+	local _,plot=cenario()
+	local sim=Simulacao.new()
+	local m=modelo("PrensaMinerio",plot)
+	caixa("SensorEntrada",CFrame.new(0,3,0),Vector3.new(2,2,2),m).CanCollide=false
+	local maquina={ObterModelo=function() return m end,ObterTerreno=function() return plot end,
+		ObterSimulacao=function() return sim end,EstaNoTerreno=function() return true end,ObterNivelUpgrade=function() return 0 end}
+	local mod=carregar("src/server/Componentes/ModificadorMinerio").new(maquina,
+		{TipoModificador="V99",Sensor="SensorEntrada",Multiplicador="2",ValorMaximo="100"})
+	mod:Atualizar(0)
+	local rejeitado=criarMinerio(plot,CFrame.new(4,3,0),{Valor="100",Tamanho={.75,.75,.75}})
+	sim:RegistrarMinerio(rejeitado,1,{})
+	sim:Avancar(Simulacao.Passo)
+	assert(m:GetAttribute("ModificadorAtivo")==true,"Estar perto da faixa não basta para desligar.")
+	local atravessa=criarMinerio(plot,CFrame.new(0,3,0),{Valor="100",Tamanho={.75,.75,.75}})
+	sim:RegistrarMinerio(atravessa,1,{}); sim:Avancar(Simulacao.Passo)
+	assert(m:GetAttribute("ModificadorAtivo")==false and atravessa:ObterValor()=="100")
+	local valido=criarMinerio(plot,CFrame.new(0,3,0))
+	sim:RegistrarMinerio(valido,1,{}); sim:Avancar(Simulacao.Passo)
+	assert(m:GetAttribute("ModificadorAtivo")==true and valido:ObterValor()=="20")
+	mod:Destruir(); sim:Destruir()
+end
+print("PASS: contato real de rejeição desliga, proximidade não desliga e uma modificação válida reativa.")
 
 local _, terrenoMovido = cenario()
 local correiaMovida = caixa("Correia", CFrame.identity, Vector3.one, terrenoMovido.Maquinas)
@@ -224,4 +412,4 @@ assert(not Minerio.DefinicaoValida({ Valor = "10", Tamanho = { 1, 1, 1 }, Elasti
 assert(not Minerio.DefinicaoValida({ Valor = "10", Tamanho = { 1, 1, 1 }, Atrito = 0 / 0 }))
 assert(Corpo.Intersecao(CFrame.identity, Vector3.one, CFrame.new(0.99, 0, 0), Vector3.one))
 assert(not Corpo.Intersecao(CFrame.identity, Vector3.one, CFrame.new(1.01, 0, 0), Vector3.one))
-print("PASS: 16 modelos nativos compativeis, coeficientes invalidos recusados e intersecao sem falsos contatos.")
+print("PASS: modelos mapeados compativeis, coeficientes invalidos recusados e intersecao sem falsos contatos.")

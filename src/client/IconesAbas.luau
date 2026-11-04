@@ -5,6 +5,9 @@ local cores = {
 	Inventario = Color3.fromRGB(255, 51, 137), Loja = Color3.fromRGB(40, 238, 146),
 	Upgrades = Color3.fromRGB(147, 93, 255), Prestigio = Color3.fromRGB(255, 181, 63),
 	Blueprints = Color3.fromRGB(49, 211, 240), Configuracoes = Color3.fromRGB(255, 214, 78),
+	Classificacao = Color3.fromRGB(255, 190, 86),
+	Administracao = Color3.fromRGB(112,198,255),
+	Tutorial = Color3.fromRGB(101,228,196),
 }
 
 -- Coordenadas de desenho usam uma placa de 56 unidades; Scale acompanha o tamanho real do botao.
@@ -33,6 +36,20 @@ local function linha(pai, cor, x1, y1, x2, y2, espessura)
 end
 
 local desenhos = {
+	Tutorial = function(pai, cor)
+		for _, x in { 9, 29 } do
+			retangulo(pai, cor, x, 13, 18, 29, 2)
+			retangulo(pai, fundo, x + 3, 16, 12, 23, 1)
+			for _, y in { 21, 27, 33 } do retangulo(pai, cor, x + 5, y, 8, 2, 1) end
+		end
+		retangulo(pai, cor, 26, 16, 4, 29, 1)
+	end,
+	Classificacao = function(pai, cor)
+		retangulo(pai, cor, 9, 31, 11, 15, 2)
+		retangulo(pai, cor, 23, 20, 11, 26, 2)
+		retangulo(pai, cor, 37, 35, 11, 11, 2)
+		retangulo(pai, cor, 26, 9, 6, 6, 1, 45)
+	end,
 	-- Prancheta: recorta o encaixe superior e as tres linhas usando a cor do fundo.
 	Inventario = function(pai, cor)
 		retangulo(pai, cor, 13, 12, 30, 33, 4)
@@ -111,7 +128,12 @@ function IconesAbas.Criar(botao, aba)
 	local simbolo = Instance.new("Frame")
 	simbolo.Name, simbolo.Size, simbolo.BackgroundTransparency = "Simbolo", UDim2.fromScale(1, 1), 1
 	simbolo.ZIndex, simbolo.Parent = icone.ZIndex + 2, icone
-	desenhos[aba](simbolo, cor)
+	if aba=="Administracao" then
+		local rotulo=Instance.new("TextLabel")
+		rotulo.Size,rotulo.BackgroundTransparency=UDim2.fromScale(1,1),1
+		rotulo.Text,rotulo.TextColor3,rotulo.TextSize,rotulo.Font="ADM",cor,20,Enum.Font.SourceSansBold
+		rotulo.ZIndex,rotulo.Parent=simbolo.ZIndex+1,simbolo
+	else desenhos[aba](simbolo, cor) end
 	return icone
 end
 

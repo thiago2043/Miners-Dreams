@@ -122,7 +122,7 @@ local arcoInclinado = novoArraste(Vector2.new(100, 0), cameraInclinada, CFrame.i
 mesmaOrientacao(arcoInclinado:Atualizar(Vector2.new(100, -48)), CFrame.Angles(0, math.pi / 2, 0))
 mesmaOrientacao(arcoInclinado:Atualizar(Vector2.new(100, 0)), CFrame.identity)
 
-local volume = Volume.new(Vector3.new(5, 9, 13))
+local volume = Volume.new(Vector3.new(5, 9, 13)*.75)
 for _, camera in { CFrame.identity, cameraAlta, CFrame.Angles(math.pi / 2, 0, 0),
     CFrame.Angles(math.rad(-60), math.rad(30), 0), CFrame.Angles(0.5, 0.8, 0.2) } do
     local eixos = {}
@@ -140,7 +140,7 @@ for _, camera in { CFrame.identity, cameraAlta, CFrame.Angles(math.pi / 2, 0, 0)
                     string.format("Giro inesperado: angulo=%s raio=%s local=%s sentido=%s", anguloGiro, raio, localizacao, sentido))
                 eixos[if math.abs(eixo.X) > 0.9 then "X" elseif math.abs(eixo.Y) > 0.9 then "Y" else "Z"] = true
                 local _, ocupado = volume:Calcular(nova)
-                assert(ocupado.X * ocupado.Y * ocupado.Z == 8 * 12 * 16)
+                assert(ocupado.X * ocupado.Y * ocupado.Z == 6 * 9 * 12)
             end
         end
     end

@@ -1,9 +1,8 @@
--- Representa o tamanho visual e os blocos reservados; girar permuta o espaco ocupado sem aumentar a quantidade
--- de blocos.
-local VolumeConstrucao = { Passo = 4, Tolerancia = 0.00001 }
+-- Calcula a reserva alinhada a plot; esteiras inclinadas conservam as pontas nas faces da grade.
+local VolumeConstrucao = { Passo = require(script.Parent.Medidas).Bloco, Tolerancia = 0.00001 }
 VolumeConstrucao.__index = VolumeConstrucao
 
--- Converte uma medida em studs no menor multiplo de 4 que a comporta, reservando pelo menos um bloco. A
+-- Converte uma medida em studs no menor multiplo do bloco que a comporta, reservando pelo menos um bloco. A
 -- tolerancia evita ganhar um bloco por pequenos erros de ponto flutuante.
 local function arredondar(v)
 	return math.max(1, math.ceil(v / VolumeConstrucao.Passo - VolumeConstrucao.Tolerancia))
@@ -37,13 +36,13 @@ end
 -- O volume declarado precisa comportar o visual; aceitar menos blocos permitiria modelos atravessarem vizinhos.
 -- Cria o objeto de tamanho a partir de um Vector3 visual e de blocos opcionais do catalogo. Recusa medidas
 -- invalidas ou uma reserva menor que o modelo, e guarda as medidas para recalcular cada giro.
-function VolumeConstrucao.new(tamanho, blocos)
+function VolumeConstrucao.new(tamanho, blocos, definicao)
 	assert(typeof(tamanho) == "Vector3", "Tamanho deve ser Vector3.")
 	for _, valor in { tamanho.X, tamanho.Y, tamanho.Z } do
 		assert(valor > 0 and valor < math.huge, "Tamanho deve ser positivo e finito.")
 	end
 	-- O catalogo guarda blocos como lista serializavel; aqui ela vira Vector3. Cada componente conta celulas,
-	-- por isso precisa ser inteiro e sera multiplicado por 4 studs.
+	-- por isso precisa ser inteiro e sera multiplicado pelo passo da grade.
 	if type(blocos) == "table" then blocos = Vector3.new(table.unpack(blocos)) end
 	if blocos then
 		assert(typeof(blocos) == "Vector3", "Blocos deve ser Vector3 ou uma lista de tres numeros.")
@@ -57,12 +56,18 @@ function VolumeConstrucao.new(tamanho, blocos)
 	end
 	-- A instancia conserva tamanho visual e reserva declarada separadamente. __index permite chamar
 	-- Calcular/ObterBlocos sem copiar esses metodos para cada objeto.
-	return setmetatable({ _tamanho = tamanho, _blocos = blocos }, VolumeConstrucao)
+	return setmetatable({ _tamanho = tamanho, _blocos = blocos, _definicao = definicao }, VolumeConstrucao)
 end
 
 -- Calcula a extensao visual e o tamanho ocupado para a rotacao recebida. Quando existem blocos declarados, a
 -- ocupacao usa essa reserva em vez de deduzi-la apenas do visual.
 function VolumeConstrucao:Calcular(rotacao)
+	local Rotacao = require(script.Parent.RotacaoConstrucao)
+	local base, angulo = Rotacao.DecomporEsteira(rotacao, self._definicao)
+	if angulo ~= 0 then
+		local blocos = self._blocos or Vector3.new(arredondar(self._tamanho.X),arredondar(self._tamanho.Y),arredondar(self._tamanho.Z))/VolumeConstrucao.Passo
+		return VolumeConstrucao.CalcularVolume(base, Vector3.new(blocos.X,blocos.Y+blocos.Z,blocos.Z)*VolumeConstrucao.Passo)
+	end
 	local extensao, ocupado = VolumeConstrucao.CalcularVolume(rotacao, self._tamanho)
 	if self._blocos then
 		local _, declarado = VolumeConstrucao.CalcularVolume(rotacao, self._blocos * VolumeConstrucao.Passo)

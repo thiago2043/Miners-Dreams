@@ -1,0 +1,294 @@
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+local Movimento = require(game:GetService("ReplicatedStorage").Shared.MovimentoMinerio)
+local AbreviarInteiro = require(game:GetService("ReplicatedStorage").Shared.AbreviarInteiro)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
+local MineriosVisuais = {}
+MineriosVisuais.__index = MineriosVisuais
+
+function MineriosVisuais.new(jogador)
+	local self = setmetatable({_observados={},_etiquetas={},_vendas={},_movimentos={},_grupos={},_ocultos={},_partes={},_poses={},
+		_configuracoes={},_mostrarValores=true,_animarVenda=true,_jogador=jogador,_ocultacao={},
+		_limitesVisuais={},_plotVisual={},_foraLimite={},_limiteVisivel=Config.Obter(jogador,"LimiteMineriosVisiveis")},MineriosVisuais)
+	if jogador then
+		local function configurar()
+			self._limiteVisivel=Config.Obter(jogador,"LimiteMineriosVisiveis")
+			for _,grupo in self._limitesVisuais do
+				for i,parte in grupo.Partes do self._foraLimite[parte]=i>self._limiteVisivel end
+			end
+			self._mostrarValores=Config.Obter(jogador,"MostrarValoresMinerios")~="Oculto"
+			self._animarVenda=Config.Obter(jogador,"AnimarVendaMinerios")
+			for parte,etiqueta in self._etiquetas do
+				self:_Ocultar(parte,self._ocultacao[parte] or false)
+				self:_ConfigurarEtiqueta(etiqueta)
+			end
+		end
+		for _,id in {"LimiteMineriosVisiveis","MostrarValoresMinerios","AnimarVendaMinerios","DistanciaValores","TamanhoValores","MineriosOutrasPlots"} do
+			table.insert(self._configuracoes,jogador:GetAttributeChangedSignal(id):Connect(configurar))
+		end
+		configurar()
+	end
+	self._adicionado = workspace.DescendantAdded:Connect(function(parte) self:_Observar(parte) end)
+	self._removido = workspace.DescendantRemoving:Connect(function(parte) self:_Remover(parte) end)
+	for _, parte in workspace:GetDescendants() do self:_Observar(parte) end
+	self._quadro = RunService.RenderStepped:Connect(function() self:Atualizar(workspace:GetServerTimeNow()) end)
+	return self
+end
+
+function MineriosVisuais:_Ocultar(parte, ocultar)
+	self._ocultacao[parte]=ocultar
+	ocultar=ocultar or self._foraLimite[parte]
+	local terreno=parte.Parent and parte.Parent.Parent
+	if self._jogador and Config.Obter(self._jogador,"MineriosOutrasPlots")==false and terreno
+		and terreno:GetAttribute("DonoUserId")~=self._jogador.UserId then ocultar=true end
+	local etiqueta = self._etiquetas[parte]
+	if etiqueta then etiqueta.Enabled = not ocultar and self._mostrarValores end
+	if ocultar then
+		if self._ocultos[parte] == nil then self._ocultos[parte] = parte.LocalTransparencyModifier end
+		parte.LocalTransparencyModifier = 1
+	elseif self._ocultos[parte] ~= nil then
+		parte.LocalTransparencyModifier = self._ocultos[parte]
+		self._ocultos[parte] = nil
+	end
+end
+
+function MineriosVisuais:_RegistrarLimite(parte)
+	local terreno=parte.Parent and parte.Parent.Parent
+	if self._plotVisual[parte]==terreno then return end
+	self:_RetirarLimite(parte)
+	if not terreno then return end
+	local grupo=self._limitesVisuais[terreno]
+	if not grupo then grupo={Partes={},Indices={}}; self._limitesVisuais[terreno]=grupo end
+	table.insert(grupo.Partes,parte)
+	grupo.Indices[parte]=#grupo.Partes
+	self._plotVisual[parte]=terreno
+	self._foraLimite[parte]=#grupo.Partes>self._limiteVisivel
+	self:_Ocultar(parte,self._ocultacao[parte] or false)
+end
+
+function MineriosVisuais:_RetirarLimite(parte)
+	local terreno=self._plotVisual[parte]
+	if not terreno then return end
+	local grupo=self._limitesVisuais[terreno]
+	local indice=grupo.Indices[parte]
+	local ultima=table.remove(grupo.Partes)
+	grupo.Indices[parte],self._plotVisual[parte],self._foraLimite[parte]=nil,nil,nil
+	-- Troca com a ultima entrada para liberar uma vaga sem percorrer todos os minerios da plot.
+	if ultima~=parte then
+		grupo.Partes[indice],grupo.Indices[ultima]=ultima,indice
+		self._foraLimite[ultima]=indice>self._limiteVisivel
+		self:_Ocultar(ultima,self._ocultacao[ultima] or false)
+	end
+	if #grupo.Partes==0 then self._limitesVisuais[terreno]=nil end
+end
+
+function MineriosVisuais:_ConfigurarEtiqueta(etiqueta)
+	etiqueta.MaxDistance=Config.Obter(self._jogador,"MostrarValoresMinerios")=="Perto" and Config.Obter(self._jogador,"DistanciaValores") or 0
+	local texto=etiqueta:FindFirstChildOfClass("TextLabel")
+	if texto then
+		local tamanho=Config.Obter(self._jogador,"TamanhoValores")
+		texto.TextScaled=false; texto.TextSize=tamanho
+		etiqueta.Size=UDim2.fromOffset(math.max(100,tamanho*7),tamanho+8)
+	end
+end
+
+function MineriosVisuais:_RetirarMovimento(parte)
+	local movimento = self._movimentos[parte]
+	if movimento then
+		local grupo = self._grupos[movimento.Terreno]
+		grupo.Movimentos[parte], grupo.Sujo = nil, true
+		if not next(grupo.Movimentos) then self._grupos[movimento.Terreno] = nil end
+		self._movimentos[parte] = nil
+	end
+	self:_Ocultar(parte, false)
+end
+
+function MineriosVisuais:_AnimarVenda(parte)
+	if self._vendas[parte] then return end
+	self._vendas[parte] = true
+	local visivel = self._ocultos[parte] == nil
+	self:_RetirarLimite(parte)
+	self:_RetirarMovimento(parte)
+	self:_Ocultar(parte, true)
+	if not visivel or not self._animarVenda then return end
+	local efeito = Instance.new("Part")
+	efeito.Name, efeito.Anchored = "VendaMinerio", true
+	efeito.CanCollide, efeito.CanTouch, efeito.CanQuery, efeito.CastShadow = false, false, false, false
+	efeito.Size, efeito.CFrame, efeito.Color, efeito.Material = parte.Size, parte.CFrame, parte.Color, parte.Material
+	efeito.Parent = workspace
+	TweenService:Create(efeito, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.one * 0.05, Transparency = 1, CFrame = parte.CFrame + Vector3.new(0, 0.6, 0),
+	}):Play()
+	Debris:AddItem(efeito, 0.3)
+end
+
+function MineriosVisuais:_Observar(parte)
+	if self._observados[parte] or not parte:IsA("BasePart") or parte.Name~="Minerio"
+		or not parte.Parent or parte.Parent.Name~="Minerios" then return end
+	self:_RegistrarLimite(parte)
+	local etiqueta = Instance.new("BillboardGui")
+	etiqueta.Name, etiqueta.Adornee, etiqueta.AlwaysOnTop = "ValorMinerio", parte, true
+	etiqueta.Enabled = self._mostrarValores
+	etiqueta.Size, etiqueta.StudsOffsetWorldSpace = UDim2.fromOffset(100, 24), Vector3.new(0, parte.Size.Y / 2 + 0.4, 0)
+	local texto = Instance.new("TextLabel")
+	texto.Size, texto.BackgroundTransparency = UDim2.fromScale(1, 1), 1
+	texto.Font, texto.TextSize, texto.TextColor3 = Enum.Font.SourceSansBold, 16, Color3.new(1, 1, 1)
+	texto.TextScaled = true
+	texto.TextStrokeTransparency, texto.Parent = 0, etiqueta
+	etiqueta.Parent = parte
+	self:_ConfigurarEtiqueta(etiqueta)
+	self._etiquetas[parte] = etiqueta
+	self:_Ocultar(parte,self._ocultacao[parte] or false)
+	local function atualizarValor()
+		local valor = parte:GetAttribute("Valor")
+		texto.Text = if type(valor) == "string" and valor:match("^[0-9]+$") then "$" .. AbreviarInteiro(valor) else "—"
+	end
+	local function atualizar()
+		if self._vendas[parte] then return end
+		local anterior = self._movimentos[parte]
+		local grupoAnterior = anterior and self._grupos[anterior.Terreno]
+		self:_RetirarMovimento(parte)
+		if not parte.Parent or parte.Parent.Name ~= "Minerios" then self:_RetirarLimite(parte); return end
+		self:_RegistrarLimite(parte)
+		local movimento = Movimento.Decodificar(parte:GetAttribute("MovimentoMinerio"))
+		if movimento and movimento.Velocidade==Vector3.zero and movimento.Aceleracao==Vector3.zero and movimento.Angular==Vector3.zero then
+			-- Quem acabou de parar recebe a pose final mesmo se a CFrame do servidor nao mudou.
+			if anterior then parte.CFrame=movimento.Origem end
+			movimento=nil
+		end
+		if not movimento or not parte.Parent.Parent then return end
+		movimento.Terreno = parte.Parent.Parent
+		if movimento.Suave and anterior and anterior.Terreno==movimento.Terreno then
+			movimento.TransicaoDe=anterior.Exibido or anterior.TransicaoDe
+		end
+		local grupo = self._grupos[movimento.Terreno]
+		if not grupo then
+			grupo = if anterior and anterior.Terreno==movimento.Terreno then grupoAnterior else {Movimentos={}}
+			self._grupos[movimento.Terreno] = grupo
+		end
+		grupo.Movimentos[parte], grupo.Sujo = movimento, true
+		self._movimentos[parte] = movimento
+		if grupo.Oculto then self:_Ocultar(parte, true) end
+	end
+	self._observados[parte] = {
+		parte:GetAttributeChangedSignal("MovimentoMinerio"):Connect(atualizar),
+		parte:GetAttributeChangedSignal("Valor"):Connect(atualizarValor),
+		parte:GetAttributeChangedSignal("Vendido"):Connect(function()
+			if parte:GetAttribute("Vendido") then self:_AnimarVenda(parte) end
+		end),
+		parte.AncestryChanged:Connect(atualizar),
+		parte:GetPropertyChangedSignal("Size"):Connect(function()
+			etiqueta.StudsOffsetWorldSpace = Vector3.new(0, parte.Size.Y / 2 + 0.4, 0)
+			local movimento = self._movimentos[parte]
+			if movimento then self._grupos[movimento.Terreno].Sujo = true end
+		end),
+	}
+	atualizarValor()
+	atualizar()
+	if parte:GetAttribute("Vendido") then self:_AnimarVenda(parte) end
+end
+
+function MineriosVisuais:_Remover(parte)
+	if self._observados[parte] and parte:GetAttribute("Vendido") then self:_AnimarVenda(parte) end
+	self:_RetirarLimite(parte)
+	local etiqueta = self._etiquetas[parte]
+	if etiqueta then etiqueta:Destroy(); self._etiquetas[parte] = nil end
+	local conexoes = self._observados[parte]
+	if conexoes then
+		for _, conexao in conexoes do conexao:Disconnect() end
+		self._observados[parte]=nil
+	end
+	self:_RetirarMovimento(parte)
+	self._vendas[parte] = nil
+	self._ocultacao[parte]=nil
+end
+
+local function atualizarLimites(grupo, tempo)
+	local minimo, maximo = Vector3.one*math.huge, -Vector3.one*math.huge
+	local lenta, rapida = minimo, maximo
+	local aceleracaoMin,aceleracaoMax=Vector3.zero,Vector3.zero
+	for parte, movimento in grupo.Movimentos do
+		local pose,velocidade=Movimento.Avaliar(movimento,tempo)
+		movimento.PoseAvaliada,movimento.TempoAvaliado=pose,tempo
+		local posicao=pose.Position
+		if movimento.TransicaoDe then
+			local anterior=movimento.TransicaoDe
+			local desvio=anterior.Position-posicao
+			-- Corrige pequenas diferencas de rede sem deslizar teleportes ou mudancas de plot.
+			if desvio.Magnitude<=math.max(2,parte.Size.Magnitude*2) then
+				movimento.Desvio=desvio
+				movimento.RotacaoDesvio=anterior.Rotation*pose.Rotation:Inverse()
+				movimento.InicioCorrecao=tempo
+			end
+			movimento.TransicaoDe=nil
+		end
+		local margem = Vector3.one*(parte.Size.Magnitude/2+(movimento.Desvio and movimento.Desvio.Magnitude or 0))
+		minimo, maximo = minimo:Min(posicao-margem), maximo:Max(posicao+margem)
+		lenta, rapida = lenta:Min(velocidade), rapida:Max(velocidade)
+		aceleracaoMin,aceleracaoMax=aceleracaoMin:Min(movimento.Aceleracao),aceleracaoMax:Max(movimento.Aceleracao)
+		if movimento.Inicio > tempo or movimento.Duracao>0 then lenta, rapida = lenta:Min(Vector3.zero), rapida:Max(Vector3.zero) end
+	end
+	grupo.Minimo, grupo.Maximo, grupo.Lenta, grupo.Rapida = minimo, maximo, lenta, rapida
+	grupo.AceleracaoMin,grupo.AceleracaoMax=aceleracaoMin,aceleracaoMax
+	grupo.Tempo, grupo.Sujo = tempo, false
+end
+
+function MineriosVisuais:Atualizar(agora)
+	local partes, poses = self._partes, self._poses
+	table.clear(partes); table.clear(poses)
+	local camera = workspace.CurrentCamera
+	if not camera or camera.ViewportSize.X <= 0 or camera.ViewportSize.Y <= 0 then return end
+	local poseCamera = camera:GetRenderCFrame()
+	local vertical = math.tan(math.rad(camera.FieldOfView)/2)
+	local horizontal = vertical*camera.ViewportSize.X/camera.ViewportSize.Y
+	for terreno, grupo in self._grupos do
+		local texto=terreno:GetAttribute("RelogioMinerios")
+		if texto~=grupo.TextoRelogio then
+			grupo.TextoRelogio,grupo.Relogio=texto,Movimento.DecodificarRelogio(texto)
+		end
+		if not grupo.Relogio then continue end
+		grupo.EstadoRelogio=grupo.EstadoRelogio or {}
+		local tempo=Movimento.TempoVisual(grupo.EstadoRelogio,grupo.Relogio,agora)
+		if grupo.Sujo or tempo < grupo.Tempo then atualizarLimites(grupo,tempo) end
+		-- Extremos de velocidade mantem o volume conservador sem recalcular cada minerio fora da camera.
+		local delta = tempo-grupo.Tempo
+		local minimo=grupo.Minimo+grupo.Lenta*delta+grupo.AceleracaoMin*(delta*delta/2)
+		local maximo=grupo.Maximo+grupo.Rapida*delta+grupo.AceleracaoMax*(delta*delta/2)
+		local centro = poseCamera:PointToObjectSpace((minimo+maximo)/2)
+		local raio, profundidade = (maximo-minimo).Magnitude/2, -centro.Z
+		local visivel = profundidade+raio >= 0
+			and math.abs(centro.X) <= profundidade*horizontal+raio*math.sqrt(1+horizontal*horizontal)
+			and math.abs(centro.Y) <= profundidade*vertical+raio*math.sqrt(1+vertical*vertical)
+		if grupo.Oculto ~= not visivel then
+			grupo.Oculto = not visivel
+			for parte in grupo.Movimentos do self:_Ocultar(parte, not visivel) end
+		end
+		if not visivel then continue end
+		for parte, movimento in grupo.Movimentos do
+			if self._ocultos[parte]~=nil then continue end
+			local pose=if movimento.TempoAvaliado==tempo then movimento.PoseAvaliada else Movimento.Avaliar(movimento,tempo)
+			if movimento.InicioCorrecao then
+				local peso=math.clamp((tempo-movimento.InicioCorrecao)/.1,0,1)
+				pose=CFrame.new(pose.Position+movimento.Desvio*(1-peso))
+					*movimento.RotacaoDesvio:Lerp(CFrame.identity,peso)*pose.Rotation
+				if peso==1 then movimento.InicioCorrecao,movimento.Desvio,movimento.RotacaoDesvio=nil,nil,nil end
+			end
+			movimento.Exibido=pose
+			table.insert(partes,parte)
+			table.insert(poses,pose)
+		end
+	end
+	if #partes>0 then workspace:BulkMoveTo(partes,poses,Enum.BulkMoveMode.FireCFrameChanged) end
+end
+
+function MineriosVisuais:Destruir()
+	self._jogador=nil
+	self._adicionado:Disconnect(); self._removido:Disconnect(); self._quadro:Disconnect()
+	for _,conexao in self._configuracoes do conexao:Disconnect() end
+	for parte in self._observados do self:_Remover(parte) end
+	table.clear(self._partes); table.clear(self._poses)
+	table.clear(self._grupos)
+end
+
+return MineriosVisuais

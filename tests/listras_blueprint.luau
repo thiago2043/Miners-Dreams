@@ -119,7 +119,7 @@ for _, tamanho in {
 						local f = faixa.Instancia
 						if not f.Visible then continue end
 						assert(f.Rotation == 0, "Frames girados reproduzem a falha de recorte no Studio.")
-						local esperado = math.ceil(8 * math.sqrt(2) * 24) + 1
+						local esperado = math.ceil(6 * math.sqrt(2) * 24) + 1
 						assert(f.Size.X.Offset == esperado and f.Size.Y.Offset == esperado,
 							"O padrao deve ter escala fixa, com apenas um pixel de sobreposicao.")
 						local g = assert(f:FindFirstChildOfClass("UIGradient"))
@@ -140,7 +140,7 @@ for _, tamanho in {
                     local ponto = uv[3] * tamanho / 2
                         + uv[1] * ((0.5 + x*(largura-1))/24 - largura/48)
                         + uv[2] * ((0.5 + y*(altura-1))/24 - altura/48)
-                    local esperada = ((ponto.X+ponto.Y+ponto.Z-fase)/(4*math.sqrt(2))) % 2
+                    local esperada = ((ponto.X+ponto.Y+ponto.Z-fase)/(3*math.sqrt(2))) % 2
                     local erro = math.abs(faseRenderizada - esperada)
                     assert(math.min(erro, 2-erro) < 0.04,
                         "A fase deve corresponder ao mesmo ponto 3D em todas as faces: "..face.Superficie.Face.Name)
@@ -167,7 +167,7 @@ for _, tamanho in {
             for _, segmento in borda.Segmentos do
                 if segmento.Transparency >= 1 then continue end
                 local p = segmento.CFrame.Position
-                local indice = (p.X+p.Y+p.Z-fase)/(4*math.sqrt(2))
+                local indice = (p.X+p.Y+p.Z-fase)/(3*math.sqrt(2))
                 if math.abs(indice-math.round(indice)) < 1e-4 then continue end
                 local cor = math.floor(indice)%2 == 0 and roblox.Color3.fromRGB(115,205,255)
                     or roblox.Color3.fromRGB(25,85,190)

@@ -25,11 +25,11 @@ Coleção de 13 modelos Roblox editáveis, organizada na classe `Modelador`. As 
 
 Abra `GaleriaMineradoras.rbxlx` no Roblox Studio. A galeria independente contém as 13 máquinas, esteiras básicas reais para recepção, um exemplo estático de minério por esteira, câmera, iluminação, placas e grade.
 
-Cada bloco mede **4 studs**, conforme `VolumeConstrucao.Passo` do projeto. `HitboxConstrucao` é uma Part invisível, sem colisão física e sem consulta por raycast. Seu volume indica a reserva de construção; o modelo visual pode projetar-se para a frente. O contorno no chão e a linha laranja das prévias indicam a projeção horizontal dessa hitbox.
+Cada bloco mede **3 studs**, conforme `VolumeConstrucao.Passo` do projeto. `HitboxConstrucao` é uma Part invisível, sem colisão física e sem consulta por raycast. Seu volume indica a reserva de construção; o modelo visual pode projetar-se para a frente. O contorno no chão e a linha laranja das prévias indicam a projeção horizontal dessa hitbox.
 
-O avanço abaixo mede a distância do **centro do indicador** até a face frontal da hitbox, dividida por 4 studs. Nas brocas, essa também é a extensão longitudinal inteira da broca, cuja raiz está na face frontal do corpo. Os alcances terminam no centro de um bloco à frente: 0,5 / 1,5 / 2,5 / 3,5 / 4,5.
+O avanço abaixo mede a distância do **centro do indicador** até a face frontal da hitbox, dividida por 3 studs. Nas brocas, essa também é a extensão longitudinal inteira da broca, cuja raiz está na face frontal do corpo. Os alcances terminam no centro de um bloco à frente: 0,5 / 1,5 / 2,5 / 3,5 / 4,5.
 
-O indicador acompanha o cabeçote; não fica solto no espaço. `SaidaMinerio` continua como Attachment, situado 0,55 stud abaixo da face inferior do indicador, deixando livre o volume inicial de um minério de 1 stud. Conforme a definição confirmada, a saída fica no eixo central da máquina também nas larguras pares; a centralização no bloco se aplica somente à distância para a frente da hitbox.
+O indicador acompanha o cabeçote; não fica solto no espaço. `SaidaMinerio` continua como Attachment, situado 0,4125 stud abaixo da face inferior do indicador, deixando livre o volume inicial de um minério de 0,75 stud. Conforme a definição confirmada, a saída fica no eixo central da máquina também nas larguras pares; a centralização no bloco se aplica somente à distância para a frente da hitbox.
 
 ```text
 ID  | Mineradora    | Hitbox XxYxZ  | Núcleo XxZ    | Cabeçote X  | Saída à frente  | Partes
