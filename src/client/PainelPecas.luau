@@ -1,4 +1,3 @@
--- A mesma classe monta loja ou inventario. Cada instancia conserva sua lista, ficha e resposta de compra/venda.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local Input = game:GetService("UserInputService")
@@ -11,13 +10,10 @@ local FichaPeca = require(script.Parent.FichaPeca)
 local PainelPecas = {}
 PainelPecas.__index = PainelPecas
 
--- Devolve true somente para uma quantidade numerica inteira, nao negativa e menor que 2^53.
 local function quantidadeValida(quantidade)
   return type(quantidade) == "number" and quantidade >= 0 and quantidade % 1 == 0 and quantidade < 2 ^ 53
 end
 
--- Recebe o ScreenGui pai, Inventario/Loja, o jogador, o controlador e a rede da loja. Constroi sua lista e sua
--- ficha nos lados correspondentes da tela; recuoEsquerdo reserva a coluna de navegacao quando ela existe.
 function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
   recuoEsquerdo = recuoEsquerdo or 0
   local self = setmetatable({
@@ -27,7 +23,6 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
   }, PainelPecas)
   local inventario = aba == "Inventario"
 
-  -- O inventario ancora a esquerda e a loja a direita, cada um usando ate metade da tela.
   self._grupo = Instance.new("Frame")
   self._grupo.Name = aba
   self._grupo.AnchorPoint = Vector2.new(inventario and 0 or 1, 0.5)
@@ -89,8 +84,6 @@ function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
   return self
 end
 
--- Interpreta a ativacao de uma entrada da lista. O primeiro clique seleciona e abre a ficha; o segundo, na
--- mesma peca dentro de 0,35 s e sem outra navegacao, inicia a colocacao e fecha todas as abas.
 function PainelPecas:Selecionar(id)
   if self._destruido or self._negociando then return end
   if self.Aba == "Inventario" and self._grade._modo ~= "Estoque"
@@ -109,8 +102,6 @@ function PainelPecas:Selecionar(id)
   if duplo and self._fichaValida then self._construcao:ColocarSelecionada(self.Aba, true) end
 end
 
--- Rele a selecao e os atributos do jogador, mantendo Inventario na esquerda e Loja na direita no PC.
--- O modo compacto centralizado so e ativado em dispositivos puramente de toque com tela estreita.
 function PainelPecas:Atualizar()
   if self._destruido then return end
   local nav = self._construcao.Navegacao
@@ -124,7 +115,6 @@ function PainelPecas:Atualizar()
     tela = camera and camera.ViewportSize or Vector2.new(1280, 720)
   end
 
-  -- So usa layout compacto centralizado em telas moveis estreitas sem teclado fisico.
   local somenteToque = Input.TouchEnabled == true and Input.KeyboardEnabled ~= true and Input.MouseEnabled ~= true
   local compacta = somenteToque and (tela.X < 700 or tela.Y < 420)
   local inventario = self.Aba == "Inventario"
@@ -157,7 +147,6 @@ function PainelPecas:Atualizar()
     end
   end
 
-  -- Apenas no celular compacto a ficha substitui a lista; no PC a lista permanece visivel para permitir duplo clique.
   if compacta then
     if self._construcao._abaSelecionada ~= self.Aba then
       self._painelLista.Visible = false

@@ -186,8 +186,6 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
   return self
 end
 
--- Desativa o UIStroke quando o cartao sai da janela do ScrollingFrame ou quando a aba fecha, evitando que o
--- contorno vaze na tela sob UIScale.
 function GradePecas:_AtualizarMiniatura(item)
   if self._destruido then return end
   local botao = item.Botao:ObterInstancia()
@@ -203,7 +201,6 @@ function GradePecas:_AtualizarMiniatura(item)
   end
   local naJanela = posicao.X < origem.X + janela.X and posicao.X + tamanho.X > origem.X
     and posicao.Y < origem.Y + janela.Y and posicao.Y + tamanho.Y > origem.Y
-  -- Contorno totalmente contido na janela visivel evita residuos do UIStroke fora do ScrollingFrame.
   local dentroVertical = posicao.Y >= origem.Y - 2 and posicao.Y + tamanho.Y <= origem.Y + janela.Y + 2
   item.Borda.Enabled = naJanela and dentroVertical
   if naJanela and not item.Miniatura and item.Retrato.Visible then

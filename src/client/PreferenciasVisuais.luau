@@ -49,7 +49,6 @@ function Visuais.new(jogador)
     local raiz = Instance.new("Frame")
     raiz.Name = "EscalaConteudo"
     raiz.BackgroundTransparency = 1
-    -- Define o tamanho completo antes de reparentar os filhos para nao zerar o AbsoluteSize lido pelos paineis.
     raiz.Size = UDim2.fromScale(1 / valor, 1 / valor)
     raiz.Parent = t
     local escala = Instance.new("UIScale")
