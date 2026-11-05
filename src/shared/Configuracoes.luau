@@ -39,13 +39,25 @@ function C.CombinacaoTecla(tecla)
   if Input:IsKeyDown(Enum.KeyCode.LeftSuper) or Input:IsKeyDown(Enum.KeyCode.RightSuper) then prefixo..="Win+" end
   return prefixo..tecla.Name
 end
+function C.NormalizarOpcao(id,valor)
+  if id=="MostrarValoresMinerios" and type(valor)=="boolean" then valor=valor and "Sempre" or "Oculto" end
+  for _,opcao in C.Opcoes do
+    if opcao.Id==id then
+      for _,permitido in opcao.Valores do
+        if permitido==valor or (type(permitido)=="number" and type(valor)=="number" and math.abs(permitido-valor)<1e-6) then
+          return permitido,opcao
+        end
+      end
+      return nil,opcao
+    end
+  end
+  return nil,nil
+end
 function C.Obter(jogador,id)
   local valor=jogador and jogador:GetAttribute(id)
-  if id=="MostrarValoresMinerios" and type(valor)=="boolean" then return valor and "Sempre" or "Oculto" end
-  for _,opcao in C.Opcoes do if opcao.Id==id then
-    if table.find(opcao.Valores,valor) then return valor end
-    return opcao.Padrao
-  end end
+  local normalizado,opcao=C.NormalizarOpcao(id,valor)
+  if normalizado~=nil then return normalizado end
+  return opcao and opcao.Padrao or nil
 end
 function C.Tecla(jogador,original)
   local atributo=jogador and jogador:GetAttribute("Atalho_"..original)
@@ -72,15 +84,22 @@ function C.ResolverTecla(jogador,tecla)
   end
   return tecla
 end
-function C.ValidarTecla(jogador,original,nova)
-  if type(nova)~="string" then return false end
+function C.FormatoTeclaValido(original,nova)
+  if type(original)~="string" or type(nova)~="string" then return false end
+  local existe=false
+  for _,acao in C.Atalhos do
+    if acao[1]==original then existe=true; break end
+  end
+  if not existe then return false end
   local movimento=original=="W" or original=="A" or original=="S" or original=="D"
   if movimento then
-    if not (nova:match("^[A-Z]$") or table.find({"Up","Down","Left","Right"},nova)) then return false end
-  else
-    local base=nova:gsub("^Ctrl%+",""):gsub("^Shift%+",""):gsub("^Alt%+",""):gsub("^Win%+","")
-    if not base:match("^[A-Z]$") then return false end
+    return nova:match("^[A-Z]$")~=nil or table.find({"Up","Down","Left","Right"},nova)~=nil
   end
+  local base=nova:gsub("^Ctrl%+",""):gsub("^Shift%+",""):gsub("^Alt%+",""):gsub("^Win%+","")
+  return base:match("^[A-Z]$")~=nil
+end
+function C.ValidarTecla(jogador,original,nova)
+  if not C.FormatoTeclaValido(original,nova) then return false end
   for _,acao in C.Atalhos do if acao[1]~=original and C.Tecla(jogador,acao[1])==nova then return false end end
   return true
 end

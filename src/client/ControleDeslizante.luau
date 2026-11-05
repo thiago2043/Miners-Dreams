@@ -1,7 +1,7 @@
 local Input=game:GetService("UserInputService")
 local Controle={}; Controle.__index=Controle
-function Controle.new(pai,nome,valores,cor,alterar)
-	local self=setmetatable({_valores=valores,_indice=1,_alterar=alterar,_conexoes={},_pai=pai},Controle)
+function Controle.new(pai,nome,valores,cor,alterar,aoSoltar)
+  local self=setmetatable({_valores=valores,_indice=1,_alterar=alterar,_aoSoltar=aoSoltar,_conexoes={},_pai=pai},Controle)
 	local raiz=Instance.new("Frame"); raiz.Name,raiz.BackgroundTransparency,raiz.Size,raiz.Parent=nome,1,UDim2.fromOffset(148,36),pai
 	self._raiz=raiz
 	local texto=Instance.new("TextLabel")
@@ -43,12 +43,18 @@ function Controle.new(pai,nome,valores,cor,alterar)
 	return self
 end
 function Controle:_Soltar()
-	if not self._arraste then return end
-	self._arraste=nil; self._pai.ScrollingEnabled=self._rolagem
+  if not self._arraste then return end
+  self._arraste=nil; self._pai.ScrollingEnabled=self._rolagem
+  if self._aoSoltar then self._aoSoltar(self._valores[self._indice]) end
 end
 function Controle:_Escolher(indice)
-	indice=math.clamp(indice,1,#self._valores)
-	if indice~=self._indice then self._indice=indice; self._alterar(self._valores[indice]) end
+  indice=math.clamp(indice,1,#self._valores)
+  if indice~=self._indice then
+    self._indice=indice
+    local valor=self._valores[indice]
+    self._alterar(valor)
+    if not self._arraste and self._aoSoltar then self._aoSoltar(valor) end
+  end
 end
 function Controle:_PorX(x)
 	if self._trilho.AbsoluteSize.X<=0 then return end

@@ -5,6 +5,7 @@ local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
+local Configuracoes = require(ReplicatedStorage.Shared.Configuracoes)
 local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
@@ -15,7 +16,7 @@ local ReinicioProgresso = require(script.Parent.ReinicioProgresso)
 local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
@@ -152,11 +153,74 @@ function DadosJogador:Sincronizar()
 	-- Perfis antigos recebem os campos por Reconcile; os valores iniciais tambem permitem consultar dados legados.
 	self._jogador:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
 	self._jogador:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
-	for maquinaId in CatalogoMaquinas do
-		self:_PublicarInventario(maquinaId)
-	end
-	self:PublicarResumoPlot()
-	self:PublicarRecebimentos()
+for maquinaId in CatalogoMaquinas do
+    self:_PublicarInventario(maquinaId)
+  end
+  self:_SincronizarConfiguracoes()
+  self:PublicarResumoPlot()
+  self:PublicarRecebimentos()
+end
+
+function DadosJogador:_SincronizarConfiguracoes()
+  local dados = self._perfil.Data
+  local opcoesSalvas = type(dados.Configuracoes) == "table" and dados.Configuracoes or {}
+  dados.Configuracoes = opcoesSalvas
+  for _, opcao in Configuracoes.Opcoes do
+    local normalizado = Configuracoes.NormalizarOpcao(opcao.Id, opcoesSalvas[opcao.Id])
+    if normalizado == nil then
+      opcoesSalvas[opcao.Id] = nil
+      normalizado = opcao.Padrao
+    elseif normalizado == opcao.Padrao then
+      opcoesSalvas[opcao.Id] = nil
+    else
+      opcoesSalvas[opcao.Id] = normalizado
+    end
+    self._jogador:SetAttribute(opcao.Id, normalizado)
+  end
+
+  local atalhosSalvos = type(dados.Atalhos) == "table" and dados.Atalhos or {}
+  dados.Atalhos = atalhosSalvos
+  local propostos, usados, colisao = {}, {}, false
+  for _, acao in Configuracoes.Atalhos do
+    local original, padrao = acao[1], acao[3] or acao[1]
+    local salvo = atalhosSalvos[original]
+    local tecla = if Configuracoes.FormatoTeclaValido(original, salvo) then salvo else padrao
+    propostos[original] = tecla
+    if usados[tecla] then colisao = true else usados[tecla] = original end
+  end
+  for _, acao in Configuracoes.Atalhos do
+    local original, padrao = acao[1], acao[3] or acao[1]
+    local tecla = if colisao then padrao else propostos[original]
+    atalhosSalvos[original] = if tecla ~= padrao then tecla else nil
+    self._jogador:SetAttribute("Atalho_" .. original, tecla)
+  end
+end
+
+function DadosJogador:DefinirConfiguracao(id, valor)
+  if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
+  local normalizado, opcao = Configuracoes.NormalizarOpcao(id, valor)
+  if normalizado == nil or not opcao then return false, "Configuracao invalida." end
+  local opcoesSalvas = type(self._perfil.Data.Configuracoes) == "table" and self._perfil.Data.Configuracoes or {}
+  self._perfil.Data.Configuracoes = opcoesSalvas
+  opcoesSalvas[id] = if normalizado ~= opcao.Padrao then normalizado else nil
+  self._jogador:SetAttribute(id, normalizado)
+  return true
+end
+
+function DadosJogador:DefinirAtalho(original, tecla)
+  if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
+  if not Configuracoes.ValidarTecla(self._jogador, original, tecla) then
+    return false, "Tecla reservada ou ja utilizada."
+  end
+  local padrao = original
+  for _, acao in Configuracoes.Atalhos do
+    if acao[1] == original then padrao = acao[3] or acao[1]; break end
+  end
+  local atalhosSalvos = type(self._perfil.Data.Atalhos) == "table" and self._perfil.Data.Atalhos or {}
+  self._perfil.Data.Atalhos = atalhosSalvos
+  atalhosSalvos[original] = if tecla ~= padrao then tecla else nil
+  self._jogador:SetAttribute("Atalho_" .. original, tecla)
+  return true
 end
 
 function DadosJogador:RegistrarRecorde(id, valor)

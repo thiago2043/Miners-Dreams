@@ -65,9 +65,38 @@ end
 -- Encaminha a venda e sua configuracao esperada ao objeto do jogador. Retorna uma recusa quando os dados ainda
 -- nao estao disponiveis.
 function DataManager.VenderMaquina(jogador: Player, maquinaId: string, configuracaoEsperada: string)
-	local dados = DataManager.ObterDados(jogador)
-	if not dados then return false, "Dados ainda nao estao disponiveis." end
-	return dados:VenderMaquina(maquinaId, configuracaoEsperada)
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Dados ainda nao estao disponiveis." end
+  return dados:VenderMaquina(maquinaId, configuracaoEsperada)
+end
+
+function DataManager.DefinirConfiguracao(jogador: Player, id: string, valor: any)
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Dados ainda nao estao disponiveis." end
+  return dados:DefinirConfiguracao(id, valor)
+end
+
+function DataManager.DefinirAtalho(jogador: Player, original: string, tecla: string)
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Dados ainda nao estao disponiveis." end
+  return dados:DefinirAtalho(original, tecla)
+end
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local pacotes = ReplicatedStorage:FindFirstChild("Packages")
+if pacotes and pacotes:FindFirstChild("Networker") then
+  local Networker = require(pacotes.Networker)
+  local ServicoConfiguracoes = {}
+  function ServicoConfiguracoes:SalvarOpcao(jogador, id, valor)
+    return DataManager.DefinirConfiguracao(jogador, id, valor)
+  end
+  function ServicoConfiguracoes:SalvarAtalho(jogador, original, tecla)
+    return DataManager.DefinirAtalho(jogador, original, tecla)
+  end
+  Networker.server.new("Configuracoes", ServicoConfiguracoes, {
+    ServicoConfiguracoes.SalvarOpcao,
+    ServicoConfiguracoes.SalvarAtalho,
+  })
 end
 
 return DataManager

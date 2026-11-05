@@ -26,6 +26,8 @@ return {
 	-- pecas que o jogador realmente colocou no terreno.
 	InventarioPersonalizado = {},
 	MaquinasColocadas = {},
-	-- Cada blueprint e um conjunto salvo de pecas com configuracoes e distancias relativas.
-	Blueprints = {},
+-- Cada blueprint e um conjunto salvo de pecas com configuracoes e distancias relativas.
+  Blueprints = {},
+  Configuracoes = {},
+  Atalhos = {},
 }
