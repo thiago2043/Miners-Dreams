@@ -68,11 +68,14 @@ function ControladorConstrucao.new(jogador)
 		_selecoes = SelecaoPecas.new(), _abaSelecionada = "Inventario",
 		_rotacao = CFrame.identity, _colocando = false,
 		_destruido = false, _modoSelecao = nil, _movimento = nil,
-		_pecasSelecionadas = {}, _destaquesPecas = {}, _arrasteSelecao = nil,
-		_salvandoBlueprint = false, _nomeBlueprintEmCriacao = nil, _resultadoBlueprint = nil,
-	}, ControladorConstrucao)
-	self._eventoPecaFocada = Instance.new("BindableEvent")
-	self.PecaFocada = self._eventoPecaFocada.Event
+_pecasSelecionadas = {}, _destaquesPecas = {}, _arrasteSelecao = nil,
+    _salvandoBlueprint = false, _nomeBlueprintEmCriacao = nil, _resultadoBlueprint = nil,
+    _historicoCopia = {},
+  }, ControladorConstrucao)
+  self._eventoPecaFocada = Instance.new("BindableEvent")
+  self.PecaFocada = self._eventoPecaFocada.Event
+  self._eventoHistoricoCopia = Instance.new("BindableEvent")
+  self.HistoricoCopiaAlterado = self._eventoHistoricoCopia.Event
 	self._destaqueHover = Instance.new("Highlight")
 	self._destaqueHover.Name = "PecaSobCursor"
 	self._destaqueHover.Enabled = false
@@ -178,8 +181,9 @@ function ControladorConstrucao:Destruir()
 	self:EncerrarSelecaoTerreno()
 	if self._gradeTerreno then self._gradeTerreno:Destruir() end
 	if self._setasTerreno then self._setasTerreno:Destruir() end
-	self._destaqueHover:Destroy()
-	self._eventoPecaFocada:Destroy()
+self._destaqueHover:Destroy()
+  self._eventoPecaFocada:Destroy()
+  self._eventoHistoricoCopia:Destroy()
 end
 
 -- Retira o modelo temporario da cena e apaga o alvo e o ultimo encaixe. A instancia continua existindo para
@@ -1377,10 +1381,123 @@ function ControladorConstrucao:IniciarCopiaGrupo(ancora, somenteAncora)
 		self.Navegacao:Fechar("Copiando")
 		return false
 	end
-	self.Navegacao:Voltar()
-	if not comunicou then warn("Nao foi possivel copiar as pecas."); return false end
-	if not sucesso then warn(mensagem); return false end
-	return self:_IniciarPreviaCopiaGrupo(resposta, nil, #modelos)
+self.Navegacao:Voltar()
+  if not comunicou then warn("Nao foi possivel copiar as pecas."); return false end
+  if not sucesso then warn(mensagem); return false end
+  self:_RegistrarHistoricoCopia(resposta)
+  return self:_IniciarPreviaCopiaGrupo(resposta, nil, #modelos)
+end
+
+function ControladorConstrucao:_RegistrarHistoricoCopia(resposta)
+  if type(resposta) ~= "table" or type(resposta.Token) ~= "number" or type(resposta.Pecas) ~= "table" or #resposta.Pecas == 0 then return end
+  local primeira = CatalogoMaquinas[resposta.Pecas[1].MaquinaId]
+  local nomeBase = primeira and primeira.Nome or resposta.Pecas[1].MaquinaId
+  local titulo = if #resposta.Pecas == 1 then nomeBase else string.format("%s + %d peça(s)", nomeBase, #resposta.Pecas - 1)
+  for i = #self._historicoCopia, 1, -1 do
+    if self._historicoCopia[i].Token == resposta.Token then table.remove(self._historicoCopia, i) end
+  end
+  table.insert(self._historicoCopia, 1, {
+    Token = resposta.Token, Titulo = titulo, Quantidade = #resposta.Pecas,
+    Horario = os.date("%H:%M:%S"), Resposta = resposta,
+  })
+  while #self._historicoCopia > 15 do table.remove(self._historicoCopia) end
+  self._eventoHistoricoCopia:Fire()
+end
+
+function ControladorConstrucao:ObterHistoricoCopia()
+  return table.clone(self._historicoCopia)
+end
+
+function ControladorConstrucao:LimparHistoricoCopia()
+  table.clear(self._historicoCopia)
+  self._eventoHistoricoCopia:Fire()
+end
+
+function ControladorConstrucao:_ExecutarAtalhoComposto(atalho)
+  if atalho == "Desfazer" then self:Desfazer(); return true
+  elseif atalho == "Refazer" then self:Refazer(); return true
+  elseif atalho == "CopiarPlot" then self:CopiarParaAreaTransferencia(); return true
+  elseif atalho == "ColarPlot" then self:ColarDaAreaTransferencia(1); return true
+  elseif atalho == "HistoricoPlot" then self:AlternarPainelCentral("HistoricoCopia"); return true end
+  return false
+end
+
+function ControladorConstrucao:CopiarParaAreaTransferencia()
+  if self._destruido or self._colocando then return false end
+  if not self:_EncontrarTerreno(true) then return false end
+  local sobMouse = self:_MaquinaSobMouse()
+  local selecionadas = self:ObterPecasFocadas()
+  if #selecionadas == 0 then
+    for _, m in self._pecasSelecionadas do
+      if m.Parent == self._maquinas and m:GetAttribute("PodeRecolher") == true then table.insert(selecionadas, m) end
+    end
+  end
+  local modelos = {}
+  if #selecionadas > 0 then
+    if sobMouse and table.find(selecionadas, sobMouse) then
+      table.insert(modelos, sobMouse)
+    end
+    for _, m in selecionadas do
+      if m ~= sobMouse then table.insert(modelos, m) end
+    end
+  elseif sobMouse and sobMouse:GetAttribute("PodeRecolher") == true then
+    table.insert(modelos, sobMouse)
+  end
+  if #modelos == 0 then warn("Selecione ou aponte para uma peca na plot para copiar."); return false end
+  if #modelos > Limites.PecasPorGrupo then return false end
+  self._colocando = true
+  local comunicou, sucesso, mensagem, resposta = pcall(function()
+    return self._redeConstrucao:fetch("CopiarGrupo", modelos)
+  end)
+  self._colocando = false
+  if self._destruido then return false end
+  if not comunicou or not sucesso then
+    warn(if comunicou and type(mensagem) == "string" then mensagem else "Nao foi possivel copiar para a area de transferencia.")
+    return false
+  end
+  self:_RegistrarHistoricoCopia(resposta)
+  print(string.format("Copiado para a area de transferencia (%d peca(s)).", #modelos))
+  return true
+end
+
+function ControladorConstrucao:ColarDaAreaTransferencia(indice)
+  if self._destruido or self._colocando then return false end
+  local entrada = self._historicoCopia[indice or 1]
+  if not entrada then warn("A area de transferencia esta vazia."); return false end
+  if not self:_EncontrarTerreno() then return false end
+  if not self:_EncerrarAcao() then return false end
+  for _, aba in { "Inventario", "Loja", "Blueprints", "HistoricoCopia" } do self.Navegacao:Fechar(aba) end
+  return self:_IniciarPreviaCopiaGrupo(entrada.Resposta, nil, #entrada.Resposta.Pecas)
+end
+
+function ControladorConstrucao:Desfazer()
+  if self._destruido or self._colocando then return false end
+  if not self:_EncerrarAcao() then return false end
+  self._colocando = true
+  local comunicou, sucesso, mensagem = pcall(function()
+    return self._redeConstrucao:fetch("Desfazer")
+  end)
+  self._colocando = false
+  if self._destruido then return false end
+  if comunicou and type(mensagem) == "string" then
+    if sucesso then print(mensagem) else warn(mensagem) end
+  end
+  return comunicou and sucesso == true
+end
+
+function ControladorConstrucao:Refazer()
+  if self._destruido or self._colocando then return false end
+  if not self:_EncerrarAcao() then return false end
+  self._colocando = true
+  local comunicou, sucesso, mensagem = pcall(function()
+    return self._redeConstrucao:fetch("Refazer")
+  end)
+  self._colocando = false
+  if self._destruido then return false end
+  if comunicou and type(mensagem) == "string" then
+    if sucesso then print(mensagem) else warn(mensagem) end
+  end
+  return comunicou and sucesso == true
 end
 
 -- Ao cancelar, envia o token; o servidor devolve as configuracoes ao inventario e encerra o movimento atomico.
@@ -1513,25 +1630,37 @@ end
 -- conforme a tecla, o botao e o estado ativo; Q espera a resposta durante um reposicionamento em rede porque o
 -- modelo esta fora da cena local ate o servidor confirmar a movimentacao ou a devolucao.
 function ControladorConstrucao:ProcessarEntrada(entrada, processada)
-	if self._destruido then return end
-	if self._jogador:GetAttribute("CapturandoAtalho") then return end
-	if processada or UserInputService:GetFocusedTextBox() then
-		return
-	end
+  if self._destruido then return end
+  if self._jogador:GetAttribute("CapturandoAtalho") then return end
+  if UserInputService:GetFocusedTextBox() then
+    return
+  end
+if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando then
+    local atalho = Configuracoes.ResolverAtalho(self._jogador, entrada.KeyCode)
+    if atalho then
+      self._atalhoAcionado = self._atalhoAcionado or {}
+      self._atalhoAcionado[entrada.KeyCode] = true
+      self:_ExecutarAtalhoComposto(atalho)
+      return
+    end
+  end
+  if processada then
+    return
+  end
 
-	-- Q fecha o topo da pilha antes da guarda de rede. Assim o jogador pode cancelar a tela/acao local mesmo
-	-- enquanto um pedido aguarda resposta.
-	if Configuracoes.ResolverTecla(self._jogador,entrada.KeyCode) == Enum.KeyCode.Q then
-		self:Cancelar()
-		return
-	end
-	if self._colocando then return end
+  -- Q fecha o topo da pilha antes da guarda de rede. Assim o jogador pode cancelar a tela/acao local mesmo
+  -- enquanto um pedido aguarda resposta.
+  if Configuracoes.ResolverTecla(self._jogador,entrada.KeyCode) == Enum.KeyCode.Q then
+    self:Cancelar()
+    return
+  end
+  if self._colocando then return end
 	if self._arrasteColocacao and (Configuracoes.ResolverTecla(self._jogador,entrada.KeyCode) == Enum.KeyCode.R
 		or entrada.UserInputType == Enum.UserInputType.MouseButton1) then return end
 	local estado = self.Navegacao:Atual()
 	if estado and estado ~= "Inventario" and estado ~= "Loja" and estado ~= "FichaInventario"
 		and estado ~= "FichaLoja" and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
-		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial"
+		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia"
 		and estado ~= "Colocacao"
 		and estado ~= "Rotacao" and estado ~= "Recolhimento"
 		and estado ~= "Selecao"
@@ -1546,7 +1675,7 @@ function ControladorConstrucao:ProcessarEntrada(entrada, processada)
 		if acao then self:ExecutarAcaoPeca(acao); return end
 	end
 	-- Nas abas centrais simples, apenas os atalhos de paineis continuam ativos; cliques nao operam sobre a plot.
-	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao" or estado == "Administracao" or estado == "Tutorial") and tecla ~= Enum.KeyCode.U
+	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao" or estado == "Administracao" or estado == "Tutorial" or estado == "HistoricoCopia") and tecla ~= Enum.KeyCode.U
 		and tecla ~= Enum.KeyCode.P and tecla ~= Enum.KeyCode.B
 		and tecla ~= Enum.KeyCode.E and tecla ~= Enum.KeyCode.F then return end
 
@@ -1942,17 +2071,17 @@ end
 
 -- As abas usam a mesma regiao central; trocar de aba preserva inventario e loja nas laterais.
 function ControladorConstrucao:AlternarPainelCentral(aba)
-	if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" then return false end
-	if not self._colocando and self._modoSelecao == "Selecao" then self:_EncerrarAcao() end
-	if self._destruido or self._colocando or self._previa or self._movimento or self._modoSelecao then return false end
-	if self.Navegacao:Contem(aba) then
-		self.Navegacao:Fechar(aba)
-	else
-		self.Navegacao:Fechar("MenuPeca")
-		for _, nome in { "Blueprints", "Upgrades", "Prestigio", "Configuracoes", "Classificacao", "Administracao", "Tutorial" } do self.Navegacao:Fechar(nome) end
-		self.Navegacao:Abrir(aba)
-	end
-	return true
+  if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" then return false end
+  if not self._colocando and self._modoSelecao == "Selecao" then self:_EncerrarAcao() end
+  if self._destruido or self._colocando or self._previa or self._movimento or self._modoSelecao then return false end
+  if self.Navegacao:Contem(aba) then
+    self.Navegacao:Fechar(aba)
+  else
+    self.Navegacao:Fechar("MenuPeca")
+    for _, nome in { "Blueprints", "Upgrades", "Prestigio", "Configuracoes", "Classificacao", "Administracao", "Tutorial", "HistoricoCopia" } do self.Navegacao:Fechar(nome) end
+    self.Navegacao:Abrir(aba)
+  end
+  return true
 end
 
 -- Inicia uma unica selecao 3D; Q encerra a selecao e retorna a lista de blueprints sem alterar o terreno.
@@ -2152,7 +2281,19 @@ end
 -- Recebe a liberacao de uma tecla ou botao. Soltar o mouse termina o arraste; soltar R aplica um giro simples
 -- em Y somente quando R nao foi usado para arrastar nem cancelado por outra tela.
 function ControladorConstrucao:FinalizarEntrada(entrada)
-	if entrada.UserInputType==Enum.UserInputType.MouseButton1 and self.Navegacao:Contem("Confirmacao") then return end
+  if entrada.UserInputType == Enum.UserInputType.Keyboard then
+    if self._atalhoAcionado and self._atalhoAcionado[entrada.KeyCode] then
+      self._atalhoAcionado[entrada.KeyCode] = nil
+      return
+    end
+    if not self._destruido and not self._colocando
+      and not self._jogador:GetAttribute("CapturandoAtalho")
+      and not UserInputService:GetFocusedTextBox() then
+      local atalho = Configuracoes.ResolverAtalho(self._jogador, entrada.KeyCode)
+      if atalho and self:_ExecutarAtalhoComposto(atalho) then return end
+    end
+  end
+  if entrada.UserInputType==Enum.UserInputType.MouseButton1 and self.Navegacao:Contem("Confirmacao") then return end
 	if entrada.UserInputType == Enum.UserInputType.MouseButton1 then
 		local colocacao = self._arrasteColocacao
 		if colocacao and not self._colocando then

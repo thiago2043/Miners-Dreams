@@ -29,7 +29,13 @@ function Construcao:Recolher(jogador, maquina)
 	return servico:Recolher(jogador, maquina)
 end
 function Construcao:RecolherTudo(jogador)
-	return servico:RecolherTudo(jogador)
+  return servico:RecolherTudo(jogador)
+end
+function Construcao:Desfazer(jogador)
+  return servico:Desfazer(jogador)
+end
+function Construcao:Refazer(jogador)
+  return servico:Refazer(jogador)
 end
 -- Vende uma lista de pecas colocadas; o servico valida o dono, atualiza o perfil e so entao destroi os modelos.
 function Construcao:VenderColocadas(jogador, maquinas)
@@ -105,7 +111,9 @@ Networker.server.new("Construcao", Construcao, {
 	Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
 	Construcao.PrepararBlueprint, Construcao.IniciarMovimento,
 	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
-	Construcao.ColocarMultiplos,
-	Construcao.RecolherTudo,
+Construcao.ColocarMultiplos,
+  Construcao.RecolherTudo,
+  Construcao.Desfazer,
+  Construcao.Refazer,
 })
 return Construcao

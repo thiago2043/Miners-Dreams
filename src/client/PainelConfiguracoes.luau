@@ -31,13 +31,16 @@ function Painel.new(pai,jogador,navegacao)
 	local fim=y+46+#Config.Atalhos*48
 	self._nota=janela:Texto(janela.Conteudo,"Nota","Preferências desta sessão. Toque: aponte no cenário e use os botões de construção. Controle: Y alterna menus e mira; R2 seleciona ou coloca; B volta.",UDim2.fromOffset(0,fim),UDim2.new(1,-8,0,86),14)
 	janela.Conteudo.CanvasSize=UDim2.fromOffset(0,fim+66)
-	table.insert(self._conexoes,Input.InputBegan:Connect(function(entrada)
-		if not self._captura or entrada.UserInputType~=Enum.UserInputType.Keyboard then return end
-		local tecla=entrada.KeyCode.Name
-		if tecla=="Escape" then self:_CancelarCaptura(); return end
-		if not Config.ValidarTecla(jogador,self._captura,tecla) then self._aviso.Text="Tecla reservada ou já utilizada. Escolha outra."; return end
-		jogador:SetAttribute("Atalho_"..self._captura,tecla); self:_CancelarCaptura()
-	end))
+table.insert(self._conexoes,Input.InputBegan:Connect(function(entrada)
+    if not self._captura or entrada.UserInputType~=Enum.UserInputType.Keyboard then return end
+    local tecla=entrada.KeyCode.Name
+    if tecla=="Escape" then self:_CancelarCaptura(); return end
+    if Config.EhModificador(entrada.KeyCode) then return end
+    local movimento=self._captura=="W" or self._captura=="A" or self._captura=="S" or self._captura=="D"
+    local combinacao=if movimento then tecla else (Config.CombinacaoTecla(entrada.KeyCode) or tecla)
+    if not Config.ValidarTecla(jogador,self._captura,combinacao) then self._aviso.Text="Tecla reservada ou já utilizada. Escolha outra."; return end
+    jogador:SetAttribute("Atalho_"..self._captura,combinacao); self:_CancelarCaptura()
+  end))
 	table.insert(self._conexoes,navegacao.Alterado:Connect(function()
 		if not navegacao:Contem("Configuracoes") then
 			self:_CancelarCaptura()
