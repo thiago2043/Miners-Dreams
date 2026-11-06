@@ -2072,8 +2072,8 @@ end
 -- As abas usam a mesma regiao central; trocar de aba preserva inventario e loja nas laterais.
 function ControladorConstrucao:AlternarPainelCentral(aba)
   if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" then return false end
-  if not self._colocando and self._modoSelecao == "Selecao" then self:_EncerrarAcao() end
-  if self._destruido or self._colocando or self._previa or self._movimento or self._modoSelecao then return false end
+  if self._destruido or self._colocando then return false end
+  if (self._previa or self._movimento or self._modoSelecao) and not self:_EncerrarAcao() then return false end
   if self.Navegacao:Contem(aba) then
     self.Navegacao:Fechar(aba)
   else

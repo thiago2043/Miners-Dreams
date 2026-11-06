@@ -75,10 +75,14 @@ function Painel:_Abrir(indice)
 	self:_Desenhar()
 end
 function Painel:_Desenhar()
-	if self._destruido then return end
-	self:_Limpar()
-	local layout=Instance.new("UIListLayout")
-	layout.SortOrder,layout.Padding,layout.Parent=Enum.SortOrder.LayoutOrder,UDim.new(0,12),self._corpo
+  if self._destruido then return end
+  self:_Limpar()
+  local layout=Instance.new("UIListLayout")
+  layout.SortOrder,layout.Padding,layout.Parent=Enum.SortOrder.LayoutOrder,UDim.new(0,12),self._corpo
+  local function atualizarCanvas()
+    self._janela.Conteudo.CanvasSize=UDim2.fromOffset(0,layout.AbsoluteContentSize.Y+16)
+  end
+  table.insert(self._conexoes,layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(atualizarCanvas))
 	if not self._atual then
 		self:_Texto("Introducao","Escolha um tema ou pesquise uma dúvida.",17)
 		local busca=Instance.new("TextBox")
@@ -134,13 +138,14 @@ function Painel:_Desenhar()
 			o.TextColor3=disponivel and Color3.fromRGB(238,244,247) or Color3.fromRGB(132,146,150)
 		end
 	end
-	self._janela.Conteudo.CanvasPosition=Vector2.zero
+atualizarCanvas()
+  self._janela.Conteudo.CanvasPosition=Vector2.zero
 end
 function Painel:Atualizar()
-	if self._destruido then return end
-	self._janela:Atualizar()
-	if self._grupo.Visible and not self._visivel and self._atual then self:_Desenhar() end
-	self._visivel=self._grupo.Visible
+  if self._destruido then return end
+  self._janela:Atualizar()
+  if self._grupo.Visible and not self._visivel then self:_Desenhar() end
+  self._visivel=self._grupo.Visible
 end
 function Painel:Destruir()
 	if self._destruido then return end

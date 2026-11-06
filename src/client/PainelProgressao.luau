@@ -14,9 +14,9 @@ function PainelProgressao.new(pai, navegacao, nome, titulo, tecla, mensagem, alt
 	local g=Instance.new("Frame")
 	g.Name,g.AnchorPoint=nome,Vector2.new(.5,.5)
 	g.Position,g.Size=UDim2.fromScale(.5,.5),UDim2.new(1,-32,1,-48)
-	g.BackgroundColor3,g.BorderSizePixel=Color3.fromRGB(22,23,29),0
-	g.ZIndex=2
-	g.Active,g.Visible,g.Parent=true,false,pai
+g.BackgroundColor3,g.BorderSizePixel=Color3.fromRGB(22,23,29),0
+  g.ZIndex=15
+  g.Active,g.Visible,g.Parent=true,false,pai
 	arredondar(g,12)
 	self._grupo=g
 	local limite=Instance.new("UISizeConstraint")
