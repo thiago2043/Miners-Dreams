@@ -87,7 +87,6 @@ end
 function Minerio:IncrementarUsosModificador(chave: string)
   local novo = (self:ObterUsosModificador(chave) or 0) + 1
   self._usos[chave] = novo
-  self._parte:SetAttribute(chave, novo)
   return novo
 end
 

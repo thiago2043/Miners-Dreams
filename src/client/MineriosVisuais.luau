@@ -179,7 +179,7 @@ function MineriosVisuais:_Observar(parte)
     end
     if not movimento or not parte.Parent.Parent then return end
     movimento.Terreno = parte.Parent.Parent
-    if movimento.Suave and anterior and anterior.Terreno == movimento.Terreno then
+if anterior and anterior.Terreno == movimento.Terreno then
       movimento.TransicaoDe = anterior.Exibido or anterior.TransicaoDe
     end
     local grupo = self._grupos[movimento.Terreno]
@@ -267,14 +267,16 @@ function MineriosVisuais:Atualizar(agora)
   local fatorV = math.sqrt(1 + vertical * vertical)
 
   for terreno, grupo in self._grupos do
-    local texto = terreno:GetAttribute("RelogioMinerios")
+local texto = terreno:GetAttribute("RelogioMinerios")
     if texto ~= grupo.TextoRelogio then
       grupo.TextoRelogio, grupo.Relogio = texto, Movimento.DecodificarRelogio(texto)
     end
     if not grupo.Relogio then continue end
     grupo.EstadoRelogio = grupo.EstadoRelogio or {}
     local tempo = Movimento.TempoVisual(grupo.EstadoRelogio, grupo.Relogio, agora)
-    if grupo.Sujo or tempo < grupo.Tempo then atualizarLimites(grupo, tempo) end
+    if not grupo.Tempo or tempo < grupo.Tempo or (grupo.Sujo and tempo - grupo.Tempo >= 0.2) then
+      atualizarLimites(grupo, tempo)
+    end
     local delta = tempo - grupo.Tempo
     local d2 = delta * delta * 0.5
     local minimo = grupo.Minimo + grupo.Lenta * delta + grupo.AceleracaoMin * d2
@@ -292,15 +294,27 @@ function MineriosVisuais:Atualizar(agora)
     for parte, movimento in grupo.Movimentos do
       if self._ocultos[parte] ~= nil then continue end
       local pose = if movimento.TempoAvaliado == tempo then movimento.PoseAvaliada else Movimento.Avaliar(movimento, tempo)
+      if movimento.TransicaoDe then
+        local anterior = movimento.TransicaoDe
+        local desvio = anterior.Position - pose.Position
+        if desvio.Magnitude <= math.max(6, parte.Size.Magnitude * 4) then
+          movimento.Desvio = desvio
+          movimento.RotacaoDesvio = anterior.Rotation * pose.Rotation:Inverse()
+          movimento.InicioCorrecao = tempo
+        end
+        movimento.TransicaoDe = nil
+      end
       if movimento.InicioCorrecao then
-        local peso = math.clamp((tempo - movimento.InicioCorrecao) / .1, 0, 1)
+        local peso = math.clamp((tempo - movimento.InicioCorrecao) / .12, 0, 1)
         pose = CFrame.new(pose.Position + movimento.Desvio * (1 - peso))
           * movimento.RotacaoDesvio:Lerp(CFrame.identity, peso) * pose.Rotation
         if peso == 1 then movimento.InicioCorrecao, movimento.Desvio, movimento.RotacaoDesvio = nil, nil, nil end
       end
-      movimento.Exibido = pose
-      table.insert(partes, parte)
-      table.insert(poses, pose)
+      if movimento.Exibido ~= pose then
+        movimento.Exibido = pose
+        table.insert(partes, parte)
+        table.insert(poses, pose)
+      end
     end
   end
   if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end

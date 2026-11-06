@@ -236,8 +236,8 @@ self._regioes[terreno] = regioes
 local consulta = self._consultas[terreno]
 if not consulta then
 consulta = OverlapParams.new()
-consulta.FilterType = Enum.RaycastFilterType.Exclude
-consulta.FilterDescendantsInstances = {}
+consulta.FilterType = Enum.RaycastFilterType.Include
+consulta.FilterDescendantsInstances = if regioes.Base then { terreno, regioes.Base } else { terreno }
 consulta.RespectCanCollide = true
 consulta.MaxParts = 0
 self._consultas[terreno] = consulta
@@ -449,13 +449,23 @@ local passo = SimulacaoMinerios.Passo
 local executados = 0
 local quantidade = math.min(SimulacaoMinerios.MaximoPassos, math.floor((self._acumulado+.000000001)/passo))
 if quantidade == 0 then return end
+if self._acumulado > SimulacaoMinerios.MaximoPassos * passo then
+self._acumulado = SimulacaoMinerios.MaximoPassos * passo
+end
 self._chamada += 1
+local cicloRegioes = math.floor(self._tempo * 4)
+if self._versaoRegioes ~= self._versao or self._cicloRegioes ~= cicloRegioes then
 table.clear(self._regioes)
+self._versaoRegioes, self._cicloRegioes = self._versao, cicloRegioes
+end
 local versaoRegioes=self._versao
 while executados < quantidade do
 self._tempo = self._passos * passo
 if antesPasso then antesPasso(self._tempo) end
-if versaoRegioes~=self._versao then table.clear(self._regioes); versaoRegioes=self._versao end
+if versaoRegioes~=self._versao then
+table.clear(self._regioes)
+versaoRegioes, self._versaoRegioes = self._versao, self._versao
+end
 for indice = #self._minerios, 1, -1 do
 local registro = self._minerios[indice]
 local parte = registro.Parte
@@ -517,15 +527,22 @@ else
 local tPrev = if movimento.Duracao > 0 then math.min(dt, movimento.Duracao) else dt
 local posPrev = movimento.Origem.Position + movimento.Velocidade*tPrev + movimento.Aceleracao*(tPrev*tPrev*.5)
 local velPrev = movimento.Velocidade + movimento.Aceleracao*tPrev
-mudou = dt >= .1
-or (corpo.CFrame.Position - posPrev).Magnitude > .015
-or (corpo.Velocidade - velPrev).Magnitude > .2
-or (angular - movimento.Angular).Magnitude > .4
+local limiteTempo = if corpo._emContato and movimento.Aceleracao == Vector3.zero and angular.Magnitude < 0.05 then 0.45 else 0.2
+mudou = dt >= limiteTempo
+or (corpo.CFrame.Position - posPrev).Magnitude > .025
+or (corpo.Velocidade - velPrev).Magnitude > .25
+or (angular - movimento.Angular).Magnitude > .45
 end
 end
 if not mudou then continue end
 local duracao,apoio
-if uniforme then duracao=0 elseif corpo._emContato then duracao=.25 else duracao,apoio=self:_DuracaoQueda(registro,.25) end
+if uniforme then
+duracao=0
+elseif corpo._emContato then
+duracao = if angular.Magnitude < 0.05 then 0.5 else 0.25
+else
+duracao,apoio=self:_DuracaoQueda(registro,.35)
+end
 local velocidade=corpo.Velocidade
 if apoio then
 aceleracao=Vector3.zero
@@ -545,7 +562,7 @@ end
 end
 if not self._relogioAgora or agora-self._relogioAgora>=.1 then
 local taxa=if self._relogioAgora and agora>self._relogioAgora then (inicio-self._relogioTempo)/(agora-self._relogioAgora) else 1
-self._relogio=HttpService:JSONEncode({agora,inicio,math.clamp(taxa,0,4)})
+self._relogio=HttpService:JSONEncode({agora,inicio,math.clamp(taxa,0.35,1.05)})
 self._relogioAgora,self._relogioTempo=agora,inicio
 end
 for terreno in terrenos do

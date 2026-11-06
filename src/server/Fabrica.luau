@@ -10,12 +10,21 @@ Fabrica.__index = Fabrica
 -- Recebe a pasta de terrenos e cria o registro de objetos Maquina junto de uma SimulacaoMinerios
 -- compartilhada. Nao coloca modelos iniciais nas plots.
 function Fabrica.new(pastaTerrenos)
-	-- O mapa usa o proprio Model como chave, distinguindo varias copias de um mesmo tipo. Todas as maquinas
-	-- desta fabrica recebem a mesma simulacao e o mesmo relogio.
-	return setmetatable({
-		_terrenos = pastaTerrenos, _maquinas = {}, _destruida = false,
-		_simulacao = SimulacaoMinerios.new(), _proximaAtualizacao = 0,
-	}, Fabrica)
+  local self = setmetatable({
+    _terrenos = pastaTerrenos, _maquinas = {}, _destruida = false,
+    _simulacao = SimulacaoMinerios.new(), _proximaAtualizacao = 0, _sujo = true,
+  }, Fabrica)
+  local function aoMudar(obj)
+    if obj:IsA("Model") and obj.Parent and obj.Parent.Name == "Maquinas" then
+      self._sujo = true
+      self._simulacao._versao += 1
+    end
+  end
+  self._conexoes = {
+    pastaTerrenos.DescendantAdded:Connect(aoMudar),
+    pastaTerrenos.DescendantRemoving:Connect(aoMudar),
+  }
+  return self
 end
 
 -- Remove objetos cujos modelos sairam do terreno e encontra os modelos novos do catalogo. Cria uma Maquina por
@@ -57,25 +66,28 @@ end
 -- Recebe o tempo decorrido do Heartbeat e o entrega a simulacao de passos fixos. Seu callback agenda a
 -- descoberta de modelos a cada segundo; os componentes acompanham os passos do relogio.
 function Fabrica:Avancar(delta)
-	if self._destruida then return end
-	-- A busca continua uma vez por segundo; intervalos como 1,2 e 1,5 s precisam dos passos intermediarios.
-	self._simulacao:Avancar(delta, function(agora)
-		if agora + 0.000000001 >= self._proximaAtualizacao then
-			self:Atualizar(agora)
-			self._proximaAtualizacao = agora + 1
-		else
-			for _, maquina in self._maquinas do maquina:Atualizar(agora) end
-		end
-	end)
+  if self._destruida then return end
+  local atualizouMaquinas = false
+  self._simulacao:Avancar(delta, function(agora)
+    if self._sujo or agora + 0.000000001 >= self._proximaAtualizacao then
+      self._sujo = false
+      self:Atualizar(agora)
+      self._proximaAtualizacao = agora + 1
+      atualizouMaquinas = true
+    elseif not atualizouMaquinas then
+      atualizouMaquinas = true
+      for _, maquina in self._maquinas do maquina:Atualizar(agora) end
+    end
+  end)
 end
 
--- Marca a fabrica como encerrada, destroi os componentes registrados e encerra a simulacao com seus minerios.
--- Os modelos de maquinas pertencem ao terreno e nao sao apagados por este metodo.
 function Fabrica:Destruir()
-	self._destruida = true
-	for _, maquina in self._maquinas do maquina:Destruir() end
-	table.clear(self._maquinas)
-	self._simulacao:Destruir()
+  self._destruida = true
+  for _, c in self._conexoes or {} do c:Disconnect() end
+  self._conexoes = nil
+  for _, maquina in self._maquinas do maquina:Destruir() end
+  table.clear(self._maquinas)
+  self._simulacao:Destruir()
 end
 
 return Fabrica

@@ -1094,11 +1094,14 @@ end
 
 -- O contorno branco acompanha a peca sob o cursor fora dos modos de selecao colorida.
 function ControladorConstrucao:_AtualizarDestaqueHover()
-	if self._modoSelecao or self._previa or self._movimento or self._rPressionado or self._colocando then
-		self._destaqueHover.Adornee = nil
-		self._destaqueHover.Enabled = false
-		return
-	end
+  if self._modoSelecao or self._previa or self._movimento or self._rPressionado or self._colocando then
+    self._destaqueHover.Adornee = nil
+    self._destaqueHover.Enabled = false
+    return
+  end
+  local agora = os.clock()
+  if self._proximoHover and agora < self._proximoHover then return end
+  self._proximoHover = agora + 0.05
 	if not self._terreno or self._terreno.Parent ~= self._pastaTerrenos
 		or self._terreno:GetAttribute("DonoUserId") ~= self._jogador.UserId
 		or not self._maquinas or self._maquinas.Parent ~= self._terreno
@@ -2541,12 +2544,15 @@ end
 -- Lanca um raio da camera pelas maquinas do terreno e sobe dos filhos atingidos ate o Model. Devolve somente
 -- um modelo com os atributos de dono e terreno corretos; sem um alvo valido, devolve nil.
 function ControladorConstrucao:_MaquinaSobMouse()
-	local camera = workspace.CurrentCamera
-	if not camera then return nil end
-	local mouse = self:ObterPonteiro()
-	local raio = camera:ViewportPointToRay(mouse.X, mouse.Y)
-	self._consultaMaquinas.FilterDescendantsInstances = { self._piso, self._maquinas }
-	local resultado = workspace:Raycast(raio.Origin, raio.Direction * alcance, self._consultaMaquinas)
+  local camera = workspace.CurrentCamera
+  if not camera then return nil end
+  local mouse = self:ObterPonteiro()
+  local raio = camera:ViewportPointToRay(mouse.X, mouse.Y)
+  if self._filtroPisoCache ~= self._piso or self._filtroMaquinasCache ~= self._maquinas then
+    self._filtroPisoCache, self._filtroMaquinasCache = self._piso, self._maquinas
+    self._consultaMaquinas.FilterDescendantsInstances = { self._piso, self._maquinas }
+  end
+  local resultado = workspace:Raycast(raio.Origin, raio.Direction * alcance, self._consultaMaquinas)
 	local objeto = resultado and resultado.Instance
 	while objeto and objeto.Parent ~= self._maquinas do objeto = objeto.Parent end
 	if objeto and objeto:IsA("Model") and objeto:GetAttribute("DonoUserId") == self._jogador.UserId

@@ -103,8 +103,11 @@ transicao.Size=Vector3.new(p.Size.X,.04*escala,(b-a).Magnitude)
 transicao.CFrame=CFrame.fromMatrix((a+b)/2-cima*.02*escala,direita,cima,frente)
 transicao.Color,transicao.Material=p.Color,p.Material
 transicao.Transparency,transicao.Reflectance=p.Transparency,p.Reflectance
-transicao.Anchored,transicao.CanCollide,transicao.CanTouch=true,false,false
+local dirOrig = p:GetAttribute("DirecaoTransporte") or Vector3.zAxis
+transicao.Anchored,transicao.CanCollide,transicao.CanTouch=true,true,false
 transicao:SetAttribute("GeometriaEsteiraGerada",true)
+transicao:SetAttribute("ParteTransporteOrigem",p.Name)
+transicao:SetAttribute("DirecaoSuperficie",transicao.CFrame:VectorToObjectSpace(Vector3.new(dirOrig.X,0,0)+frente*(s*dirOrig.Z)).Unit)
 transicao.Parent=modelo
 end
 end

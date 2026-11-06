@@ -98,9 +98,9 @@ function TransportadorMinerio:Atualizar(_agora)
     local direcao = superficie:GetAttribute("DirecaoSuperficie") or (if i == 1 then orientacao else nil) or Vector3.zAxis
     local pose, tamanho = superficie.CFrame, superficie.Size
     local estado = self._estados[i]
-    local preparar = i == 1 and estado and (not superficie.Anchored or not superficie.CanCollide or superficie.AssemblyLinearVelocity ~= Vector3.zero)
+local preparar = estado and (not superficie.Anchored or not superficie.CanCollide or superficie.AssemblyLinearVelocity ~= Vector3.zero)
     if preparar or mudou or not estado or estado.CFrame ~= pose or estado.Tamanho ~= tamanho or estado.Direcao ~= direcao then
-      if i == 1 then superficie.Anchored, superficie.CanCollide, superficie.AssemblyLinearVelocity = true, true, Vector3.zero end
+      superficie.Anchored, superficie.CanCollide, superficie.AssemblyLinearVelocity = true, true, Vector3.zero
       simulacao:RegistrarTransportador(self, superficie, pose:VectorToWorldSpace(direcao) * velocidade, atrito, self._centralizacao)
       self._estados[i] = { Nome = superficie.Name, CFrame = pose, Tamanho = tamanho, Direcao = direcao }
     end

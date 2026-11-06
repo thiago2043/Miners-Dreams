@@ -217,7 +217,7 @@ if not normal then continue end
 if obstaculo.Parte and (obstaculo.Parte == piso or obstaculo.Parte == base) then tocouChao = true end
 if obstaculo.PriorizarTopo then
 local altura=obstaculo.CFrame:PointToObjectSpace(self.CFrame.Position).Y
-if altura>=obstaculo.Tamanho.Y/2 then
+if altura>=-tolerancia then
 normal=obstaculo.CFrame.UpVector
 profundidade=math.max(0,raio(eixos(self.CFrame),self.Tamanho/2,normal)+obstaculo.Tamanho.Y/2-altura)
 end
@@ -264,19 +264,25 @@ if contato.TracaoEsteira and contato.Normal.Y>.5
 and (not tracao or math.abs(contato.Superficie.Y)>math.abs(tracao.Superficie.Y)) then tracao=contato end
 end
 if tracao then
-local soma,peso,vistos=Vector3.zero,0,{}
+local soma,peso,normalSoma,vistos=Vector3.zero,0,Vector3.zero,{}
 for _,contato in restricoes do
 local o=contato.Obstaculo
-if contato.TracaoEsteira and not vistos[o] and contato.Normal:Dot(tracao.Normal)>.999
-and math.abs(math.abs(contato.Superficie.Y)-math.abs(tracao.Superficie.Y))<.001 then
+if contato.TracaoEsteira and not vistos[o] and contato.Normal.Y>.5 then
 vistos[o]=true
 local x=o.CFrame:PointToObjectSpace(self.CFrame.Position).X
 local r=raio(eixos(self.CFrame),self.Tamanho/2,o.CFrame.RightVector)
 local largura=math.max(.0001,math.min(x+r,o.Tamanho.X/2)-math.max(x-r,-o.Tamanho.X/2))
 soma+=contato.Superficie*largura; peso+=largura
+normalSoma+=contato.Normal*largura
 end
 end
-local diferenca=soma/peso-self.Velocidade
+local normalTracao = if normalSoma.Magnitude > .001 then normalSoma.Unit else tracao.Normal
+local alvoVelocidade = soma / peso
+if math.abs(tracao.Superficie.Y) > .001 and alvoVelocidade.Magnitude > .001 then
+alvoVelocidade = alvoVelocidade.Unit * tracao.Superficie.Magnitude
+end
+local diferenca = alvoVelocidade - self.Velocidade
+tracao = { Normal = normalTracao, Centralizacao = tracao.Centralizacao, Superficie = alvoVelocidade }
 if tracao.Centralizacao then
 local c=tracao.Centralizacao
 local erro=(self.CFrame.Position-c.Centro):Dot(c.Eixo)
@@ -287,9 +293,9 @@ local rolagem=tracao.Normal:Cross(c.Eixo).Unit
 self.MomentoAngular-=rolagem*self.MomentoAngular:Dot(rolagem)
 end
 diferenca-=tracao.Normal*diferenca:Dot(tracao.Normal)
-local limite=gravidade.Magnitude*delta*2
-if diferenca.Magnitude>limite then diferenca=diferenca.Unit*limite end
-self.Velocidade+=diferenca
+  local limite=gravidade.Magnitude*delta*2
+  if diferenca.Magnitude>limite then diferenca=diferenca.Unit*limite end
+  self.Velocidade+=diferenca
 end
 local emRepouso = self.Velocidade.Magnitude + self:VelocidadeAngular().Magnitude * self.Tamanho.Magnitude / 2 < 0.02
 and apoioEstavel(restricoes, gravidade, self.Atrito)
