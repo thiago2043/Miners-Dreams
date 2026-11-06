@@ -114,7 +114,8 @@ end)
 end
 
 function Painel:_Layout()
-local estreita=self._janela.Conteudo.AbsoluteSize.X<360
+  if self._grupo:GetAttribute("AnimandoUI") then return end
+  local estreita=self._janela.Conteudo.AbsoluteSize.X<360
 local altura=estreita and 90 or 64
 for i,opcao in Config.Opcoes do
 local texto=self._rotulos[opcao.Id]

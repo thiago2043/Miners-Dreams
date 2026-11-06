@@ -17,6 +17,7 @@ local PainelPrestigio = require(script.Parent.PainelPrestigio)
 local PainelMoedas = require(script.Parent.PainelMoedas)
 local Botao = require(script.Parent.Botao)
 local IconesAbas = require(script.Parent.IconesAbas)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 local FichaMaquina = require(script.Parent.FichaMaquina)
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
@@ -118,14 +119,14 @@ function InterfaceJogo:_AtualizarMenusLaterais()
 	for _, menu in { self._menuAbas, self._menuDireito, self._botaoLimparPlot:ObterInstancia() } do
 		local a, s = menu.AbsolutePosition, menu.AbsoluteSize
 		local ocupado = false
-		for _, painel in paineis do
-			local b, t = painel.AbsolutePosition, painel.AbsoluteSize
-			if painel.Visible and s.X > 0 and s.Y > 0 and t.X > 0 and t.Y > 0
-				and a.X < b.X + t.X and a.X + s.X > b.X
-				and a.Y < b.Y + t.Y and a.Y + s.Y > b.Y then
-				ocupado = true; break
-			end
-		end
+for _, painel in paineis do
+      local b, t = painel.AbsolutePosition, painel.AbsoluteSize
+      if painel.Visible and not painel:GetAttribute("FechandoUI") and s.X > 0 and s.Y > 0 and t.X > 0 and t.Y > 0
+        and a.X < b.X + t.X and a.X + s.X > b.X
+        and a.Y < b.Y + t.Y and a.Y + s.Y > b.Y then
+        ocupado = true; break
+      end
+    end
 		menu.Visible = not ocupado
 		if ocupado then self._dicaAba.Visible = false end
 	end
@@ -138,11 +139,17 @@ function InterfaceJogo:_ObservarMenusLaterais()
 		table.insert(objetos, painel._painelFicha)
 	end
 	for _, painel in self._paineisProgressao do table.insert(objetos, painel._grupo) end
-	for _, objeto in objetos do
-		for _, propriedade in { "AbsolutePosition", "AbsoluteSize", "Visible" } do
-			table.insert(self._conexoes, objeto:GetPropertyChangedSignal(propriedade):Connect(function() self:_AtualizarMenusLaterais() end))
-		end
-	end
+for _, objeto in objetos do
+    for _, propriedade in { "AbsolutePosition", "AbsoluteSize", "Visible" } do
+      table.insert(self._conexoes, objeto:GetPropertyChangedSignal(propriedade):Connect(function()
+        if propriedade ~= "Visible" and objeto:GetAttribute("AnimandoUI") then return end
+        self:_AtualizarMenusLaterais()
+      end))
+    end
+    table.insert(self._conexoes, objeto:GetAttributeChangedSignal("FechandoUI"):Connect(function()
+      self:_AtualizarMenusLaterais()
+    end))
+  end
 end
 
 -- Uma unica coluna permanece acessivel quando os paineis abrem; os botoes usam as mesmas acoes dos atalhos.
@@ -314,18 +321,18 @@ function InterfaceJogo:_CriarMenuPeca(playerGui)
 		{ "Estatisticas", "", nil, 166, 164, 32, Color3.fromRGB(65, 112, 135) },
 	} do
 		local acaoBotao, cor = item[1], item[7]
-		local botao = Botao.new(self._menuPeca, acaoBotao, function()
-			if acaoBotao == "Estatisticas" then
-				self._estatisticasVisiveis = not self._estatisticasVisiveis
-				self._estatisticasPeca.Visible = self._estatisticasVisiveis
-				self._areaEstatisticasPeca.Visible = self._estatisticasVisiveis
-				self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, self._estatisticasVisiveis and alturaDetalhesPeca or alturaMenuPeca)
-				self:_AtualizarDescricaoPeca()
-				self:_AtualizarMenuPeca()
-			else
-				self._construcao:ExecutarAcaoPeca(acaoBotao)
-			end
-		end)
+local botao = Botao.new(self._menuPeca, acaoBotao, function()
+      if acaoBotao == "Estatisticas" then
+        self._estatisticasVisiveis = not self._estatisticasVisiveis
+        self._estatisticasPeca.Visible = self._estatisticasVisiveis
+        AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, self._estatisticasVisiveis, "Centro")
+        self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, self._estatisticasVisiveis and alturaDetalhesPeca or alturaMenuPeca)
+        self:_AtualizarDescricaoPeca()
+        self:_AtualizarMenuPeca()
+      else
+        self._construcao:ExecutarAcaoPeca(acaoBotao)
+      end
+    end)
 		local instancia = botao:ObterInstancia()
 		botao:DefinirDisponivel(true)
 		instancia.Text, instancia.Position, instancia.Size = "", UDim2.fromOffset(item[4], item[5]), UDim2.fromOffset(item[6], item[3] and 42 or 30)
@@ -376,15 +383,22 @@ function InterfaceJogo:_AtualizarDescricaoPeca()
 end
 
 function InterfaceJogo:_MostrarPeca(maquina)
-	self._maquinaFocada = maquina
-	self._estatisticasVisiveis = false
-	self._estatisticasPeca.Visible = false
-	self._areaEstatisticasPeca.Visible = false
-	self._areaEstatisticasPeca.CanvasPosition = Vector2.zero
-	self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, alturaMenuPeca)
-	self._menuPeca.Visible = maquina ~= nil
-	self._contornoPeca.Visible = maquina ~= nil
-	self:_AtualizarMenuPeca()
+  local anterior = self._maquinaFocada
+  self._maquinaFocada = maquina
+  self._estatisticasVisiveis = false
+  self._estatisticasPeca.Visible = false
+  self._areaEstatisticasPeca.Visible = false
+  self._areaEstatisticasPeca.CanvasPosition = Vector2.zero
+  self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, alturaMenuPeca)
+  self._contornoPeca.Visible = maquina ~= nil
+  if maquina then
+    self:_AtualizarMenuPeca()
+    if anterior ~= maquina then
+      AnimacaoInterface.TransicaoSubAba(self._menuPeca)
+    end
+  else
+    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Centro")
+  end
 end
 
 -- O centro do corpo mantem o menu na peca sem desloca-lo para a ponta de um cabecote ou broca.

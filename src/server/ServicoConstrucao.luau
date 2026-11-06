@@ -25,7 +25,7 @@ function ServicoConstrucao.new()
 	-- servidor configuracoes individuais ou formacoes inteiras capturadas para copiar.
 local self = setmetatable({
     _modelos = {}, _carregados = {}, _limites = {}, _registrosPorMaquina = {}, _copias = {}, _copiasGrupo = {},
-    _historicoCopias = {}, _historicoDesfazer = {}, _historicoRefazer = {},
+    _historicoCopias = {}, _historicoDesfazer = {}, _historicoRefazer = {}, _temposPrevia = {},
     _movimentosPendentes = {}, _sequenciaCopia = 0, _sequenciaMovimento = 0,
   }, ServicoConstrucao)
 	-- Carrega recursos de ReplicatedStorage; nao depende de maquinas iniciais no Workspace. Mede uma vez os
@@ -1509,6 +1509,33 @@ end
 
 -- Sincroniza as alteracoes visuais antes de descartar tokens, limites e vinculos locais do jogador. A limpeza
 -- do terreno e o encerramento do ProfileStore sao realizados por seus respectivos sistemas.
+function ServicoConstrucao:AtualizarPrevia(jogador, previa)
+  local _, terreno = contexto(jogador)
+  if not terreno then return false end
+  if previa == nil then
+    terreno:SetAttribute("PreviaConstrucao", nil)
+    return true
+  end
+  local agora = os.clock()
+  if self._temposPrevia[jogador] and agora - self._temposPrevia[jogador] < 0.04 then
+    return false
+  end
+  self._temposPrevia[jogador] = agora
+  if type(previa) ~= "table" or #previa < 1 or #previa > 60 then return false end
+  local limpo = {}
+  for i = 1, #previa do
+    local item = previa[i]
+    if type(item) ~= "table" or type(item[1]) ~= "string" or not CatalogoMaquinas[item[1]] then return false end
+    for j = 2, 13 do if not finito(item[j]) then return false end end
+    local rot = RotacaoConstrucao.ValidarNaGrade(CFrame.new(0, 0, 0, table.unpack(item, 5, 13)), CatalogoMaquinas[item[1]])
+    if not rot then return false end
+    local c = { rot:GetComponents() }
+    limpo[i] = { item[1], item[2], item[3], item[4], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11], c[12], item[14] == 1 and 1 or 0 }
+  end
+  terreno:SetAttribute("PreviaConstrucao", game:GetService("HttpService"):JSONEncode(limpo))
+  return true
+end
+
 function ServicoConstrucao:LimparJogador(jogador)
   self:Sincronizar(jogador)
   self._copias[jogador] = nil
@@ -1516,8 +1543,17 @@ function ServicoConstrucao:LimparJogador(jogador)
   self._historicoCopias[jogador] = nil
   self._historicoDesfazer[jogador] = nil
   self._historicoRefazer[jogador] = nil
+  self._temposPrevia[jogador] = nil
   self._limites[jogador] = nil
   self._movimentosPendentes[jogador] = nil
+  local pasta = workspace:FindFirstChild("Terrenos")
+  if pasta then
+    for _, terreno in pasta:GetChildren() do
+      if terreno:GetAttribute("DonoUserId") == jogador.UserId then
+        terreno:SetAttribute("PreviaConstrucao", nil)
+      end
+    end
+  end
 	for maquina, vinculo in self._registrosPorMaquina do
 		if vinculo.jogador == jogador then
 			self._registrosPorMaquina[maquina] = nil

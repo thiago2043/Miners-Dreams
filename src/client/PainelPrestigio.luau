@@ -4,6 +4,7 @@ local Config=require(ReplicatedStorage.Shared.Configuracoes)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local BarraProgressao = require(script.Parent.BarraProgressao)
 local Botao = require(script.Parent.Botao)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 
 local PainelPrestigio = {}
 PainelPrestigio.__index = PainelPrestigio
@@ -84,9 +85,9 @@ end
 -- Dados replicados atualizam apenas a estimativa. Marcos completos e progresso parcial possuem
 -- textos separados: uma barra zerada no novo marco nao esconde as vidas que ja podem ser obtidas.
 function PainelPrestigio:Atualizar()
-	if self._destruido then return end
-	self._titulo.Text="Prestígio ["..Config.Tecla(self._jogador,"P").."]"
-	self._grupo.Visible = self._navegacao:Contem("Prestigio")
+  if self._destruido then return end
+  self._titulo.Text="Prestígio ["..Config.Tecla(self._jogador,"P").."]"
+  AnimacaoInterface.DefinirVisivel(self._grupo, self._navegacao:Contem("Prestigio"), "Centro")
 	local saldo = self._jogador:GetAttribute("Dinheiro")
 	local estado = self._regra:Calcular(saldo, self._jogador:GetAttribute("Reencarnacoes"), self._jogador:GetAttribute("Vidas"))
 	self._estado = estado

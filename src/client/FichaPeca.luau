@@ -155,7 +155,8 @@ end
 -- Limita o retrato a 20% da altura e a 96 pixels, alem da largura disponivel. A altura pequena de
 -- uma janela nao deve ser consumida pela miniatura, escondendo as estatisticas abaixo dela.
 function FichaPeca:_DimensionarRetrato()
-	local limiteAltura = math.clamp(math.floor(self._instancia.AbsoluteSize.Y * 0.2), 48, 96)
+  if self._instancia:GetAttribute("AnimandoUI") then return end
+  local limiteAltura = math.clamp(math.floor(self._instancia.AbsoluteSize.Y * 0.2), 48, 96)
 	local lado = math.clamp(self._conteudo.AbsoluteSize.X - 4, 1, limiteAltura)
 	self._retrato.Size = UDim2.fromOffset(lado, lado)
 end
@@ -181,8 +182,8 @@ function FichaPeca:Atualizar(id, nome, quantidade, copia, definicao, chave)
 	self._campos.Quantidade.Visible = self._loja or copia or type(quantidade) ~= "number"
 	local raridade = Raridades.Obter(definicao)
 	self._raridade.Text, self._faixaRaridade.Color = raridade.Nome, raridade.Cores
-	Raridades.ColorirBorda(self._bordaRetrato, raridade)
-	if not self._instancia.Visible then return true end
+Raridades.ColorirBorda(self._bordaRetrato, raridade)
+  if not self._instancia.Visible or self._instancia:GetAttribute("FechandoUI") then return true end
 	if not id or not definicao then
 		-- Ao trocar para dados ainda indisponiveis, o retrato antigo nao pode representar a nova selecao.
 		if self._miniatura then self._miniatura:Destruir(); self._miniatura = nil end

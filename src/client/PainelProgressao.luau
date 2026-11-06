@@ -1,5 +1,6 @@
 local Botao = require(script.Parent.Botao)
 local Icones = require(script.Parent.IconesAbas)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 local PainelProgressao = {}
 PainelProgressao.__index = PainelProgressao
 local cores = {Blueprints=Color3.fromRGB(49,211,240), Upgrades=Color3.fromRGB(176,137,255), Configuracoes=Color3.fromRGB(255,214,78), Classificacao=Color3.fromRGB(255,190,86),Administracao=Color3.fromRGB(112,198,255),Tutorial=Color3.fromRGB(101,228,196)}
@@ -80,7 +81,9 @@ function PainelProgressao:Botao(pai,nome,posicao,tamanho,callback)
 end
 
 function PainelProgressao:Atualizar()
-	if not self._destruido then self._grupo.Visible=self._navegacao:Contem(self._nome) end
+  if not self._destruido then
+    AnimacaoInterface.DefinirVisivel(self._grupo, self._navegacao:Contem(self._nome), "Centro")
+  end
 end
 
 function PainelProgressao:Destruir()

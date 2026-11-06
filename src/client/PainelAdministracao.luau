@@ -7,6 +7,7 @@ local Abreviar=require(R.Shared.AbreviarInteiro)
 local bloco=require(R.Shared.Medidas).Bloco
 local Janela=require(script.Parent.PainelProgressao)
 local Botao=require(script.Parent.Botao)
+local AnimacaoInterface=require(script.Parent.AnimacaoInterface)
 local Painel={}; Painel.__index=Painel
 local tipos={"Dinheiro","Vidas","Upgrade","Inventario"}
 local tiposPlot={"Adicionar","Reposicionar","Recolher","Remover"}
@@ -237,12 +238,13 @@ function Painel:_Desenhar()
 	end,.5,.5)
 	local abas={"Jogadores","Progresso","Histórico","Editar","Plot","Registro"}
 	local colunas=self._janela.Conteudo.AbsoluteSize.X<380 and 3 or #abas
-	for i,nome in abas do
-		local b=self:_Botao(nome,nome,130+math.floor((i-1)/colunas)*52,function()
-			if nome=="Plot" and not table.find(tiposPlot,self._tipo) then self._tipo="Adicionar"; self._chave=nil end
-			if nome=="Editar" and not table.find(tipos,self._tipo) then self._tipo="Dinheiro"; self._chave=nil end
-			self._aba=nome; self._pagina=1; self._escolhendo=nil; self:_Desenhar()
-		end,((i-1)%colunas)/colunas,1/colunas)
+for i,nome in abas do
+    local b=self:_Botao(nome,nome,130+math.floor((i-1)/colunas)*52,function()
+      if nome=="Plot" and not table.find(tiposPlot,self._tipo) then self._tipo="Adicionar"; self._chave=nil end
+      if nome=="Editar" and not table.find(tipos,self._tipo) then self._tipo="Dinheiro"; self._chave=nil end
+      self._aba=nome; self._pagina=1; self._escolhendo=nil; self:_Desenhar()
+      AnimacaoInterface.TransicaoSubAba(self._janela.Conteudo)
+    end,((i-1)%colunas)/colunas,1/colunas)
 		if self._aba==nome then b:ObterInstancia().BackgroundColor3=Color3.fromRGB(48,93,120) end
 	end
 	local y=132+math.ceil(#abas/colunas)*52

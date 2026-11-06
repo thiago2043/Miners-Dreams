@@ -1,6 +1,7 @@
 local Tutorial=require(game:GetService("ReplicatedStorage").Shared.Tutorial)
 local Janela=require(script.Parent.PainelProgressao)
 local Botao=require(script.Parent.Botao)
+local AnimacaoInterface=require(script.Parent.AnimacaoInterface)
 local Painel={}; Painel.__index=Painel
 
 function Painel.new(pai,jogador,navegacao)
@@ -66,13 +67,15 @@ function Painel:_Filtrar()
 	self._janela.Conteudo.CanvasPosition=Vector2.zero
 end
 function Painel:_Indice()
-	self._atual=nil
-	self:_Desenhar()
+  self._atual=nil
+  self:_Desenhar()
+  AnimacaoInterface.TransicaoSubAba(self._corpo)
 end
 function Painel:_Abrir(indice)
-	if not Tutorial.Licoes[indice] then return end
-	self._atual=indice
-	self:_Desenhar()
+  if not Tutorial.Licoes[indice] then return end
+  self._atual=indice
+  self:_Desenhar()
+  AnimacaoInterface.TransicaoSubAba(self._corpo)
 end
 function Painel:_Desenhar()
   if self._destruido then return end
@@ -96,8 +99,12 @@ function Painel:_Desenhar()
 		self._pesquisa=busca
 		local faixa=self:_Faixa("Niveis")
 		self._filtros={}
-		for i,nivel in {"Todos",table.unpack(Tutorial.Niveis)} do
-			local b=self:_Botao(faixa,nivel,nivel,function() self._nivel=nivel; self:_Filtrar() end)
+for i,nivel in {"Todos",table.unpack(Tutorial.Niveis)} do
+      local b=self:_Botao(faixa,nivel,nivel,function()
+        if self._nivel==nivel then return end
+        self._nivel=nivel; self:_Filtrar()
+        AnimacaoInterface.TransicaoSubAba(self._corpo)
+      end)
 			local o=b:ObterInstancia(); o.Position,o.Size=UDim2.fromScale((i-1)/4,0),UDim2.new(.25,-6,1,0)
 			o.TextSize=15
 			self._filtros[nivel]=b

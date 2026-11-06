@@ -6,6 +6,7 @@ local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local FichaMaquina = require(script.Parent.FichaMaquina)
 local GradePecas = require(script.Parent.GradePecas)
 local FichaPeca = require(script.Parent.FichaPeca)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 
 local PainelPecas = {}
 PainelPecas.__index = PainelPecas
@@ -105,8 +106,8 @@ end
 function PainelPecas:Atualizar()
   if self._destruido then return end
   local nav = self._construcao.Navegacao
-  self._painelLista.Visible = nav:Contem(self.Aba)
-  self._painelFicha.Visible = self._painelLista.Visible and nav:Contem("Ficha" .. self.Aba)
+  local visivelLista = nav:Contem(self.Aba)
+  local visivelFicha = visivelLista and nav:Contem("Ficha" .. self.Aba)
 
   local parent = self._grupo.Parent
   local tela = parent and parent:IsA("GuiBase2d") and parent.AbsoluteSize or Vector2.new(1280, 720)
@@ -118,8 +119,9 @@ function PainelPecas:Atualizar()
   local somenteToque = Input.TouchEnabled == true and Input.KeyboardEnabled ~= true and Input.MouseEnabled ~= true
   local compacta = somenteToque and (tela.X < 700 or tela.Y < 420)
   local inventario = self.Aba == "Inventario"
+  local direcaoAnim = if inventario then "Esquerda" else "Direita"
   local modoResumo = inventario and self._grade._modo ~= "Estoque"
-  local listaLarga = compacta or (modoResumo and not self._painelFicha.Visible)
+  local listaLarga = compacta or (modoResumo and not visivelFicha)
 
   self._grupo.AnchorPoint = Vector2.new(compacta and 0.5 or (inventario and 0 or 1), 0.5)
   self._grupo.Position = compacta and UDim2.fromScale(0.5, 0.5)
@@ -134,31 +136,42 @@ function PainelPecas:Atualizar()
     self._grade:_DimensionarGrade()
   end
 
-  for _, painel in { self._painelLista, self._painelFicha } do
-    if listaLarga then
-      painel.AnchorPoint = Vector2.zero
-      painel.Position = UDim2.new()
-      painel.Size = UDim2.fromScale(1, 1)
-    else
-      local esquerda = (painel == self._painelLista) == inventario
-      painel.AnchorPoint = Vector2.new(esquerda and 0 or 1, 0)
-      painel.Position = UDim2.fromScale(esquerda and 0 or 1, 0)
-      painel.Size = UDim2.new(0.5, -4, 1, 0)
+if compacta then
+    if self._construcao._abaSelecionada ~= self.Aba then
+      visivelLista = false
+      visivelFicha = false
+    elseif visivelFicha then
+      visivelLista = false
     end
   end
 
-  if compacta then
-    if self._construcao._abaSelecionada ~= self.Aba then
-      self._painelLista.Visible = false
-      self._painelFicha.Visible = false
-    elseif self._painelFicha.Visible then
-      self._painelLista.Visible = false
+  for _, painel in { self._painelLista, self._painelFicha } do
+    local vaiFicarVisivel = if painel == self._painelLista then visivelLista else visivelFicha
+    if vaiFicarVisivel and not painel:GetAttribute("AnimandoUI") then
+      if listaLarga then
+        painel.AnchorPoint = Vector2.new(0.5, 0.5)
+        painel.Position = UDim2.fromScale(0.5, 0.5)
+        painel.Size = UDim2.fromScale(1, 1)
+      else
+        local esquerda = (painel == self._painelLista) == inventario
+        painel.AnchorPoint = Vector2.new(esquerda and 0 or 1, 0.5)
+        painel.Position = UDim2.fromScale(esquerda and 0 or 1, 0.5)
+        painel.Size = UDim2.new(0.5, -4, 1, 0)
+      end
     end
   end
+
+  local fichaJaAberta = AnimacaoInterface.EstaVisivel(self._painelFicha)
+  AnimacaoInterface.DefinirVisivel(self._painelLista, visivelLista, direcaoAnim)
+  AnimacaoInterface.DefinirVisivel(self._painelFicha, visivelFicha, direcaoAnim)
 
   local selecao = self._construcao:ObterSelecao(self.Aba)
-  if (self._selecao and self._selecao.Id) ~= (selecao and selecao.Id) or not self._painelFicha.Visible then
+  local mudouSelecao = (self._selecao and self._selecao.Id) ~= (selecao and selecao.Id)
+  if mudouSelecao or not visivelFicha then
     self._textoResposta.Text = ""
+  end
+  if mudouSelecao and fichaJaAberta and visivelFicha then
+    AnimacaoInterface.TransicaoSubAba(self._ficha._conteudo)
   end
   self._selecao = selecao
 
@@ -184,7 +197,7 @@ function PainelPecas:Atualizar()
   for _, id in self._ids do
     local quantidade = self._jogador:GetAttribute("Inventario_" .. id)
     local pronto = quantidadeValida(quantidade)
-    local selecionada = self._painelFicha.Visible and selecao ~= nil and selecao.MaquinaId == id
+local selecionada = visivelFicha and selecao ~= nil and selecao.MaquinaId == id
     if chaveDescricao ~= self._chaveDescricao then
       local ok, descricao = pcall(FichaMaquina.Descrever, Catalogo[id], self._jogador)
       self._grade:AtualizarDescricao(id, ok and descricao or "Descrição indisponível")
@@ -232,8 +245,8 @@ function PainelPecas:Atualizar()
   )
   self._fichaValida = self._fichaValida and retratoValido
 
-  for acao, botao in self._acoes do
-    local disponivel = self._painelFicha.Visible and item ~= nil and pronto and self._fichaValida and not self._negociando
+for acao, botao in self._acoes do
+    local disponivel = visivelFicha and item ~= nil and pronto and self._fichaValida and not self._negociando
     if acao == "Colocar" then disponivel = disponivel and (quantidade > 0 or copia) end
     if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Renascimento end
     if acao == "Comprar" then disponivel = disponivel and not item.Renascimento end

@@ -5,6 +5,7 @@ local Botao = require(script.Parent.Botao)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local IconesAbas = require(script.Parent.IconesAbas)
 local Raridades = require(script.Parent.Raridades)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 local Inteiro = require(game:GetService("ReplicatedStorage").Shared.InteiroGrande)
 
 local GradePecas = {}
@@ -86,10 +87,11 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
   local padding = Instance.new("UIPadding")
   padding.PaddingLeft, padding.PaddingRight, padding.Parent = UDim.new(0, 8), UDim.new(0, 6), self._busca
 
-  self._ordenar = self:_Botao(self._grupo, "Ordenar", function()
+self._ordenar = self:_Botao(self._grupo, "Ordenar", function()
     self._ordem = self._ordem == "Nome" and (loja and "Preco" or "Quantidade") or "Nome"
     self.Revisao += 1
     self:ConcluirAtualizacao()
+    AnimacaoInterface.TransicaoSubAba(self._conteudo)
   end)
   local ordenar = self._ordenar:ObterInstancia()
   ordenar.Position, ordenar.Size, ordenar.TextSize = UDim2.new(1, -94, 0, topoBusca), UDim2.fromOffset(82, 32), 15
@@ -187,7 +189,7 @@ function GradePecas.new(pai, ids, modelos, selecionar, fechar, aba)
 end
 
 function GradePecas:_AtualizarMiniatura(item)
-  if self._destruido then return end
+  if self._destruido or AnimacaoInterface.EstaAnimando(self._grupo) then return end
   local botao = item.Botao:ObterInstancia()
   if not self._grupo.Visible or not botao.Visible then
     item.Borda.Enabled = false
@@ -210,13 +212,14 @@ end
 
 function GradePecas:_CriarModos()
   self._modos = {}
-  for i, item in { { "Estoque", "Inventário" }, { "Plot", "Na plot" }, { "Novas", "Não usadas" } } do
+for i, item in { { "Estoque", "Inventário" }, { "Plot", "Na plot" }, { "Novas", "Não usadas" } } do
     local id, nome = item[1], item[2]
     local botao = self:_Botao(self._grupo, id, function()
       if self._modo == id then return end
       self._modo = id; self.Revisao += 1
       self._area.CanvasPosition = Vector2.zero
       self:_DimensionarGrade(); self:ConcluirAtualizacao()
+      AnimacaoInterface.TransicaoSubAba(self._conteudo)
       if self.AoMudarModo then self.AoMudarModo() end
     end)
     local b = botao:ObterInstancia()
@@ -248,13 +251,14 @@ function GradePecas:_CriarCategorias()
   arredondar(faixa, 18)
   borda(faixa, Color3.fromRGB(48, 53, 59), 1)
   self._categorias = {}
-  for indice, categoria in categorias do
+for indice, categoria in categorias do
     local id, nome = categoria[1], categoria[2]
     local botao = self:_Botao(faixa, id, function()
       if self._categoria == id then return end
       self._categoria = id
       self.Revisao += 1
       self:ConcluirAtualizacao()
+      AnimacaoInterface.TransicaoSubAba(self._conteudo)
     end)
     local b = botao:ObterInstancia()
     b.Text, b.Position, b.Size = "", UDim2.new((indice - 1) / #categorias, 4, 0, 4), UDim2.new(1 / #categorias, -8, 1, -8)
@@ -287,6 +291,7 @@ function GradePecas:_PertenceACategoria(id)
 end
 
 function GradePecas:_DimensionarGrade()
+  if AnimacaoInterface.EstaAnimando(self._grupo) then return end
   local largura = self._conteudo.AbsoluteSize.X
   if largura <= 0 then return end
   local resumo = not self._loja and self._modo ~= "Estoque"

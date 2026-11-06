@@ -188,22 +188,81 @@ end
 
 -- Retira o modelo temporario da cena e apaga o alvo e o ultimo encaixe. A instancia continua existindo para
 -- poder reaparecer quando houver uma posicao calculavel.
+function ControladorConstrucao:_LimparPreviaRemota()
+  if not self._ultimaChavePrevia then return end
+  self._ultimaChavePrevia = nil
+  self._ultimoEnvioPrevia = nil
+  task.spawn(function()
+    pcall(function() self._redeConstrucao:fetch("AtualizarPrevia", nil) end)
+  end)
+end
+
+function ControladorConstrucao:_PublicarPreviaRemota()
+  if self._destruido or not self._previa or self._previa:ObterModelo().Parent ~= workspace or not self._alvoColocacao then
+    self:_LimparPreviaRemota()
+    return
+  end
+  local lista = {}
+  if self._arrasteColocacao and self._arrasteColocacao.Alvos then
+    for i = 1, math.min(60, #self._arrasteColocacao.Alvos) do
+      table.insert(lista, self._arrasteColocacao.Alvos[i])
+    end
+  elseif self._movimento and self._movimento.Grupo and self._alvosGrupo then
+    for i = 1, math.min(60, #self._alvosGrupo) do
+      table.insert(lista, self._alvosGrupo[i].Alvo)
+    end
+  else
+    table.insert(lista, self._alvoColocacao)
+  end
+  if #lista == 0 then
+    self:_LimparPreviaRemota()
+    return
+  end
+  local partesChave = {}
+  for i, a in lista do
+    local c = { a.rotacao:GetComponents() }
+    partesChave[i] = string.format("%s:%g,%g,%g:%g,%g,%g,%g,%g,%g:%d",
+      a.maquinaId, a.minimo.X, a.minimo.Y, a.minimo.Z,
+      c[4], c[5], c[6], c[7], c[8], c[9], a.livre and 1 or 0)
+  end
+  local chave = table.concat(partesChave, "|")
+  if chave == self._ultimaChavePrevia then return end
+  local agora = os.clock()
+  if self._ultimoEnvioPrevia and agora - self._ultimoEnvioPrevia < 0.06 then return end
+  self._ultimaChavePrevia = chave
+  self._ultimoEnvioPrevia = agora
+  local payload = {}
+  for i, a in lista do
+    local c = { a.rotacao:GetComponents() }
+    payload[i] = {
+      a.maquinaId, a.minimo.X, a.minimo.Y, a.minimo.Z,
+      c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11], c[12],
+      a.livre and 1 or 0,
+    }
+  end
+  task.spawn(function()
+    pcall(function() self._redeConstrucao:fetch("AtualizarPrevia", payload) end)
+  end)
+end
+
 function ControladorConstrucao:_OcultarPrevia()
-	if self._movimento and self._movimento.Grupo then
-		for _, peca in self._movimento.Pecas do peca.Previa:Ocultar() end
-	else
-		self._previa:Ocultar()
-	end
-	self._alvoColocacao = nil
-	self._ultimoEncaixe = nil
-	self._alvosGrupo = nil
+  if self._movimento and self._movimento.Grupo then
+    for _, peca in self._movimento.Pecas do peca.Previa:Ocultar() end
+  else
+    self._previa:Ocultar()
+  end
+  self._alvoColocacao = nil
+  self._ultimoEncaixe = nil
+  self._alvosGrupo = nil
+  self:_LimparPreviaRemota()
 end
 
 -- Destruir a previa libera suas hitboxes e recursos. As instancias movidas ja foram apagadas pelo servidor;
 -- somente ConfirmarMovimento cria substitutas, enquanto o cancelamento as devolve ao inventario.
 function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
-	self:_EncerrarArrasteColocacao()
-	self:_EncerrarRotacao()
+  self:_LimparPreviaRemota()
+  self:_EncerrarArrasteColocacao()
+  self:_EncerrarRotacao()
 	if not preservarSelecao then
 		self._rotacao = CFrame.identity
 		self._copia = nil
@@ -1861,15 +1920,17 @@ function ControladorConstrucao:Atualizar(deltaTime)
 	-- depender da posicao mundial do terreno.
 	local origem = Geometria.Origem(self._piso)
 
-	self._previa:AtualizarVolumes(origem, deltaTime)
-	if self._arrasteColocacao then
-		self:_AtualizarArrasteColocacao(self:ObterPonteiro(), deltaTime)
-		return
-	end
-	if self._rPressionado and self._ancoraRotacao then
-		self:_AtualizarAlvoRotacao(deltaTime)
-		return
-	end
+self._previa:AtualizarVolumes(origem, deltaTime)
+  if self._arrasteColocacao then
+    self:_AtualizarArrasteColocacao(self:ObterPonteiro(), deltaTime)
+    self:_PublicarPreviaRemota()
+    return
+  end
+  if self._rPressionado and self._ancoraRotacao then
+    self:_AtualizarAlvoRotacao(deltaTime)
+    self:_PublicarPreviaRemota()
+    return
+  end
 
 	local camera = workspace.CurrentCamera
 
@@ -2017,11 +2078,12 @@ function ControladorConstrucao:Atualizar(deltaTime)
 		ocupado = ocupado,
 	}
 
-	if self._movimento and self._movimento.Grupo then
-		self:_AtualizarAlvosGrupo(self._alvoColocacao, origem, deltaTime)
-	else
-		self._previa:Animar(self._alvoColocacao, deltaTime)
-	end
+if self._movimento and self._movimento.Grupo then
+    self:_AtualizarAlvosGrupo(self._alvoColocacao, origem, deltaTime)
+  else
+    self._previa:Animar(self._alvoColocacao, deltaTime)
+  end
+  self:_PublicarPreviaRemota()
 end
 
 -- Atalho especifico do comando E para abrir ou fechar Inventario pelo mesmo fluxo usado pelas outras abas.

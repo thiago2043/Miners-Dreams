@@ -37,6 +37,9 @@ end
 function Construcao:Refazer(jogador)
   return servico:Refazer(jogador)
 end
+function Construcao:AtualizarPrevia(jogador, previa)
+  return servico:AtualizarPrevia(jogador, previa)
+end
 -- Vende uma lista de pecas colocadas; o servico valida o dono, atualiza o perfil e so entao destroi os modelos.
 function Construcao:VenderColocadas(jogador, maquinas)
 	return servico:VenderMaquinasColocadas(jogador, maquinas)
@@ -130,7 +133,8 @@ Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBluepr
 	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
 Construcao.ColocarMultiplos,
   Construcao.RecolherTudo,
-  Construcao.Desfazer,
+Construcao.Desfazer,
   Construcao.Refazer,
+  Construcao.AtualizarPrevia,
 })
 return Construcao

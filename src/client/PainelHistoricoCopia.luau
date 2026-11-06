@@ -8,6 +8,7 @@ local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local bloco = require(ReplicatedStorage.Shared.Medidas).Bloco
 local Botao = require(script.Parent.Botao)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 
 local PainelHistoricoCopia = {}
 PainelHistoricoCopia.__index = PainelHistoricoCopia
@@ -302,8 +303,8 @@ function PainelHistoricoCopia.new(pai, jogador, construcao)
   table.insert(self._conexoes, construcao.HistoricoCopiaAlterado:Connect(function()
     if self._grupo.Visible then self:_DesenharLista() end
   end))
-  table.insert(self._conexoes, g:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-    if not self._grupo.Visible then return end
+table.insert(self._conexoes, g:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+    if not self._grupo.Visible or g:GetAttribute("AnimandoUI") then return end
     local tamanho = g.AbsoluteSize
     if not self._ultimoTamanho or (tamanho - self._ultimoTamanho).Magnitude >= 16 then
       self._ultimoTamanho = tamanho
@@ -397,9 +398,9 @@ function PainelHistoricoCopia:Atualizar()
   self._titulo.Text = "Área de transferência [" .. tHist .. "]"
   self._dica.Text = string.format("Copiar: [%s] • Colar: [%s] • Desfazer: [%s] • Refazer: [%s]", tCopiar, tColar, tDesfazer, tRefazer)
   self._vazio.Text = string.format("Nenhuma cópia recente.\nAponte ou selecione peças na plot e pressione [%s].", tCopiar)
-  local visivel = self._navegacao:Contem("HistoricoCopia")
-  local abriu = visivel and not self._grupo.Visible
-  self._grupo.Visible = visivel
+local visivel = self._navegacao:Contem("HistoricoCopia")
+  local abriu = visivel and not AnimacaoInterface.EstaVisivel(self._grupo)
+  AnimacaoInterface.DefinirVisivel(self._grupo, visivel, "Centro")
   if abriu then
     self._ultimoTamanho = self._grupo.AbsoluteSize
     self:_DesenharLista()

@@ -5,6 +5,7 @@ local NomeNumero = require(R.Shared.NomeNumero)
 local Configuracoes = require(R.Shared.Configuracoes)
 local DicaNumero = require(script.Parent.DicaNumero)
 local Janela = require(script.Parent.PainelProgressao)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 local Painel = {}
 Painel.__index = Painel
 
@@ -12,12 +13,14 @@ function Painel.new(pai, jogador, navegacao, rede)
 	local janela = Janela.new(pai, navegacao, "Classificacao", "Classificação", nil, nil, 540, jogador)
 	local self = setmetatable({ _janela = janela, _grupo = janela._grupo, _rede = rede, _categoria = "Vidas", _linhas = {}, _abas = {} }, Painel)
 	self._dica = DicaNumero.new(self._grupo, UDim2.fromOffset(12, 76), Vector2.zero)
-	for i, categoria in Regras.Categorias do
-		local botao = janela:Botao(janela.Conteudo, categoria.Id, UDim2.new((i - 1) / 4, 0, 0, 0), UDim2.new(1 / 4, -6, 0, 36), function()
-			self._categoria = categoria.Id
-			self._dica:Ocultar()
-			self:_Desenhar()
-		end)
+for i, categoria in Regras.Categorias do
+    local botao = janela:Botao(janela.Conteudo, categoria.Id, UDim2.new((i - 1) / 4, 0, 0, 0), UDim2.new(1 / 4, -6, 0, 36), function()
+      if self._categoria == categoria.Id then return end
+      self._categoria = categoria.Id
+      self._dica:Ocultar()
+      self:_Desenhar()
+      AnimacaoInterface.TransicaoSubAba(janela.Conteudo)
+    end)
 		botao:ObterInstancia().Text = categoria.Nome
 		self._abas[categoria.Id] = botao
 	end

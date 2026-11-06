@@ -10,6 +10,7 @@ local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local bloco = require(ReplicatedStorage.Shared.Medidas).Bloco
 local Janela = require(script.Parent.PainelProgressao)
 local Botao = require(script.Parent.Botao)
+local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 
 local PainelBlueprints = {}
 PainelBlueprints.__index = PainelBlueprints
@@ -520,13 +521,18 @@ self._janela.Conteudo.CanvasSize = UDim2.fromOffset(0, y + 12)
 end
 
 function PainelBlueprints:_Desenhar()
-if self._destruido then return end
-self:_LimparLista()
+  if self._destruido then return end
+  self:_LimparLista()
+  local chaveSubAba = if self._editando then ("Editor_" .. self._editando.Blueprint.Id) elseif self._renomeandoId then ("Renomear_" .. self._renomeandoId) else "Lista"
+  local mudouSubAba = self._ultimaSubAba and self._ultimaSubAba ~= chaveSubAba
+  self._ultimaSubAba = chaveSubAba
 
-if self._editando then
-self:_DesenharEditor()
-return
-end
+  if self._editando then
+    self:_DesenharEditor()
+    if mudouSubAba then AnimacaoInterface.TransicaoSubAba(self._lista) end
+    return
+  end
+  if mudouSubAba then AnimacaoInterface.TransicaoSubAba(self._lista) end
 
 self._cabecalho.Visible = true
 self._lista.Position = UDim2.fromOffset(0, 140)

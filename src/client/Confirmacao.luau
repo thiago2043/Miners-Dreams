@@ -1,5 +1,6 @@
 local Config=require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
 local Botao=require(script.Parent.Botao)
+local AnimacaoInterface=require(script.Parent.AnimacaoInterface)
 local Confirmacao={}; Confirmacao.__index=Confirmacao
 function Confirmacao.new(pai,jogador,nav)
 	local self=setmetatable({_jogador=jogador,_nav=nav},Confirmacao)
@@ -23,13 +24,21 @@ function Confirmacao:Pedir(tipo,quantidade,callback,mensagem)
 	local pedir=if tipo=="Administracao" or tipo=="LimparPlot" then true elseif tipo=="Renascimento" then Config.Obter(self._jogador,"ConfirmarRenascimento") else modo=="Sempre" or (modo=="Várias peças" and quantidade>1)
 	if not pedir then return callback() end
 	if self._callback then return false end
-	self._callback=callback; self._fundo.Visible=true
-	self._caixa.Size=UDim2.new(1,-32,0,tipo=="Administracao" and 320 or 220)
-	self._texto.Size=UDim2.new(1,-36,1,-88)
-	self._texto.TextSize=tipo=="Administracao" and 16 or 19
-	self._texto.Text=mensagem or (if tipo=="Renascimento" then "Confirmar renascimento?\n\nDinheiro e upgrades do ciclo serão reiniciados. Recompensas e expansão permanecem." else "Vender "..quantidade.." peça(s)?\n\nAs peças selecionadas serão removidas da plot ou do inventário.")
-	self._nav:Abrir("Confirmacao",function() self._callback=nil; self._fundo.Visible=false end)
-	return true
+self._callback=callback; self._fundo.Visible=true
+  self._caixa.Size=UDim2.new(1,-32,0,tipo=="Administracao" and 320 or 220)
+  self._texto.Size=UDim2.new(1,-36,1,-88)
+  self._texto.TextSize=tipo=="Administracao" and 16 or 19
+  self._texto.Text=mensagem or (if tipo=="Renascimento" then "Confirmar renascimento?\n\nDinheiro e upgrades do ciclo serão reiniciados. Recompensas e expansão permanecem." else "Vender "..quantidade.." peça(s)?\n\nAs peças selecionadas serão removidas da plot ou do inventário.")
+AnimacaoInterface.DefinirVisivel(self._caixa, true, "Centro")
+  self._nav:Abrir("Confirmacao",function()
+    self._callback=nil
+    AnimacaoInterface.DefinirVisivel(self._caixa, false, "Centro", function()
+      if not AnimacaoInterface.EstaVisivel(self._caixa) then
+        self._fundo.Visible = false
+      end
+    end)
+  end)
+  return true
 end
 function Confirmacao:Destruir()
 	self._nav:Fechar("Confirmacao"); self._sim:Destruir(); self._nao:Destruir(); self._gui:Destroy()
