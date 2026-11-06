@@ -90,8 +90,67 @@ function DadosJogador:AdicionarBlueprint(blueprint)
 			return false, "Esse blueprint ja existe."
 		end
 	end
-	table.insert(blueprints, blueprint)
-	return true, "Blueprint salvo."
+table.insert(blueprints, blueprint)
+  return true, "Blueprint salvo."
+end
+
+function DadosJogador:AtualizarBlueprint(id, nome, pecas)
+  if not self:EstaAtivo() or type(id) ~= "string" then
+    return false, "Dados ou blueprint invalidos."
+  end
+  local blueprints = self._perfil.Data.Blueprints
+  if type(blueprints) ~= "table" then return false, "Blueprints indisponiveis." end
+  local alvo
+  for _, existente in blueprints do
+    if type(existente) == "table" and existente.Id == id then alvo = existente; break end
+  end
+  if not alvo then return false, "Esse blueprint nao existe." end
+  if nome ~= nil then
+    if type(nome) ~= "string" or #nome < 1 then return false, "Nome de blueprint invalido." end
+    alvo.Nome = nome
+  end
+  if pecas ~= nil then
+    if type(pecas) ~= "table" or #pecas < 1 or #pecas > Limites.PecasPorGrupo then
+      return false, "Pecas de blueprint invalidas."
+    end
+    alvo.Pecas = pecas
+  end
+  return true, "Blueprint atualizado.", alvo
+end
+
+function DadosJogador:RemoverBlueprint(id)
+  if not self:EstaAtivo() or type(id) ~= "string" then
+    return false, "Dados ou blueprint invalidos."
+  end
+  local blueprints = self._perfil.Data.Blueprints
+  if type(blueprints) ~= "table" then return false, "Blueprints indisponiveis." end
+  for indice, existente in blueprints do
+    if type(existente) == "table" and existente.Id == id then
+      table.remove(blueprints, indice)
+      return true, "Blueprint deletado."
+    end
+  end
+  return false, "Esse blueprint nao existe."
+end
+
+function DadosJogador:MoverBlueprint(id, deslocamento)
+  if not self:EstaAtivo() or type(id) ~= "string"
+    or type(deslocamento) ~= "number" or deslocamento % 1 ~= 0 or deslocamento == 0
+  then
+    return false, "Pedido invalido."
+  end
+  local blueprints = self._perfil.Data.Blueprints
+  if type(blueprints) ~= "table" then return false, "Blueprints indisponiveis." end
+  local indiceAtual
+  for indice, existente in blueprints do
+    if type(existente) == "table" and existente.Id == id then indiceAtual = indice; break end
+  end
+  if not indiceAtual then return false, "Esse blueprint nao existe." end
+  local novoIndice = math.clamp(indiceAtual + deslocamento, 1, #blueprints)
+  if novoIndice == indiceAtual then return false, "O blueprint ja esta nessa posicao." end
+  local item = table.remove(blueprints, indiceAtual)
+  table.insert(blueprints, novoIndice, item)
+  return true, "Sequencia atualizada."
 end
 
 -- Consulta as personalizacoes daquele tipo de peca e confere se cabem na quantidade total. A diferenca entre

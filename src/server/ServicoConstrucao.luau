@@ -557,60 +557,228 @@ function ServicoConstrucao:CopiarGrupo(jogador, maquinasSelecionadas)
 	return true, "Peca copiada para colocacao.", self:_RegistrarCopiaGrupo(jogador, pecas)
 end
 
--- Lista nomes e tamanhos sem enviar ao cliente os dados usados para reconstruir as pecas.
-function ServicoConstrucao:ListarBlueprints(jogador)
-	if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante antes de atualizar os blueprints." end
-	local dados = DataManager.ObterDados(jogador)
-	local blueprints = dados and dados:ObterBlueprints()
-	if not blueprints then return false, "Seus dados ainda nao estao disponiveis." end
-	local resposta = {}
-	for _, blueprint in blueprints do
-		if type(blueprint) ~= "table" or type(blueprint.Id) ~= "string" or type(blueprint.Nome) ~= "string"
-			or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
-		then return false, "Os dados de um blueprint estao invalidos." end
-		table.insert(resposta, { Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #blueprint.Pecas })
-	end
-	return true, "Blueprints carregados.", resposta
+function ServicoConstrucao:_ValidarNomeBlueprint(nome, idPadrao)
+  if nome ~= nil and type(nome) ~= "string" then return nil, "Nome de blueprint invalido." end
+  nome = string.gsub(string.gsub(nome or "", "^%s+", ""), "%s+$", "")
+  local caracteres = utf8.len(nome)
+  if not caracteres or caracteres > 40 or nome:find("[%c]") then
+    return nil, "Use um nome de ate 40 caracteres."
+  end
+  if nome == "" then nome = "Blueprint " .. tostring(idPadrao) end
+  return nome
 end
 
--- Captura um grupo validado pela rotina de copia e salva sua configuracao em relacao a primeira peca selecionada.
-function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
-	if nome ~= nil and type(nome) ~= "string" then return false, "Nome de blueprint invalido." end
-	nome = nome or ""
-	nome = string.gsub(string.gsub(nome, "^%s+", ""), "%s+$", "")
-	local caracteres = utf8.len(nome)
-	if not caracteres or caracteres > 40 or nome:find("[%c]") then
-		return false, "Use um nome de ate 40 caracteres."
-	end
-	local dados = DataManager.ObterDados(jogador)
-	local existentes = dados and dados:ObterBlueprints()
-	if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
-	local identificador = tostring(#existentes + 1)
-	if nome == "" then nome = "Blueprint " .. identificador end
+function ServicoConstrucao:_ResumoBlueprint(blueprint)
+  if type(blueprint) ~= "table" or type(blueprint.Id) ~= "string" or type(blueprint.Nome) ~= "string"
+    or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
+  then return nil end
+  local pecas = {}
+  local custoTotal, renascimento = "0", 0
+  local minX, minY, minZ = math.huge, math.huge, math.huge
+  local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
+  for indice, item in blueprint.Pecas do
+    if type(item) ~= "table" then return nil end
+    local defModelo = self._modelos[item.MaquinaId]
+    local cat = CatalogoMaquinas[item.MaquinaId]
+    local deslocamento, matriz = item.DeslocamentoInicial, item.RotacaoInicial
+    if not defModelo or not cat or type(item.Modificacoes) ~= "table"
+      or type(deslocamento) ~= "table" or #deslocamento ~= 3
+      or type(matriz) ~= "table" or #matriz ~= 9
+    then return nil end
+    for _, n in deslocamento do if not finito(n) then return nil end end
+    for _, n in matriz do if not finito(n) then return nil end end
+    local rotacao = RotacaoConstrucao.ValidarNaGrade(CFrame.new(0, 0, 0, table.unpack(matriz)), cat)
+    if not rotacao then return nil end
+    local okMod, modificacoes = pcall(function()
+      return PersonalizacaoMaquina.new(item.Modificacoes):ObterDados()
+    end)
+    if not okMod then return nil end
+    local posRel = Vector3.new(table.unpack(deslocamento))
+    local _, ocupado = defModelo.Volume:Calcular(rotacao)
+    local pMin, pMax = posRel - ocupado * 0.5, posRel + ocupado * 0.5
+    minX, minY, minZ = math.min(minX, pMin.X), math.min(minY, pMin.Y), math.min(minZ, pMin.Z)
+    maxX, maxY, maxZ = math.max(maxX, pMax.X), math.max(maxY, pMax.Y), math.max(maxZ, pMax.Z)
+    if cat.Renascimento then
+      renascimento += 1
+    elseif InteiroGrande.eValido(cat.Preco) then
+      custoTotal = InteiroGrande.somar(custoTotal, cat.Preco)
+    end
+    pecas[indice] = {
+      MaquinaId = item.MaquinaId, Modificacoes = modificacoes,
+      DeslocamentoInicial = posRel, RotacaoInicial = rotacao,
+    }
+  end
+  local passo = Geometria.Passo
+  local blocos = {
+    math.max(1, math.round((maxX - minX) / passo)),
+    math.max(1, math.round((maxY - minY) / passo)),
+    math.max(1, math.round((maxZ - minZ) / passo)),
+  }
+  return {
+    Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #pecas,
+    Custo = custoTotal, Renascimento = renascimento, Blocos = blocos, Pecas = pecas,
+  }
+end
 
-	local sucesso, mensagem = self:CopiarGrupo(jogador, maquinasSelecionadas)
-	if not sucesso then return false, mensagem end
-	local captura = self._copiasGrupo[jogador]
-	if not captura or #captura.Pecas ~= #maquinasSelecionadas then
-		self._copiasGrupo[jogador] = nil
-		return false, "Nao foi possivel capturar as pecas do blueprint."
-	end
-	local pecas = {}
-	for indice, peca in captura.Pecas do
-		local deslocamento = peca.DeslocamentoInicial
-		local componentes = { peca.RotacaoInicial:GetComponents() }
-		pecas[indice] = {
-			MaquinaId = peca.MaquinaId,
-			Modificacoes = PersonalizacaoMaquina.new(peca.Modificacoes):ObterDados(),
-			DeslocamentoInicial = { deslocamento.X, deslocamento.Y, deslocamento.Z },
-			RotacaoInicial = { table.unpack(componentes, 4, 12) },
-		}
-	end
-	self._copiasGrupo[jogador] = nil
-	local blueprint = { Id = identificador, Nome = nome, Pecas = pecas }
-	local adicionado, resultado = dados:AdicionarBlueprint(blueprint)
-	if not adicionado then return false, resultado end
-	return true, "Blueprint salvo.", { Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #pecas }
+function ServicoConstrucao:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
+  local historicoAntes = self._historicoCopias[jogador] and table.clone(self._historicoCopias[jogador]) or nil
+  local anteriorGrupo = self._copiasGrupo[jogador]
+  local sucesso, mensagem = self:CopiarGrupo(jogador, maquinasSelecionadas)
+  if not sucesso then return nil, mensagem end
+  local captura = self._copiasGrupo[jogador]
+  self._copiasGrupo[jogador] = anteriorGrupo
+  self._historicoCopias[jogador] = historicoAntes
+  if not captura or #captura.Pecas ~= #maquinasSelecionadas then
+    return nil, "Nao foi possivel capturar as pecas do blueprint."
+  end
+  local pecas = {}
+  for indice, peca in captura.Pecas do
+    local deslocamento = peca.DeslocamentoInicial
+    local componentes = { peca.RotacaoInicial:GetComponents() }
+    pecas[indice] = {
+      MaquinaId = peca.MaquinaId,
+      Modificacoes = PersonalizacaoMaquina.new(peca.Modificacoes):ObterDados(),
+      DeslocamentoInicial = { deslocamento.X, deslocamento.Y, deslocamento.Z },
+      RotacaoInicial = { table.unpack(componentes, 4, 12) },
+    }
+  end
+  return pecas
+end
+
+function ServicoConstrucao:ListarBlueprints(jogador)
+  if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante antes de atualizar os blueprints." end
+  local dados = DataManager.ObterDados(jogador)
+  local blueprints = dados and dados:ObterBlueprints()
+  if not blueprints then return false, "Seus dados ainda nao estao disponiveis." end
+  local resposta = {}
+  for _, blueprint in blueprints do
+    local resumo = self:_ResumoBlueprint(blueprint)
+    if not resumo then return false, "Os dados de um blueprint estao invalidos." end
+    table.insert(resposta, resumo)
+  end
+  return true, "Blueprints carregados.", resposta
+end
+
+function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
+  local dados = DataManager.ObterDados(jogador)
+  local existentes = dados and dados:ObterBlueprints()
+  if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
+  local usados = {}
+  for _, b in existentes do
+    if type(b) == "table" and type(b.Id) == "string" then usados[b.Id] = true end
+  end
+  local numeroId = #existentes + 1
+  while usados[tostring(numeroId)] do numeroId += 1 end
+  local identificador = tostring(numeroId)
+  local nomeValido, erroNome = self:_ValidarNomeBlueprint(nome, identificador)
+  if not nomeValido then return false, erroNome end
+
+  local pecas, erroCaptura = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
+  if not pecas then return false, erroCaptura end
+  local blueprint = { Id = identificador, Nome = nomeValido, Pecas = pecas }
+  local adicionado, resultado = dados:AdicionarBlueprint(blueprint)
+  if not adicionado then return false, resultado end
+  return true, "Blueprint salvo.", self:_ResumoBlueprint(blueprint)
+end
+
+function ServicoConstrucao:SubstituirBlueprint(jogador, identificador, nome, maquinasSelecionadas)
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  local dados = DataManager.ObterDados(jogador)
+  local existentes = dados and dados:ObterBlueprints()
+  if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
+  local atual
+  for _, b in existentes do
+    if type(b) == "table" and b.Id == identificador then atual = b; break end
+  end
+  if not atual then return false, "Esse blueprint nao esta disponivel." end
+  local nomeFinal = atual.Nome
+  if type(nome) == "string" and string.gsub(nome, "%s+", "") ~= "" then
+    local validado, erroNome = self:_ValidarNomeBlueprint(nome, identificador)
+    if not validado then return false, erroNome end
+    nomeFinal = validado
+  end
+  local pecas, erroCaptura = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
+  if not pecas then return false, erroCaptura end
+  local ok, msg, atualizado = dados:AtualizarBlueprint(identificador, nomeFinal, pecas)
+  if not ok then return false, msg end
+  return true, "Blueprint substituido com sucesso.", self:_ResumoBlueprint(atualizado)
+end
+
+function ServicoConstrucao:RenomearBlueprint(jogador, identificador, novoNome)
+  if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  local nomeValido, erroNome = self:_ValidarNomeBlueprint(novoNome, identificador)
+  if not nomeValido then return false, erroNome end
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Seus dados ainda nao estao disponiveis." end
+  local ok, msg, atualizado = dados:AtualizarBlueprint(identificador, nomeValido, nil)
+  if not ok then return false, msg end
+  return true, "Blueprint renomeado.", self:_ResumoBlueprint(atualizado)
+end
+
+function ServicoConstrucao:EditarBlueprint(jogador, identificador, novoNome, indicesMantidos)
+  if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  local dados = DataManager.ObterDados(jogador)
+  local existentes = dados and dados:ObterBlueprints()
+  if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
+  local atual
+  for _, b in existentes do
+    if type(b) == "table" and b.Id == identificador then atual = b; break end
+  end
+  if not atual or type(atual.Pecas) ~= "table" then return false, "Esse blueprint nao esta disponivel." end
+  local nomeValido, erroNome = self:_ValidarNomeBlueprint(novoNome ~= nil and novoNome or atual.Nome, identificador)
+  if not nomeValido then return false, erroNome end
+
+  local novasPecas
+  if indicesMantidos ~= nil then
+    if type(indicesMantidos) ~= "table" or #indicesMantidos < 1 or #indicesMantidos > #atual.Pecas then
+      return false, "O blueprint precisa manter pelo menos uma peca."
+    end
+    novasPecas = {}
+    local vistos = {}
+    for i = 1, #indicesMantidos do
+      local idx = indicesMantidos[i]
+      if type(idx) ~= "number" or idx % 1 ~= 0 or idx < 1 or idx > #atual.Pecas or vistos[idx] then
+        return false, "Selecao de pecas do blueprint invalida."
+      end
+      vistos[idx] = true
+      local orig = atual.Pecas[idx]
+      table.insert(novasPecas, {
+        MaquinaId = orig.MaquinaId,
+        Modificacoes = PersonalizacaoMaquina.new(orig.Modificacoes):ObterDados(),
+        DeslocamentoInicial = table.clone(orig.DeslocamentoInicial),
+        RotacaoInicial = table.clone(orig.RotacaoInicial),
+      })
+    end
+    local ancora = table.clone(novasPecas[1].DeslocamentoInicial)
+    for _, p in novasPecas do
+      p.DeslocamentoInicial = {
+        p.DeslocamentoInicial[1] - ancora[1],
+        p.DeslocamentoInicial[2] - ancora[2],
+        p.DeslocamentoInicial[3] - ancora[3],
+      }
+    end
+  end
+  local ok, msg, atualizado = dados:AtualizarBlueprint(identificador, nomeValido, novasPecas)
+  if not ok then return false, msg end
+  return true, "Blueprint atualizado.", self:_ResumoBlueprint(atualizado)
+end
+
+function ServicoConstrucao:DeletarBlueprint(jogador, identificador)
+  if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Seus dados ainda nao estao disponiveis." end
+  return dados:RemoverBlueprint(identificador)
+end
+
+function ServicoConstrucao:MoverBlueprint(jogador, identificador, deslocamento)
+  if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Seus dados ainda nao estao disponiveis." end
+  return dados:MoverBlueprint(identificador, deslocamento)
 end
 
 -- Recria um token de grupo a partir do blueprint persistido; a confirmacao usa a colocacao parcial das copias.

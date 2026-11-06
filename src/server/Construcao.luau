@@ -64,7 +64,22 @@ function Construcao:ListarBlueprints(jogador)
 end
 -- Gera um token temporario para posicionar uma copia do blueprint escolhido usando a compra em grupo existente.
 function Construcao:PrepararBlueprint(jogador, identificador)
-	return servico:PrepararBlueprint(jogador, identificador)
+  return servico:PrepararBlueprint(jogador, identificador)
+end
+function Construcao:SubstituirBlueprint(jogador, identificador, nome, maquinas)
+  return servico:SubstituirBlueprint(jogador, identificador, nome, maquinas)
+end
+function Construcao:EditarBlueprint(jogador, identificador, nome, indicesMantidos)
+  return servico:EditarBlueprint(jogador, identificador, nome, indicesMantidos)
+end
+function Construcao:RenomearBlueprint(jogador, identificador, nome)
+  return servico:RenomearBlueprint(jogador, identificador, nome)
+end
+function Construcao:DeletarBlueprint(jogador, identificador)
+  return servico:DeletarBlueprint(jogador, identificador)
+end
+function Construcao:MoverBlueprint(jogador, identificador, deslocamento)
+  return servico:MoverBlueprint(jogador, identificador, deslocamento)
 end
 -- Valida, captura e apaga as instancias selecionadas antes de iniciar a previa; devolve um token temporario.
 function Construcao:IniciarMovimento(jogador, maquinas)
@@ -108,8 +123,10 @@ end)
 -- Restaurar e Sincronizar continuam acessiveis apenas a scripts do servidor.
 Networker.server.new("Construcao", Construcao, {
 	Construcao.Colocar, Construcao.Recolher, Construcao.Copiar, Construcao.CopiarGrupo,
-	Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
-	Construcao.PrepararBlueprint, Construcao.IniciarMovimento,
+Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
+  Construcao.PrepararBlueprint, Construcao.SubstituirBlueprint, Construcao.EditarBlueprint,
+  Construcao.RenomearBlueprint, Construcao.DeletarBlueprint, Construcao.MoverBlueprint,
+  Construcao.IniciarMovimento,
 	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
 Construcao.ColocarMultiplos,
   Construcao.RecolherTudo,

@@ -1009,11 +1009,15 @@ function ControladorConstrucao:_SalvarBlueprintDaSelecao()
 		return false
 	end
 
-	self._salvandoBlueprint, self._colocando = true, true
-	local comunicou, sucesso, mensagem, blueprint = pcall(function()
-		return self._redeConstrucao:fetch("CriarBlueprint", self._nomeBlueprintEmCriacao, maquinas)
-	end)
-	self._salvandoBlueprint, self._colocando = false, false
+local idSubstituir = self._idBlueprintEmSubstituicao
+  self._salvandoBlueprint, self._colocando = true, true
+  local comunicou, sucesso, mensagem, blueprint = pcall(function()
+    if idSubstituir then
+      return self._redeConstrucao:fetch("SubstituirBlueprint", idSubstituir, self._nomeBlueprintEmCriacao, maquinas)
+    end
+    return self._redeConstrucao:fetch("CriarBlueprint", self._nomeBlueprintEmCriacao, maquinas)
+  end)
+  self._salvandoBlueprint, self._colocando = false, false
 	if self._destruido then return false end
 	if not comunicou then
 		self._resultadoBlueprint = { Sucesso = false, Mensagem = "Nao foi possivel salvar o blueprint." }
@@ -2085,21 +2089,80 @@ function ControladorConstrucao:AlternarPainelCentral(aba)
 end
 
 -- Inicia uma unica selecao 3D; Q encerra a selecao e retorna a lista de blueprints sem alterar o terreno.
-function ControladorConstrucao:IniciarCriacaoBlueprint(nome)
-	if self._destruido or self._colocando or self._previa or self._movimento or (self._modoSelecao and self._modoSelecao ~= "Selecao") then
-		return false, "Encerre a acao atual antes de criar um blueprint."
-	end
-	if not self:_IniciarSelecaoTerreno("Blueprint") then return false, "Sua plot ainda nao esta disponivel." end
-	self._nomeBlueprintEmCriacao = nome
-	for _, aba in { "Inventario", "Loja", "Blueprints" } do self.Navegacao:Fechar(aba) end
-	self.Navegacao:Abrir("CriacaoBlueprint", function()
-		self:EncerrarSelecaoTerreno()
-		self._nomeBlueprintEmCriacao = nil
-		if not self._destruido and not self.Navegacao:Contem("Blueprints") then
-			self.Navegacao:Abrir("Blueprints")
-		end
-	end)
-	return true
+function ControladorConstrucao:IniciarCriacaoBlueprint(nome, idSubstituir)
+  if self._destruido or self._colocando or self._previa or self._movimento or (self._modoSelecao and self._modoSelecao ~= "Selecao") then
+    return false, "Encerre a acao atual antes de criar ou substituir um blueprint."
+  end
+  if not self:_IniciarSelecaoTerreno("Blueprint") then return false, "Sua plot ainda nao esta disponivel." end
+  self._nomeBlueprintEmCriacao = nome
+  self._idBlueprintEmSubstituicao = idSubstituir
+  for _, aba in { "Inventario", "Loja", "Blueprints" } do self.Navegacao:Fechar(aba) end
+  self.Navegacao:Abrir("CriacaoBlueprint", function()
+    self:EncerrarSelecaoTerreno()
+    self._nomeBlueprintEmCriacao = nil
+    self._idBlueprintEmSubstituicao = nil
+    if not self._destruido and not self.Navegacao:Contem("Blueprints") then
+      self.Navegacao:Abrir("Blueprints")
+    end
+  end)
+  return true
+end
+
+function ControladorConstrucao:IniciarSubstituicaoBlueprint(identificador, nome)
+  if type(identificador) ~= "string" then return false, "Blueprint invalido." end
+  return self:IniciarCriacaoBlueprint(nome, identificador)
+end
+
+function ControladorConstrucao:RenomearBlueprint(identificador, novoNome)
+  if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
+  self._colocando = true
+  local comunicou, sucesso, mensagem, resumo = pcall(function()
+    return self._redeConstrucao:fetch("RenomearBlueprint", identificador, novoNome)
+  end)
+  self._colocando = false
+  if not comunicou or type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+    return false, "Nao foi possivel renomear o blueprint."
+  end
+  return sucesso, mensagem, resumo
+end
+
+function ControladorConstrucao:EditarBlueprint(identificador, novoNome, indicesMantidos)
+  if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
+  self._colocando = true
+  local comunicou, sucesso, mensagem, resumo = pcall(function()
+    return self._redeConstrucao:fetch("EditarBlueprint", identificador, novoNome, indicesMantidos)
+  end)
+  self._colocando = false
+  if not comunicou or type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+    return false, "Nao foi possivel salvar as alteracoes do blueprint."
+  end
+  return sucesso, mensagem, resumo
+end
+
+function ControladorConstrucao:DeletarBlueprint(identificador)
+  if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
+  self._colocando = true
+  local comunicou, sucesso, mensagem = pcall(function()
+    return self._redeConstrucao:fetch("DeletarBlueprint", identificador)
+  end)
+  self._colocando = false
+  if not comunicou or type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+    return false, "Nao foi possivel deletar o blueprint."
+  end
+  return sucesso, mensagem
+end
+
+function ControladorConstrucao:MoverBlueprint(identificador, deslocamento)
+  if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
+  self._colocando = true
+  local comunicou, sucesso, mensagem = pcall(function()
+    return self._redeConstrucao:fetch("MoverBlueprint", identificador, deslocamento)
+  end)
+  self._colocando = false
+  if not comunicou or type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+    return false, "Nao foi possivel alterar a ordem dos blueprints."
+  end
+  return sucesso, mensagem
 end
 
 -- Faz a leitura pela rede e devolve o erro ao painel, sem expor os registros completos do perfil.
