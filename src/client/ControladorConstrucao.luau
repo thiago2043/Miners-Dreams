@@ -259,6 +259,7 @@ end
 
 function ControladorConstrucao:_AtualizarTransparenciaAltura()
   local alturaAlvo = self._travamentoAltura and self._travamentoAltura.altura or nil
+  local transpConfig = Configuracoes.Obter(self._jogador, "TransparenciaForaAltura") or 0.8
   if alturaAlvo == nil and self._ultimaAlturaTransparencia == nil then return end
   self._ultimaAlturaTransparencia = alturaAlvo
   self._estadoTransparenciaAltura = self._estadoTransparenciaAltura or setmetatable({}, { __mode = "k" })
@@ -277,11 +278,11 @@ function ControladorConstrucao:_AtualizarTransparenciaAltura()
         minimoY = origem:PointToObjectSpace(caixa.Position).Y - tam.Y * 0.5
       end
       if minimoY ~= nil and math.abs(minimoY - alturaAlvo) > 0.1 then
-        mod = 0.8
+        mod = transpConfig
       end
     end
     local descendentes = maquina:GetDescendants()
-    local chave = tostring(mod) .. ":" .. tostring(#descendentes)
+    local chave = string.format("%.3f:%d", mod, #descendentes)
     if self._estadoTransparenciaAltura[maquina] ~= chave then
       self._estadoTransparenciaAltura[maquina] = chave
       for _, desc in descendentes do
@@ -2199,8 +2200,13 @@ end
 -- Se a aba recebida ja existe na pilha, fecha esse estado e deixa suas rotinas de saida limparem a ficha. Caso
 -- contrario, abre o painel preservando o outro lado.
 function ControladorConstrucao:AlternarAba(aba)
-	if self._destruido or self._colocando then return end
-	if self.Navegacao:Contem(aba) then self.Navegacao:Fechar(aba) else self:AbrirAba(aba) end
+  if self._destruido or self._colocando then return end
+  if self.Navegacao:Contem(aba) then
+    self.Navegacao:Fechar(aba)
+  else
+    self.Navegacao:Fechar("MenuPeca")
+    self:AbrirAba(aba)
+  end
 end
 
 -- Fecha rotacao, colocacao, movimento, copia, venda e recolhimento por seus nomes, disparando as limpezas. As

@@ -33,10 +33,11 @@ function InterfaceJogo.new(jogador, construcao)
 	local self = setmetatable({ _jogador = jogador, _construcao = construcao, _conexoes = {}, _paineis = {} }, InterfaceJogo)
 	-- ScreenGui e o recipiente desenhado na tela. ResetOnSpawn=false conserva essa interface quando o
 	-- personagem renasce, evitando perder os paineis pelo respawn.
-	self._interface = Instance.new("ScreenGui")
-	self._interface.Name, self._interface.ResetOnSpawn = "InterfaceJogo", false
-	-- Mantem os ZIndex dos retratos e quantidades dentro da aba que os contem.
-	self._interface.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+self._interface = Instance.new("ScreenGui")
+  self._interface.Name, self._interface.ResetOnSpawn = "InterfaceJogo", false
+  self._interface.DisplayOrder = 2
+  -- Mantem os ZIndex dos retratos e quantidades dentro da aba que os contem.
+  self._interface.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	local playerGui = jogador:WaitForChild("PlayerGui")
 	self._interface.Parent = playerGui
 	self._painelMoedas = PainelMoedas.new(playerGui)
@@ -256,10 +257,10 @@ end
 
 -- Cria a ficha flutuante em uma camada separada para que sua coordenada acompanhe a projecao da maquina.
 function InterfaceJogo:_CriarMenuPeca(playerGui)
-	self._menuGui = Instance.new("ScreenGui")
-	self._menuGui.Name, self._menuGui.ResetOnSpawn = "MenuContextualPeca", false
-	self._menuGui.IgnoreGuiInset, self._menuGui.DisplayOrder = true, 2
-	self._menuGui.Parent = playerGui
+  self._menuGui = Instance.new("ScreenGui")
+  self._menuGui.Name, self._menuGui.ResetOnSpawn = "MenuContextualPeca", false
+  self._menuGui.IgnoreGuiInset, self._menuGui.DisplayOrder = true, 0
+  self._menuGui.Parent = playerGui
 
 	self._menuPeca = Instance.new("Frame")
 	self._menuPeca.Name, self._menuPeca.Visible = "AcoesPeca", false
@@ -325,7 +326,7 @@ local botao = Botao.new(self._menuPeca, acaoBotao, function()
       if acaoBotao == "Estatisticas" then
         self._estatisticasVisiveis = not self._estatisticasVisiveis
         self._estatisticasPeca.Visible = self._estatisticasVisiveis
-        AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, self._estatisticasVisiveis, "Centro")
+        AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, self._estatisticasVisiveis, "Flutuante")
         self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, self._estatisticasVisiveis and alturaDetalhesPeca or alturaMenuPeca)
         self:_AtualizarDescricaoPeca()
         self:_AtualizarMenuPeca()
@@ -387,52 +388,62 @@ function InterfaceJogo:_MostrarPeca(maquina)
   self._maquinaFocada = maquina
   self._estatisticasVisiveis = false
   self._estatisticasPeca.Visible = false
-  self._areaEstatisticasPeca.Visible = false
+  AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, false, "Flutuante")
   self._areaEstatisticasPeca.CanvasPosition = Vector2.zero
   self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, alturaMenuPeca)
   self._contornoPeca.Visible = maquina ~= nil
   if maquina then
+    local jaVisivel = AnimacaoInterface.EstaVisivel(self._menuPeca)
     self:_AtualizarMenuPeca()
-    if anterior ~= maquina then
+    if jaVisivel and anterior ~= maquina then
       AnimacaoInterface.TransicaoSubAba(self._menuPeca)
     end
   else
-    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Centro")
+    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Flutuante")
   end
 end
 
 -- O centro do corpo mantem o menu na peca sem desloca-lo para a ponta de um cabecote ou broca.
 function InterfaceJogo:_AtualizarMenuPeca()
-	local maquina = self._maquinaFocada
-	if not maquina then return end
-	if not maquina.Parent then
-		self._construcao.Navegacao:Fechar("MenuPeca")
-		return
-	end
-	local quantidade = #self._construcao:ObterPecasFocadas()
-	local definicao = Catalogo[maquina.Name]
-	self._tituloPeca.Text = if quantidade > 1 then "Seleção de peças" else definicao and definicao.Nome or "Peça"
-	self._selecaoPeca.Text = if quantidade == 1 then "1 selecionada" else quantidade .. " selecionadas"
-	local tipo = "Peça"
-	for _, componente in (definicao and definicao.Componentes) or {} do
-		if componente.Tipo == "Vendedor" then tipo = "Fornalha"; break
-		elseif componente.Tipo == "Soltador" then tipo = "Mineradora"
-		elseif componente.Tipo == "Modificador" then tipo = "Modificador"
-		elseif componente.Tipo == "Transportador" then tipo = "Esteira" end
-	end
-	self._tipoPeca.Text = if quantidade > 1 then "Grupo" else tipo
-	local camera = workspace.CurrentCamera
-	if not camera then self._menuPeca.Visible = false; self._contornoPeca.Visible = false; return end
-	local caixa, tamanho = Geometria.CaixaDeConstrucao(maquina)
-	self._volumePeca.CFrame, self._volumePeca.Size = caixa, tamanho
-	local ponto, dentro = camera:WorldToViewportPoint(caixa.Position)
-	local viewport = camera.ViewportSize
-	if not dentro or ponto.Z <= 0 or viewport.X <= 16 or viewport.Y <= 16 then
-		self._menuPeca.Visible, self._contornoPeca.Visible = false, false
-		return
-	end
-	self._menuPeca.Visible = true
-	self._contornoPeca.Visible = true
+  local maquina = self._maquinaFocada
+  if not maquina then return end
+  if not self._construcao.Navegacao:Contem("MenuPeca") then
+    self:_MostrarPeca(nil)
+    return
+  end
+  if not maquina.Parent then
+    self._construcao.Navegacao:Fechar("MenuPeca")
+    return
+  end
+  local quantidade = #self._construcao:ObterPecasFocadas()
+  local definicao = Catalogo[maquina.Name]
+  self._tituloPeca.Text = if quantidade > 1 then "Seleção de peças" else definicao and definicao.Nome or "Peça"
+  self._selecaoPeca.Text = if quantidade == 1 then "1 selecionada" else quantidade .. " selecionadas"
+  local tipo = "Peça"
+  for _, componente in (definicao and definicao.Componentes) or {} do
+    if componente.Tipo == "Vendedor" then tipo = "Fornalha"; break
+    elseif componente.Tipo == "Soltador" then tipo = "Mineradora"
+    elseif componente.Tipo == "Modificador" then tipo = "Modificador"
+    elseif componente.Tipo == "Transportador" then tipo = "Esteira" end
+  end
+  self._tipoPeca.Text = if quantidade > 1 then "Grupo" else tipo
+  local camera = workspace.CurrentCamera
+  if not camera then
+    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Flutuante")
+    self._contornoPeca.Visible = false
+    return
+  end
+  local caixa, tamanho = Geometria.CaixaDeConstrucao(maquina)
+  self._volumePeca.CFrame, self._volumePeca.Size = caixa, tamanho
+  local ponto, dentro = camera:WorldToViewportPoint(caixa.Position)
+  local viewport = camera.ViewportSize
+  if not dentro or ponto.Z <= 0 or viewport.X <= 16 or viewport.Y <= 16 then
+    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Flutuante")
+    self._contornoPeca.Visible = false
+    return
+  end
+  AnimacaoInterface.DefinirVisivel(self._menuPeca, true, "Flutuante")
+  self._contornoPeca.Visible = true
 	local altura = self._menuPeca.Size.Y.Offset
 	local preferencia=Configuracoes.Obter(self._jogador,"EscalaInterface")
 	local escala = math.min(1, (viewport.X - 16) / (larguraMenuPeca*preferencia), (viewport.Y - 16) / (altura*preferencia))
@@ -466,8 +477,11 @@ end
 -- Solicita a cada painel que releia estoque e selecao, e atualiza os botoes das abas. E chamada pelos
 -- eventos de atributos e de navegacao, em vez de reconstruir a interface a cada quadro.
 function InterfaceJogo:AtualizarInventario()
-	if self._destruida then return end
-	for _, painel in self._paineis do painel:Atualizar() end
+  if self._destruida then return end
+  if self._maquinaFocada and not self._construcao.Navegacao:Contem("MenuPeca") then
+    self:_MostrarPeca(nil)
+  end
+  for _, painel in self._paineis do painel:Atualizar() end
 	self:_AtualizarBotaoLimparPlot()
 	self._painelBlueprints:Atualizar()
 	for _, painel in self._paineisProgressao do painel:Atualizar() end

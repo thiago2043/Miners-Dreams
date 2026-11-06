@@ -2,19 +2,20 @@ local C={}
 local quantidades={}
 for n=0,5000,100 do table.insert(quantidades,n) end
 C.Opcoes={
-	{Id="LimiteMineriosVisiveis",Nome="Minérios visíveis por plot",Valores=quantidades,Padrao=5000},
-	{Id="MostrarValoresMinerios",Nome="Valores dos minérios",Valores={"Sempre","Perto","Oculto"},Padrao="Sempre"},
-	{Id="DistanciaValores",Nome="Distância dos valores",Valores={15,30,60},Padrao=30,Sufixo=" studs"},
-	{Id="TamanhoValores",Nome="Texto dos valores",Valores={12,16,20,24},Padrao=16},
-	{Id="AnimarVendaMinerios",Nome="Animação de venda",Valores={true,false},Padrao=true},
-	{Id="EfeitosMaquinas",Nome="Efeitos das máquinas",Valores={"Completo","Reduzido","Oculto"},Padrao="Completo"},
-	{Id="MineriosOutrasPlots",Nome="Minérios de outras plots",Valores={true,false},Padrao=true},
-	{Id="TransparenciaPrevia",Nome="Transparência da prévia",Valores={.3,.55,.8},Padrao=.55,Percentual=true},
-	{Id="IntensidadeGrade",Nome="Intensidade da grade",Valores={"Suave","Normal","Forte"},Padrao="Normal",Deslizante=true},
-	{Id="EscalaInterface",Nome="Escala da interface",Valores={.8,.9,1,1.1,1.2},Padrao=1,Percentual=true},
-	{Id="ConfirmarVenda",Nome="Confirmar venda de peças",Valores={"Nunca","Várias peças","Sempre"},Padrao="Várias peças"},
-	{Id="ConfirmarRenascimento",Nome="Confirmar renascimento",Valores={true,false},Padrao=true},
-	{Id="IntensidadeSetas",Nome="Setas de colocação",Valores={"Suave","Normal","Forte"},Padrao="Forte",Deslizante=true},
+{Id="LimiteMineriosVisiveis",Nome="Minérios visíveis por plot",Valores={0,5000},Passo=1,Padrao=5000},
+{Id="MostrarValoresMinerios",Nome="Valores dos minérios",Valores={"Sempre","Perto","Oculto"},Padrao="Sempre"},
+{Id="DistanciaValores",Nome="Distância dos valores",Valores={15,30,60},Passo=1,Padrao=30,Sufixo=" studs"},
+{Id="TamanhoValores",Nome="Texto dos valores",Valores={12,16,20,24},Passo=1,Padrao=16},
+{Id="AnimarVendaMinerios",Nome="Animação de venda",Valores={true,false},Padrao=true},
+{Id="EfeitosMaquinas",Nome="Efeitos das máquinas",Valores={"Completo","Reduzido","Oculto"},Padrao="Completo"},
+{Id="MineriosOutrasPlots",Nome="Minérios de outras plots",Valores={true,false},Padrao=true},
+{Id="TransparenciaPrevia",Nome="Transparência da prévia",Valores={.1,.3,.55,.8,.95},Passo=.01,Padrao=.55,Percentual=true},
+{Id="TransparenciaForaAltura",Nome="Transparência fora da altura",Valores={0,.8,.95},Passo=.01,Padrao=.8,Percentual=true},
+{Id="IntensidadeGrade",Nome="Intensidade da grade",Valores={0,.5,1},Passo=.01,Padrao=.5,Percentual=true,Deslizante=true},
+{Id="EscalaInterface",Nome="Escala da interface",Valores={.8,.9,1,1.1,1.2},Passo=.01,Padrao=1,Percentual=true},
+{Id="ConfirmarVenda",Nome="Confirmar venda de peças",Valores={"Nunca","Várias peças","Sempre"},Padrao="Várias peças"},
+{Id="ConfirmarRenascimento",Nome="Confirmar renascimento",Valores={true,false},Padrao=true},
+{Id="IntensidadeSetas",Nome="Setas de colocação",Valores={0,.5,1},Passo=.01,Padrao=1,Percentual=true,Deslizante=true},
 }
 C.Atalhos={{"W","Andar para frente"},{"S","Andar para trás"},{"A","Andar para a esquerda"},{"D","Andar para a direita"},{"Q","Cancelar / voltar"},
 	{"E","Inventário"},{"F","Loja"},{"B","Blueprints"},{"U","Upgrades"},{"P","Prestígio"},
@@ -39,19 +40,55 @@ function C.CombinacaoTecla(tecla)
   if Input:IsKeyDown(Enum.KeyCode.LeftSuper) or Input:IsKeyDown(Enum.KeyCode.RightSuper) then prefixo..="Win+" end
   return prefixo..tecla.Name
 end
+function C.InterpolarIntensidade(valor,suave,normal,forte)
+local t=if valor=="Suave" then 0 elseif valor=="Normal" then .5 elseif valor=="Forte" then 1 elseif type(valor)=="number" then math.clamp(valor,0,1) else .5
+local function interp(s,n,f)
+if type(n)=="number" then
+if t<=.5 then return s+(n-s)*(t/.5) end
+return n+(f-n)*((t-.5)/.5)
+elseif type(n)=="table" then
+local res={}
+for k,vn in n do res[k]=interp(s and s[k] or vn,vn,f and f[k] or vn) end
+return res
+end
+return n
+end
+return interp(suave,normal,forte)
+end
+function C.TabelaIntensidade(tabela)
+return setmetatable(tabela,{
+__index=function(self,chave)
+return C.InterpolarIntensidade(chave,rawget(self,"Suave"),rawget(self,"Normal"),rawget(self,"Forte"))
+end,
+})
+end
 function C.NormalizarOpcao(id,valor)
-  if id=="MostrarValoresMinerios" and type(valor)=="boolean" then valor=valor and "Sempre" or "Oculto" end
-  for _,opcao in C.Opcoes do
-    if opcao.Id==id then
-      for _,permitido in opcao.Valores do
-        if permitido==valor or (type(permitido)=="number" and type(valor)=="number" and math.abs(permitido-valor)<1e-6) then
-          return permitido,opcao
-        end
-      end
-      return nil,opcao
-    end
-  end
-  return nil,nil
+if id=="MostrarValoresMinerios" and type(valor)=="boolean" then valor=valor and "Sempre" or "Oculto" end
+if (id=="IntensidadeGrade" or id=="IntensidadeSetas") and type(valor)=="string" then
+valor=if valor=="Suave" then 0 elseif valor=="Normal" then .5 elseif valor=="Forte" then 1 else nil
+end
+for _,opcao in C.Opcoes do
+if opcao.Id==id then
+if type(opcao.Valores[1])=="number" then
+if type(valor)~="number" or valor~=valor then return nil,opcao end
+local minimo,maximo=opcao.Valores[1],opcao.Valores[#opcao.Valores]
+if valor<minimo-1e-6 or valor>maximo+1e-6 then return nil,opcao end
+local passo=opcao.Passo or (if minimo%1==0 and maximo%1==0 then 1 else .01)
+local ajustado=math.clamp(math.round(valor/passo)*passo,minimo,maximo)
+if passo<1 then
+ajustado=tonumber(string.format("%.4f",ajustado)) or ajustado
+else
+ajustado=math.round(ajustado)
+end
+return ajustado,opcao
+end
+for _,permitido in opcao.Valores do
+if permitido==valor then return permitido,opcao end
+end
+return nil,opcao
+end
+end
+return nil,nil
 end
 function C.Obter(jogador,id)
   local valor=jogador and jogador:GetAttribute(id)

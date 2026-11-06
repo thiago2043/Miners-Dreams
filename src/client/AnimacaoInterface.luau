@@ -36,24 +36,23 @@ end
 
 function AnimacaoInterface.EstaVisivel(quadro)
 if not quadro then return false end
-local estado = estados[quadro]
-if estado ~= nil then return estado.Aberto == true end
 return quadro.Visible and not quadro:GetAttribute("FechandoUI")
 end
 
 function AnimacaoInterface.DefinirVisivel(quadro, visivel, direcao, aoConcluirFechamento)
 if not quadro then return end
 visivel = visivel == true
+local visivelReal = quadro.Visible and not quadro:GetAttribute("FechandoUI")
 local estado = estados[quadro]
 if not estado then
 estado = {
-Aberto = quadro.Visible and not quadro:GetAttribute("FechandoUI"),
+Aberto = visivelReal,
 Token = 0,
 }
 estados[quadro] = estado
 end
 
-if estado.Aberto == visivel then
+if estado.Aberto == visivel and visivelReal == visivel then
 if not visivel and not quadro.Visible and aoConcluirFechamento then
 aoConcluirFechamento()
 end
@@ -65,15 +64,18 @@ local tokenAtual = estado.Token
 cancelarTweens(estado)
 
 local escala = obterEscala(quadro)
+local flutuante = direcao == "Flutuante"
 local dx = if direcao == "Esquerda" then -14 elseif direcao == "Direita" then 14 else 0
-local dy = if dx == 0 then 8 else 0
+local dy = if not flutuante and dx == 0 then 8 else 0
 
 if visivel then
-if estado.PosicaoBase then
+if not flutuante and estado.PosicaoBase then
 quadro.Position = estado.PosicaoBase
 end
 local posFinal = quadro.Position
+if not flutuante then
 estado.PosicaoBase = posFinal
+end
 
 quadro:SetAttribute("FechandoUI", nil)
 quadro:SetAttribute("AnimandoUI", nil)
@@ -82,25 +84,29 @@ quadro.Visible = true
 
 quadro:SetAttribute("AnimandoUI", true)
 escala.Scale = 0.02
+local info = TweenInfo.new(0.17, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local tEscala = TweenService:Create(escala, info, { Scale = 1 })
+local tPos
+if not flutuante then
 quadro.Position = UDim2.new(
 posFinal.X.Scale, posFinal.X.Offset + dx,
 posFinal.Y.Scale, posFinal.Y.Offset + dy
 )
-
-local info = TweenInfo.new(0.17, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local tEscala = TweenService:Create(escala, info, { Scale = 1 })
-local tPos = TweenService:Create(quadro, info, { Position = posFinal })
+tPos = TweenService:Create(quadro, info, { Position = posFinal })
+end
 estado.TweenEscala, estado.TweenPosicao = tEscala, tPos
 tEscala.Completed:Once(function()
 if estado.Token ~= tokenAtual then return end
 estado.TweenEscala, estado.TweenPosicao = nil, nil
 escala.Scale = 1
+if not flutuante then
 quadro.Position = posFinal
 estado.PosicaoBase = nil
+end
 quadro:SetAttribute("AnimandoUI", nil)
 end)
 tEscala:Play()
-tPos:Play()
+if tPos then tPos:Play() end
 else
 if not quadro.Visible then
 escala.Scale = 1
@@ -111,31 +117,38 @@ return
 end
 
 local posBase = estado.PosicaoBase or quadro.Position
+if not flutuante then
 estado.PosicaoBase = posBase
+end
 quadro:SetAttribute("AnimandoUI", true)
 quadro:SetAttribute("FechandoUI", true)
 
+local info = TweenInfo.new(0.13, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+local tEscala = TweenService:Create(escala, info, { Scale = 0 })
+local tPos
+if not flutuante then
 local posFechar = UDim2.new(
 posBase.X.Scale, posBase.X.Offset + dx,
 posBase.Y.Scale, posBase.Y.Offset + dy
 )
-local info = TweenInfo.new(0.13, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-local tEscala = TweenService:Create(escala, info, { Scale = 0 })
-local tPos = TweenService:Create(quadro, info, { Position = posFechar })
+tPos = TweenService:Create(quadro, info, { Position = posFechar })
+end
 estado.TweenEscala, estado.TweenPosicao = tEscala, tPos
 tEscala.Completed:Once(function()
 if estado.Token ~= tokenAtual then return end
 estado.TweenEscala, estado.TweenPosicao = nil, nil
 quadro.Visible = false
 escala.Scale = 1
+if not flutuante then
 quadro.Position = posBase
 estado.PosicaoBase = nil
+end
 quadro:SetAttribute("AnimandoUI", nil)
 quadro:SetAttribute("FechandoUI", nil)
 if aoConcluirFechamento then aoConcluirFechamento() end
 end)
 tEscala:Play()
-tPos:Play()
+if tPos then tPos:Play() end
 end
 end
 

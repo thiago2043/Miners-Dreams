@@ -24,7 +24,8 @@ if type(opcao.Valores[1])=="number" or opcao.Deslizante then
 local controle=Deslizante.new(
 janela.Conteudo,opcao.Id,opcao.Valores,janela.Cor,
 function(valor) jogador:SetAttribute(opcao.Id,valor) end,
-function(valor) self:_SalvarOpcao(opcao.Id,valor) end
+function(valor) self:_SalvarOpcao(opcao.Id,valor) end,
+opcao.Passo
 )
 self._opcoes[opcao.Id],self._deslizantes[opcao.Id]=controle,controle
 else
