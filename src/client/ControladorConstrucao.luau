@@ -257,14 +257,67 @@ function ControladorConstrucao:_OcultarPrevia()
   self:_LimparPreviaRemota()
 end
 
+function ControladorConstrucao:_AtualizarTransparenciaAltura()
+  local alturaAlvo = self._travamentoAltura and self._travamentoAltura.altura or nil
+  if alturaAlvo == nil and self._ultimaAlturaTransparencia == nil then return end
+  self._ultimaAlturaTransparencia = alturaAlvo
+  self._estadoTransparenciaAltura = self._estadoTransparenciaAltura or setmetatable({}, { __mode = "k" })
+  if not self._maquinas or not self._maquinas.Parent then return end
+  local origem = self._piso and Geometria.Origem(self._piso) or nil
+  for _, maquina in self._maquinas:GetChildren() do
+    if not maquina:IsA("Model") then continue end
+    local mod = 0
+    if alturaAlvo ~= nil then
+      local minimo = maquina:GetAttribute("VolumeMinimo")
+      local minimoY
+      if typeof(minimo) == "Vector3" then
+        minimoY = minimo.Y
+      elseif origem then
+        local caixa, tam = Geometria.CaixaDeConstrucao(maquina)
+        minimoY = origem:PointToObjectSpace(caixa.Position).Y - tam.Y * 0.5
+      end
+      if minimoY ~= nil and math.abs(minimoY - alturaAlvo) > 0.1 then
+        mod = 0.8
+      end
+    end
+    local descendentes = maquina:GetDescendants()
+    local chave = tostring(mod) .. ":" .. tostring(#descendentes)
+    if self._estadoTransparenciaAltura[maquina] ~= chave then
+      self._estadoTransparenciaAltura[maquina] = chave
+      for _, desc in descendentes do
+        if desc:IsA("BasePart") then
+          desc.LocalTransparencyModifier = mod
+        elseif desc:IsA("Decal") or desc:IsA("Texture") then
+          if mod > 0 then
+            if desc:GetAttribute("TranspOrigAltura") == nil then
+              desc:SetAttribute("TranspOrigAltura", desc.Transparency)
+            end
+            local orig = desc:GetAttribute("TranspOrigAltura") or 0
+            desc.Transparency = 1 - (1 - orig) * (1 - mod)
+          else
+            local orig = desc:GetAttribute("TranspOrigAltura")
+            if orig ~= nil then
+              desc.Transparency = orig
+              desc:SetAttribute("TranspOrigAltura", nil)
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
 -- Destruir a previa libera suas hitboxes e recursos. As instancias movidas ja foram apagadas pelo servidor;
 -- somente ConfirmarMovimento cria substitutas, enquanto o cancelamento as devolve ao inventario.
 function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
+  if self._previa and self._rotacao then
+    self._rotacaoPreservada = self._rotacao
+  end
   self:_LimparPreviaRemota()
   self:_EncerrarArrasteColocacao()
   self:_EncerrarRotacao()
 	if not preservarSelecao then
-		self._rotacao = CFrame.identity
+		self._rotacao = self._rotacaoPreservada or CFrame.identity
 		self._copia = nil
 	end
 	local movimento = self._movimento
@@ -279,7 +332,7 @@ function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
 
 	self._alvoColocacao = nil
 	self._ultimoEncaixe = nil
-	self._travamentoAltura = nil
+	self._travamentoAltura = self._travamentoAltura
 	self._movimento = nil
 	self._alvosGrupo = nil
 end
@@ -361,9 +414,29 @@ function ControladorConstrucao:IniciarColocacao()
 	local personalizacao = self:ObterPersonalizacaoSelecionada()
 	self._configuracaoInventario = personalizacao:Codificar()
 	local definicao = personalizacao:ObterDefinicao(CatalogoMaquinas[self._maquinaIdSelecionada])
-	self._previa = PreviaConstrucao.new(self._modelosOriginais[self._maquinaIdSelecionada], personalizacao, definicao, self._maquinas)
-	self._consulta.FilterDescendantsInstances = { self._piso, self._previa:ObterPastaVolumes() }
-	self._ultimoEncaixe, self._travamentoAltura = nil, nil
+if self._rotacaoPreservada then
+    self._rotacao = RotacaoConstrucao.ValidarNaGrade(self._rotacaoPreservada, definicao)
+      or RotacaoConstrucao.EncaixarNaGrade(self._rotacaoPreservada, definicao)
+      or self._rotacao
+  else
+    self._rotacao = RotacaoConstrucao.ValidarNaGrade(self._rotacao, definicao)
+      or RotacaoConstrucao.EncaixarNaGrade(self._rotacao, definicao)
+      or CFrame.identity
+  end
+  self._rotacaoPreservada = self._rotacao
+self._previa = PreviaConstrucao.new(self._modelosOriginais[self._maquinaIdSelecionada], personalizacao, definicao, self._maquinas)
+self._consulta.FilterDescendantsInstances = { self._piso, self._previa:ObterPastaVolumes() }
+if self._travamentoAltura ~= nil then
+local _, ocupadoNovo = self._previa:ObterVolume(self._rotacao):Calcular(self._rotacao)
+self._travamentoAltura = {
+altura = self._travamentoAltura.altura,
+ancora = Vector3.new(ocupadoNovo.X / 2, 0, ocupadoNovo.Z / 2),
+ocupado = ocupadoNovo,
+maquinaId = self._maquinaIdSelecionada,
+}
+self:_AtualizarTransparenciaAltura()
+end
+	self._ultimoEncaixe, _travamentoIgnorado = _travamentoIgnorado, nil
 
 end
 
@@ -1841,14 +1914,14 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 	if tecla == Enum.KeyCode.E then
 		self:AlternarInventario()
 		return
-	elseif tecla == Enum.KeyCode.F then
-		self:AlternarAba("Loja")
-		return
-	end
+elseif tecla == Enum.KeyCode.F then
+    self:AlternarAba("Loja")
+    return
+  end
 
-	if not self._previa then
-		return
-	end
+  if not self._previa and not (tecla == Enum.KeyCode.T and self._travamentoAltura ~= nil) then
+    return
+  end
 
 	if tecla == Enum.KeyCode.T then
 		self:AlternarAltura()
@@ -1893,7 +1966,9 @@ function ControladorConstrucao:Atualizar(deltaTime)
 		return
 	end
 
-	if not self._previa then return end
+self:_AtualizarTransparenciaAltura()
+  if not self._previa then return end
+  if self._rotacao then self._rotacaoPreservada = self._rotacao end
 
 	if self._colocando then
 		if self._arrasteColocacao then
@@ -1952,11 +2027,22 @@ self._previa:AtualizarVolumes(origem, deltaTime)
 		inicio, direcao, self._piso.Size, alcance
 	)
 
-	-- Com T, o raio cruza um plano horizontal fixo na altura da ancora. Fora da plot, usa a parede lateral; sem
-	-- cruzamento valido, mantem o ultimo alvo em vez de fazer a previa saltar.
-	if self._travamentoAltura ~= nil then
-		local alturaDoPonto = self._travamentoAltura.altura
-			+ self._travamentoAltura.ancora.Y
+-- Com T, o raio cruza um plano horizontal fixo na altura da ancora. Fora da plot, usa a parede lateral; sem
+  -- cruzamento valido, mantem o ultimo alvo em vez de fazer a previa saltar.
+  if self._travamentoAltura ~= nil then
+    local _, ocupadoTravamento = self._previa:ObterVolume(self._rotacao):Calcular(self._rotacao)
+    if self._travamentoAltura.maquinaId ~= self._maquinaIdSelecionada
+      or self._travamentoAltura.ocupado ~= ocupadoTravamento
+    then
+      self._travamentoAltura = {
+        altura = self._travamentoAltura.altura,
+        ancora = Vector3.new(ocupadoTravamento.X / 2, 0, ocupadoTravamento.Z / 2),
+        ocupado = ocupadoTravamento,
+        maquinaId = self._maquinaIdSelecionada,
+      }
+    end
+    local alturaDoPonto = self._travamentoAltura.altura
+      + self._travamentoAltura.ancora.Y
 
 		local distancia
 		if math.abs(direcao.Y) >= 0.0001 then
@@ -2360,11 +2446,13 @@ end
 -- T alterna entre seguir superficies e mover sobre um plano horizontal fixo. Ao travar, calcula o ponto da
 -- caixa sob o cursor como ancora, para que mover o mouse nao acrescente um deslocamento artificial a previa.
 function ControladorConstrucao:AlternarAltura()
-	if self._destruido or self._colocando or self._arrasteColocacao or not self._previa then return end
-	if self._travamentoAltura ~= nil then
-		self._travamentoAltura = nil
-		print("Altura liberada.")
-	elseif self._ultimoEncaixe ~= nil and self._alvoColocacao then
+if self._destruido or self._colocando or self._arrasteColocacao then return end
+  if not self._previa and self._travamentoAltura == nil then return end
+  if self._travamentoAltura ~= nil then
+    self._travamentoAltura = nil
+    self:_AtualizarTransparenciaAltura()
+    print("Altura liberada.")
+  elseif self._previa and self._ultimoEncaixe ~= nil and self._alvoColocacao then
 		local camera = workspace.CurrentCamera
 		if not camera then
 			return
@@ -2384,17 +2472,20 @@ function ControladorConstrucao:AlternarAltura()
 		local ancora = ponto and (ponto + metade)
 			or Vector3.new(metade.X, 0, metade.Z)
 
-		self._travamentoAltura = {
-			altura = self._ultimoEncaixe.Y,
-			ancora = ancora,
-		}
+self._travamentoAltura = {
+      altura = self._ultimoEncaixe.Y,
+      ancora = ancora,
+      ocupado = ocupado,
+      maquinaId = self._maquinaIdSelecionada,
+    }
+    self:_AtualizarTransparenciaAltura()
 
-		print(
-			"Altura travada em "
-				.. self._travamentoAltura.altura
-				.. " studs."
-		)
-	end
+    print(
+      "Altura travada em "
+        .. self._travamentoAltura.altura
+        .. " studs."
+    )
+  end
 end
 
 -- Apaga o gesto de arraste, as marcas de R pressionado e sua ancora. Os passos ja aplicados
