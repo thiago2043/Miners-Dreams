@@ -12,7 +12,7 @@ C.Opcoes={
 {Id="TransparenciaPrevia",Nome="Transparência da prévia",Valores={.1,.3,.55,.8,.95},Passo=.01,Padrao=.55,Percentual=true},
 {Id="TransparenciaForaAltura",Nome="Transparência fora da altura",Valores={0,.8,.95},Passo=.01,Padrao=.8,Percentual=true},
 {Id="IntensidadeGrade",Nome="Intensidade da grade",Valores={0,.5,1},Passo=.01,Padrao=.5,Percentual=true,Deslizante=true},
-{Id="EscalaInterface",Nome="Escala da interface",Valores={.8,.9,1,1.1,1.2},Passo=.01,Padrao=1,Percentual=true},
+{Id="EscalaInterface",Nome="Escala da interface",Valores={.5,.8,.9,1,1.1,1.2,1.5},Passo=.01,Padrao=1,Percentual=true},
 {Id="ConfirmarVenda",Nome="Confirmar venda de peças",Valores={"Nunca","Várias peças","Sempre"},Padrao="Várias peças"},
 {Id="ConfirmarRenascimento",Nome="Confirmar renascimento",Valores={true,false},Padrao=true},
 {Id="IntensidadeSetas",Nome="Setas de colocação",Valores={0,.5,1},Passo=.01,Padrao=1,Percentual=true,Deslizante=true},

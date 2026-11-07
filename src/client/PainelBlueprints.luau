@@ -305,6 +305,14 @@ self._lista.Name, self._lista.Position, self._lista.Size = "ListaBlueprints", UD
 self._lista.BackgroundTransparency, self._lista.Parent = 1, area
 self._vazio = janela:Texto(self._lista, "Vazio", "Nenhum blueprint salvo.\nCrie um conjunto com as peças da sua plot.", UDim2.fromOffset(14, 8), UDim2.new(1, -28, 0, 72), 17)
 self._vazio.TextXAlignment = Enum.TextXAlignment.Center
+self._conexoesBp = {
+ area:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+if self._grupo.Visible and not self._grupo:GetAttribute("AnimandoUI") then self:_Desenhar() end
+end),
+jogador:GetAttributeChangedSignal("EscalaInterface"):Connect(function()
+if self._grupo.Visible then self:_Desenhar() end
+end),
+}
 return self
 end
 
@@ -540,14 +548,20 @@ local blueprints = self._blueprints or {}
 self._quantidade.Text = #blueprints .. " salvo(s)"
 self._vazio.Visible = #blueprints == 0
 
+local esc = require(ReplicatedStorage.Shared.Configuracoes).Obter(self._jogador, "EscalaInterface") or 1
+local largInterna = math.max(280, math.floor(self._janela.Conteudo.AbsoluteSize.X / esc) - 10)
+local colunas = math.clamp(math.floor((largInterna + 10) / 390), 1, 3)
+local largCartao = math.floor((largInterna - (colunas - 1) * 10) / colunas)
 local alturaCartao = 132
 local passoCartao = 142
 for indice, blueprint in blueprints do
+local col = (indice - 1) % colunas
+local lin = math.floor((indice - 1) / colunas)
 local id = blueprint.Id
 local cartao = Instance.new("Frame")
 cartao.Name = "Blueprint_" .. id
-cartao.Position = UDim2.fromOffset(0, (indice - 1) * passoCartao)
-cartao.Size = UDim2.new(1, 0, 0, alturaCartao)
+cartao.Position = UDim2.fromOffset(col * (largCartao + 10), lin * passoCartao)
+cartao.Size = UDim2.fromOffset(largCartao, alturaCartao)
 cartao.BackgroundColor3, cartao.BorderSizePixel = Color3.fromRGB(31, 35, 44), 0
 cartao.Parent = self._lista
 arredondar(cartao, 8)
@@ -648,7 +662,8 @@ end
 end
 end
 
-local altura = math.max(92, #blueprints * passoCartao)
+local totalLinhas = math.ceil(#blueprints / colunas)
+local altura = math.max(92, totalLinhas * passoCartao)
 self._lista.Size = UDim2.new(1, -8, 0, altura)
 self._janela.Conteudo.CanvasSize = UDim2.fromOffset(0, 140 + altura + 10)
 end

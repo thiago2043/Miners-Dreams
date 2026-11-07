@@ -5,6 +5,7 @@ local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local BarraProgressao = require(script.Parent.BarraProgressao)
 local Botao = require(script.Parent.Botao)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
+local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 
 local PainelPrestigio = {}
 PainelPrestigio.__index = PainelPrestigio
@@ -55,9 +56,18 @@ function PainelPrestigio.new(pai, jogador, navegacao, rede)
 	self._reencarnar = self:_Botao("Reencarnar", UDim2.new(0, 18, 1, -44), UDim2.new(1, -36, 0, 32), function()
 		self:Reencarnar()
 	end)
-	self._reencarnar:DefinirDisponivel(false)
-	self:Atualizar()
-	return self
+self._reencarnar:DefinirDisponivel(false)
+GerenciadorJanelas.Registrar("Janela_Prestigio", self._grupo, {
+Jogador = jogador,
+AlturaBarra = 44,
+RecuoDireitoBarra = 48,
+MinLargura = 280,
+MinAltura = 240,
+LarguraPadrao = 560,
+AlturaPadrao = 260,
+})
+self:Atualizar()
+return self
 end
 
 function PainelPrestigio:_Texto(nome, texto, posicao, tamanho, fonte, cor)

@@ -9,6 +9,7 @@ local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local bloco = require(ReplicatedStorage.Shared.Medidas).Bloco
 local Botao = require(script.Parent.Botao)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
+local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 
 local PainelHistoricoCopia = {}
 PainelHistoricoCopia.__index = PainelHistoricoCopia
@@ -311,9 +312,21 @@ table.insert(self._conexoes, g:GetPropertyChangedSignal("AbsoluteSize"):Connect(
       self:_DesenharLista()
     end
   end))
-  for _, id in { "Atalho_CopiarPlot", "Atalho_ColarPlot", "Atalho_HistoricoPlot", "Atalho_Desfazer", "Atalho_Refazer" } do
-    table.insert(self._conexoes, jogador:GetAttributeChangedSignal(id):Connect(function() self:Atualizar() end))
+for _, id in { "Atalho_CopiarPlot", "Atalho_ColarPlot", "Atalho_HistoricoPlot", "Atalho_Desfazer", "Atalho_Refazer", "EscalaInterface" } do
+    table.insert(self._conexoes, jogador:GetAttributeChangedSignal(id):Connect(function()
+      if id == "EscalaInterface" and self._grupo.Visible then self:_DesenharLista() end
+      self:Atualizar()
+    end))
   end
+  GerenciadorJanelas.Registrar("Janela_HistoricoCopia", g, {
+    Jogador = jogador,
+    AlturaBarra = 44,
+    RecuoDireitoBarra = 250,
+    MinLargura = 320,
+    MinAltura = 240,
+    LarguraPadrao = 540,
+    AlturaPadrao = 520,
+  })
   self:Atualizar()
   return self
 end
@@ -329,20 +342,25 @@ function PainelHistoricoCopia:_DesenharLista()
   self._vazio.Visible = #historico == 0
   self._limpar:DefinirDisponivel(#historico > 0)
 
-  local tamanhoPainel = self._grupo.AbsoluteSize
-  local alturaUtil = if tamanhoPainel.Y > 120 then tamanhoPainel.Y - 92 else 410
-  local alturaCartao = math.clamp(math.floor(alturaUtil * 0.28), 96, 124)
+local escala = Config.Obter(self._jogador, "EscalaInterface") or 1
+  local larguraInterna = math.max(280, math.floor(self._grupo.AbsoluteSize.X / escala) - 40)
+  local alturaInterna = math.max(180, math.floor(self._grupo.AbsoluteSize.Y / escala) - 92)
+  local colunas = math.clamp(math.floor((larguraInterna + 8) / 360), 1, 3)
+  local largCartao = math.floor((larguraInterna - (colunas - 1) * 8) / colunas)
+  local alturaCartao = math.clamp(math.floor(alturaInterna * 0.28), 92, 124)
   local passoItem = alturaCartao + 8
   local alturaMini = alturaCartao - 16
-  local larguraMini = math.round(alturaMini * 1.18)
-  local recuoTexto = larguraMini + 18
+  local larguraMini = math.clamp(math.round(alturaMini * 1.15), 84, math.floor(largCartao * 0.38))
+  local recuoTexto = larguraMini + 16
 
   for indice, entrada in historico do
+    local col = (indice - 1) % colunas
+    local lin = math.floor((indice - 1) / colunas)
     local botao = Botao.new(self._rolagem, "Copia_" .. indice, function()
       self._construcao:ColarDaAreaTransferencia(indice)
     end)
     local b = botao:ObterInstancia()
-    b.Position, b.Size = UDim2.fromOffset(0, (indice - 1) * passoItem), UDim2.new(1, -8, 0, alturaCartao)
+    b.Position, b.Size = UDim2.fromOffset(col * (largCartao + 8), lin * passoItem), UDim2.fromOffset(largCartao, alturaCartao)
     b.BackgroundColor3, b.BorderSizePixel, b.Text = Color3.fromRGB(31, 35, 44), 0, ""
     b.Selectable = true
     arredondar(b, 8)
@@ -385,7 +403,8 @@ function PainelHistoricoCopia:_DesenharLista()
 
     table.insert(self._itens, botao)
   end
-  self._rolagem.CanvasSize = UDim2.fromOffset(0, math.max(96, #historico * passoItem))
+local totalLinhas = math.ceil(#historico / colunas)
+  self._rolagem.CanvasSize = UDim2.fromOffset(0, math.max(96, totalLinhas * passoItem))
 end
 
 function PainelHistoricoCopia:Atualizar()

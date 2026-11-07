@@ -140,9 +140,14 @@ end
 -- As categorias da loja usam silhuetas sem placa propria: GradePecas controla o fundo e recolore
 -- as formas ao trocar o filtro. O retorno e um elemento visual, nao outro controlador de botao.
 function IconesAbas.CriarCategoria(botao, categoria)
-	local icone = Instance.new("Frame")
-	icone.Name, icone.Size, icone.BackgroundTransparency = "IconeCategoria", UDim2.fromScale(1, 1), 1
-	icone.ZIndex, icone.Parent = botao.ZIndex + 1, botao
+  local icone = Instance.new("Frame")
+  icone.Name, icone.BackgroundTransparency = "IconeCategoria", 1
+  icone.AnchorPoint, icone.Position, icone.Size = Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.5), UDim2.fromScale(1, 1)
+  icone.ZIndex, icone.Parent = botao.ZIndex + 1, botao
+  local proporcao = Instance.new("UIAspectRatioConstraint")
+  proporcao.AspectRatio = 1
+  proporcao.AspectType = Enum.AspectType.FitWithinMaxSize
+  proporcao.Parent = icone
 	local cor = Color3.fromRGB(128, 142, 138)
 	if categoria == "Todos" then
 		-- Quatro quadrados representam a visao completa do catalogo.

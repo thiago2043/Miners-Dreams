@@ -110,27 +110,14 @@ self._paineisProgressao.HistoricoCopia=PainelHistoricoCopia.new(self._interface,
 end
 
 function InterfaceJogo:_AtualizarMenusLaterais()
-	if self._destruida then return end
-	local paineis = { self._painelBlueprints._grupo }
-	for _, painel in self._paineis do
-		table.insert(paineis, painel._painelLista)
-		table.insert(paineis, painel._painelFicha)
-	end
-	for _, painel in self._paineisProgressao do table.insert(paineis, painel._grupo) end
-	for _, menu in { self._menuAbas, self._menuDireito, self._botaoLimparPlot:ObterInstancia() } do
-		local a, s = menu.AbsolutePosition, menu.AbsoluteSize
-		local ocupado = false
-for _, painel in paineis do
-      local b, t = painel.AbsolutePosition, painel.AbsoluteSize
-      if painel.Visible and not painel:GetAttribute("FechandoUI") and s.X > 0 and s.Y > 0 and t.X > 0 and t.Y > 0
-        and a.X < b.X + t.X and a.X + s.X > b.X
-        and a.Y < b.Y + t.Y and a.Y + s.Y > b.Y then
-        ocupado = true; break
-      end
-    end
-		menu.Visible = not ocupado
-		if ocupado then self._dicaAba.Visible = false end
-	end
+  if self._destruida then return end
+  self._menuAbas.ZIndex = 250
+  self._menuDireito.ZIndex = 250
+  self._dicaAba.ZIndex = 260
+  self._botaoLimparPlot:ObterInstancia().ZIndex = 250
+  self._menuAbas.Visible = true
+  self._menuDireito.Visible = true
+  self._botaoLimparPlot:ObterInstancia().Visible = true
 end
 
 function InterfaceJogo:_ObservarMenusLaterais()

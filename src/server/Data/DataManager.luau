@@ -82,6 +82,12 @@ function DataManager.DefinirAtalho(jogador: Player, original: string, tecla: str
   return dados:DefinirAtalho(original, tecla)
 end
 
+function DataManager.DefinirJanela(jogador: Player, id: string, rect: any)
+  local dados = DataManager.ObterDados(jogador)
+  if not dados then return false, "Dados ainda nao estao disponiveis." end
+  return dados:DefinirJanela(id, rect)
+end
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local pacotes = ReplicatedStorage:FindFirstChild("Packages")
 if pacotes and pacotes:FindFirstChild("Networker") then
@@ -93,9 +99,13 @@ if pacotes and pacotes:FindFirstChild("Networker") then
   function ServicoConfiguracoes:SalvarAtalho(jogador, original, tecla)
     return DataManager.DefinirAtalho(jogador, original, tecla)
   end
+  function ServicoConfiguracoes:SalvarJanela(jogador, id, rect)
+    return DataManager.DefinirJanela(jogador, id, rect)
+  end
   Networker.server.new("Configuracoes", ServicoConfiguracoes, {
     ServicoConfiguracoes.SalvarOpcao,
     ServicoConfiguracoes.SalvarAtalho,
+    ServicoConfiguracoes.SalvarJanela,
   })
 end
 

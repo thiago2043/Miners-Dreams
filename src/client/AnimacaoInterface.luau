@@ -39,6 +39,28 @@ if not quadro then return false end
 return quadro.Visible and not quadro:GetAttribute("FechandoUI")
 end
 
+function AnimacaoInterface.AtualizarPosicaoBase(quadro, novaPosicao)
+local estado = estados[quadro]
+if estado and estado.PosicaoBase then
+estado.PosicaoBase = novaPosicao
+end
+end
+
+function AnimacaoInterface.ConcluirImediatamente(quadro)
+local estado = estados[quadro]
+if not estado then return end
+estado.Token += 1
+cancelarTweens(estado)
+local escala = obterEscala(quadro)
+escala.Scale = 1
+if estado.PosicaoBase then
+quadro.Position = estado.PosicaoBase
+estado.PosicaoBase = nil
+end
+quadro:SetAttribute("AnimandoUI", nil)
+quadro:SetAttribute("FechandoUI", nil)
+end
+
 function AnimacaoInterface.DefinirVisivel(quadro, visivel, direcao, aoConcluirFechamento)
 if not quadro then return end
 visivel = visivel == true
@@ -99,8 +121,8 @@ tEscala.Completed:Once(function()
 if estado.Token ~= tokenAtual then return end
 estado.TweenEscala, estado.TweenPosicao = nil, nil
 escala.Scale = 1
-if not flutuante then
-quadro.Position = posFinal
+if not flutuante and estado.PosicaoBase then
+quadro.Position = estado.PosicaoBase
 estado.PosicaoBase = nil
 end
 quadro:SetAttribute("AnimandoUI", nil)
@@ -139,8 +161,8 @@ if estado.Token ~= tokenAtual then return end
 estado.TweenEscala, estado.TweenPosicao = nil, nil
 quadro.Visible = false
 escala.Scale = 1
-if not flutuante then
-quadro.Position = posBase
+if not flutuante and estado.PosicaoBase then
+quadro.Position = estado.PosicaoBase
 estado.PosicaoBase = nil
 end
 quadro:SetAttribute("AnimandoUI", nil)

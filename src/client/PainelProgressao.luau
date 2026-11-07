@@ -1,6 +1,7 @@
 local Botao = require(script.Parent.Botao)
 local Icones = require(script.Parent.IconesAbas)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
+local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 local PainelProgressao = {}
 PainelProgressao.__index = PainelProgressao
 local cores = {Blueprints=Color3.fromRGB(49,211,240), Upgrades=Color3.fromRGB(176,137,255), Configuracoes=Color3.fromRGB(255,214,78), Classificacao=Color3.fromRGB(255,190,86),Administracao=Color3.fromRGB(112,198,255),Tutorial=Color3.fromRGB(101,228,196)}
@@ -51,10 +52,19 @@ g.BackgroundColor3,g.BorderSizePixel=Color3.fromRGB(22,23,29),0
 		estado.BackgroundColor3,estado.BorderSizePixel,estado.Parent=Color3.fromRGB(29,31,39),0,self.Conteudo
 		arredondar(estado,10)
 		self._mensagem=self:Texto(estado,"Vazio",mensagem,UDim2.fromOffset(20,24),UDim2.new(1,-40,0,56),21,true)
-		self._mensagem.TextXAlignment=Enum.TextXAlignment.Center
-		self.Conteudo.CanvasSize=UDim2.fromOffset(0,192)
-	end
-	return self
+self._mensagem.TextXAlignment=Enum.TextXAlignment.Center
+self.Conteudo.CanvasSize=UDim2.fromOffset(0,192)
+end
+GerenciadorJanelas.Registrar("Janela_" .. nome, g, {
+Jogador = jogador,
+AlturaBarra = 48,
+RecuoDireitoBarra = 48,
+MinLargura = 260,
+MinAltura = 240,
+LarguraPadrao = 540,
+AlturaPadrao = altura or 340,
+})
+return self
 end
 
 function PainelProgressao:Texto(pai,nome,conteudo,posicao,tamanho,fonte,negrito)

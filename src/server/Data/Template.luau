@@ -28,6 +28,7 @@ return {
 	MaquinasColocadas = {},
 -- Cada blueprint e um conjunto salvo de pecas com configuracoes e distancias relativas.
   Blueprints = {},
-  Configuracoes = {},
+Configuracoes = {},
   Atalhos = {},
+  Janelas = {},
 }

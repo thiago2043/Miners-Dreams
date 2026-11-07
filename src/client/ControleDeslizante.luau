@@ -55,17 +55,29 @@ local c3 = Instance.new("UICorner")
 c3.CornerRadius, c3.Parent = UDim.new(0, 4), marcador
 self._marcador = marcador
 
-local captura = Instance.new("TextButton")
-captura.Name, captura.Size, captura.BackgroundTransparency, captura.Text, captura.Parent = "Ajustar", UDim2.fromScale(1, 1), 1, "", raiz
-captura.Selectable, captura.ZIndex = true, 2
+local captura = Instance.new("Frame")
+captura.Name, captura.Size, captura.BackgroundTransparency, captura.Parent = "Ajustar", UDim2.fromScale(1, 1), 1, raiz
+captura.Active, captura.Selectable, captura.ZIndex = true, true, 2
 self._captura = captura
 
 table.insert(self._conexoes, captura.InputBegan:Connect(function(i)
+local okG, ger = pcall(require, script.Parent.GerenciadorJanelas)
+if okG and ger and ger.PodeInteragir and not ger.PodeInteragir(captura) then return end
 if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
 self._arraste = i
 self._rolagem = pai.ScrollingEnabled
 pai.ScrollingEnabled = false
 self:_PorX(i.Position.X)
+elseif i.KeyCode == Enum.KeyCode.ButtonA or i.KeyCode == Enum.KeyCode.Return then
+if self._continuo then
+local salto = math.max(self._passo, (self._maximo - self._minimo) * 0.05)
+local proximo = (self._valor or self._minimo) + salto
+if proximo > self._maximo + 1e-6 then proximo = self._minimo end
+local t = (proximo - self._minimo) / (self._maximo - self._minimo)
+self:_EscolherPorFracao(t)
+else
+self:_Escolher(self._indice % #self._valores + 1)
+end
 end
 end))
 table.insert(self._conexoes, Input.InputChanged:Connect(function(i)
@@ -76,21 +88,6 @@ end))
 table.insert(self._conexoes, Input.InputEnded:Connect(function(i)
 if i == self._arraste or (self._arraste and i.UserInputType == Enum.UserInputType.MouseButton1) then
 self:_Soltar()
-end
-end))
-table.insert(self._conexoes, captura.Activated:Connect(function(_, cont)
-if self._arraste then return end
-if Input:GetLastInputType() == Enum.UserInputType.MouseButton1 or Input:GetLastInputType() == Enum.UserInputType.Touch then
-return
-end
-if self._continuo then
-local salto = math.max(self._passo, (self._maximo - self._minimo) * 0.05)
-local proximo = (self._valor or self._minimo) + salto
-if proximo > self._maximo + 1e-6 then proximo = self._minimo end
-local t = (proximo - self._minimo) / (self._maximo - self._minimo)
-self:_EscolherPorFracao(t)
-else
-self:_Escolher(self._indice % #self._valores + 1)
 end
 end))
 return self

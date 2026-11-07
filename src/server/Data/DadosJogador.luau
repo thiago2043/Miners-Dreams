@@ -16,7 +16,7 @@ local ReinicioProgresso = require(script.Parent.ReinicioProgresso)
 local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
@@ -247,12 +247,59 @@ function DadosJogador:_SincronizarConfiguracoes()
     propostos[original] = tecla
     if usados[tecla] then colisao = true else usados[tecla] = original end
   end
-  for _, acao in Configuracoes.Atalhos do
+for _, acao in Configuracoes.Atalhos do
     local original, padrao = acao[1], acao[3] or acao[1]
     local tecla = if colisao then padrao else propostos[original]
     atalhosSalvos[original] = if tecla ~= padrao then tecla else nil
     self._jogador:SetAttribute("Atalho_" .. original, tecla)
   end
+
+  local janelasSalvas = type(dados.Janelas) == "table" and dados.Janelas or {}
+  dados.Janelas = janelasSalvas
+  local janelasLimpas = {}
+  for idJanela, rect in janelasSalvas do
+    if type(idJanela) == "string" and #idJanela <= 40 and type(rect) == "table"
+      and type(rect.X) == "number" and type(rect.Y) == "number"
+      and type(rect.L) == "number" and type(rect.A) == "number"
+    then
+      janelasLimpas[idJanela] = {
+        X = math.round(rect.X),
+        Y = math.round(rect.Y),
+        L = math.clamp(math.round(rect.L), 140, 3840),
+        A = math.clamp(math.round(rect.A), 120, 2160),
+      }
+    end
+  end
+  dados.Janelas = janelasLimpas
+  self._jogador:SetAttribute("LayoutJanelas", HttpService:JSONEncode(janelasLimpas))
+end
+
+function DadosJogador:DefinirJanela(id, rect)
+  if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
+  if type(id) ~= "string" or #id == 0 or #id > 40 then return false, "Janela invalida." end
+  local janelasSalvas = type(self._perfil.Data.Janelas) == "table" and self._perfil.Data.Janelas or {}
+  self._perfil.Data.Janelas = janelasSalvas
+  if id == "_TODAS_" and rect == nil then
+    table.clear(janelasSalvas)
+  elseif rect == nil then
+    janelasSalvas[id] = nil
+  elseif type(rect) == "table"
+    and type(rect.X) == "number" and rect.X == rect.X and math.abs(rect.X) < 10000
+    and type(rect.Y) == "number" and rect.Y == rect.Y and math.abs(rect.Y) < 10000
+    and type(rect.L) == "number" and rect.L == rect.L and rect.L >= 120 and rect.L <= 3840
+    and type(rect.A) == "number" and rect.A == rect.A and rect.A >= 100 and rect.A <= 2160
+  then
+    janelasSalvas[id] = {
+      X = math.round(rect.X),
+      Y = math.round(rect.Y),
+      L = math.round(rect.L),
+      A = math.round(rect.A),
+    }
+  else
+    return false, "Dimensoes de janela invalidas."
+  end
+  self._jogador:SetAttribute("LayoutJanelas", HttpService:JSONEncode(janelasSalvas))
+  return true
 end
 
 function DadosJogador:DefinirConfiguracao(id, valor)

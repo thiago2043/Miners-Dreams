@@ -2239,8 +2239,11 @@ function ControladorConstrucao:AlternarPainelCentral(aba)
     self.Navegacao:Fechar(aba)
   else
     self.Navegacao:Fechar("MenuPeca")
-    for _, nome in { "Blueprints", "Upgrades", "Prestigio", "Configuracoes", "Classificacao", "Administracao", "Tutorial", "HistoricoCopia" } do self.Navegacao:Fechar(nome) end
     self.Navegacao:Abrir(aba)
+    local ok, GerenciadorJanelas = pcall(require, script.Parent.GerenciadorJanelas)
+    if ok and GerenciadorJanelas then
+      GerenciadorJanelas.TrazerParaFrente("Janela_" .. aba)
+    end
   end
   return true
 end

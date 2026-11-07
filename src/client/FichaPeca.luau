@@ -72,7 +72,7 @@ function FichaPeca.new(pai, modelos, aoAtivar, fechar, aba)
 	layout.SortOrder, layout.HorizontalAlignment, layout.Padding = Enum.SortOrder.LayoutOrder, Enum.HorizontalAlignment.Center, UDim.new(0, 5)
 	layout.Parent = self._conteudo
 	table.insert(self._conexoes, layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self._rolagem.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 8)
+		local esc = require(game:GetService("ReplicatedStorage").Shared.Configuracoes).Obter(game:GetService("Players").LocalPlayer, "EscalaInterface") or 1; self._rolagem.CanvasSize = UDim2.fromOffset(0, math.ceil(layout.AbsoluteContentSize.Y / esc) + 10)
 	end))
 	-- O retrato permanece quadrado ao mudar a largura. MiniaturaPeca enquadra o modelo dentro dele.
 	self._retrato = Instance.new("Frame")
@@ -155,10 +155,14 @@ end
 -- Limita o retrato a 20% da altura e a 96 pixels, alem da largura disponivel. A altura pequena de
 -- uma janela nao deve ser consumida pela miniatura, escondendo as estatisticas abaixo dela.
 function FichaPeca:_DimensionarRetrato()
-  if self._instancia:GetAttribute("AnimandoUI") then return end
-  local limiteAltura = math.clamp(math.floor(self._instancia.AbsoluteSize.Y * 0.2), 48, 96)
-	local lado = math.clamp(self._conteudo.AbsoluteSize.X - 4, 1, limiteAltura)
-	self._retrato.Size = UDim2.fromOffset(lado, lado)
+if self._instancia:GetAttribute("AnimandoUI") then return end
+local esc = require(game:GetService("ReplicatedStorage").Shared.Configuracoes).Obter(game:GetService("Players").LocalPlayer, "EscalaInterface") or 1
+local altInterna = self._instancia.AbsoluteSize.Y / esc
+local largInterna = self._instancia.AbsoluteSize.X / esc
+local limiteAltura = math.clamp(math.floor(altInterna * 0.24), 48, 128)
+local limiteLargura = math.max(48, math.floor(largInterna - 28))
+local lado = math.min(limiteAltura, limiteLargura)
+self._retrato.Size = UDim2.fromOffset(lado, lado)
 end
 
 -- Entrega o painel para a navegacao existente decidir quando ele deve aparecer.

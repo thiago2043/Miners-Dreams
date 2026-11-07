@@ -82,8 +82,9 @@ function Painel:_Desenhar()
   self:_Limpar()
   local layout=Instance.new("UIListLayout")
   layout.SortOrder,layout.Padding,layout.Parent=Enum.SortOrder.LayoutOrder,UDim.new(0,12),self._corpo
-  local function atualizarCanvas()
-    self._janela.Conteudo.CanvasSize=UDim2.fromOffset(0,layout.AbsoluteContentSize.Y+16)
+local function atualizarCanvas()
+    local esc = require(game:GetService("ReplicatedStorage").Shared.Configuracoes).Obter(self._jogador, "EscalaInterface") or 1
+    self._janela.Conteudo.CanvasSize=UDim2.fromOffset(0,math.ceil(layout.AbsoluteContentSize.Y / esc)+16)
   end
   table.insert(self._conexoes,layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(atualizarCanvas))
 	if not self._atual then
