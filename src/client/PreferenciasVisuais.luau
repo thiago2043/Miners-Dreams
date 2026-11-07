@@ -6,6 +6,7 @@ local Lighting = game:GetService("Lighting")
 local Debris = game:GetService("Debris")
 
 local Config = require(ReplicatedStorage.Shared.Configuracoes)
+local MonitorRecursos = require(ReplicatedStorage.Shared.MonitorRecursos)
 local catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Inteiro = require(ReplicatedStorage.Shared.InteiroGrande)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
@@ -339,7 +340,11 @@ end
 end
 
 function Visuais:_AnimarPreviasRemotas(deltaTime)
-if not next(self._previasRemotas) then return end
+local tInicio = MonitorRecursos.Iniciar()
+if not next(self._previasRemotas) then
+MonitorRecursos.Finalizar("Efeitos, Fornalhas e Prévias (PreferenciasVisuais)", tInicio, "Monitoramento passivo")
+return
+end
 local alpha = 1 - math.exp(-45 * deltaTime)
 for _, grupo in self._previasRemotas do
 for _, item in grupo.Itens do
@@ -352,6 +357,7 @@ item.Caixa.CFrame = item.VolumeVisual
 end
 end
 end
+MonitorRecursos.Finalizar("Efeitos, Fornalhas e Prévias (PreferenciasVisuais)", tInicio, "Interpolando prévias remotas")
 end
 
 function Visuais:_Efeito(objeto, salvo)

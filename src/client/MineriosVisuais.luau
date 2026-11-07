@@ -5,6 +5,7 @@ local Debris = game:GetService("Debris")
 local Movimento = require(game:GetService("ReplicatedStorage").Shared.MovimentoMinerio)
 local AbreviarInteiro = require(game:GetService("ReplicatedStorage").Shared.AbreviarInteiro)
 local Config = require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
+local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 local MineriosVisuais = {}
 MineriosVisuais.__index = MineriosVisuais
 
@@ -256,6 +257,7 @@ local function atualizarLimites(grupo, tempo)
 end
 
 function MineriosVisuais:Atualizar(agora)
+  local tInicio = MonitorRecursos.Iniciar()
   local partes, poses = self._partes, self._poses
   table.clear(partes); table.clear(poses)
   local camera = workspace.CurrentCamera
@@ -317,7 +319,9 @@ local texto = terreno:GetAttribute("RelogioMinerios")
       end
     end
   end
-  if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end
+if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end
+  MonitorRecursos.DefinirMetrica("MineriosMovidosFrame", #partes)
+  MonitorRecursos.Finalizar("Movimento Visual de Minérios (MineriosVisuais)", tInicio, string.format("%d movidos/frame", #partes))
 end
 
 function MineriosVisuais:Destruir()

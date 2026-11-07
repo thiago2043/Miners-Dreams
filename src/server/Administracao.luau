@@ -1,3 +1,4 @@
+local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 local Players=game:GetService("Players")
 local Http=game:GetService("HttpService")
 local Run=game:GetService("RunService")
@@ -189,4 +190,9 @@ function Admin:Alterar(jogador,id,pedido)
 	local ok,enviou=pcall(function() return Store:MessageAsync("Player_"..id,mensagem) end)
 	return ok and enviou==true,ok and enviou and "Pedido enviado. Será validado no servidor do jogador ou na próxima entrada; confira o registro de alterações." or "Falha ao enviar a alteração.",mensagem.Id
 end
+function Admin:Recursos(jogador)
+if not self:Permissao(jogador) then return false, "Sem permissão." end
+return true, MonitorRecursos.ColetarServidor()
+end
+
 return Admin

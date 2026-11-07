@@ -199,7 +199,7 @@ function DadosJogador:PublicarResumoPlot()
 		local id=type(registro)=="table" and registro.MaquinaId
 		if id and CatalogoMaquinas[id] then contagens[id]=(contagens[id] or 0)+1 end
 	end
-	self._jogador:SetAttribute("PecasNaPlot",HttpService:JSONEncode(contagens))
+	self._jogador:SetAttribute("PecasNaPlot",game:GetService("HttpService"):JSONEncode(contagens))
 end
 
 -- Publica os dados replicados depois do carregamento ou de uma alteracao completa de progresso.
@@ -271,7 +271,7 @@ for _, acao in Configuracoes.Atalhos do
     end
   end
   dados.Janelas = janelasLimpas
-  self._jogador:SetAttribute("LayoutJanelas", HttpService:JSONEncode(janelasLimpas))
+  self._jogador:SetAttribute("LayoutJanelas", game:GetService("HttpService"):JSONEncode(janelasLimpas))
 end
 
 function DadosJogador:DefinirJanela(id, rect)
@@ -298,7 +298,7 @@ function DadosJogador:DefinirJanela(id, rect)
   else
     return false, "Dimensoes de janela invalidas."
   end
-  self._jogador:SetAttribute("LayoutJanelas", HttpService:JSONEncode(janelasSalvas))
+  self._jogador:SetAttribute("LayoutJanelas", game:GetService("HttpService"):JSONEncode(janelasSalvas))
   return true
 end
 

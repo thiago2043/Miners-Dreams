@@ -1,3 +1,4 @@
+local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 -- Coordena comandos, estados e pedidos de construcao. PreviaConstrucao possui o visual; SelecaoPecas protege
 -- as escolhas das listas.
 local RunService = game:GetService("RunService")
@@ -1968,7 +1969,7 @@ function ControladorConstrucao:Atualizar(deltaTime)
 	end
 
 self:_AtualizarTransparenciaAltura()
-  if not self._previa then return end
+	if not self._previa then return end
   if self._rotacao then self._rotacaoPreservada = self._rotacao end
 
 	if self._colocando then
@@ -2752,6 +2753,18 @@ function ControladorConstrucao:Girar(eixo)
 	-- Multiplicar o giro pela esquerda aplica o eixo no referencial da construcao. A validacao final remove
 	-- residuos e confirma que a matriz continua nas orientacoes permitidas para a peca.
 	self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(self._rotacao,definicao))
+end
+
+local _atualizarBaseCtrl = ControladorConstrucao.Atualizar
+function ControladorConstrucao:Atualizar(...)
+local tInicio = MonitorRecursos.Iniciar()
+local r = _atualizarBaseCtrl(self, ...)
+MonitorRecursos.Finalizar(
+"Construção, Raycast e Camadas (ControladorConstrucao)",
+tInicio,
+if self._previa then "Prévia 3D ativa" elseif self._modoSelecao then ("Modo: " .. tostring(self._modoSelecao)) else "Hover / Repouso"
+)
+return r
 end
 
 return ControladorConstrucao

@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 local DataManager = require(game:GetService("ServerScriptService").Data.DataManager)
 local CorpoRigido = require(ReplicatedStorage.Shared.CorpoRigido)
 local Movimento = require(ReplicatedStorage.Shared.MovimentoMinerio)
+local MonitorRecursos = require(ReplicatedStorage.Shared.MonitorRecursos)
 local celula = require(ReplicatedStorage.Shared.Medidas).Bloco * 2
 local vazio = {}
 
@@ -459,6 +460,7 @@ table.clear(self._regioes)
 self._versaoRegioes, self._cicloRegioes = self._versao, cicloRegioes
 end
 local versaoRegioes=self._versao
+local tInicioFisica = MonitorRecursos.Iniciar()
 while executados < quantidade do
 self._tempo = self._passos * passo
 if antesPasso then antesPasso(self._tempo) end
@@ -503,6 +505,9 @@ self._passos += 1
 executados += 1
 self._acumulado -= passo
 end
+MonitorRecursos.Finalizar("Física e Colisão de Minérios (SimulacaoMinerios)", tInicioFisica, string.format("%d minérios • %d passo(s)/frame", #self._minerios, executados))
+local tInicioReplicacao = MonitorRecursos.Iniciar()
+local pacotesMovimento = 0
 local partes, poses, terrenos = {}, {}, {}
 local agora = workspace:GetServerTimeNow()
 local inicio = self._passos * passo
@@ -572,6 +577,7 @@ end
 end
 for terreno in self._relogios do if not terreno.Parent then self._relogios[terreno]=nil end end
 if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end
+MonitorRecursos.Finalizar("Replicação de Minérios (Atributos/Rede)", tInicioReplicacao, string.format("%d minérios ativos • %d BulkMove", #self._minerios, #partes))
 end
 
 function SimulacaoMinerios:Destruir()

@@ -39,7 +39,7 @@ if inventario or not item.Renascimento then table.insert(self._ids, id) end
 end
 table.sort(self._ids, function(a, b) return Catalogo[a].Nome < Catalogo[b].Nome end)
 
-self._grade = GradePecas.new(pai, self._ids, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+self._grade = GradePecas.new(pai:FindFirstChild("EscalaConteudo") or pai, self._ids, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 function(id) self:Selecionar(id) end,
 function() construcao:AlternarAba(aba) end,
 aba
@@ -53,7 +53,7 @@ self._ultimoClique = nil
 if acao == "Colocar" then construcao:ColocarSelecionada(aba, true) else self:Negociar(acao) end
 end
 
-self._ficha = FichaPeca.new(pai, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+self._ficha = FichaPeca.new(pai:FindFirstChild("EscalaConteudo") or pai, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 executar,
 function() construcao:FecharFicha(aba) end,
 aba

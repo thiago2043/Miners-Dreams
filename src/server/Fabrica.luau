@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Maquina = require(script.Parent.Maquinas.Maquina)
 local SimulacaoMinerios = require(script.Parent.SimulacaoMinerios)
+local MonitorRecursos = require(ReplicatedStorage.Shared.MonitorRecursos)
 local Fabrica = {}
 Fabrica.__index = Fabrica
 
@@ -70,13 +71,22 @@ function Fabrica:Avancar(delta)
   local atualizouMaquinas = false
   self._simulacao:Avancar(delta, function(agora)
     if self._sujo or agora + 0.000000001 >= self._proximaAtualizacao then
+      local tMaq = MonitorRecursos.Iniciar()
       self._sujo = false
       self:Atualizar(agora)
       self._proximaAtualizacao = agora + 1
       atualizouMaquinas = true
+      local qtd = 0; for _ in self._maquinas do qtd += 1 end
+      MonitorRecursos.Finalizar("Máquinas e Componentes (Fabrica)", tMaq, string.format("%d máquinas ativas (varredura)", qtd))
     elseif not atualizouMaquinas then
+      local tMaq = MonitorRecursos.Iniciar()
       atualizouMaquinas = true
-      for _, maquina in self._maquinas do maquina:Atualizar(agora) end
+      local qtd = 0
+      for _, maquina in self._maquinas do
+        maquina:Atualizar(agora)
+        qtd += 1
+      end
+      MonitorRecursos.Finalizar("Máquinas e Componentes (Fabrica)", tMaq, string.format("%d máquinas ativas", qtd))
     end
   end)
 end

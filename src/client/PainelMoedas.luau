@@ -140,7 +140,7 @@ function PainelMoedas:AtualizarRecebimentos(total)
 	texto.BackgroundTransparency,texto.TextColor3=1,Color3.fromRGB(69,255,139)
 	texto.Font,texto.TextSize,texto.TextStrokeTransparency=Enum.Font.SourceSansBold,18,.35
 	-- Fora do layout horizontal do saldo, para a animacao nao deslocar o cartao.
-	texto.Parent=self._gui
+	texto.Parent = self._gui:FindFirstChild("EscalaConteudo") or self._gui
 	texto.AnchorPoint,texto.Position=Vector2.new(.5,0),UDim2.new(.5,0,0,48)
 	game:GetService("TweenService"):Create(texto,TweenInfo.new(.75,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{
 		Position=UDim2.new(.5,0,0,30),TextTransparency=1,TextStrokeTransparency=1,

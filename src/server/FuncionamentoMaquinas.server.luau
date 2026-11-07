@@ -1,3 +1,4 @@
+local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 -- Entrega o tempo do Heartbeat a fabrica; a simulacao transforma esse tempo em passos fixos e atualiza os
 -- componentes.
 local Fabrica = require(script.Parent.Fabrica)
@@ -12,10 +13,10 @@ local tempoRecebimentos = 0
 local conexao = game:GetService("RunService").Heartbeat:Connect(function(delta)
 	fabrica:Avancar(delta)
 	tempoRecebimentos+=delta
-	if tempoRecebimentos>=1 then DataManager.PublicarRecebimentos(); tempoRecebimentos=0 end
+	if tempoRecebimentos>=1 then local tEco=MonitorRecursos.Iniciar(); DataManager.PublicarRecebimentos(); MonitorRecursos.Finalizar("Economia e Recebimentos (DataManager)", tEco, "Publicação de saldos e ganhos"); tempoRecebimentos=0 end
 	tempoTaxa += delta
 	if tempoTaxa >= 2 then
-		DataManager.PublicarGanhosPorSegundo(tempoTaxa)
+		local tTaxa=MonitorRecursos.Iniciar(); DataManager.PublicarGanhosPorSegundo(tempoTaxa); MonitorRecursos.Finalizar("Economia e Recebimentos (DataManager)", tTaxa, "Cálculo de $/s")
 		tempoTaxa = 0
 	end
 end)

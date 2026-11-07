@@ -9,7 +9,7 @@ local Painel = {}
 Painel.__index = Painel
 
 function Painel.new(pai, jogador, navegacao, rede)
-if not rede then rede = GerenciadorJanelas.ObterRede() end
+
 local janela = Janela.new(pai, navegacao, "Configuracoes", "Configurações", nil, nil, 520, jogador)
 local self = setmetatable({
 _janela = janela, _grupo = janela._grupo, _jogador = jogador, _rede = rede,
@@ -92,7 +92,7 @@ end
 
 function Painel:_SalvarOpcao(id, valor)
 self._jogador:SetAttribute(id, valor)
-if not self._rede then return end
+if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end; if not self._rede then return end
 self._opcoesPendentes[id] = valor
 if self._enviandoOpcoes then return end
 self._enviandoOpcoes = true
@@ -114,7 +114,7 @@ end
 
 function Painel:_SalvarAtalho(original, combinacao)
 self._jogador:SetAttribute("Atalho_" .. original, combinacao)
-if not self._rede then return end
+if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end; if not self._rede then return end
 table.insert(self._filaAtalhos, { Original = original, Tecla = combinacao })
 if self._enviandoAtalhos then return end
 self._enviandoAtalhos = true

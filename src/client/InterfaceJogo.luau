@@ -6,6 +6,7 @@ local Networker = require(ReplicatedStorage.Packages.Networker)
 local PainelPecas = require(script.Parent.PainelPecas)
 local PainelBlueprints = require(script.Parent.PainelBlueprints)
 local Configuracoes=require(ReplicatedStorage.Shared.Configuracoes)
+local MonitorRecursos=require(ReplicatedStorage.Shared.MonitorRecursos)
 local PainelConfiguracoes = require(script.Parent.PainelConfiguracoes)
 local PainelUpgrades = require(script.Parent.PainelUpgrades)
 local PainelClassificacao = require(script.Parent.PainelClassificacao)
@@ -66,16 +67,18 @@ self._paineisProgressao.HistoricoCopia=PainelHistoricoCopia.new(self._interface,
 	table.insert(self._conexoes, construcao.PecaFocada:Connect(function(maquina)
 		self:_MostrarPeca(maquina)
 	end))
-	table.insert(self._conexoes, RunService.RenderStepped:Connect(function()
-		self:_AtualizarMenuPeca()
-		if self._resumoPlotAlterado then
-			self._resumoPlotAlterado=false
-			for _,painel in self._paineis do painel:Atualizar() end
-			self:_AtualizarBotaoLimparPlot()
-		end
-		if self._saldoInventarioAlterado then self._saldoInventarioAlterado=false; self._paineis.Inventario:Atualizar() end
-		if self._limparStatus.Visible and os.clock()>=self._limparStatusAte then self._limparStatus.Visible=false end
-	end))
+table.insert(self._conexoes, RunService.RenderStepped:Connect(function()
+local tHud = MonitorRecursos.Iniciar()
+self:_AtualizarMenuPeca()
+if self._resumoPlotAlterado then
+self._resumoPlotAlterado=false
+for _,painel in self._paineis do painel:Atualizar() end
+self:_AtualizarBotaoLimparPlot()
+end
+if self._saldoInventarioAlterado then self._saldoInventarioAlterado=false; self._paineis.Inventario:Atualizar() end
+if self._limparStatus.Visible and os.clock()>=self._limparStatusAte then self._limparStatus.Visible=false end
+MonitorRecursos.Finalizar("Interface e HUD (InterfaceJogo)", tHud, "Atualização de quadros da UI")
+end))
 	table.insert(self._conexoes,jogador:GetAttributeChangedSignal("PecasNaPlot"):Connect(function() self._resumoPlotAlterado=true end))
 	-- Os atributos chegam replicados do servidor. Os sinais atualizam o HUD quando os dados mudam, dispensando
 	-- uma consulta repetida a cada quadro.

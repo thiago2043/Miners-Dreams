@@ -1,3 +1,4 @@
+local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 local R=game:GetService("ReplicatedStorage")
 local Run=game:GetService("RunService")
 local Http=game:GetService("HttpService")
@@ -26,6 +27,14 @@ function Painel.new(pai,jogador,nav,rede,confirmacao)
 		_confirmacao=confirmacao,_botoes={},_aba="Jogadores",_tipo="Dinheiro",_pagina=1,_online={},_perfis={},_tempo=10},Painel)
 	self._conexao=Run.Heartbeat:Connect(function(dt)
 		if not self._grupo.Visible or not jogador:GetAttribute("Administrador") then return end
+if self._aba == "Recursos" and self._autoRecursos ~= false then
+self._tempoRecursos = (self._tempoRecursos or 0) - dt
+if self._tempoRecursos <= 0 then
+self._tempoRecursos = 1.5
+self:CarregarRecursos()
+end
+return
+end
 		self._tempo+=dt
 		if self._tempo>=10 then
 			self._tempo=0
@@ -234,22 +243,25 @@ function Painel:_Desenhar()
 	local busca=self:_Entrada("Jogador","","Nome de usuário ou UserId",0)
 	self:_Botao("Buscar","Buscar jogador",76,function() self:Consultar(busca.Text) end,0,.5)
 	self:_Botao("Atualizar","Atualizar",76,function()
-		if self._dados and self._aba~="Jogadores" then self:Consultar(self._dados.UserId) else self:Listar(false) end
+		if self._aba=="Recursos" then self:CarregarRecursos() elseif self._dados and self._aba~="Jogadores" then self:Consultar(self._dados.UserId) else self:Listar(false) end
 	end,.5,.5)
-	local abas={"Jogadores","Progresso","Histórico","Editar","Plot","Registro"}
-	local colunas=self._janela.Conteudo.AbsoluteSize.X<380 and 3 or #abas
-for i,nome in abas do
-    local b=self:_Botao(nome,nome,130+math.floor((i-1)/colunas)*52,function()
-      if nome=="Plot" and not table.find(tiposPlot,self._tipo) then self._tipo="Adicionar"; self._chave=nil end
-      if nome=="Editar" and not table.find(tipos,self._tipo) then self._tipo="Dinheiro"; self._chave=nil end
-      self._aba=nome; self._pagina=1; self._escolhendo=nil; self:_Desenhar()
-      AnimacaoInterface.TransicaoSubAba(self._janela.Conteudo)
-    end,((i-1)%colunas)/colunas,1/colunas)
-		if self._aba==nome then b:ObterInstancia().BackgroundColor3=Color3.fromRGB(48,93,120) end
-	end
-	local y=132+math.ceil(#abas/colunas)*52
-	if self._mensagem then self:_Texto("Resposta",self._mensagem,y,66,15); y+=74 end
-	if self._aba=="Jogadores" then
+	local abas={"Jogadores","Progresso","Histórico","Editar","Plot","Registro","Recursos"}
+	local abasExibidas = table.clone(abas)
+if not table.find(abasExibidas, "Recursos") then table.insert(abasExibidas, "Recursos") end
+local colunas = self._janela.Conteudo.AbsoluteSize.X < 420 and 3 or 4
+for i, nome in abasExibidas do
+local b = self:_Botao(nome, nome, 130 + math.floor((i - 1) / colunas) * 52, function()
+if nome == "Plot" and not table.find(tiposPlot, self._tipo) then self._tipo = "Adicionar"; self._chave = nil end
+if nome == "Editar" and not table.find(tipos, self._tipo) then self._tipo = "Dinheiro"; self._chave = nil end
+self._aba = nome; self._pagina = 1; self._escolhendo = nil
+if nome == "Recursos" then self:CarregarRecursos() end
+self:_Desenhar()
+AnimacaoInterface.TransicaoSubAba(self._janela.Conteudo)
+end, ((i - 1) % colunas) / colunas, 1 / colunas)
+if self._aba == nome then b:ObterInstancia().BackgroundColor3 = Color3.fromRGB(48, 93, 120) end
+end
+local y = 134 + math.ceil(#abasExibidas / colunas) * 52
+if self._aba == "Jogadores" then
 		self:_Texto("Online","Online • até 100 recentes • atualização a cada 10 segundos",y,40,17); y+=46
 		local linhas={}
 		for id,r in self._online do table.insert(linhas,{Id=id,Resumo=r}) end
@@ -322,4 +334,288 @@ function Painel:Destruir()
 	for _,b in self._botoes do b:Destruir() end
 	self._janela:Destruir()
 end
+function Painel:CarregarRecursos()
+if self._destruido then return end
+self._recursosCliente = MonitorRecursos.ColetarCliente(self._jogador)
+if self._buscandoRecursos then return end
+self._buscandoRecursos = true
+task.spawn(function()
+local ok, sucesso, dadosSrv = pcall(self._rede.fetch, self._rede, "Recursos")
+self._buscandoRecursos = false
+if self._destruido then return end
+if ok and sucesso and type(dadosSrv) == "table" then
+self._recursosServidor = dadosSrv
+end
+self._recursosCliente = MonitorRecursos.ColetarCliente(self._jogador)
+if self._aba == "Recursos" and self._grupo.Visible then
+local posRolagem = self._janela.Conteudo.CanvasPosition
+self:_Desenhar()
+self._janela.Conteudo.CanvasPosition = posRolagem
+end
+end)
+end
+
+function Painel:_CartaoMetricaBarra(nome, titulo, subtitulo, percentual, corBarra, y)
+local quadro = Instance.new("Frame")
+quadro.Name = nome
+quadro.Position = UDim2.fromOffset(0, y)
+quadro.Size = UDim2.new(1, -8, 0, 54)
+quadro.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
+quadro.BorderSizePixel = 0
+quadro.Parent = self._janela.Conteudo
+local c = Instance.new("UICorner")
+c.CornerRadius, c.Parent = UDim.new(0, 6), quadro
+
+local tTitulo = self._janela:Texto(quadro, "Titulo", titulo, UDim2.fromOffset(10, 4), UDim2.new(1, -20, 0, 20), 15, true)
+tTitulo.TextTruncate = Enum.TextTruncate.AtEnd
+
+local tSub = self._janela:Texto(quadro, "Subtitulo", subtitulo, UDim2.fromOffset(10, 22), UDim2.new(1, -20, 0, 16), 13)
+tSub.TextColor3 = Color3.fromRGB(175, 190, 210)
+tSub.TextTruncate = Enum.TextTruncate.AtEnd
+
+local trilho = Instance.new("Frame")
+trilho.Name = "Trilho"
+trilho.Position = UDim2.fromOffset(10, 42)
+trilho.Size = UDim2.new(1, -20, 0, 6)
+trilho.BackgroundColor3 = Color3.fromRGB(16, 18, 24)
+trilho.BorderSizePixel = 0
+trilho.Parent = quadro
+local ct = Instance.new("UICorner")
+ct.CornerRadius, ct.Parent = UDim.new(1, 0), trilho
+
+local barra = Instance.new("Frame")
+barra.Name = "Preenchimento"
+barra.Size = UDim2.fromScale(math.clamp((percentual or 0) / 100, 0, 1), 1)
+barra.BackgroundColor3 = corBarra or Color3.fromRGB(82, 214, 150)
+barra.BorderSizePixel = 0
+barra.Parent = trilho
+local cb = Instance.new("UICorner")
+cb.CornerRadius, cb.Parent = UDim.new(1, 0), barra
+
+return y + 60
+end
+
+local function corPorSeveridade(percentual)
+if percentual >= 65 then
+return Color3.fromRGB(245, 95, 85)
+elseif percentual >= 35 then
+return Color3.fromRGB(245, 190, 75)
+end
+return Color3.fromRGB(80, 220, 145)
+end
+
+function Painel:_DesenharSecaoServidor(srv, y)
+local tituloSrv = self:_Texto("TituloServidor", "━━ SERVIDOR (RECURSOS GLOBAIS) ━━", y, 28, 17)
+tituloSrv.Font = Enum.Font.SourceSansBold
+tituloSrv.TextColor3 = Color3.fromRGB(95, 205, 255)
+y += 32
+
+if not srv then
+self:_Texto("CarregandoSrv", "Coletando métricas do servidor...", y, 32, 15)
+return y + 38
+end
+
+local resumo1 = string.format(
+"FPS Servidor: %.1f (%.2f ms/frame) • Scripts monitorados: %.2f ms/s\nMemória Total: %.1f MB • LuaHeap: %.1f MB\nRede: Envio %.1f KB/s • Receb. %.1f KB/s • Física %.1f KB/s\nMundo: %d minérios • %d máquinas • %d instâncias • %d contatos",
+srv.FPS or 0, srv.FrameMs or 0, srv.ScriptsMsPorSegundo or 0,
+srv.MemoriaTotalMb or 0, srv.MemoriaLuaMb or 0,
+srv.RedeEnvioKbps or 0, srv.RedeRecebimentoKbps or 0, srv.FisicaEnvioKbps or 0,
+srv.TotalMinerios or 0, srv.TotalMaquinas or 0, srv.Instancias or 0, srv.Contatos or 0
+)
+local lblRes = self:_Texto("ResumoServidor", resumo1, y, 88, 14)
+lblRes.TextColor3 = Color3.fromRGB(220, 230, 245)
+y += 94
+
+local subCpu = self:_Texto("SubCpuSrv", "1. O que mais consome CPU no Servidor (Scripts):", y, 24, 16)
+subCpu.Font = Enum.Font.SourceSansBold
+subCpu.TextColor3 = Color3.fromRGB(135, 215, 255)
+y += 28
+
+if #(srv.Subsistemas or {}) == 0 then
+self:_Texto("SemSubSrv", "Aguardando amostras de CPU...", y, 26, 14)
+y += 30
+else
+for i, item in srv.Subsistemas do
+local pct = item.PercentualScript or 0
+local t1 = string.format("%dº  %s — %.2f ms/s (%g%%)", i, item.Nome, item.MsPorSegundo or 0, pct)
+local t2 = string.format("%.3f ms/frame • %s", item.MsPorQuadro or 0, item.Detalhe ~= "" and item.Detalhe or "Ativo")
+y = self:_CartaoMetricaBarra("SrvSub_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+end
+
+y += 6
+local subPlot = self:_Texto("SubPlotSrv", "2. Plots que mais consomem recursos no Servidor:", y, 24, 16)
+subPlot.Font = Enum.Font.SourceSansBold
+subPlot.TextColor3 = Color3.fromRGB(135, 215, 255)
+y += 28
+
+if #(srv.Plots or {}) == 0 then
+self:_Texto("SemPlotSrv", "Nenhuma plot ativa com peças ou minérios.", y, 26, 14)
+y += 30
+else
+for i, p in srv.Plots do
+local pct = p.Percentual or 0
+local t1 = string.format("%dº  %s (%s) — %g%% da carga de plots", i, p.Nome, p.Dono, pct)
+local t2 = string.format("%d minérios • %d máquinas • %d partes • %d efeitos", p.Minerios, p.Maquinas, p.Partes, p.Efeitos)
+y = self:_CartaoMetricaBarra("SrvPlot_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+end
+
+if #(srv.TopMaquinas or {}) > 0 then
+y += 6
+local subMaq = self:_Texto("SubMaqSrv", "3. Máquinas em maior quantidade no Servidor:", y, 24, 16)
+subMaq.Font = Enum.Font.SourceSansBold
+subMaq.TextColor3 = Color3.fromRGB(135, 215, 255)
+y += 28
+local totalM = math.max(1, srv.TotalMaquinas or 1)
+for i, m in srv.TopMaquinas do
+local pct = math.clamp(math.round((m.Quantidade / totalM) * 1000) / 10, 0, 100)
+local t1 = string.format("%dº  %s — ×%d unidades (%g%%)", i, m.Nome, m.Quantidade, pct)
+local t2 = string.format("ID: %s • %d de %d máquinas colocadas", m.Id, m.Quantidade, totalM)
+y = self:_CartaoMetricaBarra("SrvMaq_" .. i, t1, t2, pct, Color3.fromRGB(88, 178, 249), y)
+end
+end
+
+y += 6
+local subMem = self:_Texto("SubMemSrv", "4. O que mais consome Memória (RAM) no Servidor:", y, 24, 16)
+subMem.Font = Enum.Font.SourceSansBold
+subMem.TextColor3 = Color3.fromRGB(135, 215, 255)
+y += 28
+
+for i, tag in srv.MemoriaTags or {} do
+local pct = tag.Percentual or 0
+local t1 = string.format("%dº  %s — %.1f MB (%g%%)", i, tag.Nome, tag.Mb, pct)
+local t2 = string.format("Consumo de memória interna do servidor (Total: %.1f MB)", srv.MemoriaTotalMb or 0)
+y = self:_CartaoMetricaBarra("SrvMem_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+
+return y + 10
+end
+
+function Painel:_DesenharSecaoCliente(cli, y)
+local tituloCli = self:_Texto("TituloCliente", "━━ CLIENTE LOCAL (SEU DISPOSITIVO) ━━", y, 28, 17)
+tituloCli.Font = Enum.Font.SourceSansBold
+tituloCli.TextColor3 = Color3.fromRGB(95, 240, 175)
+y += 32
+
+if not cli then
+cli = MonitorRecursos.ColetarCliente(self._jogador)
+self._recursosCliente = cli
+end
+
+local resumoCli = string.format(
+"FPS Cliente: %.1f (%.2f ms/frame) • Ping: %d ms\nRender CPU: %.2f ms • Render GPU: %.2f ms • Scripts UI/Visuais: %.2f ms/s\nMemória Total Cliente: %.1f MB • LuaHeap Cliente: %.1f MB\nRede Cliente: Receb. %.1f KB/s • Envio %.1f KB/s • Primitivas móveis: %d",
+cli.FPS or 0, cli.FrameMs or 0, cli.PingMs or 0,
+cli.CpuRenderMs or 0, cli.GpuRenderMs or 0, cli.ScriptsMsPorSegundo or 0,
+cli.MemoriaTotalMb or 0, cli.MemoriaLuaMb or 0,
+cli.RedeRecebimentoKbps or 0, cli.RedeEnvioKbps or 0, cli.PrimitivasMovimento or 0
+)
+local lblRes = self:_Texto("ResumoCliente", resumoCli, y, 88, 14)
+lblRes.TextColor3 = Color3.fromRGB(220, 242, 232)
+y += 94
+
+local subCpu = self:_Texto("SubCpuCli", "1. O que mais consome CPU / Quadro no Cliente:", y, 24, 16)
+subCpu.Font = Enum.Font.SourceSansBold
+subCpu.TextColor3 = Color3.fromRGB(125, 245, 190)
+y += 28
+
+if #(cli.Subsistemas or {}) == 0 then
+self:_Texto("SemSubCli", "Aguardando amostras do cliente...", y, 26, 14)
+y += 30
+else
+for i, item in cli.Subsistemas do
+local pct = item.PercentualScript or 0
+local t1 = string.format("%dº  %s — %.2f ms/s (%g%%)", i, item.Nome, item.MsPorSegundo or 0, pct)
+local t2 = string.format("%.3f ms/frame • %s", item.MsPorQuadro or 0, item.Detalhe ~= "" and item.Detalhe or "Ativo")
+y = self:_CartaoMetricaBarra("CliSub_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+end
+
+y += 6
+local subVis = self:_Texto("SubVisCli", "2. Elementos Gráficos / UI mais pesados no Cliente:", y, 24, 16)
+subVis.Font = Enum.Font.SourceSansBold
+subVis.TextColor3 = Color3.fromRGB(125, 245, 190)
+y += 28
+
+for i, ev in cli.ElementosVisuais or {} do
+local pct = ev.Percentual or 0
+local t1 = string.format("%dº  %s — %g%% do peso visual", i, ev.Nome, pct)
+local t2 = ev.Detalhe
+y = self:_CartaoMetricaBarra("CliVis_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+
+y += 6
+local subMem = self:_Texto("SubMemCli", "3. O que mais consome Memória (RAM/VRAM) no Cliente:", y, 24, 16)
+subMem.Font = Enum.Font.SourceSansBold
+subMem.TextColor3 = Color3.fromRGB(125, 245, 190)
+y += 28
+
+for i, tag in cli.MemoriaTags or {} do
+local pct = tag.Percentual or 0
+local t1 = string.format("%dº  %s — %.1f MB (%g%%)", i, tag.Nome, tag.Mb, pct)
+local t2 = string.format("Memória alocada no cliente (Total: %.1f MB)", cli.MemoriaTotalMb or 0)
+y = self:_CartaoMetricaBarra("CliMem_" .. i, t1, t2, pct, corPorSeveridade(pct), y)
+end
+
+return y + 10
+end
+
+function Painel:_DesenharRecursos(y)
+self._visaoRecursos = self._visaoRecursos or "Ambos"
+if self._autoRecursos == nil then self._autoRecursos = true end
+if not self._recursosServidor and not self._buscandoRecursos then
+self:CarregarRecursos()
+end
+self._recursosCliente = MonitorRecursos.ColetarCliente(self._jogador)
+
+local opcoesVisao = {
+{ "Ambos", "Ambos" },
+{ "Servidor", "Só Servidor" },
+{ "Cliente", "Só Cliente" },
+}
+for i, op in opcoesVisao do
+local b = self:_Botao("VisaoRec_" .. op[1], op[2], y, function()
+self._visaoRecursos = op[1]
+self:_Desenhar()
+end, (i - 1) * 0.25, 0.25)
+if self._visaoRecursos == op[1] then
+b:ObterInstancia().BackgroundColor3 = Color3.fromRGB(48, 93, 120)
+end
+end
+
+local bAuto = self:_Botao("AutoRecursos", self._autoRecursos and "Auto: 1.5s" or "Pausado", y, function()
+self._autoRecursos = not self._autoRecursos
+if self._autoRecursos then self:CarregarRecursos() else self:_Desenhar() end
+end, 0.75, 0.25)
+bAuto:ObterInstancia().BackgroundColor3 = self._autoRecursos and Color3.fromRGB(40, 91, 76) or Color3.fromRGB(68, 45, 52)
+y += 52
+
+if self._visaoRecursos == "Ambos" or self._visaoRecursos == "Servidor" then
+y = self:_DesenharSecaoServidor(self._recursosServidor, y)
+end
+if self._visaoRecursos == "Ambos" or self._visaoRecursos == "Cliente" then
+y = self:_DesenharSecaoCliente(self._recursosCliente, y)
+end
+return y
+end
+
+local _desenharBaseAdm = Painel._Desenhar
+function Painel:_Desenhar(...)
+_desenharBaseAdm(self, ...)
+if self._aba == "Recursos" then
+local yCorte = 190
+local botaoRec = self._janela.Conteudo:FindFirstChild("Recursos")
+if botaoRec and botaoRec:IsA("GuiObject") then
+yCorte = botaoRec.Position.Y.Offset + botaoRec.Size.Y.Offset + 12
+end
+for _, filho in self._janela.Conteudo:GetChildren() do
+if filho:IsA("GuiObject") and filho.Position.Y.Offset >= yCorte - 4 then
+filho:Destroy()
+end
+end
+local yFim = self:_DesenharRecursos(yCorte)
+self._janela.Conteudo.CanvasSize = UDim2.fromOffset(0, yFim + 16)
+end
+end
+
 return Painel
