@@ -1,3 +1,14 @@
+--[[
+Módulo: GradePecas (LPOO)
+Responsabilidade:
+Gerencia a grade visual de peças do Inventário e da Loja, incluindo:
+- Sub-abas de modo no Inventário ("Inventário", "Na plot", "Não usadas");
+- Filtro por categoria de peça (Todas, Mineradoras, Modificadores, Fornalhas, Esteiras);
+- Filtros avançados por Multiplicador (faixa ou valor exato), Limite de Dinheiro
+  (Com limite, Sem limite e faixa em $) e Tamanho independente por eixo (X, Y, Z);
+- Sistema de Prioridade reordenável (1º, 2º, 3º) por Multiplicador, Tamanho no eixo e Limite;
+- Cálculo responsivo de colunas compensando o UIScale (AbsoluteSize.X / escala).
+]]
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Configuracoes)
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
@@ -1302,9 +1313,39 @@ end
 self._dica.Text = (not self._loja and self._modo ~= "Estoque" and self._resumoDica) or "Clique: detalhes • Duplo clique: colocar"
 end
 
+--- Retorna o Frame raiz da janela de lista.
+--- @return Frame
 function GradePecas:ObterInstancia() return self._grupo end
+
+--- Retorna o rótulo exibido quando nenhuma peça corresponde aos filtros.
+--- @return TextLabel
 function GradePecas:ObterTextoVazio() return self._vazio end
+
+--- Retorna a instância de Botao associada ao ID de uma máquina.
+--- @param id string
+--- @return table?
 function GradePecas:ObterBotao(id) return self._itens[id] and self._itens[id].Botao end
+
+--- Retorna o modo de visualização ativo ("Estoque", "Plot", "Novas" ou "Loja").
+--- @return string
+function GradePecas:ObterModo() return self._modo end
+
+--- Retorna o número de revisão atual dos filtros/ordenação.
+--- @return number
+function GradePecas:ObterRevisao() return self.Revisao end
+
+--- Define o saldo atual do jogador para cálculo de peças disponíveis.
+--- @param saldo string?
+function GradePecas:DefinirSaldo(saldo) self.Saldo = saldo end
+
+--- Registra o callback acionado ao alternar entre "Inventário", "Na plot" e "Não usadas".
+--- @param callback () -> ()
+function GradePecas:DefinirAoMudarModo(callback) self.AoMudarModo = callback end
+
+--- Recalcula responsivamente as colunas e tamanhos de célula da grade.
+function GradePecas:DimensionarGrade()
+self:_DimensionarGrade()
+end
 
 function GradePecas:Destruir()
 if self._destruido then return end

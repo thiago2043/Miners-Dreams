@@ -1,3 +1,15 @@
+--[[
+Módulo: PainelPecas (LPOO - Controlador Composto)
+Responsabilidade:
+Coordena a interação entre a janela de listagem (GradePecas) e a janela de detalhes (FichaPeca)
+para o Inventário e a Loja, gerenciando seleção, duplo clique para posicionar, compra/venda
+via rede e sincronização com os atributos replicados do jogador.
+Princípios LPOO Aplicados:
+- Composição: Compõe instâncias de GradePecas e FichaPeca.
+- Encapsulamento: Comunica-se com GradePecas e FichaPeca exclusivamente por seus métodos
+  públicos (:ObterModo(), :ObterRevisao(), :DefinirSaldo(), :DimensionarGrade(), :ObterConteudo(), :DimensionarRetrato()).
+]]
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
@@ -11,18 +23,34 @@ local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 local PainelPecas = {}
 PainelPecas.__index = PainelPecas
 
+--- Valida se a quantidade de peças no atributo do jogador é um inteiro não-negativo seguro.
 local function quantidadeValida(quantidade)
 return type(quantidade) == "number" and quantidade >= 0 and quantidade % 1 == 0 and quantidade < 2 ^ 53
 end
 
+--- Construtor da classe PainelPecas.
+--- @param pai GuiObject -- ScreenGui ou contêiner principal da interface
+--- @param aba string -- "Inventario" ou "Loja"
+--- @param jogador Player -- Jogador local
+--- @param construcao table -- Instância do ControladorConstrucao
+--- @param rede table -- Canal Networker da Loja
+--- @param recuoEsquerdo number? -- Deslocamento lateral dos botões do HUD
 function PainelPecas.new(pai, aba, jogador, construcao, rede, recuoEsquerdo)
 recuoEsquerdo = recuoEsquerdo or 0
 local self = setmetatable({
-Aba = aba, _jogador = jogador, _construcao = construcao,
-_botoesPecas = {}, _acoes = {}, _destruido = false, _conexoes = {},
-_rede = rede, _recuoEsquerdo = recuoEsquerdo,
+Aba = aba,
+_jogador = jogador,
+_construcao = construcao,
+_botoesPecas = {},
+_acoes = {},
+_destruido = false,
+_conexoes = {},
+_rede = rede,
+_recuoEsquerdo = recuoEsquerdo,
 }, PainelPecas)
+
 local inventario = aba == "Inventario"
+local conteinerJanelas = pai:FindFirstChild("EscalaConteudo") or pai
 
 self._grupo = Instance.new("Frame")
 self._grupo.Name = aba
@@ -35,25 +63,45 @@ self._grupo.Parent = pai
 
 self._ids = {}
 for id, item in Catalogo do
-if inventario or not item.Renascimento then table.insert(self._ids, id) end
+if inventario or not item.Renascimento then
+table.insert(self._ids, id)
 end
-table.sort(self._ids, function(a, b) return Catalogo[a].Nome < Catalogo[b].Nome end)
+end
+table.sort(self._ids, function(a, b)
+return Catalogo[a].Nome < Catalogo[b].Nome
+end)
 
-self._grade = GradePecas.new(pai:FindFirstChild("EscalaConteudo") or pai, self._ids, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+-- Instancia a janela de GradePecas diretamente no contêiner compartilhado para ZIndex uniforme
+self._grade = GradePecas.new(
+conteinerJanelas,
+self._ids,
+ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 function(id) self:Selecionar(id) end,
 function() construcao:AlternarAba(aba) end,
 aba
 )
-self._grade.AoMudarModo = function() self:Atualizar() end
-self._painelLista, self._textoVazio = self._grade:ObterInstancia(), self._grade:ObterTextoVazio()
-for _, id in self._ids do self._botoesPecas[id] = self._grade:ObterBotao(id) end
+self._grade:DefinirAoMudarModo(function()
+self:Atualizar()
+end)
+self._painelLista = self._grade:ObterInstancia()
+self._textoVazio = self._grade:ObterTextoVazio()
+for _, id in self._ids do
+self._botoesPecas[id] = self._grade:ObterBotao(id)
+end
 
 local function executar(acao)
 self._ultimoClique = nil
-if acao == "Colocar" then construcao:ColocarSelecionada(aba, true) else self:Negociar(acao) end
+if acao == "Colocar" then
+construcao:ColocarSelecionada(aba, true)
+else
+self:Negociar(acao)
+end
 end
 
-self._ficha = FichaPeca.new(pai:FindFirstChild("EscalaConteudo") or pai, ReplicatedStorage:WaitForChild("ModelosMaquinas"),
+-- Instancia a janela de FichaPeca
+self._ficha = FichaPeca.new(
+conteinerJanelas,
+ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 executar,
 function() construcao:FecharFicha(aba) end,
 aba
@@ -67,6 +115,7 @@ self._textoResposta.Text = ""
 local idJanelaLista = "Aba_" .. aba
 local idJanelaFicha = "Ficha_" .. aba
 
+-- Registra ambas as janelas no GerenciadorJanelas
 GerenciadorJanelas.Registrar(idJanelaLista, self._painelLista, {
 Jogador = jogador,
 AlturaBarra = 42,
@@ -83,7 +132,7 @@ local y = math.round((vp.Y - a) * 0.5)
 return { X = x, Y = y, L = l, A = a }
 end,
 AoRedimensionar = function()
-self._grade:_DimensionarGrade()
+self._grade:DimensionarGrade()
 end,
 AoMoverOuRedimensionar = function()
 if not GerenciadorJanelas.EstaCustomizada(idJanelaFicha) then
@@ -114,7 +163,7 @@ end
 return { X = x, Y = y, L = l, A = a }
 end,
 AoRedimensionar = function()
-self._ficha:_DimensionarRetrato()
+self._ficha:DimensionarRetrato()
 end,
 })
 
@@ -122,24 +171,42 @@ self:Atualizar()
 return self
 end
 
+--- Retorna o Frame da janela de listagem de peças.
+--- @return Frame
+function PainelPecas:ObterPainelLista()
+return self._painelLista
+end
+
+--- Retorna o Frame da janela de ficha de detalhes da peça.
+--- @return Frame
+function PainelPecas:ObterPainelFicha()
+return self._painelFicha
+end
+
+--- Processa o clique ou duplo clique sobre uma peça na grade.
+--- @param id string -- Identificador da máquina no catálogo
 function PainelPecas:Selecionar(id)
 if self._destruido or self._negociando then return end
-if self.Aba == "Inventario" and self._grade._modo ~= "Estoque"
-and self._jogador:GetAttribute("Inventario_" .. id) == 0 and not Catalogo[id].Renascimento then
+if self.Aba == "Inventario" and self._grade:ObterModo() ~= "Estoque"
+and self._jogador:GetAttribute("Inventario_" .. id) == 0 and not Catalogo[id].Renascimento
+then
 self._ultimoClique = nil
 self._construcao:SelecionarMaquina(id, "Loja")
 return
 end
 local nav, agora = self._construcao.Navegacao, os.clock()
-local filtro = self._grade and self._grade.Revisao or 0
+local filtro = self._grade:ObterRevisao()
 local anterior = self._ultimoClique
 local duplo = anterior and anterior.Id == id and agora - anterior.Tempo <= 0.35
 and anterior.Revisao == nav.Revisao and anterior.Filtro == filtro
 if not self._construcao:SelecionarMaquina(id, self.Aba) then return end
 self._ultimoClique = not duplo and { Id = id, Tempo = agora, Revisao = nav.Revisao, Filtro = filtro } or nil
-if duplo and self._fichaValida then self._construcao:ColocarSelecionada(self.Aba, true) end
+if duplo and self._fichaValida then
+self._construcao:ColocarSelecionada(self.Aba, true)
+end
 end
 
+--- Sincroniza a visibilidade, os contadores de estoque/plot e os detalhes da peça selecionada.
 function PainelPecas:Atualizar()
 if self._destruido then return end
 local nav = self._construcao.Navegacao
@@ -169,7 +236,7 @@ if mudouSelecao or not visivelFicha then
 self._textoResposta.Text = ""
 end
 if mudouSelecao and fichaJaAberta and visivelFicha then
-AnimacaoInterface.TransicaoSubAba(self._ficha._conteudo)
+AnimacaoInterface.TransicaoSubAba(self._ficha:ObterConteudo())
 end
 self._selecao = selecao
 
@@ -206,7 +273,7 @@ self._contagensPlot and (self._contagensPlot[id] or 0)
 )
 end
 self._chaveDescricao = chaveDescricao
-self._grade.Saldo = self._jogador:GetAttribute("Dinheiro")
+self._grade:DefinirSaldo(self._jogador:GetAttribute("Dinheiro"))
 self._grade:ConcluirAtualizacao()
 
 self._fichaValida = false
@@ -257,9 +324,12 @@ self._ficha:AtualizarDisponibilidade()
 self._textoResposta.Visible = self._textoResposta.Text ~= ""
 end
 
+--- Executa uma transação de Compra ou Venda da peça selecionada junto ao servidor.
+--- @param acao string -- "Comprar" ou "Vender"
+--- @param confirmada boolean? -- Indica se já passou pelo modal de confirmação
 function PainelPecas:Negociar(acao, confirmada)
 local botao = self._acoes[acao]
-if self._destruido or self._negociando or acao == "Colocar" or not botao or not botao:ObterInstancia().Active then return end
+if self._destruido or self._negociando or acao == "Colocar" or not botao or not botao:EstaDisponivel() then return end
 if acao == "Vender" and not confirmada and self._construcao.Confirmacao then
 return self._construcao.Confirmacao:Pedir("Venda", 1, function() self:Negociar(acao, true) end)
 end
@@ -273,17 +343,20 @@ if self._destruido then return end
 self._negociando = nil
 local atual = self._construcao:ObterSelecao(self.Aba)
 if not atual or atual.Id ~= selecao.Id or not self._construcao.Navegacao:Contem("Ficha" .. self.Aba) then
-self:Atualizar(); return
+self:Atualizar()
+return
 end
 self._textoResposta.Text = not comunicou and "Não foi possível confirmar a operação."
 or ((type(sucesso) ~= "boolean" or type(mensagem) ~= "string") and "Resposta inválida da loja." or mensagem)
 self:Atualizar()
 end
 
+--- Libera conexões e destrói as instâncias de GradePecas e FichaPeca.
 function PainelPecas:Destruir()
 if self._destruido then return end
 self._destruido = true
 for _, c in self._conexoes do c:Disconnect() end
+table.clear(self._conexoes)
 self._grade:Destruir()
 self._ficha:Destruir()
 self._grupo:Destroy()

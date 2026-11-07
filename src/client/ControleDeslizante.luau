@@ -1,7 +1,29 @@
+--[[
+Módulo: ControleDeslizante (LPOO)
+Responsabilidade:
+Componente de barra deslizante (slider) com suporte a interpolação contínua
+(qualquer valor intermediário entre mínimo e máximo respeitando um passo fino)
+ou seleção discreta.
+Decisões de Projeto:
+- Utiliza um Frame com Active = true para captura de entrada (em vez de TextButton),
+  evitando que o Roblox force o cursor de mãozinha ao passar o mouse sobre a barra.
+- Calcula a fração relativa usando (x - AbsolutePosition.X) / AbsoluteSize.X,
+  mantendo precisão exata independentemente do UIScale (EscalaInterface) aplicado.
+]]
+
 local Input = game:GetService("UserInputService")
+
 local Controle = {}
 Controle.__index = Controle
 
+--- Construtor da classe ControleDeslizante.
+--- @param pai ScrollingFrame | GuiObject -- Contêiner onde o controle será inserido
+--- @param nome string -- Nome do controle
+--- @param valores {any} -- Lista de valores (numéricos para modo contínuo ou arbitrários para discreto)
+--- @param cor Color3 -- Cor da barra de preenchimento
+--- @param alterar (valor: any) -> () -- Callback disparado em tempo real durante o arraste
+--- @param aoSoltar ((valor: any) -> ())? -- Callback disparado ao finalizar o ajuste (para persistência no servidor)
+--- @param passo number? -- Incremento mínimo entre valores no modo contínuo (ex.: 1 ou 0.01)
 function Controle.new(pai, nome, valores, cor, alterar, aoSoltar, passo)
 local minimo = type(valores[1]) == "number" and valores[1] or nil
 local maximo = type(valores[#valores]) == "number" and valores[#valores] or nil
@@ -25,15 +47,18 @@ _conexoes = {},
 _pai = pai,
 }, Controle)
 
+-- Contêiner raiz do controle
 local raiz = Instance.new("Frame")
 raiz.Name, raiz.BackgroundTransparency, raiz.Size, raiz.Parent = nome, 1, UDim2.fromOffset(148, 36), pai
 self._raiz = raiz
 
+-- Rótulo superior que exibe o valor formatado (ex.: "80%", "30 studs", "5000")
 local texto = Instance.new("TextLabel")
 texto.Name, texto.Text, texto.BackgroundTransparency, texto.Size, texto.Parent = "Valor", "", 1, UDim2.new(1, 0, 0, 16), raiz
 texto.Font, texto.TextSize, texto.TextColor3 = Enum.Font.SourceSansBold, 15, Color3.fromRGB(240, 243, 250)
 self._texto = texto
 
+-- Trilho de fundo da barra deslizante
 local trilho = Instance.new("Frame")
 trilho.Name, trilho.Position, trilho.Size, trilho.BorderSizePixel, trilho.Parent = "Trilho", UDim2.fromOffset(7, 25), UDim2.new(1, -14, 0, 4), 0, raiz
 trilho.BackgroundColor3 = Color3.fromRGB(48, 52, 64)
@@ -41,6 +66,7 @@ local c1 = Instance.new("UICorner")
 c1.CornerRadius, c1.Parent = UDim.new(1, 0), trilho
 self._trilho = trilho
 
+-- Barra de preenchimento proporcional ao valor atual
 local preenchimento = Instance.new("Frame")
 preenchimento.Name, preenchimento.Size, preenchimento.BorderSizePixel, preenchimento.Parent = "Preenchimento", UDim2.fromScale(0, 1), 0, trilho
 preenchimento.BackgroundColor3 = cor
@@ -48,6 +74,7 @@ local c2 = Instance.new("UICorner")
 c2.CornerRadius, c2.Parent = UDim.new(1, 0), preenchimento
 self._preenchimento = preenchimento
 
+-- Indicador móvel (thumb) da barra
 local marcador = Instance.new("Frame")
 marcador.Name, marcador.AnchorPoint, marcador.Size, marcador.BorderSizePixel, marcador.Parent = "Marcador", Vector2.new(0.5, 0.5), UDim2.fromOffset(12, 16), 0, trilho
 marcador.Position, marcador.BackgroundColor3 = UDim2.fromScale(0, 0.5), Color3.fromRGB(240, 243, 250)
@@ -55,6 +82,7 @@ local c3 = Instance.new("UICorner")
 c3.CornerRadius, c3.Parent = UDim.new(0, 4), marcador
 self._marcador = marcador
 
+-- Área de captura interativa (Frame para evitar o cursor de mão do Roblox)
 local captura = Instance.new("Frame")
 captura.Name, captura.Size, captura.BackgroundTransparency, captura.Parent = "Ajustar", UDim2.fromScale(1, 1), 1, raiz
 captura.Active, captura.Selectable, captura.ZIndex = true, true, 2
@@ -63,12 +91,14 @@ self._captura = captura
 table.insert(self._conexoes, captura.InputBegan:Connect(function(i)
 local okG, ger = pcall(require, script.Parent.GerenciadorJanelas)
 if okG and ger and ger.PodeInteragir and not ger.PodeInteragir(captura) then return end
+
 if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
 self._arraste = i
 self._rolagem = pai.ScrollingEnabled
 pai.ScrollingEnabled = false
 self:_PorX(i.Position.X)
 elseif i.KeyCode == Enum.KeyCode.ButtonA or i.KeyCode == Enum.KeyCode.Return then
+-- Suporte a navegação por controle/teclado (avança em passos de 5% da faixa)
 if self._continuo then
 local salto = math.max(self._passo, (self._maximo - self._minimo) * 0.05)
 local proximo = (self._valor or self._minimo) + salto
@@ -80,24 +110,30 @@ self:_Escolher(self._indice % #self._valores + 1)
 end
 end
 end))
+
 table.insert(self._conexoes, Input.InputChanged:Connect(function(i)
 if self._arraste and (i == self._arraste or i.UserInputType == Enum.UserInputType.MouseMovement) then
 self:_PorX(i.Position.X)
 end
 end))
+
 table.insert(self._conexoes, Input.InputEnded:Connect(function(i)
 if i == self._arraste or (self._arraste and i.UserInputType == Enum.UserInputType.MouseButton1) then
-self:_Soltar()
+self:Soltar()
 end
 end))
+
 return self
 end
 
+--- Retorna o Frame raiz do controle deslizante.
+--- @return Frame
 function Controle:ObterInstancia()
 return self._raiz
 end
 
-function Controle:_Soltar()
+--- Finaliza o estado de arraste ativo, restaura a rolagem do painel pai e dispara o callback de salvamento.
+function Controle:Soltar()
 if not self._arraste then return end
 self._arraste = nil
 self._pai.ScrollingEnabled = self._rolagem
@@ -105,13 +141,19 @@ if self._aoSoltar and self._valor ~= nil then
 self._aoSoltar(self._valor)
 end
 end
+-- Alias mantido para compatibilidade retroativa
+Controle._Soltar = Controle.Soltar
 
+--- Converte a coordenada horizontal do ponteiro em uma fração normalizada [0, 1].
+--- @param x number -- Coordenada X na tela
 function Controle:_PorX(x)
 local largura = math.max(1, self._trilho.AbsoluteSize.X)
 local t = math.clamp((x - self._trilho.AbsolutePosition.X) / largura, 0, 1)
 self:_EscolherPorFracao(t)
 end
 
+--- Interpola e arredonda o valor correspondente à fração [0, 1] do trilho.
+--- @param t number -- Fração entre 0 e 1
 function Controle:_EscolherPorFracao(t)
 if self._continuo then
 local bruto = self._minimo + math.clamp(t, 0, 1) * (self._maximo - self._minimo)
@@ -134,6 +176,8 @@ self:_Escolher(indice)
 end
 end
 
+--- Seleciona um item pelo índice quando em modo discreto.
+--- @param indice number
 function Controle:_Escolher(indice)
 indice = math.clamp(indice, 1, #self._valores)
 if indice ~= self._indice then
@@ -147,6 +191,9 @@ end
 end
 end
 
+--- Atualiza visualmente a posição do marcador, o preenchimento do trilho e o texto exibido.
+--- @param valor any -- Valor atual da configuração
+--- @param texto string -- Texto formatado para exibição
 function Controle:DefinirValor(valor, texto)
 self._texto.Text = texto
 local t = 0
@@ -163,9 +210,11 @@ self._preenchimento.Size = UDim2.fromScale(t, 1)
 self._marcador.Position = UDim2.fromScale(t, 0.5)
 end
 
+--- Limpa conexões e destrói a instância de interface do controle.
 function Controle:Destruir()
-self:_Soltar()
+self:Soltar()
 for _, c in self._conexoes do c:Disconnect() end
+table.clear(self._conexoes)
 self._raiz:Destroy()
 end
 

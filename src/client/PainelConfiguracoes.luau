@@ -1,6 +1,18 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--[[
+Módulo: PainelConfiguracoes (LPOO)
+Responsabilidade:
+Gerencia a janela de Configurações do jogador, compondo controles deslizantes contínuos
+(ControleDeslizante), botões de alternância (Botao) e captura de atalhos de teclado.
+Decisões de Projeto:
+- Auto-organização Responsiva (_Layout): Calcula a largura interna útil dividindo
+  `Conteudo.AbsoluteSize.X` pela `EscalaInterface`, distribuindo automaticamente as opções
+  em 1 a 3 colunas e os atalhos de teclado em 1 a 4 colunas.
+- Persistência Assíncrona com Coalescência: Evita sobrecarga de chamadas remotas ao arrastar
+  barras deslizantes enfileirando apenas o valor mais recente de cada opção.
+]]
+
 local Janela = require(script.Parent.PainelProgressao)
-local Config = require(ReplicatedStorage.Shared.Configuracoes)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
 local Input = game:GetService("UserInputService")
 local Deslizante = require(script.Parent.ControleDeslizante)
 local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
@@ -8,27 +20,47 @@ local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 local Painel = {}
 Painel.__index = Painel
 
+--- Construtor da classe PainelConfiguracoes.
+--- @param pai GuiObject
+--- @param jogador Player
+--- @param navegacao table
+--- @param rede table?
 function Painel.new(pai, jogador, navegacao, rede)
-
 local janela = Janela.new(pai, navegacao, "Configuracoes", "Configurações", nil, nil, 520, jogador)
+local conteudo = janela:ObterConteudo()
+local corJanela = janela:ObterCor()
+
 local self = setmetatable({
-_janela = janela, _grupo = janela._grupo, _jogador = jogador, _rede = rede,
-_opcoes = {}, _deslizantes = {}, _rotulos = {}, _atalhos = {}, _rotulosAtalhos = {}, _conexoes = {},
-_opcoesPendentes = {}, _filaAtalhos = {},
+_janela = janela,
+_grupo = janela:ObterInstancia(),
+_jogador = jogador,
+_rede = rede,
+_opcoes = {},
+_deslizantes = {},
+_rotulos = {},
+_atalhos = {},
+_rotulosAtalhos = {},
+_conexoes = {},
+_opcoesPendentes = {},
+_filaAtalhos = {},
 }, Painel)
 
+-- Criação dos controles de cada opção definida em Configuracoes.Opcoes
 for i, opcao in Config.Opcoes do
-self._rotulos[opcao.Id] = janela:Texto(janela.Conteudo, opcao.Id, opcao.Nome, UDim2.fromOffset(0, (i - 1) * 64), UDim2.new(1, -162, 0, 54), 16, true)
+self._rotulos[opcao.Id] = janela:Texto(conteudo, opcao.Id, opcao.Nome, UDim2.fromOffset(0, (i - 1) * 64), UDim2.new(1, -162, 0, 54), 16, true)
 if type(opcao.Valores[1]) == "number" or opcao.Deslizante then
 local controle = Deslizante.new(
-janela.Conteudo, opcao.Id, opcao.Valores, janela.Cor,
+conteudo,
+opcao.Id,
+opcao.Valores,
+corJanela,
 function(valor) jogador:SetAttribute(opcao.Id, valor) end,
 function(valor) self:_SalvarOpcao(opcao.Id, valor) end,
 opcao.Passo
 )
 self._opcoes[opcao.Id], self._deslizantes[opcao.Id] = controle, controle
 else
-self._opcoes[opcao.Id] = janela:Botao(janela.Conteudo, opcao.Id, UDim2.new(1, -156, 0, (i - 1) * 64 + 10), UDim2.fromOffset(148, 36), function()
+self._opcoes[opcao.Id] = janela:Botao(conteudo, opcao.Id, UDim2.new(1, -156, 0, (i - 1) * 64 + 10), UDim2.fromOffset(148, 36), function()
 local indice = table.find(opcao.Valores, Config.Obter(jogador, opcao.Id)) or 1
 local novoValor = opcao.Valores[indice % #opcao.Valores + 1]
 self:_SalvarOpcao(opcao.Id, novoValor)
@@ -40,29 +72,34 @@ self:Atualizar()
 end))
 end
 
+-- Botão para restaurar o layout padrão de todas as janelas
 local y = #Config.Opcoes * 64 + 10
-self._botaoRestaurarJanelas = janela:Botao(janela.Conteudo, "RestaurarJanelas", UDim2.fromOffset(0, y), UDim2.new(1, -8, 0, 34), function()
+self._botaoRestaurarJanelas = janela:Botao(conteudo, "RestaurarJanelas", UDim2.fromOffset(0, y), UDim2.new(1, -8, 0, 34), function()
 GerenciadorJanelas.ResetarTodas()
 end)
 local bRest = self._botaoRestaurarJanelas:ObterInstancia()
 bRest.Text = "Restaurar posição e tamanho padrão das janelas"
 bRest.TextSize = 14
 
-self._aviso = janela:Texto(janela.Conteudo, "Atalhos", "Teclado • Esc cancela a captura", UDim2.fromOffset(0, y + 42), UDim2.new(1, -8, 0, 36), 17, true)
+-- Seção de mapeamento de atalhos de teclado
+self._aviso = janela:Texto(conteudo, "Atalhos", "Teclado • Esc cancela a captura", UDim2.fromOffset(0, y + 42), UDim2.new(1, -8, 0, 36), 17, true)
 for i, acao in Config.Atalhos do
 local topo = y + 84 + (i - 1) * 48
-self._rotulosAtalhos[acao[1]] = janela:Texto(janela.Conteudo, "Acao_" .. acao[1], acao[2], UDim2.fromOffset(0, topo), UDim2.new(1, -130, 0, 38), 16)
-self._atalhos[acao[1]] = janela:Botao(janela.Conteudo, "Tecla_" .. acao[1], UDim2.new(1, -120, 0, topo), UDim2.fromOffset(112, 36), function()
+self._rotulosAtalhos[acao[1]] = janela:Texto(conteudo, "Acao_" .. acao[1], acao[2], UDim2.fromOffset(0, topo), UDim2.new(1, -130, 0, 38), 16)
+self._atalhos[acao[1]] = janela:Botao(conteudo, "Tecla_" .. acao[1], UDim2.new(1, -120, 0, topo), UDim2.fromOffset(112, 36), function()
 self._captura = acao[1]
 jogador:SetAttribute("CapturandoAtalho", true)
 self:Atualizar()
 end)
-table.insert(self._conexoes, jogador:GetAttributeChangedSignal("Atalho_" .. acao[1]):Connect(function() self:Atualizar() end))
+table.insert(self._conexoes, jogador:GetAttributeChangedSignal("Atalho_" .. acao[1]):Connect(function()
+self:Atualizar()
+end))
 end
 
 local fim = y + 84 + #Config.Atalhos * 48
-self._nota = janela:Texto(janela.Conteudo, "Nota", "Arraste o topo das janelas para mover ou as bordas/cantos para redimensionar (duplo clique no topo restaura). Preferências salvas automaticamente.", UDim2.fromOffset(0, fim), UDim2.new(1, -8, 0, 76), 14)
+self._nota = janela:Texto(conteudo, "Nota", "Arraste o topo das janelas para mover ou as bordas/cantos para redimensionar (duplo clique no topo restaura). Preferências salvas automaticamente.", UDim2.fromOffset(0, fim), UDim2.new(1, -8, 0, 76), 14)
 
+-- Listener para captura de nova tecla de atalho
 table.insert(self._conexoes, Input.InputBegan:Connect(function(entrada)
 if not self._captura or entrada.UserInputType ~= Enum.UserInputType.Keyboard then return end
 local tecla = entrada.KeyCode.Name
@@ -78,21 +115,30 @@ local original = self._captura
 self:_CancelarCaptura()
 self:_SalvarAtalho(original, combinacao)
 end))
+
 table.insert(self._conexoes, navegacao.Alterado:Connect(function()
 if not navegacao:Contem("Configuracoes") then
 self:_CancelarCaptura()
-for _, controle in self._deslizantes do controle:_Soltar() end
+for _, controle in self._deslizantes do
+controle:Soltar()
+end
 end
 end))
-table.insert(self._conexoes, janela.Conteudo:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() self:_Layout() end))
+
+table.insert(self._conexoes, conteudo:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+self:_Layout()
+end))
+
 self:_Layout()
 self:Atualizar()
 return self
 end
 
+--- Envia de forma assíncrona o novo valor de uma opção para salvamento no servidor.
 function Painel:_SalvarOpcao(id, valor)
 self._jogador:SetAttribute(id, valor)
-if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end; if not self._rede then return end
+if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end
+if not self._rede then return end
 self._opcoesPendentes[id] = valor
 if self._enviandoOpcoes then return end
 self._enviandoOpcoes = true
@@ -112,9 +158,11 @@ self._enviandoOpcoes = false
 end)
 end
 
+--- Envia um atalho customizado para persistência no servidor.
 function Painel:_SalvarAtalho(original, combinacao)
 self._jogador:SetAttribute("Atalho_" .. original, combinacao)
-if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end; if not self._rede then return end
+if not self._rede then self._rede = GerenciadorJanelas.ObterRede() end
+if not self._rede then return end
 table.insert(self._filaAtalhos, { Original = original, Tecla = combinacao })
 if self._enviandoAtalhos then return end
 self._enviandoAtalhos = true
@@ -132,10 +180,12 @@ self._enviandoAtalhos = false
 end)
 end
 
+--- Organiza responsivamente as opções (1..3 colunas) e atalhos (1..4 colunas) conforme largura e escala.
 function Painel:_Layout()
 if self._grupo:GetAttribute("AnimandoUI") then return end
+local conteudo = self._janela:ObterConteudo()
 local escala = Config.Obter(self._jogador, "EscalaInterface") or 1
-local larguraUtil = math.max(200, math.floor(self._janela.Conteudo.AbsoluteSize.X / escala) - 10)
+local larguraUtil = math.max(200, math.floor(conteudo.AbsoluteSize.X / escala) - 10)
 
 local colsOp = math.clamp(math.floor((larguraUtil + 14) / 340), 1, 3)
 local largColOp = math.floor((larguraUtil - (colsOp - 1) * 14) / colsOp)
@@ -194,23 +244,32 @@ local linhasAt = math.ceil(#Config.Atalhos / colsAt)
 local fim = topoAtalhos + linhasAt * 44 + 8
 self._nota.Position = UDim2.fromOffset(0, fim)
 self._nota.Size = UDim2.fromOffset(larguraUtil, 72)
-self._janela.Conteudo.CanvasSize = UDim2.fromOffset(0, fim + 84)
+conteudo.CanvasSize = UDim2.fromOffset(0, fim + 84)
 end
 
+--- Cancela o estado de captura de tecla de atalho.
 function Painel:_CancelarCaptura()
 local estavaCapturando = self._captura
 self._captura = nil
-if estavaCapturando then task.defer(function() self._jogador:SetAttribute("CapturandoAtalho", false) end) end
+if estavaCapturando then
+task.defer(function()
+self._jogador:SetAttribute("CapturandoAtalho", false)
+end)
+end
 self._aviso.Text = "Teclado • Esc cancela a captura"
 self:Atualizar()
 end
 
+--- Atualiza os valores exibidos em todos os controles e botões de atalho.
 function Painel:Atualizar()
 if self._destruido then return end
 self._janela:Atualizar()
 for _, opcao in Config.Opcoes do
 local valor = Config.Obter(self._jogador, opcao.Id)
-local texto = if type(valor) == "boolean" then (valor and "Ativado" or "Desativado") elseif opcao.Percentual then tostring(math.round(valor * 100)) .. "%" else tostring(valor) .. (opcao.Sufixo or "")
+local texto = if type(valor) == "boolean"
+then (valor and "Ativado" or "Desativado")
+elseif opcao.Percentual then tostring(math.round(valor * 100)) .. "%"
+else tostring(valor) .. (opcao.Sufixo or "")
 if self._deslizantes[opcao.Id] then
 self._deslizantes[opcao.Id]:DefinirValor(valor, texto)
 else
@@ -223,11 +282,13 @@ botao:ObterInstancia().Text = self._captura == original and "Pressione..." or Co
 end
 end
 
+--- Limpa conexões e destrói a janela de configurações.
 function Painel:Destruir()
 if self._destruido then return end
 self._destruido = true
 self._jogador:SetAttribute("CapturandoAtalho", false)
 for _, c in self._conexoes do c:Disconnect() end
+table.clear(self._conexoes)
 for _, controle in self._deslizantes do controle:Destruir() end
 self._janela:Destruir()
 end

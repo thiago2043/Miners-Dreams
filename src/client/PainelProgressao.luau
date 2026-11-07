@@ -104,4 +104,22 @@ function PainelProgressao:Destruir()
 	self._grupo:Destroy()
 end
 
+--- Retorna o Frame raiz da janela.
+--- @return Frame
+function PainelProgressao:ObterInstancia()
+return self._grupo
+end
+
+--- Retorna o ScrollingFrame de conteúdo interno da janela.
+--- @return ScrollingFrame
+function PainelProgressao:ObterConteudo()
+return self.Conteudo
+end
+
+--- Retorna a cor temática associada à aba da janela.
+--- @return Color3
+function PainelProgressao:ObterCor()
+return self.Cor
+end
+
 return PainelProgressao

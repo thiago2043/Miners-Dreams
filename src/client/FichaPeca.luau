@@ -228,4 +228,15 @@ function FichaPeca:Destruir()
 	self._instancia:Destroy()
 end
 
+--- Retorna o contêiner interno da ficha para animações de transição.
+--- @return Frame
+function FichaPeca:ObterConteudo()
+return self._conteudo
+end
+
+--- Método público para redimensionar o retrato 3D da peça conforme o tamanho da janela e a escala.
+function FichaPeca:DimensionarRetrato()
+self:_DimensionarRetrato()
+end
+
 return FichaPeca

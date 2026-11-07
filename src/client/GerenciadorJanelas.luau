@@ -1,3 +1,26 @@
+--[[
+Módulo: GerenciadorJanelas (LPOO - Padrão Singleton)
+Responsabilidade:
+Gerencia o posicionamento livre, o redimensionamento pelas 8 direções (4 bordas e 4 cantos),
+a ordem de sobreposição (ZIndex), o cursor vetorial de redimensionamento, o bloqueio de cliques
+em janelas cobertas e a persistência de layout no servidor para todas as janelas do jogo.
+Decisões de Arquitetura:
+1. Compensação de Escala (UIScale):
+   O jogador define o retângulo físico (X, Y, L, A) da janela em pixels reais da tela.
+   Como o ScreenGui possui um UIScale com fator `escala` (EscalaInterface), o gerenciador
+   aplica `Size = UDim2.fromOffset(L / escala, A / escala)` e `Position = UDim2.fromOffset(CX / escala, CY / escala)`.
+   Assim, a janela mantém exatamente o tamanho externo escolhido pelo usuário, enquanto os
+   elementos filhos dentro dela aumentam ou diminuem segundo a EscalaInterface.
+2. Detecção Matemática de Zonas (Sem conflito no topo):
+   Os primeiros 8px das bordas (N, S, L, O) e 16px dos cantos (NO, NE, SO, SE) têm prioridade
+   estrita para redimensionamento. A zona de arraste da barra de título ("Mover") só inicia
+   abaixo da borda superior (dyTopo > 8px), impedindo que tentar redimensionar pelo topo mova a janela.
+3. Bloqueio de Cliques e Hovers em Janelas Cobertas:
+   A cada quadro (RenderStepped), identifica a única janela visível de maior ZIndex sob o cursor
+   e desabilita temporariamente `Active` de botões/caixas de texto pertencentes a janelas que
+   estão atrás dela na mesma coordenada.
+]]
+
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local RunService = game:GetService("RunService")
@@ -8,19 +31,7 @@ local Config = require(ReplicatedStorage.Shared.Configuracoes)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
 
 local GerenciadorJanelas = {}
-local registros = {}
-local estadosSalvos = {}
-local filaSalvarServidor = {}
-local enviandoServidor = false
-local redeConfig = nil
-local ordemTopo = 30
-local acaoAtiva = nil
-local ultimoIdTopoClique = nil
-local inibidosSobMouse = {}
-local conectadoGlobal = false
-local conexaoViewport = nil
-local guiCursor = nil
-local iconeCursor = nil
+GerenciadorJanelas.__index = GerenciadorJanelas
 
 local angulosCursor = {
 L = 0, O = 0,
@@ -29,42 +40,42 @@ NO = 45, SE = 45,
 NE = -45, SO = -45,
 }
 
+--- Construtor interno do Singleton GerenciadorJanelas.
+function GerenciadorJanelas.new()
+return setmetatable({
+_registros = {},
+_estadosSalvos = {},
+_filaSalvarServidor = {},
+_enviandoServidor = false,
+_redeConfig = nil,
+_ordemTopo = 30,
+_acaoAtiva = nil,
+_ultimoIdTopoClique = nil,
+_inibidosSobMouse = {},
+_conectadoGlobal = false,
+_conexaoViewport = nil,
+_guiCursor = nil,
+_iconeCursor = nil,
+}, GerenciadorJanelas)
+end
+
+local instanciaPadrao = GerenciadorJanelas.new()
+
+--- Obtém o canal de rede "Configuracoes" de forma única e compartilhada no cliente.
 function GerenciadorJanelas.ObterRede()
-if redeConfig then return redeConfig end
+local self = instanciaPadrao
+if self._redeConfig then return self._redeConfig end
 local pacotes = ReplicatedStorage:FindFirstChild("Packages")
 if pacotes and pacotes:FindFirstChild("Networker") then
 local ok, r = pcall(function()
 return require(pacotes.Networker).client.new("Configuracoes", {})
 end)
-if ok then redeConfig = r end
+if ok then self._redeConfig = r end
 end
-return redeConfig
-end
-
-local function agendarSalvamentoJanela(id, rect)
-filaSalvarServidor[id] = if rect then table.clone(rect) else false
-if enviandoServidor then return end
-enviandoServidor = true
-task.spawn(function()
-while true do
-local chave, valor = next(filaSalvarServidor)
-if not chave then break end
-filaSalvarServidor[chave] = nil
-local rede = GerenciadorJanelas.ObterRede()
-if rede then
-local payload = if valor == false then nil else { X = valor.X, Y = valor.Y, L = valor.L, A = valor.A }
-for _ = 1, 4 do
-local ok, sucesso = pcall(rede.fetch, rede, "SalvarJanela", chave, payload)
-if ok and sucesso then break end
-if filaSalvarServidor[chave] ~= nil then break end
-task.wait(0.35)
-end
-end
-end
-enviandoServidor = false
-end)
+return self._redeConfig
 end
 
+--- Retorna a resolução atual válida do Viewport (ignorando o valor transitório 1x1 do 1º frame).
 local function obterViewport()
 local camera = workspace.CurrentCamera
 local v = camera and camera.ViewportSize or Vector2.new(1280, 720)
@@ -74,20 +85,22 @@ end
 return v, true
 end
 
-local function coordenadaGui(posMouse)
+--- Converte a posição bruta do mouse para coordenadas de GUI descontando o GuiInset superior.
+local function mouseEmCoordenadaGui()
+local posMouse = UserInputService:GetMouseLocation()
 local inset = GuiService:GetGuiInset()
 return Vector2.new(posMouse.X - inset.X, posMouse.Y - inset.Y)
 end
 
-local function mouseEmCoordenadaGui()
-return coordenadaGui(UserInputService:GetMouseLocation())
-end
-
+--- Retorna o fator atual de EscalaInterface do jogador.
+--- @param jogador Player?
+--- @return number
 function GerenciadorJanelas.Escala(jogador)
 local j = jogador or Players.LocalPlayer
 return Config.Obter(j, "EscalaInterface") or 1
 end
 
+--- Restringe o retângulo (x, y, l, a) aos limites visíveis da tela e ao tamanho mínimo da janela.
 local function limitarRetangulo(reg, x, y, l, a, vp)
 vp = vp or obterViewport()
 local minL = math.min(reg.MinLargura, math.max(180, vp.X - 16))
@@ -101,12 +114,40 @@ y = math.clamp(math.round(y), 4, math.max(4, vp.Y - 44))
 return x, y, l, a
 end
 
+--- Agenda a gravação assíncrona do estado (X, Y, L, A) da janela no perfil do servidor.
+function GerenciadorJanelas:_AgendarSalvamento(id, rect)
+self._filaSalvarServidor[id] = if rect then table.clone(rect) else false
+if self._enviandoServidor then return end
+self._enviandoServidor = true
+task.spawn(function()
+while true do
+local chave, valor = next(self._filaSalvarServidor)
+if not chave then break end
+self._filaSalvarServidor[chave] = nil
+local rede = GerenciadorJanelas.ObterRede()
+if rede then
+local payload = if valor == false then nil else { X = valor.X, Y = valor.Y, L = valor.L, A = valor.A }
+for _ = 1, 4 do
+local ok, sucesso = pcall(rede.fetch, rede, "SalvarJanela", chave, payload)
+if ok and sucesso then break end
+if self._filaSalvarServidor[chave] ~= nil then break end
+task.wait(0.35)
+end
+end
+end
+self._enviandoServidor = false
+end)
+end
+
+--- Aplica o retângulo calculado ou customizado à instância da janela, compensando a EscalaInterface.
+--- @param id string -- Identificador único da janela registrada
 function GerenciadorJanelas.Aplicar(id)
-local reg = registros[id]
+local self = instanciaPadrao
+local reg = self._registros[id]
 if not reg or not reg.Quadro or not reg.Quadro.Parent then return end
 local quadro = reg.Quadro
 local vp, vpValido = obterViewport()
-local estado = estadosSalvos[id]
+local estado = self._estadosSalvos[id]
 
 if not estado or not estado.Customizada then
 local padrao = reg.ObterPadrao and reg.ObterPadrao(vp) or {
@@ -117,7 +158,7 @@ A = reg.AlturaPadrao,
 }
 local x, y, l, a = limitarRetangulo(reg, padrao.X, padrao.Y, padrao.L, padrao.A, vp)
 estado = { X = x, Y = y, L = l, A = a, Customizada = false, ViewportValido = vpValido }
-estadosSalvos[id] = estado
+self._estadosSalvos[id] = estado
 else
 estado.X, estado.Y, estado.L, estado.A = limitarRetangulo(reg, estado.X, estado.Y, estado.L, estado.A, vp)
 end
@@ -144,29 +185,39 @@ task.spawn(reg.AoRedimensionar, largInterna, altInterna, escala)
 end
 end
 
+--- Obtém o retângulo atual (X, Y, L, A) de uma janela em pixels da tela.
+--- @param id string
+--- @return table?
 function GerenciadorJanelas.ObterRetangulo(id)
-local estado = estadosSalvos[id]
-if not estado and registros[id] then
+local self = instanciaPadrao
+local estado = self._estadosSalvos[id]
+if not estado and self._registros[id] then
 GerenciadorJanelas.Aplicar(id)
-estado = estadosSalvos[id]
+estado = self._estadosSalvos[id]
 end
 return estado
 end
 
+--- Informa se a janela já teve tamanho ou posição ajustados manualmente pelo usuário.
+--- @param id string
+--- @return boolean
 function GerenciadorJanelas.EstaCustomizada(id)
-local estado = estadosSalvos[id]
+local estado = instanciaPadrao._estadosSalvos[id]
 return estado ~= nil and estado.Customizada == true
 end
 
+--- Eleva o ZIndex da janela informada para colocá-la na frente de todas as demais.
+--- @param id string
 function GerenciadorJanelas.TrazerParaFrente(id)
-local reg = registros[id]
+local self = instanciaPadrao
+local reg = self._registros[id]
 if not reg or not reg.Quadro then return end
-ordemTopo += 1
-reg.Ordem = ordemTopo
-reg.Quadro.ZIndex = ordemTopo
+self._ordemTopo += 1
+reg.Ordem = self._ordemTopo
+reg.Quadro.ZIndex = self._ordemTopo
 local pai = reg.Quadro.Parent
 if pai and pai:IsA("Frame") and pai.Name ~= "EscalaConteudo" then
-pai.ZIndex = ordemTopo
+pai.ZIndex = self._ordemTopo
 end
 end
 
@@ -175,10 +226,11 @@ local q = reg and reg.Quadro
 return q ~= nil and q.Parent ~= nil and q.Visible and not q:GetAttribute("FechandoUI")
 end
 
-local function obterJanelaDeObjeto(obj)
+--- Localiza a qual registro de janela pertence um determinado GuiObject descendente.
+function GerenciadorJanelas:_ObterJanelaDeObjeto(obj)
 local atual = obj
 while atual and atual:IsA("GuiObject") do
-for _, reg in registros do
+for _, reg in self._registros do
 if reg.Quadro == atual then
 return reg
 end
@@ -188,12 +240,14 @@ end
 return nil
 end
 
+--- Retorna o registro da janela visível que está no topo (maior ZIndex) na coordenada (mx, my).
 function GerenciadorJanelas.ObterJanelaNoTopo(mx, my, margem)
+local self = instanciaPadrao
 margem = margem or 0
 local melhorReg = nil
 local melhorZ = -math.huge
 local melhorOrdem = -math.huge
-for _, reg in registros do
+for _, reg in self._registros do
 if janelaVisivel(reg) then
 local pos = reg.Quadro.AbsolutePosition
 local tam = reg.Quadro.AbsoluteSize
@@ -214,6 +268,7 @@ end
 return melhorReg
 end
 
+--- Verifica se há algum botão ou caixa de texto ativa sob o cursor dentro da janela.
 local function temControleInterativoEm(reg, mx, my)
 local jogador = Players.LocalPlayer
 local pg = jogador and jogador:FindFirstChild("PlayerGui")
@@ -229,6 +284,8 @@ end
 return false
 end
 
+--- Determina matematicamente qual zona da janela está sob o ponto (mx, my):
+--- "NO", "NE", "SO", "SE", "N", "S", "O", "L", "Mover" ou "Interior".
 local function detectarZona(reg, mx, my)
 if not janelaVisivel(reg) then return nil end
 local pos = reg.Quadro.AbsolutePosition
@@ -245,22 +302,22 @@ local dxDir = (pos.X + tam.X) - mx
 local dyTopo = my - pos.Y
 local dyBase = (pos.Y + tam.Y) - my
 
-local b = 8
-local c = 16
+local b = 8  -- Espessura em pixels das bordas de redimensionamento
+local c = 16 -- Alcance em pixels dos cantos de redimensionamento
 
--- 1. Cantos têm prioridade estrita sobre qualquer barra ou botão
+-- 1. Cantos têm prioridade máxima
 if dyTopo <= c and dxEsq <= c and (dyTopo <= b or dxEsq <= b) then return "NO" end
 if dyTopo <= c and dxDir <= c and (dyTopo <= b or dxDir <= b) then return "NE" end
 if dyBase <= c and dxEsq <= c and (dyBase <= b or dxEsq <= b) then return "SO" end
 if dyBase <= c and dxDir <= c and (dyBase <= b or dxDir <= b) then return "SE" end
 
--- 2. Bordas N, S, O, L têm prioridade estrita sobre a barra de título (Mover)
+-- 2. Bordas têm prioridade sobre a barra de título
 if dyTopo <= b then return "N" end
 if dyBase <= b then return "S" end
 if dxEsq <= b then return "O" end
 if dxDir <= b then return "L" end
 
--- 3. Barra de título (apenas quando dyTopo > b, sem jamais conflitar com a borda N)
+-- 3. Barra de título para mover (somente abaixo dos 8px da borda superior N)
 local escala = GerenciadorJanelas.Escala(reg.Jogador)
 local altBarraPx = reg.AlturaBarra * escala
 local recuoDirPx = reg.RecuoDireitoBarra * escala
@@ -273,14 +330,18 @@ end
 return "Interior"
 end
 
+--- Valida se um controle (Botao, ControleDeslizante, TextBox) pertence à janela que está no topo sob o cursor.
+--- @param instancia GuiObject
+--- @return boolean
 function GerenciadorJanelas.PodeInteragir(instancia)
+local self = instanciaPadrao
 if not instancia then return true end
-if acaoAtiva and acaoAtiva.Moveu then return false end
-local regDona = obterJanelaDeObjeto(instancia)
+if self._acaoAtiva and self._acaoAtiva.Moveu then return false end
+local regDona = self:_ObterJanelaDeObjeto(instancia)
 if not regDona then return true end
 if not janelaVisivel(regDona) then return false end
 
-if ultimoIdTopoClique and ultimoIdTopoClique ~= regDona.Id then
+if self._ultimoIdTopoClique and self._ultimoIdTopoClique ~= regDona.Id then
 return false
 end
 
@@ -292,34 +353,40 @@ end
 return true
 end
 
+--- Restaura uma janela específica para sua posição e tamanho padrão.
 function GerenciadorJanelas.Resetar(id, naoSalvar)
-local estado = estadosSalvos[id]
+local self = instanciaPadrao
+local estado = self._estadosSalvos[id]
 if estado then
 estado.Customizada = false
 end
 GerenciadorJanelas.Aplicar(id)
 if not naoSalvar then
-agendarSalvamentoJanela(id, nil)
+self:_AgendarSalvamento(id, nil)
 end
 end
 
+--- Restaura todas as janelas registradas para suas dimensões e posições originais.
 function GerenciadorJanelas.ResetarTodas()
-for _, estado in estadosSalvos do
+local self = instanciaPadrao
+for _, estado in self._estadosSalvos do
 estado.Customizada = false
 end
-for id in registros do
+for id in self._registros do
 GerenciadorJanelas.Aplicar(id)
 end
-agendarSalvamentoJanela("_TODAS_", nil)
+self:_AgendarSalvamento("_TODAS_", nil)
 end
 
+--- Reaplica o layout em todas as janelas (chamado ao alterar resolução ou EscalaInterface).
 function GerenciadorJanelas.AtualizarTodas()
-for id in registros do
+for id in instanciaPadrao._registros do
 GerenciadorJanelas.Aplicar(id)
 end
 end
 
-local function carregarLayoutDoAtributo(jogador)
+--- Lê o JSON salvo no atributo "LayoutJanelas" replicado pelo servidor.
+function GerenciadorJanelas:_CarregarLayoutDoAtributo(jogador)
 local texto = jogador and jogador:GetAttribute("LayoutJanelas")
 if type(texto) ~= "string" or texto == "" then return end
 local ok, tabela = pcall(HttpService.JSONDecode, HttpService, texto)
@@ -329,40 +396,43 @@ if type(id) == "string" and type(rect) == "table"
 and type(rect.X) == "number" and type(rect.Y) == "number"
 and type(rect.L) == "number" and type(rect.A) == "number"
 then
-estadosSalvos[id] = {
+self._estadosSalvos[id] = {
 X = rect.X,
 Y = rect.Y,
 L = rect.L,
 A = rect.A,
 Customizada = true,
 }
-if registros[id] then
+if self._registros[id] then
 GerenciadorJanelas.Aplicar(id)
 end
 end
 end
 end
 
-local function criarCursorRedimensionamento()
-if guiCursor then return end
+--- Cria a seta dupla vetorial de redimensionamento em um ScreenGui de DisplayOrder 1000.
+function GerenciadorJanelas:_CriarCursorRedimensionamento()
+if self._guiCursor then return end
 local jogador = Players.LocalPlayer
 local pg = jogador and jogador:FindFirstChild("PlayerGui")
 if not pg then return end
 
-guiCursor = Instance.new("ScreenGui")
+local guiCursor = Instance.new("ScreenGui")
 guiCursor.Name = "CursorRedimensionamentoUI"
 guiCursor.IgnoreGuiInset = true
 guiCursor.DisplayOrder = 1000
 guiCursor.ResetOnSpawn = false
 guiCursor.Parent = pg
+self._guiCursor = guiCursor
 
-iconeCursor = Instance.new("Frame")
+local iconeCursor = Instance.new("Frame")
 iconeCursor.Name = "IconeCursor"
 iconeCursor.AnchorPoint = Vector2.new(0.5, 0.5)
 iconeCursor.Size = UDim2.fromOffset(26, 26)
 iconeCursor.BackgroundTransparency = 1
 iconeCursor.Visible = false
 iconeCursor.Parent = guiCursor
+self._iconeCursor = iconeCursor
 
 local haste = Instance.new("Frame")
 haste.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -396,8 +466,9 @@ end
 end
 end
 
-local function atualizarBloqueioHoversECliques(mx, my, regTopo)
-for obj, estadoAntigo in inibidosSobMouse do
+--- Desabilita temporariamente botões e caixas de texto que estão atrás da janela do topo sob o mouse.
+function GerenciadorJanelas:_AtualizarBloqueioHoversECliques(mx, my, regTopo)
+for obj, estadoAntigo in self._inibidosSobMouse do
 if obj and obj.Parent then
 if obj:GetAttribute("BotaoDisponivel") ~= false then
 obj.Active = estadoAntigo.Active
@@ -407,7 +478,7 @@ if obj:IsA("TextBox") and estadoAntigo.TextEditable ~= nil then
 obj.TextEditable = estadoAntigo.TextEditable
 end
 end
-inibidosSobMouse[obj] = nil
+self._inibidosSobMouse[obj] = nil
 end
 
 if not regTopo then return end
@@ -421,11 +492,10 @@ local naBordaTopo = zonaTopo ~= nil and angulosCursor[zonaTopo] ~= nil
 local objetos = pg:GetGuiObjectsAtPosition(mx, my)
 for _, obj in objetos do
 if obj:IsA("GuiButton") or obj:IsA("TextBox") then
-local regObj = obterJanelaDeObjeto(obj)
--- Inibe elementos de janelas que estão ATRÁS da janela do topo, ou elementos internos quando o mouse está nos 8px da borda de redimensionar
+local regObj = self:_ObterJanelaDeObjeto(obj)
 if regObj and (regObj ~= regTopo or naBordaTopo) then
 if obj.Active or (obj:IsA("TextBox") and obj.TextEditable) then
-inibidosSobMouse[obj] = {
+self._inibidosSobMouse[obj] = {
 Active = obj.Active,
 Selectable = obj.Selectable,
 TextEditable = if obj:IsA("TextBox") then obj.TextEditable else nil,
@@ -441,17 +511,19 @@ end
 end
 end
 
-local function atualizarCursorVisual()
-criarCursorRedimensionamento()
+--- Atualiza a visibilidade e a rotação do cursor de redimensionamento a cada frame.
+function GerenciadorJanelas:_AtualizarCursorVisual()
+self:_CriarCursorRedimensionamento()
 local m = mouseEmCoordenadaGui()
 local regTopo = GerenciadorJanelas.ObterJanelaNoTopo(m.X, m.Y, 4)
 
-atualizarBloqueioHoversECliques(m.X, m.Y, regTopo)
+self:_AtualizarBloqueioHoversECliques(m.X, m.Y, regTopo)
 
-if not iconeCursor then return end
+local icone = self._iconeCursor
+if not icone then return end
 local modoCursor = nil
-if acaoAtiva and acaoAtiva.Modo ~= "Mover" then
-modoCursor = acaoAtiva.Modo
+if self._acaoAtiva and self._acaoAtiva.Modo ~= "Mover" then
+modoCursor = self._acaoAtiva.Modo
 elseif regTopo then
 local zona = detectarZona(regTopo, m.X, m.Y)
 if zona and angulosCursor[zona] ~= nil then
@@ -462,32 +534,33 @@ end
 local angulo = modoCursor and angulosCursor[modoCursor]
 if angulo ~= nil then
 local posBruta = UserInputService:GetMouseLocation()
-iconeCursor.Position = UDim2.fromOffset(posBruta.X, posBruta.Y)
-iconeCursor.Rotation = angulo
-iconeCursor.Visible = true
+icone.Position = UDim2.fromOffset(posBruta.X, posBruta.Y)
+icone.Rotation = angulo
+icone.Visible = true
 UserInputService.MouseIconEnabled = false
 else
-if iconeCursor.Visible then
-iconeCursor.Visible = false
+if icone.Visible then
+icone.Visible = false
 UserInputService.MouseIconEnabled = true
 end
 end
 end
 
-local function conectarEventosGlobais()
-if conectadoGlobal then return end
-conectadoGlobal = true
+--- Inicializa os listeners globais de mouse, toque, viewport e atributos do jogador.
+function GerenciadorJanelas:_ConectarEventosGlobais()
+if self._conectadoGlobal then return end
+self._conectadoGlobal = true
 
 local jogador = Players.LocalPlayer
 if jogador then
 jogador:GetAttributeChangedSignal("LayoutJanelas"):Connect(function()
-carregarLayoutDoAtributo(jogador)
+self:_CarregarLayoutDoAtributo(jogador)
 end)
-carregarLayoutDoAtributo(jogador)
+self:_CarregarLayoutDoAtributo(jogador)
 end
 
 RunService.RenderStepped:Connect(function()
-atualizarCursorVisual()
+self:_AtualizarCursorVisual()
 end)
 
 UserInputService.TextBoxFocused:Connect(function(caixa)
@@ -505,7 +578,7 @@ then Vector2.new(entrada.Position.X, entrada.Position.Y)
 else mouseEmCoordenadaGui()
 
 local regTopo = GerenciadorJanelas.ObterJanelaNoTopo(m.X, m.Y, 4)
-ultimoIdTopoClique = regTopo and regTopo.Id or nil
+self._ultimoIdTopoClique = regTopo and regTopo.Id or nil
 if not regTopo then return end
 
 GerenciadorJanelas.TrazerParaFrente(regTopo.Id)
@@ -531,7 +604,7 @@ end
 regTopo.UltimoCliqueTopo = agora
 end
 
-acaoAtiva = {
+self._acaoAtiva = {
 Id = regTopo.Id,
 Modo = zona,
 Entrada = entrada,
@@ -539,33 +612,34 @@ InicioMouse = Vector2.new(entrada.Position.X, entrada.Position.Y),
 InicioRect = table.clone(estado),
 Moveu = false,
 }
-atualizarCursorVisual()
+self:_AtualizarCursorVisual()
 end)
 
 UserInputService.InputChanged:Connect(function(entrada)
-if not acaoAtiva then return end
-if entrada ~= acaoAtiva.Entrada and entrada.UserInputType ~= Enum.UserInputType.MouseMovement and entrada.UserInputType ~= Enum.UserInputType.Touch then
+local acao = self._acaoAtiva
+if not acao then return end
+if entrada ~= acao.Entrada and entrada.UserInputType ~= Enum.UserInputType.MouseMovement and entrada.UserInputType ~= Enum.UserInputType.Touch then
 return
 end
-local reg = registros[acaoAtiva.Id]
-local estado = estadosSalvos[acaoAtiva.Id]
+local reg = self._registros[acao.Id]
+local estado = self._estadosSalvos[acao.Id]
 if not reg or not estado or not janelaVisivel(reg) then
-acaoAtiva = nil
-atualizarCursorVisual()
+self._acaoAtiva = nil
+self:_AtualizarCursorVisual()
 return
 end
-local delta = Vector2.new(entrada.Position.X, entrada.Position.Y) - acaoAtiva.InicioMouse
+local delta = Vector2.new(entrada.Position.X, entrada.Position.Y) - acao.InicioMouse
 if delta.Magnitude >= 2 then
-acaoAtiva.Moveu = true
+acao.Moveu = true
 end
-local ini = acaoAtiva.InicioRect
+local ini = acao.InicioRect
 local x, y, l, a = ini.X, ini.Y, ini.L, ini.A
 
-if acaoAtiva.Modo == "Mover" then
+if acao.Modo == "Mover" then
 x = ini.X + delta.X
 y = ini.Y + delta.Y
 else
-local dir = acaoAtiva.Modo
+local dir = acao.Modo
 local vp = obterViewport()
 local minL = math.min(reg.MinLargura, math.max(180, vp.X - 16))
 local minA = math.min(reg.MinAltura, math.max(150, vp.Y - 16))
@@ -591,7 +665,7 @@ end
 
 estado.X, estado.Y, estado.L, estado.A = limitarRetangulo(reg, x, y, l, a)
 estado.Customizada = true
-GerenciadorJanelas.Aplicar(acaoAtiva.Id)
+GerenciadorJanelas.Aplicar(acao.Id)
 if reg.AoMoverOuRedimensionar then
 reg.AoMoverOuRedimensionar(estado)
 end
@@ -600,28 +674,28 @@ end)
 UserInputService.InputEnded:Connect(function(entrada)
 if entrada.UserInputType == Enum.UserInputType.MouseButton1 or entrada.UserInputType == Enum.UserInputType.Touch then
 task.defer(function()
-ultimoIdTopoClique = nil
+self._ultimoIdTopoClique = nil
 end)
 end
-if not acaoAtiva then return end
-if entrada == acaoAtiva.Entrada or entrada.UserInputType == Enum.UserInputType.MouseButton1 or entrada.UserInputType == Enum.UserInputType.Touch then
-local finalizada = acaoAtiva
-acaoAtiva = nil
-atualizarCursorVisual()
-if finalizada.Moveu then
-local est = estadosSalvos[finalizada.Id]
+local acao = self._acaoAtiva
+if not acao then return end
+if entrada == acao.Entrada or entrada.UserInputType == Enum.UserInputType.MouseButton1 or entrada.UserInputType == Enum.UserInputType.Touch then
+self._acaoAtiva = nil
+self:_AtualizarCursorVisual()
+if acao.Moveu then
+local est = self._estadosSalvos[acao.Id]
 if est and est.Customizada then
-agendarSalvamentoJanela(finalizada.Id, est)
+self:_AgendarSalvamento(acao.Id, est)
 end
 end
 end
 end)
 
 local function observarCamera()
-if conexaoViewport then conexaoViewport:Disconnect() end
+if self._conexaoViewport then self._conexaoViewport:Disconnect() end
 local cam = workspace.CurrentCamera
 if cam then
-conexaoViewport = cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+self._conexaoViewport = cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 GerenciadorJanelas.AtualizarTodas()
 end)
 end
@@ -636,6 +710,7 @@ end)
 end
 end
 
+--- Adiciona o indicador discreto "◢" no canto inferior direito da janela.
 local function criarIndicadorCanto(quadro)
 local antigo = quadro:FindFirstChild("ControlesJanelaWindows")
 if antigo then antigo:Destroy() end
@@ -656,9 +731,14 @@ indicador.ZIndex = 20
 indicador.Parent = quadro
 end
 
+--- Registra um Frame de janela no gerenciador para habilitar arraste, redimensionamento e persistência.
+--- @param id string -- Identificador único da janela (ex.: "Aba_Inventario", "Janela_Configuracoes")
+--- @param quadro Frame -- Frame raiz da janela
+--- @param opcoes table? -- Parâmetros de limites e callbacks (MinLargura, MinAltura, LarguraPadrao, AlturaPadrao, AoRedimensionar...)
 function GerenciadorJanelas.Registrar(id, quadro, opcoes)
+local self = instanciaPadrao
 opcoes = opcoes or {}
-conectarEventosGlobais()
+self:_ConectarEventosGlobais()
 
 local constraint = quadro:FindFirstChildOfClass("UISizeConstraint")
 local largPadrao = opcoes.LarguraPadrao or (constraint and constraint.MaxSize.X) or 540
@@ -667,13 +747,13 @@ if constraint then
 constraint:Destroy()
 end
 
-ordemTopo += 1
-quadro.ZIndex = ordemTopo
+self._ordemTopo += 1
+quadro.ZIndex = self._ordemTopo
 
 local reg = {
 Id = id,
 Quadro = quadro,
-Ordem = ordemTopo,
+Ordem = self._ordemTopo,
 Jogador = opcoes.Jogador or Players.LocalPlayer,
 AlturaBarra = opcoes.AlturaBarra or 42,
 RecuoDireitoBarra = opcoes.RecuoDireitoBarra or 48,
@@ -685,7 +765,7 @@ ObterPadrao = opcoes.ObterPadrao,
 AoRedimensionar = opcoes.AoRedimensionar,
 AoMoverOuRedimensionar = opcoes.AoMoverOuRedimensionar,
 }
-registros[id] = reg
+self._registros[id] = reg
 
 criarIndicadorCanto(quadro)
 GerenciadorJanelas.Aplicar(id)
