@@ -1,3 +1,10 @@
+--[[
+Módulo: ServicoConstrucao (LPOO - Serviço de Domínio do Servidor)
+Responsabilidade:
+Gerencia todas as operações de construção na plot do jogador (colocação individual e em lote,
+movimentação, rotação, recolhimento, venda direta, colagem, blueprints e restauração de sessão).
+]]
+
 -- Autoridade da construcao: confere terreno, grade e ocupacao antes de coordenar o registro salvo e o modelo
 -- colocado.
 local Players = game:GetService("Players")
@@ -73,6 +80,7 @@ function ServicoConstrucao:_ObterCopiaGrupoPorToken(jogador, token)
   return nil
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_RegistrarAcaoHistorico) encapsulado na classe.
 function ServicoConstrucao:_RegistrarAcaoHistorico(jogador, acao)
   if self._executandoHistorico then return end
   local pilha = self._historicoDesfazer[jogador] or {}
@@ -82,6 +90,7 @@ function ServicoConstrucao:_RegistrarAcaoHistorico(jogador, acao)
   self._historicoRefazer[jogador] = nil
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_RegistrarCopiaGrupo) encapsulado na classe.
 function ServicoConstrucao:_RegistrarCopiaGrupo(jogador, pecas)
   self._sequenciaCopia += 1
   local token = self._sequenciaCopia
@@ -329,8 +338,14 @@ function ServicoConstrucao:Restaurar(jogador)
 		elseif dadosModelo and dados:RegistrarRecolhimento(registro) then
 			warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao cabe no terreno e voltou ao inventario.")
 		else
-			warn("Nao foi possivel restaurar a maquina " .. tostring(indice)
-				.. " de " .. jogador.Name .. "; o registro foi preservado.")
+			-- [LPOO] Delega a recuperação da máquina órfã ao método público encapsulado em DadosJogador
+local recuperada = dados and type(dados.RecuperarMaquinaOrfa) == "function" and dados:RecuperarMaquinaOrfa(indice, registro)
+if recuperada then
+warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao cabe no terreno e voltou ao inventario.")
+else
+warn("Nao foi possivel restaurar a maquina " .. tostring(indice)
+.. " de " .. jogador.Name .. "; o registro foi preservado.")
+end
 		end
 		if dadosModelo then liberarModelo(dadosModelo) end
 	end
@@ -557,6 +572,7 @@ function ServicoConstrucao:CopiarGrupo(jogador, maquinasSelecionadas)
 	return true, "Peca copiada para colocacao.", self:_RegistrarCopiaGrupo(jogador, pecas)
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_ValidarNomeBlueprint) encapsulado na classe.
 function ServicoConstrucao:_ValidarNomeBlueprint(nome, idPadrao)
   if nome ~= nil and type(nome) ~= "string" then return nil, "Nome de blueprint invalido." end
   nome = string.gsub(string.gsub(nome or "", "^%s+", ""), "%s+$", "")
@@ -568,6 +584,7 @@ function ServicoConstrucao:_ValidarNomeBlueprint(nome, idPadrao)
   return nome
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_ResumoBlueprint) encapsulado na classe.
 function ServicoConstrucao:_ResumoBlueprint(blueprint)
   if type(blueprint) ~= "table" or type(blueprint.Id) ~= "string" or type(blueprint.Nome) ~= "string"
     or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
@@ -620,6 +637,7 @@ function ServicoConstrucao:_ResumoBlueprint(blueprint)
   }
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_CapturarPecasParaBlueprint) encapsulado na classe.
 function ServicoConstrucao:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
   local historicoAntes = self._historicoCopias[jogador] and table.clone(self._historicoCopias[jogador]) or nil
   local anteriorGrupo = self._copiasGrupo[jogador]
@@ -645,6 +663,7 @@ function ServicoConstrucao:_CapturarPecasParaBlueprint(jogador, maquinasSelecion
   return pecas
 end
 
+--- Método público LPOO (ServicoConstrucao:ListarBlueprints).
 function ServicoConstrucao:ListarBlueprints(jogador)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante antes de atualizar os blueprints." end
   local dados = DataManager.ObterDados(jogador)
@@ -659,6 +678,7 @@ function ServicoConstrucao:ListarBlueprints(jogador)
   return true, "Blueprints carregados.", resposta
 end
 
+--- Método público LPOO (ServicoConstrucao:CriarBlueprint).
 function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
   local dados = DataManager.ObterDados(jogador)
   local existentes = dados and dados:ObterBlueprints()
@@ -681,6 +701,7 @@ function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
   return true, "Blueprint salvo.", self:_ResumoBlueprint(blueprint)
 end
 
+--- Método público LPOO (ServicoConstrucao:SubstituirBlueprint).
 function ServicoConstrucao:SubstituirBlueprint(jogador, identificador, nome, maquinasSelecionadas)
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
   local dados = DataManager.ObterDados(jogador)
@@ -704,6 +725,7 @@ function ServicoConstrucao:SubstituirBlueprint(jogador, identificador, nome, maq
   return true, "Blueprint substituido com sucesso.", self:_ResumoBlueprint(atualizado)
 end
 
+--- Método público LPOO (ServicoConstrucao:RenomearBlueprint).
 function ServicoConstrucao:RenomearBlueprint(jogador, identificador, novoNome)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
@@ -716,6 +738,7 @@ function ServicoConstrucao:RenomearBlueprint(jogador, identificador, novoNome)
   return true, "Blueprint renomeado.", self:_ResumoBlueprint(atualizado)
 end
 
+--- Método público LPOO (ServicoConstrucao:EditarBlueprint).
 function ServicoConstrucao:EditarBlueprint(jogador, identificador, novoNome, indicesMantidos)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
@@ -765,6 +788,7 @@ function ServicoConstrucao:EditarBlueprint(jogador, identificador, novoNome, ind
   return true, "Blueprint atualizado.", self:_ResumoBlueprint(atualizado)
 end
 
+--- Método público LPOO (ServicoConstrucao:DeletarBlueprint).
 function ServicoConstrucao:DeletarBlueprint(jogador, identificador)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
@@ -773,6 +797,7 @@ function ServicoConstrucao:DeletarBlueprint(jogador, identificador)
   return dados:RemoverBlueprint(identificador)
 end
 
+--- Método público LPOO (ServicoConstrucao:MoverBlueprint).
 function ServicoConstrucao:MoverBlueprint(jogador, identificador, deslocamento)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
@@ -1236,10 +1261,12 @@ local pecasHistorico = {}
   return true, string.format("%d pecas movidas; %d devolvidas ao inventario.", #criadas, #devolucoes), criadas
 end
 
+--- Método público LPOO (ServicoConstrucao:Mover).
 function ServicoConstrucao:Mover(jogador, token, minimo, rotacao)
 	return self:_ConcluirMovimento(jogador, token, { { Minimo = minimo, Rotacao = rotacao } }, false)
 end
 
+--- Método público LPOO (ServicoConstrucao:MoverGrupo).
 function ServicoConstrucao:MoverGrupo(jogador, token, movimentos)
 	return self:_ConcluirMovimento(jogador, token, movimentos, true)
 end
@@ -1420,6 +1447,7 @@ local pecasHistorico = {}
   return true, mensagem or "Pecas devolvidas ao inventario."
 end
 
+--- Método público LPOO (ServicoConstrucao:RecolherTudo).
 function ServicoConstrucao:RecolherTudo(jogador)
 	if self._movimentosPendentes[jogador] then return false,"Conclua ou cancele a movimentação antes de limpar a plot." end
 	if not self:Restaurar(jogador) then return false,"Sua plot ainda não está disponível." end
@@ -1536,6 +1564,7 @@ function ServicoConstrucao:AtualizarPrevia(jogador, previa)
   return true
 end
 
+--- Método público LPOO (ServicoConstrucao:LimparJogador).
 function ServicoConstrucao:LimparJogador(jogador)
   self:Sincronizar(jogador)
   self._copias[jogador] = nil
@@ -1596,7 +1625,7 @@ function ServicoConstrucao:Administrar(jogador,pedido)
 	local dados,terreno,piso,maquinas=contexto(jogador)
 	if not dados then return false,"Plot indisponível." end
 	self:Sincronizar(jogador)
-	local registros=dados._perfil.Data.MaquinasColocadas
+	local registros=dados:ObterDadosPerfil().MaquinasColocadas
 	local indice,anterior,modeloAnterior
 	if pedido.Tipo~="Adicionar" then
 		for i,r in registros do if r.Id==pedido.PecaId then indice,anterior=i,r; break end end
@@ -1644,6 +1673,7 @@ function ServicoConstrucao:Administrar(jogador,pedido)
 	return true,"Peça "..(anterior and "reposicionada." or "adicionada sem custo."),anterior,novo
 end
 
+--- Método público LPOO (ServicoConstrucao:RedimensionarAdministrativo).
 function ServicoConstrucao:RedimensionarAdministrativo(jogador,nivel)
 	if self._movimentosPendentes[jogador] then return false,"Aguarde o jogador terminar a movimentação." end
 	local dados,terreno,piso=contexto(jogador)
@@ -1679,6 +1709,7 @@ function ServicoConstrucao:RedimensionarAdministrativo(jogador,nivel)
 	return true,"Plot redimensionada; peças que não couberam voltaram ao inventário.",devolvidas
 end
 
+--- Método público LPOO (ServicoConstrucao:Desfazer).
 function ServicoConstrucao:Desfazer(jogador)
   if self._movimentosPendentes[jogador] then return false, "Conclua ou cancele a movimentacao atual." end
   if not self:_PermitirPedido(jogador, 1) then return false, "Aguarde um instante." end
@@ -1696,6 +1727,7 @@ function ServicoConstrucao:Desfazer(jogador)
   return true, msg
 end
 
+--- Método público LPOO (ServicoConstrucao:Refazer).
 function ServicoConstrucao:Refazer(jogador)
   if self._movimentosPendentes[jogador] then return false, "Conclua ou cancele a movimentacao atual." end
   if not self:_PermitirPedido(jogador, 1) then return false, "Aguarde um instante." end
@@ -1713,6 +1745,7 @@ function ServicoConstrucao:Refazer(jogador)
   return true, msg
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_LocalizarPorId) encapsulado na classe.
 function ServicoConstrucao:_LocalizarPorId(jogador, id)
 for modelo, vinculo in self._registrosPorMaquina do
 if vinculo.jogador == jogador and vinculo.registro.Id == id and modelo.Parent then
@@ -1722,6 +1755,7 @@ end
 return nil, nil
 end
 
+--- Método auxiliar privado (ServicoConstrucao:_ExecutarAcaoHistorico) encapsulado na classe.
 function ServicoConstrucao:_ExecutarAcaoHistorico(jogador, acao, desfazer)
 if not self:Restaurar(jogador) then return false, "Terreno indisponivel." end
 local dados, terreno, piso, maquinas = contexto(jogador)
@@ -1750,7 +1784,7 @@ devolucoes[1].Registro.Modificacoes = next(devolucoes[1].Modificacoes) and devol
 local ok, msg = dados:RegistrarRecolhimento(devolucoes[1].Registro)
 if not ok then return false, msg end
 else
-      local ok, msg = dados:RegistrarRecolhimentos(devolucoes, #devolucoes == #dados._perfil.Data.MaquinasColocadas)
+      local ok, msg = dados:RegistrarRecolhimentos(devolucoes, #devolucoes == #dados:ObterDadosPerfil().MaquinasColocadas)
       if not ok then return false, msg end
     end
 for _, modelo in modelos do
@@ -1787,7 +1821,7 @@ Modificacoes = peca.Modificacoes and next(peca.Modificacoes) and PersonalizacaoM
 }
 table.insert(alvos, { Peca = peca, Minimo = minimo, Rotacao = rotacao, Ocupado = ocupado, Destino = destino, DadosModelo = dadosModelo, Registro = registro })
 end
-local d = dados._perfil.Data
+local d = dados:ObterDadosPerfil()
 local backup = {
 Dinheiro = d.Dinheiro, Inventory = table.clone(d.Inventory),
 MaquinasColocadas = table.clone(d.MaquinasColocadas),
@@ -1846,7 +1880,7 @@ table.insert(alvos, alvo)
 if origem.Devolvida then table.insert(doInventario, alvo) end
 end
 end
-local d = dados._perfil.Data
+local d = dados:ObterDadosPerfil()
 local backup = {
 Dinheiro = d.Dinheiro, Inventory = table.clone(d.Inventory),
 MaquinasColocadas = table.clone(d.MaquinasColocadas),
@@ -1938,7 +1972,7 @@ return false, "Dinheiro insuficiente para desfazer a venda."
 end
 dados:_DefinirSaldo(novoSaldo)
 for _, alvo in alvos do
-table.insert(dados._perfil.Data.MaquinasColocadas, alvo.Registro)
+table.insert(dados:ObterDadosPerfil().MaquinasColocadas, alvo.Registro)
 self:_CriarMaquina(jogador, terreno, maquinas, alvo.Destino, alvo.Registro, alvo.DadosModelo, alvo.Minimo, alvo.Rotacao, alvo.Peca.TotalRecebido)
 liberarModelo(alvo.DadosModelo)
 end

@@ -1,3 +1,10 @@
+--[[
+Módulo: Fabrica (LPOO - Controlador de Máquinas e Produção da Plot)
+Responsabilidade:
+Orquestra o ciclo de vida das máquinas colocadas em uma plot (instâncias da classe Maquina)
+e coordena sua interação com o motor físico (SimulacaoMinerios).
+]]
+
 -- Mantem uma Maquina para cada modelo colocado e compartilha uma simulacao entre elas; modelos removidos
 -- encerram seus componentes.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -91,6 +98,7 @@ function Fabrica:Avancar(delta)
   end)
 end
 
+--- Método público LPOO (Fabrica:Destruir).
 function Fabrica:Destruir()
   self._destruida = true
   for _, c in self._conexoes or {} do c:Disconnect() end
@@ -98,6 +106,27 @@ function Fabrica:Destruir()
   for _, maquina in self._maquinas do maquina:Destruir() end
   table.clear(self._maquinas)
   self._simulacao:Destruir()
+end
+
+--- Retorna a quantidade de máquinas ativas registradas nesta instância de Fábrica.
+--- @return number
+function Fabrica:ObterQuantidadeMaquinas()
+local total = 0
+for _ in self._maquinas do
+total += 1
+end
+return total
+end
+
+--- Retorna a instância encapsulada de SimulacaoMinerios associada a esta Fábrica.
+--- @return table
+function Fabrica:ObterSimulacao()
+return self._simulacao
+end
+
+--- Marca a topologia da fábrica como modificada para forçar a reconstrução das regiões no próximo ciclo.
+function Fabrica:MarcarSujo()
+self._sujo = true
 end
 
 return Fabrica

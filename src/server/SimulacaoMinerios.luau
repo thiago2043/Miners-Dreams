@@ -1,3 +1,10 @@
+--[[
+Módulo: SimulacaoMinerios (LPOO - Motor Físico Autoritativo de Minérios)
+Responsabilidade:
+Executa no servidor a simulação física determinística de corpos rígidos (CorpoRigido)
+e transporte por esteiras (MovimentoMinerio) para todos os minérios ativos da fábrica.
+]]
+
 --!native
 -- Possui o relogio fisico, os corpos e os sensores. Minerios nao colidem entre si; os obstaculos sao caixas das
 -- maquinas e do chao.
@@ -73,6 +80,7 @@ end
 table.sort(solidos,ordenar)
 end
 
+--- Método público LPOO (SimulacaoMinerios.new).
 function SimulacaoMinerios.new()
 return setmetatable({
 _minerios = {}, _corpos = {}, _transportadores = {}, _sensores = {}, _consultas = {}, _consultasSensores = {}, _regioes = {},
@@ -83,6 +91,7 @@ _acumulado = 0, _passos = 0, _tempo = 0, _chamada = 0, _versao = 0,
 }, SimulacaoMinerios)
 end
 
+--- Método público LPOO (SimulacaoMinerios:RegistrarMinerio).
 function SimulacaoMinerios:RegistrarMinerio(minerio, _tempoVida, configuracao, origem)
 local parte = minerio:ObterParte()
 local registro = {
@@ -95,6 +104,7 @@ table.insert(self._minerios, registro)
 self._corpos[parte] = registro
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_AvancarCorpo) encapsulado na classe.
 function SimulacaoMinerios:_AvancarCorpo(registro, delta, gravidade, solidos, piso, base)
 local corpo=registro.Corpo
 registro.IndiceTrajetoria+=1
@@ -140,6 +150,7 @@ self._proximoPasso=vaga%4096+1
 return chao
 end
 
+--- Método público LPOO (SimulacaoMinerios:ObterCorpo).
 function SimulacaoMinerios:ObterCorpo(parte)
 local registro = self._corpos[parte]
 if not registro then return nil end
@@ -147,6 +158,7 @@ atualizarApoio(registro, self._passos)
 return registro.Corpo
 end
 
+--- Método público LPOO (SimulacaoMinerios:RegistrarTransportador).
 function SimulacaoMinerios:RegistrarTransportador(componente, parte, velocidade, atrito, centralizacao)
 assert(atrito==nil or (type(atrito)=="number" and atrito>=0 and atrito<math.huge),"Atrito de superficie invalido.")
 local registro = self._transportadores[parte] or {}
@@ -162,6 +174,7 @@ registro.VelocidadeLocal = parte.CFrame:VectorToObjectSpace(velocidade)
 self._transportadores[parte] = registro
 end
 
+--- Método público LPOO (SimulacaoMinerios:RegistrarSensor).
 function SimulacaoMinerios:RegistrarSensor(componente, parte, terreno)
 assert(terreno, "Sensor sem terreno.")
 local componentes = self._sensores[parte] or {}
@@ -181,6 +194,7 @@ end
 self._versao += 1
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_RetirarSensorDoTerreno) encapsulado na classe.
 function SimulacaoMinerios:_RetirarSensorDoTerreno(parte)
 local terreno = self._terrenoPorSensor[parte]
 if not terreno then return end
@@ -193,6 +207,7 @@ end
 self._terrenoPorSensor[parte] = nil
 end
 
+--- Método público LPOO (SimulacaoMinerios:RemoverComponente).
 function SimulacaoMinerios:RemoverComponente(componente)
 self._versao += 1
 for parte, registro in self._transportadores do
@@ -208,6 +223,7 @@ end
 end
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_Geometria) encapsulado na classe.
 function SimulacaoMinerios:_Geometria(parte, regioes)
 local item = regioes.Geometrias[parte]
 if item then return item end
@@ -223,6 +239,7 @@ regioes.Geometrias[parte] = item
 return item
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_Candidatos) encapsulado na classe.
 function SimulacaoMinerios:_Candidatos(registro, delta, quedaPrevista)
 local corpo, terreno = registro.Corpo, registro.Terreno
 local pos = corpo.CFrame.Position
@@ -313,6 +330,7 @@ for _, item in regiao.Sensores do if perto(item, minimo, maximo) then table.inse
 return solidos, sensores
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_DuracaoQueda) encapsulado na classe.
 function SimulacaoMinerios:_DuracaoQueda(registro, horizonte)
 local corpo=registro.Corpo
 local solidos=self:_Candidatos(registro,horizonte,true)
@@ -399,6 +417,7 @@ end
 return math.max(1/10000,limite),apoioProximo
 end
 
+--- Método auxiliar privado (SimulacaoMinerios:_Simular) encapsulado na classe.
 function SimulacaoMinerios:_Simular(registro, delta, restante)
 local minerio, corpo = registro.Minerio, registro.Corpo
 atualizarApoio(registro, self._passos)
@@ -443,6 +462,7 @@ end
 end
 end
 
+--- Método público LPOO (SimulacaoMinerios:Avancar).
 function SimulacaoMinerios:Avancar(delta, antesPasso)
 assert(type(delta) == "number" and delta >= 0 and delta < math.huge, "Delta invalido.")
 self._acumulado += delta
@@ -580,6 +600,7 @@ if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCF
 MonitorRecursos.Finalizar("Replicação de Minérios (Atributos/Rede)", tInicioReplicacao, string.format("%d minérios ativos • %d BulkMove", #self._minerios, #partes))
 end
 
+--- Método público LPOO (SimulacaoMinerios:Destruir).
 function SimulacaoMinerios:Destruir()
 table.clear(self._trajetorias); table.clear(self._passosReutilizaveis)
 for _, registro in self._minerios do registro.Minerio:ObterParte():Destroy() end
@@ -593,6 +614,18 @@ table.clear(self._consultas)
 table.clear(self._consultasSensores)
 table.clear(self._regioes)
 table.clear(self._relogios)
+end
+
+--- Retorna a quantidade atual de minérios ativos sendo simulados na plot.
+--- @return number
+function SimulacaoMinerios:ObterQuantidadeMinerios()
+return #self._minerios
+end
+
+--- Retorna a versão atual do mapeamento espacial de regiões de esteiras/modificadores.
+--- @return number
+function SimulacaoMinerios:ObterVersaoRegioes()
+return self._versao
 end
 
 return SimulacaoMinerios

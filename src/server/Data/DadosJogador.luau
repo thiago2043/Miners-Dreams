@@ -1,3 +1,11 @@
+--[[
+Módulo: DadosJogador (LPOO - Entidade de Domínio e Persistência)
+Responsabilidade:
+Encapsula o perfil de dados (ProfileStore) de um único jogador conectado,
+gerenciando saldo monetário (InteiroGrande), inventário de máquinas, peças colocadas
+na plot, blueprints, upgrades, renascimentos, configurações, atalhos e layout de janelas.
+]]
+
 -- Concentra saldo, estoque e construcoes de uma sessao ativa; os atributos do jogador publicam esses dados
 -- para a interface.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -94,6 +102,7 @@ table.insert(blueprints, blueprint)
   return true, "Blueprint salvo."
 end
 
+--- Método público LPOO (DadosJogador:AtualizarBlueprint).
 function DadosJogador:AtualizarBlueprint(id, nome, pecas)
   if not self:EstaAtivo() or type(id) ~= "string" then
     return false, "Dados ou blueprint invalidos."
@@ -118,6 +127,7 @@ function DadosJogador:AtualizarBlueprint(id, nome, pecas)
   return true, "Blueprint atualizado.", alvo
 end
 
+--- Método público LPOO (DadosJogador:RemoverBlueprint).
 function DadosJogador:RemoverBlueprint(id)
   if not self:EstaAtivo() or type(id) ~= "string" then
     return false, "Dados ou blueprint invalidos."
@@ -133,6 +143,7 @@ function DadosJogador:RemoverBlueprint(id)
   return false, "Esse blueprint nao existe."
 end
 
+--- Método público LPOO (DadosJogador:MoverBlueprint).
 function DadosJogador:MoverBlueprint(id, deslocamento)
   if not self:EstaAtivo() or type(id) ~= "string"
     or type(deslocamento) ~= "number" or deslocamento % 1 ~= 0 or deslocamento == 0
@@ -220,6 +231,7 @@ for maquinaId in CatalogoMaquinas do
   self:PublicarRecebimentos()
 end
 
+--- Método auxiliar privado (DadosJogador:_SincronizarConfiguracoes) encapsulado na classe.
 function DadosJogador:_SincronizarConfiguracoes()
   local dados = self._perfil.Data
   local opcoesSalvas = type(dados.Configuracoes) == "table" and dados.Configuracoes or {}
@@ -274,6 +286,7 @@ for _, acao in Configuracoes.Atalhos do
   self._jogador:SetAttribute("LayoutJanelas", game:GetService("HttpService"):JSONEncode(janelasLimpas))
 end
 
+--- Método público LPOO (DadosJogador:DefinirJanela).
 function DadosJogador:DefinirJanela(id, rect)
   if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
   if type(id) ~= "string" or #id == 0 or #id > 40 then return false, "Janela invalida." end
@@ -302,6 +315,7 @@ function DadosJogador:DefinirJanela(id, rect)
   return true
 end
 
+--- Método público LPOO (DadosJogador:DefinirConfiguracao).
 function DadosJogador:DefinirConfiguracao(id, valor)
   if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
   local normalizado, opcao = Configuracoes.NormalizarOpcao(id, valor)
@@ -313,6 +327,7 @@ function DadosJogador:DefinirConfiguracao(id, valor)
   return true
 end
 
+--- Método público LPOO (DadosJogador:DefinirAtalho).
 function DadosJogador:DefinirAtalho(original, tecla)
   if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
   if not Configuracoes.ValidarTecla(self._jogador, original, tecla) then
@@ -329,6 +344,7 @@ function DadosJogador:DefinirAtalho(original, tecla)
   return true
 end
 
+--- Método público LPOO (DadosJogador:RegistrarRecorde).
 function DadosJogador:RegistrarRecorde(id, valor)
 	if not self:EstaAtivo() then return false end
 	local normalizado = Classificacao.Normalizar(valor)
@@ -341,10 +357,12 @@ function DadosJogador:RegistrarRecorde(id, valor)
 	return true
 end
 
+--- Método público LPOO (DadosJogador:ObterRecordes).
 function DadosJogador:ObterRecordes()
 	return table.clone(self._perfil.Data.Recordes or {}),self._perfil.Data.GeracaoProgresso or 0
 end
 
+--- Método público LPOO (DadosJogador:ZerarProgresso).
 function DadosJogador:ZerarProgresso()
 	if not self:EstaAtivo() then return false,"Perfil indisponível." end
 	local novo=reinicioTotal:Preparar({})
@@ -357,11 +375,14 @@ function DadosJogador:ZerarProgresso()
 	return true,"Dados zerados. O jogador voltou ao início com o kit inicial."
 end
 
+--- Método público LPOO (DadosJogador:ObterUpgrade).
 function DadosJogador:ObterUpgrade(id) return Upgrades.Nivel(self._perfil.Data,id) end
+--- Método público LPOO (DadosJogador:ObterVelocidadeMotores).
 function DadosJogador:ObterVelocidadeMotores()
 	local n=self._perfil.Data.VelocidadeMotores or 0
 	return Upgrades.Valido(n) and math.min(n,self:ObterUpgrade("Motores")) or 0
 end
+--- Método público LPOO (DadosJogador:ComprarUpgrade).
 function DadosJogador:ComprarUpgrade(id,nivelEsperado,ciclo)
 	if not self:EstaAtivo() or ciclo~=(self._perfil.Data.Reencarnacoes or 0) then return false,"A progressão mudou. Abra a aba novamente." end
 	local item=Upgrades.Item(id)
@@ -383,6 +404,7 @@ function DadosJogador:ComprarUpgrade(id,nivelEsperado,ciclo)
 	Historico.Evento(dados,"Upgrade",{Id=id,Nivel=nivel+1,Preco=item.Precos[nivel+1]})
 	self:Sincronizar(); return true,"Upgrade adquirido."
 end
+--- Método público LPOO (DadosJogador:DefinirVelocidadeMotores).
 function DadosJogador:DefinirVelocidadeMotores(nivel)
 	if not self:EstaAtivo() or not Upgrades.Valido(nivel) or nivel>self:ObterUpgrade("Motores") then return false,"Velocidade não desbloqueada." end
 	self._perfil.Data.VelocidadeMotores=nivel
@@ -438,6 +460,7 @@ function DadosJogador:_DefinirSaldo(saldo)
 	self._jogador:SetAttribute("Dinheiro", saldo)
 end
 
+--- Método público LPOO (DadosJogador:PublicarRecebimentos).
 function DadosJogador:PublicarRecebimentos()
 	if self._recebido~=self._recebidoPublicado then
 		self._recebidoPublicado=self._recebido
@@ -459,6 +482,7 @@ function DadosJogador:AdicionarDinheiro(valor)
 	return true
 end
 
+--- Método público LPOO (DadosJogador:PublicarGanhosPorSegundo).
 function DadosJogador:PublicarGanhosPorSegundo(segundos)
 	assert(type(segundos)=="number" and segundos>0 and segundos<math.huge,"Intervalo de ganhos inválido.")
 	table.insert(self._amostrasGanhos,{Valor=self._ganhos,Segundos=segundos})
@@ -751,6 +775,60 @@ function DadosJogador:VenderConstrucoes(construcoes)
 	self:_DefinirSaldo(novoSaldo)
 	self:PublicarResumoPlot()
 	return true, "Pecas vendidas por $" .. AbreviarInteiro(total) .. "."
+end
+
+--- Retorna a instância do jogador associada a este controlador de dados.
+--- @return Player
+function DadosJogador:ObterJogador()
+return self._jogador
+end
+
+--- Retorna a tabela de dados do perfil ativo do jogador de forma encapsulada.
+--- @return table?
+function DadosJogador:ObterDadosPerfil()
+return self._perfil and self._perfil.Data or nil
+end
+
+--- Recupera de forma encapsulada uma máquina salva na plot que não pôde ser restaurada fisicamente,
+--- devolvendo 1 unidade ao estoque do inventário e removendo o registro órfão de MaquinasColocadas.
+--- @param indice any -- Índice ou identificador da máquina colocada
+--- @param registro table? -- Dados serializados da máquina
+--- @return boolean, string? -- Sucesso da operação e ID da máquina no catálogo
+function DadosJogador:RecuperarMaquinaOrfa(indice, registro)
+if not self:EstaAtivo() or not self._perfil or type(self._perfil.Data) ~= "table" then
+return false, nil
+end
+local d = self._perfil.Data
+local maqId = type(registro) == "table" and (registro.MaquinaId or registro.Id or registro.Tipo) or nil
+local inv = d.Inventory or d.Inventario
+if type(maqId) ~= "string" or type(inv) ~= "table" then
+return false, nil
+end
+if type(inv[maqId]) == "number" then
+inv[maqId] += 1
+elseif type(inv[maqId]) == "table" and type(inv[maqId].Quantidade) == "number" then
+inv[maqId].Quantidade += 1
+else
+inv[maqId] = 1
+end
+if type(d.MaquinasColocadas) == "table" then
+if type(indice) == "number" and d.MaquinasColocadas[indice] == registro then
+table.remove(d.MaquinasColocadas, indice)
+else
+for k, v in d.MaquinasColocadas do
+if v == registro then
+if type(k) == "number" then
+table.remove(d.MaquinasColocadas, k)
+else
+d.MaquinasColocadas[k] = nil
+end
+break
+end
+end
+end
+end
+self:Sincronizar()
+return true, maqId
 end
 
 return DadosJogador
