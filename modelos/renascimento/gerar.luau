@@ -6,6 +6,7 @@ local destino = "modelos/renascimento"
 fs.writeDir(destino.."/assets")
 local galeria = r.Instance.new("Model"); galeria.Name = "GaleriaRenascimento"
 for i, def in premios do
+	if not def.Base then continue end
 	local categoria = if def.Tipo=="Soltador" then "mineradoras" elseif def.Tipo=="Vendedor" then "fornalhas" else "modificadores"
 	local modelo = r.deserializeModel(fs.readFile("modelos/"..categoria.."/assets/"..def.Base..".rbxm"))[1]
 	modelo.Name = def.Id
@@ -93,4 +94,4 @@ for i, def in premios do
 	modelo.Parent=galeria
 end
 fs.writeFile(destino.."/GaleriaRenascimento.rbxm",r.serializeModel({galeria}))
-print("RENASCIMENTO_MODELOS_OK",#premios)
+print("RENASCIMENTO_MODELOS_OK",#galeria:GetChildren())

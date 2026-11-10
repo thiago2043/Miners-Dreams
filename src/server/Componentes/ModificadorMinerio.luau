@@ -12,6 +12,12 @@ function ModificadorMinerio.new(maquina, configuracao)
   assert(type(codigo) == "string" and codigo:match("^[ANVH][0-9]+$"), "Tipo de modificador invalido.")
   assert(limite == nil or (type(limite) == "number" and limite >= 1 and limite < 2 ^ 53 and limite % 1 == 0), "Limite de usos invalido.")
   assert(InteiroGrande.eValido(configuracao.ValorMinimo or "0"), "Valor minimo invalido.")
+  if configuracao.MultiplicadoresFaixas then
+    assert(#configuracao.MultiplicadoresFaixas == configuracao.Etapas, "Faixas de modificacao invalidas.")
+    for _, fator in configuracao.MultiplicadoresFaixas do
+      assert(InteiroGrande.eDecimalValido(fator), "Multiplicador de faixa invalido.")
+    end
+  end
   if configuracao.ValorMaximo then
     assert(InteiroGrande.eValido(configuracao.ValorMaximo), "Valor maximo invalido.")
     local intervalo = InteiroGrande.subtrair(configuracao.ValorMaximo, configuracao.ValorMinimo or "0")
@@ -21,6 +27,7 @@ function ModificadorMinerio.new(maquina, configuracao)
   self._passagens = setmetatable({}, { __mode = "k" })
   self._limitesPassagem, self._versaoLimites = {}, 0
   self._chaveUsos = "UsosModificador_" .. codigo
+  self._unidade = maquina:ObterModelo():GetAttribute("IdUnidade") or maquina:ObterModelo()
   self._ativoVisual = true
   maquina:ObterModelo():SetAttribute("ModificadorAtivo", true)
   return self
@@ -73,8 +80,18 @@ function ModificadorMinerio:AoTocar(minerio, sensor)
   local parte, config = minerio:ObterParte(), self._configuracao
   local etapa = if sensor then table.find(self._sensores or {}, sensor) else 1
   local passagem = self._passagens[parte] or { Etapas = {}, Iniciada = false }
-  local valor = minerio:CalcularValor(config.Multiplicador, config.Bonus)
-  if not valor or not minerio:DefinirValor(valor) then return end
+  if not passagem.Iniciada then
+    passagem.Copia = config.Renascimento and minerio:ObterUsosModificador(self._chaveUsos) > 0
+  end
+  if passagem.Copia then
+    local n = config.Etapas
+    local antes, depois = math.floor((etapa - 1) * 50 / n), math.floor(etapa * 50 / n)
+    if not minerio:AdicionarBonusCopias(depois - antes) then return end
+  else
+    local multiplicador = if config.MultiplicadoresFaixas then config.MultiplicadoresFaixas[etapa] else config.Multiplicador
+    local valor = minerio:CalcularValor(multiplicador, config.Bonus, true)
+    if not valor or not minerio:DefinirValor(valor) then return end
+  end
   if not passagem.Iniciada and config.LimiteUsos then
     if minerio.IncrementarUsosModificador then
       minerio:IncrementarUsosModificador(self._chaveUsos)
@@ -82,6 +99,7 @@ function ModificadorMinerio:AoTocar(minerio, sensor)
       parte:SetAttribute(self._chaveUsos, (parte:GetAttribute(self._chaveUsos) or 0) + 1)
     end
   end
+  if not passagem.Iniciada and config.Renascimento then minerio:RegistrarRenascimento(self._unidade) end
   passagem.Etapas[etapa], passagem.Iniciada = true, true
   self._passagens[parte] = passagem
   if not self._ativoVisual then
@@ -115,6 +133,8 @@ function ModificadorMinerio:PrecisaReceber(minerio, sensor)
   local passagem = self._passagens[parte]
   local etapa = if sensor then table.find(self._sensores or {}, sensor) else 1
   if not etapa or (passagem and passagem.Etapas[etapa]) then return false end
+  if config.Renascimento and not (passagem and passagem.Iniciada)
+    and not minerio:PodeReceberRenascimento(self._unidade) then return false end
   if config.LimiteUsos and not (passagem and passagem.Iniciada) then
     local usos = if minerio.ObterUsosModificador
       then minerio:ObterUsosModificador(self._chaveUsos)

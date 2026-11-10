@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RegraReencarnacao = require(ReplicatedStorage.Shared.RegraReencarnacao)
+local RegraRecompensas = require(ReplicatedStorage.Shared.RegraRecompensas)
 local Config=require(ReplicatedStorage.Shared.Configuracoes)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local BarraProgressao = require(script.Parent.BarraProgressao)
@@ -121,7 +122,10 @@ function PainelPrestigio:Atualizar()
 		or ""
 	self._barra:Atualizar(estado.Fracao)
 
-	if disponivel then b.Text = "Reencarnar · +" .. AbreviarInteiro(estado.VidasDisponiveis) .. " vida(s)" end
+	if disponivel then
+		local garantidas = #RegraRecompensas.Garantidas(estado.Reencarnacoes + 1)
+		b.Text = "Reencarnar · " .. (garantidas + estado.VidasPuladas) .. " peça(s) · +" .. AbreviarInteiro(estado.VidasDisponiveis) .. " vida(s)"
+	end
 end
 
 -- Um clique envia apenas o ciclo esperado. O guarda evita pedidos simultaneos; fechar com Q durante

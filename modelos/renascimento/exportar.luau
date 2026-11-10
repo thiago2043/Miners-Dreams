@@ -3,6 +3,7 @@ local r=require("@lune/roblox")
 local serde=require("@lune/serde")
 local modelos={}
 for _,def in require("../../src/shared/RecompensasRenascimento") do
+	if not def.Base then continue end
 	local m=r.deserializeModel(fs.readFile("modelos/renascimento/assets/"..def.Id..".rbxm"))[1]
 	local partes={}
 	for _,p in m:GetDescendants() do if p:IsA("BasePart") then

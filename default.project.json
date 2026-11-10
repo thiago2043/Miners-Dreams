@@ -282,6 +282,159 @@
         },
         "NexusEterno": {
           "$path": "modelos/renascimento/assets/NexusEterno.rbxm"
+        },
+        "RessonanciaAbissal": {
+          "$path": "modelos/renascimento/novas/assets/RessonanciaAbissal.rbxm"
+        },
+        "CouracaSolar": {
+          "$path": "modelos/renascimento/novas/assets/CouracaSolar.rbxm"
+        },
+        "SondaUmbra": {
+          "$path": "modelos/renascimento/novas/assets/SondaUmbra.rbxm"
+        },
+        "EscavadoraMeridiano": {
+          "$path": "modelos/renascimento/novas/assets/EscavadoraMeridiano.rbxm"
+        },
+        "FornalhaBastiao": {
+          "$path": "modelos/renascimento/novas/assets/FornalhaBastiao.rbxm"
+        },
+        "FornalhaMarDeVidro": {
+          "$path": "modelos/renascimento/novas/assets/FornalhaMarDeVidro.rbxm"
+        },
+        "FornalhaCiclotron": {
+          "$path": "modelos/renascimento/novas/assets/FornalhaCiclotron.rbxm"
+        },
+        "FornalhaCatedral": {
+          "$path": "modelos/renascimento/novas/assets/FornalhaCatedral.rbxm"
+        },
+        "LaminaFotovoltaica": {
+          "$path": "modelos/renascimento/novas/assets/LaminaFotovoltaica.rbxm"
+        },
+        "GrampoDeCobalto": {
+          "$path": "modelos/renascimento/novas/assets/GrampoDeCobalto.rbxm"
+        },
+        "CadinhoCeramico": {
+          "$path": "modelos/renascimento/novas/assets/CadinhoCeramico.rbxm"
+        },
+        "PeneiraLuminosa": {
+          "$path": "modelos/renascimento/novas/assets/PeneiraLuminosa.rbxm"
+        },
+        "SondaDeAmetista": {
+          "$path": "modelos/renascimento/novas/assets/SondaDeAmetista.rbxm"
+        },
+        "BobinaDeMare": {
+          "$path": "modelos/renascimento/novas/assets/BobinaDeMare.rbxm"
+        },
+        "TrefilaDeTitanio": {
+          "$path": "modelos/renascimento/novas/assets/TrefilaDeTitanio.rbxm"
+        },
+        "BicoDeIrradiacao": {
+          "$path": "modelos/renascimento/novas/assets/BicoDeIrradiacao.rbxm"
+        },
+        "PorticoDeSafira": {
+          "$path": "modelos/renascimento/novas/assets/PorticoDeSafira.rbxm"
+        },
+        "LimiarDeBasalto": {
+          "$path": "modelos/renascimento/novas/assets/LimiarDeBasalto.rbxm"
+        },
+        "TriagemBoreal": {
+          "$path": "modelos/renascimento/novas/assets/TriagemBoreal.rbxm"
+        },
+        "MatrizDeImpacto": {
+          "$path": "modelos/renascimento/novas/assets/MatrizDeImpacto.rbxm"
+        },
+        "AroDeMercurio": {
+          "$path": "modelos/renascimento/novas/assets/AroDeMercurio.rbxm"
+        },
+        "VenturiVioleta": {
+          "$path": "modelos/renascimento/novas/assets/VenturiVioleta.rbxm"
+        },
+        "PolarizadorDeJade": {
+          "$path": "modelos/renascimento/novas/assets/PolarizadorDeJade.rbxm"
+        },
+        "MicrossondaFria": {
+          "$path": "modelos/renascimento/novas/assets/MicrossondaFria.rbxm"
+        },
+        "CisalhaHelio": {
+          "$path": "modelos/renascimento/novas/assets/CisalhaHelio.rbxm"
+        },
+        "VigiliaIonica": {
+          "$path": "modelos/renascimento/novas/assets/VigiliaIonica.rbxm"
+        },
+        "CanalDeMarfim": {
+          "$path": "modelos/renascimento/novas/assets/CanalDeMarfim.rbxm"
+        },
+        "ReleDeRubi": {
+          "$path": "modelos/renascimento/novas/assets/ReleDeRubi.rbxm"
+        },
+        "RessonadorAzimutal": {
+          "$path": "modelos/renascimento/novas/assets/RessonadorAzimutal.rbxm"
+        },
+        "CamaraDeNeve": {
+          "$path": "modelos/renascimento/novas/assets/CamaraDeNeve.rbxm"
+        },
+        "CascataDeAmbar": {
+          "$path": "modelos/renascimento/novas/assets/CascataDeAmbar.rbxm"
+        },
+        "PulsadorDeNeodimio": {
+          "$path": "modelos/renascimento/novas/assets/PulsadorDeNeodimio.rbxm"
+        },
+        "ObeliscoDeFase": {
+          "$path": "modelos/renascimento/novas/assets/ObeliscoDeFase.rbxm"
+        },
+        "OsciladorDeQuartzo": {
+          "$path": "modelos/renascimento/novas/assets/OsciladorDeQuartzo.rbxm"
+        },
+        "InjetorDeArgonio": {
+          "$path": "modelos/renascimento/novas/assets/InjetorDeArgonio.rbxm"
+        },
+        "CorredorSolsticio": {
+          "$path": "modelos/renascimento/novas/assets/CorredorSolsticio.rbxm"
+        },
+        "FatiaDeHorizonte": {
+          "$path": "modelos/renascimento/novas/assets/FatiaDeHorizonte.rbxm"
+        },
+        "RetificadorDeIridio": {
+          "$path": "modelos/renascimento/novas/assets/RetificadorDeIridio.rbxm"
+        },
+        "FoleGravitacional": {
+          "$path": "modelos/renascimento/novas/assets/FoleGravitacional.rbxm"
+        },
+        "RasgoDeEspectro": {
+          "$path": "modelos/renascimento/novas/assets/RasgoDeEspectro.rbxm"
+        },
+        "TrilhoDeApolonio": {
+          "$path": "modelos/renascimento/novas/assets/TrilhoDeApolonio.rbxm"
+        },
+        "GarraDoEquinocio": {
+          "$path": "modelos/renascimento/novas/assets/GarraDoEquinocio.rbxm"
+        },
+        "CondensadorNacar": {
+          "$path": "modelos/renascimento/novas/assets/CondensadorNacar.rbxm"
+        },
+        "BalizaUltravioleta": {
+          "$path": "modelos/renascimento/novas/assets/BalizaUltravioleta.rbxm"
+        },
+        "DinamoDePlatina": {
+          "$path": "modelos/renascimento/novas/assets/DinamoDePlatina.rbxm"
+        },
+        "CrivoDoPerielio": {
+          "$path": "modelos/renascimento/novas/assets/CrivoDoPerielio.rbxm"
+        },
+        "BaluarteMagnetico": {
+          "$path": "modelos/renascimento/novas/assets/BaluarteMagnetico.rbxm"
+        },
+        "CupulaDeInercia": {
+          "$path": "modelos/renascimento/novas/assets/CupulaDeInercia.rbxm"
+        },
+        "CadenciaDoEclipse": {
+          "$path": "modelos/renascimento/novas/assets/CadenciaDoEclipse.rbxm"
+        },
+        "CoroaDeAntiparticulas": {
+          "$path": "modelos/renascimento/novas/assets/CoroaDeAntiparticulas.rbxm"
+        },
+        "PortaDoMeridiano": {
+          "$path": "modelos/renascimento/novas/assets/PortaDoMeridiano.rbxm"
         }
       },
       "Packages": {

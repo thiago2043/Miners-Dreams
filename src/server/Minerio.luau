@@ -10,6 +10,7 @@ function Minerio.new(parte)
   return setmetatable({
     _parte = parte,
     _valor = parte:GetAttribute("Valor"),
+    _valorInicial = parte:GetAttribute("Valor"),
     _processado = parte:GetAttribute("Processado") == true,
     _vendido = parte:GetAttribute("Vendido") == true,
     _usos = {},
@@ -37,6 +38,7 @@ function Minerio.Criar(definicao, cframe, terreno, dadosDono)
   local self = Minerio.new(parte)
   self._dadosDono = dadosDono
   assert(self:DefinirValor(definicao.Valor), "Valor inicial de minerio invalido.")
+  self._valorInicial = definicao.Valor
   assert(self:DefinirTamanho(Vector3.new(table.unpack(definicao.Tamanho))), "Tamanho inicial de minerio invalido.")
   parte.CFrame = cframe
   parte.Color = Color3.fromRGB(140, 100, 65)
@@ -58,6 +60,7 @@ end
 function Minerio:ObterParte() return self._parte end
 
 function Minerio:ObterValor()
+  if self._valorEfetivo then return self._valorEfetivo end
   local valor = self._valor
   if valor ~= nil then return valor end
   valor = self._parte:GetAttribute("Valor")
@@ -92,10 +95,13 @@ end
 
 function Minerio:DefinirValor(valor)
   if not InteiroGrande.eValido(valor) then return false end
-  if self._valor ~= valor then
-    self._valor = valor
-    self._parte:SetAttribute("Valor", valor)
+  self._valor = valor
+  if self._bonusCopias then
+    local fator = string.format("%d.%02d", 1 + math.floor(self._bonusCopias / 100), self._bonusCopias % 100)
+    valor = InteiroGrande.multiplicarArredondado(valor, fator)
   end
+  self._valorEfetivo = valor
+  if self._parte:GetAttribute("Valor") ~= valor then self._parte:SetAttribute("Valor", valor) end
   if self._dadosDono then self._dadosDono:RegistrarRecorde("Minerio", valor) end
   return true
 end
@@ -122,10 +128,29 @@ function Minerio:EstaDisponivel(terreno)
     and self._parte:GetAttribute("TerrenoId") == terreno:GetAttribute("TerrenoId")
 end
 
-function Minerio:CalcularValor(multiplicador, bonus)
-  local valor = self:ObterValor()
+function Minerio:CalcularValor(multiplicador, bonus, principal)
+  local valor = if principal then self._valor or self:ObterValor() else self:ObterValor()
   if not InteiroGrande.eValido(valor) then return nil end
   return InteiroGrande.somar(InteiroGrande.multiplicarArredondado(valor, multiplicador or "1"), bonus or "0")
+end
+
+function Minerio:PodeReceberRenascimento(unidade)
+  if self._unidadesRenascimento and self._unidadesRenascimento[unidade] then return false end
+  if self._renascimentoAtivo then return true end
+  local inicial = self._valorInicial or self:ObterValor()
+  return InteiroGrande.eValido(inicial) and not InteiroGrande.menor(self:ObterValor(), inicial .. "0000")
+end
+
+function Minerio:RegistrarRenascimento(unidade)
+  self._unidadesRenascimento = self._unidadesRenascimento or {}
+  self._unidadesRenascimento[unidade] = true
+  self._renascimentoAtivo = true
+end
+
+function Minerio:AdicionarBonusCopias(pontos)
+  assert(type(pontos) == "number" and pontos >= 1 and pontos % 1 == 0, "Bonus de copia invalido.")
+  self._bonusCopias = (self._bonusCopias or 0) + pontos
+  return self:DefinirValor(self._valor)
 end
 
 function Minerio:Consumir(vendido)

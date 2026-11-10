@@ -51,6 +51,10 @@ function FichaMaquina.Descrever(definicao,jogador)
 			if not vendedor and not transportes[texto] then table.insert(linhas,texto); transportes[texto]=true end
 		elseif componente.Tipo == "Modificador" then
 			table.insert(linhas, "Modificação: " .. efeito(componente))
+			if componente.Renascimento then
+				table.insert(linhas, "Cópias: +50% por unidade adicional")
+				table.insert(linhas, "Entrada inicial: minério processado ×10K")
+			end
 			local limites = {}
 			if componente.LimiteUsos then table.insert(limites, numero(componente.LimiteUsos)) end
 			local minimo,maximo=Efeitos.Limites(componente,Efeitos.Nivel(jogador,"Calibracao"))

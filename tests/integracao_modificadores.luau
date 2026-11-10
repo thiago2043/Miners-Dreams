@@ -69,7 +69,9 @@ local porCodigo={}
 local posicaoEconomica={A0="N17",N17="A0",N02="N18",N18="N02",N04="N20",N20="N04",
 	H1="N21",N21="H1",N03="N23",N23="N03",N11="N24",N24="N11"}
 local totalEtapas,comEsteira=0,0
-assert(#manifesto==55 and #modelos:GetChildren()==91)
+local quantidadeCatalogo = 0
+for _ in Catalogo do quantidadeCatalogo += 1 end
+assert(#manifesto==55 and #modelos:GetChildren()==quantidadeCatalogo)
 for _, m in manifesto do
 	local def=assert(Catalogo[m.id]); local posicao=posicaoEconomica[m.codigo] or m.codigo
 	local regra=assert(propostas[posicao])
@@ -143,14 +145,14 @@ local unidade=ore("10")
 tocar(a,unidade,1); tocar(a,unidade,1)
 assert(unidade:ObterValor()=="20")
 tocar(a,unidade,2)
-assert(unidade:ObterValor()=="40" and unidade:ObterParte():GetAttribute("UsosModificador_N05")==1)
+assert(unidade:ObterValor()=="40" and unidade:ObterUsosModificador("UsosModificador_N05")==1)
 tocar(b,unidade,1); tocar(b,unidade,2)
 assert(unidade:ObterValor()=="40")
 local _,outro=criar("N02"); tocar(outro,unidade)
-assert(unidade:ObterValor()=="80" and unidade:ObterParte():GetAttribute("UsosModificador_N18")==1)
+assert(unidade:ObterValor()=="80" and unidade:ObterUsosModificador("UsosModificador_N18")==1)
 local _,tripla=criar("N01"); local fracionado=ore("5")
 for etapa,esperado in {"9","16","28"} do tocar(tripla,fracionado,etapa); assert(fracionado:ObterValor()==esperado) end
-assert(fracionado:ObterParte():GetAttribute("UsosModificador_N01")==1)
+assert(fracionado:ObterUsosModificador("UsosModificador_N01")==1)
 print("PASS: todas as etapas consomem um uso; copias compartilham o limite e tipos diferentes permanecem independentes.")
 
 local _,magnetica=criar("V3")
@@ -163,7 +165,7 @@ local inicialLaser=ore("5"); tocar(laser,inicialLaser); assert(inicialLaser:Obte
 assert(Ficha.Descrever(Catalogo.LaserQuantico):find("Modificação: +25",1,true))
 local limitado=ore("0")
 for _=1,4 do local _,c=criar("H1"); tocar(c,limitado) end
-assert(limitado:ObterValor()=="75" and limitado:ObterParte():GetAttribute("UsosModificador_N21")==3)
+assert(limitado:ObterValor()=="75" and limitado:ObterUsosModificador("UsosModificador_N21")==3)
 local maq,prensa=criar("V1"); local repetido=ore("5")
 for _, valor in {"10","20","40","80","160","160"} do
 	repetido:ObterParte().CFrame=CF.new(1000,1000,1000); maq:Atualizar(1)
@@ -175,7 +177,7 @@ for _, esperado in {"15","25","35"} do
 	tocar(jato,aditivo); tocar(jato,aditivo); assert(aditivo:ObterValor()==esperado)
 end
 local alheio=ore("10"); alheio:ObterParte():SetAttribute("DonoUserId",999); tocar(a,alheio); assert(alheio:ObterValor()=="10")
-local invalido=ore("10"); invalido:ObterParte():SetAttribute("Valor","invalido"); tocar(a,invalido); assert(invalido:ObterValor()=="invalido")
+local invalido=ore("10"); assert(not invalido:DefinirValor("invalido")); tocar(a,invalido); assert(invalido:ObterValor()=="20")
 for _, m in maquinas do m:Destruir() end
 assert(next(simulacao._sensores)==nil and next(simulacao._transportadores)==nil)
 terreno.Maquinas:ClearAllChildren(); terreno.Minerios:ClearAllChildren()
@@ -229,6 +231,6 @@ for _=1,66 do
 	fabrica:Avancar(1/60)
 	if minerio:ObterParte().Parent and minerio:ObterValor()=="40" then break end
 end
-assert(minerio:ObterValor()=="40" and minerio:ObterParte():GetAttribute("UsosModificador_N05")==1)
+assert(minerio:ObterValor()=="40" and minerio:ObterUsosModificador("UsosModificador_N05")==1)
 fabrica:Destruir()
 print("INTEGRACAO_MODIFICADORES_OK 55 100: simulacao real do projeto atravessou duas etapas e contou um uso; fora do Studio.")

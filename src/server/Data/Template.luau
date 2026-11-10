@@ -21,6 +21,7 @@ return {
 	Upgrades = {Extracao=0,Fundicao=0,Motores=0,Calibracao=0}, VelocidadeMotores=0, ExpansaoPlot=0, VersaoExpansaoPlot=2,
 	-- Quantidades de recompensas permanentes, devolvidas ao inventario a cada renascimento.
 	RecompensasReencarnacao = {},
+	VersaoRecompensasRenascimento = 1,
 	Inventory = inventario,
 	-- As variantes guardam apenas diferencas por unidade; MaquinasColocadas guarda tipo, canto e orientacao das
 	-- pecas que o jogador realmente colocou no terreno.

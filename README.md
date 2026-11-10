@@ -169,9 +169,9 @@ rojo build default.project.json -o "Miners Dreams.rbxlx"
 rojo sourcemap default.project.json --include-non-scripts -o sourcemap.json
 ```
 
-O `.rbxlx` é um arquivo gerado e pode ser reconstruído. Ele inclui 13 mineradoras, 55 modificadores, nove fornalhas, quatro esteiras e uma parede de loja, além de nove recompensas de renascimento e dos scripts do jogo. Terrain e configurações de publicação não fazem parte deste build. O Rojo preserva instâncias não mapeadas no Workspace, incluindo galerias importadas manualmente.
+O `.rbxlx` é um arquivo gerado e pode ser reconstruído. Ele inclui 13 mineradoras, 55 modificadores, nove fornalhas, quatro esteiras e uma parede de loja, além de 60 recompensas de renascimento e dos scripts do jogo. Terrain e configurações de publicação não fazem parte deste build. O Rojo preserva instâncias não mapeadas no Workspace, incluindo galerias importadas manualmente.
 
-Cada vida ganha no renascimento concede uma peça aleatória entre três mineradoras, três fornalhas e três modificadores, com chances iguais. Todas superam o maior efeito da respectiva categoria da loja. As cópias acumulam, são permanentes e voltam ao inventário nos próximos renascimentos, incluindo personalizações de peças colocadas. Não podem ser compradas ou vendidas. As definições estão em `src/shared/RecompensasRenascimento.luau`; os modelos e a tabela de efeitos estão em `modelos/renascimento/README.md`. Vidas anteriores à implementação não geram prêmios retroativos.
+Cada renascimento concede 1 ou 2 peças garantidas entre 7 mineradoras, 7 fornalhas e 46 modificadores. Os ciclos 1–5 completam o conjunto do 5º, 6–10 completam o do 10º, e assim até o 50º; depois repete-se o último conjunto. Cada vida extra sorteia uma peça entre os tipos já obtidos, incluindo a entrega atual. As cópias acumulam, são permanentes e voltam ao inventário nos próximos renascimentos, incluindo personalizações de peças colocadas. Não podem ser compradas ou vendidas. A migração entrega apenas os tipos garantidos faltantes pelos ciclos já concluídos. As definições estão em `src/shared/RecompensasRenascimento.luau`; os efeitos e as verificações estão em `modelos/renascimento/README.md`.
 
 ## Sincronizar com o Studio
 
@@ -292,7 +292,7 @@ O mapa usa oito plots em duas fileiras de quatro, com as expansões voltadas par
 `tests/cenario.luau` confere o circuito contínuo, as oito reservas de expansão, a iluminação e a ausência de colisão/consulta na decoração. O cenário verifica as velocidades de superfície e o sentido de cada trecho, sem controlador de personagem. O teste de restauração também usa uma plot orientada para fora da estrada para conferir as coordenadas salvas.
 
 
-O HUD mostra somente dinheiro e ganho por segundo. Os nove primeiros prêmios por vidas ganhas completam as nove recompensas de renascimento em ordem aleatória, sem repetição, mesmo em saltos de várias vidas ou em sessões separadas. Depois disso o sorteio permite cópias. Coleções antigas incompletas recebem primeiro os itens faltantes, preservando as quantidades anteriores.
+O HUD mostra somente dinheiro e ganho por segundo. As recompensas de renascimento seguem os conjuntos de cinco ciclos descritos acima. Vidas extras sorteiam tipos já obtidos, sem limitar o estoque pelo número de usos por minério. Coleções antigas recebem os tipos garantidos faltantes, preservando as quantidades anteriores.
 
 A velocidade nas fichas é exibida em blocos/s. Configurações numéricas e intensidades usam controles deslizantes. O limite de 0 a 5.000 minérios visíveis por plot é local: oculta também os valores e pula a animação dos ocultos, preservando a simulação, produção e venda.
 

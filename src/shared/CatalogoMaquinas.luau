@@ -176,9 +176,13 @@ for _, premio in require(script.Parent.RecompensasRenascimento) do
 	elseif premio.Tipo == "Vendedor" then
 		item = fornalha("", "0", premio.Blocos, premio.Multiplicador)
 	else
-		item = modificador(premio.Codigo, premio.Nome, "0", premio.Blocos, 1, premio.Multiplicador, "0", 3, "0", nil, true)
+		item = modificador(premio.Codigo, premio.Nome, "0", premio.Blocos, #premio.Faixas, premio.Multiplicador, "0", premio.LimiteUsos, "0", nil, true)
+		local efeito = item.Componentes[2]
+		efeito.Renascimento = true
+		efeito.MultiplicadoresFaixas = premio.Faixas
 	end
 	item.Nome, item.Renascimento = premio.Nome, true
+	item.LoteRenascimento = premio.Lote
 	item.Raridade = "Renascimento"
 	catalogo[premio.Id] = item
 end

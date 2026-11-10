@@ -246,6 +246,7 @@ function ServicoConstrucao:_CriarMaquina(jogador, terreno, maquinas, destino, re
 	maquina:SetAttribute("DonoUserId", jogador.UserId)
 	maquina:SetAttribute("TerrenoId", terreno:GetAttribute("TerrenoId"))
 	maquina:SetAttribute("PodeRecolher", true)
+	maquina:SetAttribute("IdUnidade", registro.Id)
 	local rotacao = rotacaoAlvo or CFrame.new(0, 0, 0, table.unpack(registro.Rotacao))
 	local _, ocupado = dadosModelo.Volume:Calcular(rotacao)
 	maquina:SetAttribute("VolumeMinimo", minimoAlvo or Vector3.new(table.unpack(registro.Posicao)))
