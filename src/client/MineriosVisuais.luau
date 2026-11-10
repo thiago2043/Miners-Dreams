@@ -1,3 +1,15 @@
+--[[
+Módulo: MineriosVisuais (LPOO - Renderizador e Controlador de LOD de Minérios no Cliente)
+Responsabilidade:
+Interpola a posição visual dos minérios em trânsito no cliente a partir das trajetórias
+e relógios replicados pelo servidor, aplicando movimentação em lote (workspace:BulkMoveTo)
+e escalonamento dinâmico de Nível de Detalhe (LOD) por distância e campo de visão (Frustum Culling).
+Princípios LPOO Aplicados:
+- Encapsulamento de Estado: Armazena caches de fase, nível de LOD por terreno e estado
+  de posicionamento inicial diretamente na instância (`self`).
+- Degradação Graciosa de Desempenho: Mantém 60 Hz na plot do jogador local e reduz
+  progressivamente a frequência de cálculo e sombras nas plots distantes ou fora da tela.
+]]
 --!native
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -259,6 +271,7 @@ end
 function MineriosVisuais:Atualizar(agora)
   local tInicio = MonitorRecursos.Iniciar()
   local partes, poses = self._partes, self._poses
+	self:_PrepararQuadroLOD(agora, partes, poses)
   table.clear(partes); table.clear(poses)
   local camera = workspace.CurrentCamera
   if not camera or camera.ViewportSize.X <= 0 or camera.ViewportSize.Y <= 0 then return end
@@ -269,6 +282,7 @@ function MineriosVisuais:Atualizar(agora)
   local fatorV = math.sqrt(1 + vertical * vertical)
 
   for terreno, grupo in self._grupos do
+		if not self:_DeveAtualizarLOD(terreno, grupo) then continue end
 local texto = terreno:GetAttribute("RelogioMinerios")
     if texto ~= grupo.TextoRelogio then
       grupo.TextoRelogio, grupo.Relogio = texto, Movimento.DecodificarRelogio(texto)
@@ -320,8 +334,14 @@ local texto = terreno:GetAttribute("RelogioMinerios")
     end
   end
 if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end
-  MonitorRecursos.DefinirMetrica("MineriosMovidosFrame", #partes)
-  MonitorRecursos.Finalizar("Movimento Visual de Minérios (MineriosVisuais)", tInicio, string.format("%d movidos/frame", #partes))
+  local poupados = self._poupadosNoQuadro or 0
+MonitorRecursos.DefinirMetrica("MineriosMovidosFrame", #partes)
+MonitorRecursos.DefinirMetrica("MineriosPoupadosLOD", poupados)
+MonitorRecursos.Finalizar(
+"Movimento Visual de Minérios (MineriosVisuais)",
+tInicio,
+string.format("%d movidos/frame • %d poupados [LOD: %s] (%d plots reduzidas)", #partes, poupados, tostring(self._modoLODAtivo or "Médio"), self._plotsEmLOD or 0)
+)
 end
 
 function MineriosVisuais:Destruir()
@@ -331,6 +351,262 @@ function MineriosVisuais:Destruir()
   for parte in self._observados do self:_Remover(parte) end
   table.clear(self._partes); table.clear(self._poses)
   table.clear(self._grupos)
+end
+
+-- Tabela estática encapsulada com os parâmetros de cada perfil de intensidade de LOD
+local perfisIntensidadeLOD = {
+Desativado = {
+Ativo = false,
+FatorDistancia = 1.0,
+PassosMinhaPlot = { 1, 1, 1 },
+PassosVizinha = { 1, 1, 1, 1 },
+PassosForaCamera = { 1, 1, 1 },
+DistBillboard = { 110, 110, 110, 110 },
+SombraVizinha = true,
+},
+Baixo = {
+Ativo = true,
+FatorDistancia = 1.45,
+PassosMinhaPlot = { 1, 1, 2 },
+PassosVizinha = { 1, 2, 3, 4 },
+PassosForaCamera = { 1, 2, 4 },
+DistBillboard = { 110, 80, 55, 35 },
+SombraVizinha = true,
+},
+["Médio"] = {
+Ativo = true,
+FatorDistancia = 1.0,
+PassosMinhaPlot = { 1, 2, 4 },
+PassosVizinha = { 1, 2, 4, 8 },
+PassosForaCamera = { 2, 4, 10 },
+DistBillboard = { 95, 65, 45, 25 },
+SombraVizinha = false,
+},
+["Máximo"] = {
+Ativo = true,
+FatorDistancia = 0.60,
+PassosMinhaPlot = { 1, 2, 6 },
+PassosVizinha = { 2, 4, 8, 15 },
+PassosForaCamera = { 4, 8, 15 },
+DistBillboard = { 75, 40, 20, 0 },
+SombraVizinha = false,
+},
+}
+
+--- Prepara a tabela de decisão de LOD por plot no início de cada quadro de renderização,
+--- respeitando a opção "LODPlots" escolhida pelo jogador nas Configurações.
+--- @param agora number -- Timestamp atual do frame
+--- @param partes {BasePart}? -- Lista reutilizável de partes para BulkMoveTo
+--- @param poses {CFrame}? -- Lista reutilizável de poses para BulkMoveTo
+function MineriosVisuais:_PrepararQuadroLOD(agora, partes, poses)
+if partes then table.clear(partes) end
+if poses then table.clear(poses) end
+
+self._quadroLOD = (self._quadroLOD or 0) + 1
+self._poupadosNoQuadro = 0
+self._terrenoAtivoNoQuadro = self._terrenoAtivoNoQuadro or {}
+self._passoPorTerreno = self._passoPorTerreno or {}
+self._nivelPorTerreno = self._nivelPorTerreno or {}
+self._fasePorTerreno = self._fasePorTerreno or {}
+self._jaPosicionadoLOD = self._jaPosicionadoLOD or {}
+self._terrenoDaParteLOD = self._terrenoDaParteLOD or {}
+
+local players = game:GetService("Players")
+local eu = players.LocalPlayer
+local meuUserId = eu and eu.UserId or 0
+
+local modoLOD = Config.Obter(eu, "LODPlots")
+if type(modoLOD) ~= "string" or not perfisIntensidadeLOD[modoLOD] then
+modoLOD = "Médio"
+end
+local perfil = perfisIntensidadeLOD[modoLOD]
+
+local executarVarreduraVisual = false
+if self._modoLODAtivo ~= modoLOD then
+self._modoLODAtivo = modoLOD
+executarVarreduraVisual = true
+elseif not self._proximaVarreduraVisualLOD or agora >= self._proximaVarreduraVisualLOD then
+self._proximaVarreduraVisualLOD = agora + 0.5
+executarVarreduraVisual = true
+end
+
+local pastaTerrenos = workspace:FindFirstChild("Terrenos")
+if not pastaTerrenos then
+self._plotsEmLOD = 0
+return
+end
+
+local camera = workspace.CurrentCamera
+local posCam = camera and camera.CFrame.Position or Vector3.zero
+local lookCam = camera and camera.CFrame.LookVector or Vector3.new(0, 0, -1)
+
+local plotsReduzidas = 0
+local raioPlot = 55
+local fatorDist = perfil.FatorDistancia
+
+for idx, terreno in pastaTerrenos:GetChildren() do
+if not terreno:IsA("Model") then continue end
+
+local fase = self._fasePorTerreno[terreno]
+if not fase then
+local num = tonumber(terreno.Name:match("%d+")) or idx
+fase = num
+self._fasePorTerreno[terreno] = fase
+end
+
+local donoId = terreno:GetAttribute("DonoUserId") or 0
+local ehMinhaPlot = (meuUserId ~= 0 and donoId == meuUserId)
+
+local nivel, passo
+if not perfil.Ativo then
+nivel, passo = 0, 1
+else
+local pivo = terreno:GetPivot().Position
+local vetor = pivo - posCam
+local dist = vetor.Magnitude
+local dot = if dist > 0.001 then (vetor / dist):Dot(lookCam) else 1
+
+local margemAngular = math.atan2(raioPlot, math.max(1, dist))
+local visivelCamera = (dist <= raioPlot + 20) or (dot >= -math.sin(margemAngular) + 0.05)
+
+if ehMinhaPlot then
+local pMinha = perfil.PassosMinhaPlot
+if dist <= 170 * fatorDist and visivelCamera then
+nivel, passo = 0, pMinha[1]
+elseif dist <= 260 * fatorDist then
+nivel, passo = 1, pMinha[2]
+else
+nivel, passo = 2, pMinha[3]
+end
+elseif not visivelCamera then
+local pFora = perfil.PassosForaCamera
+if dist <= 85 * fatorDist then
+nivel, passo = 1, pFora[1]
+elseif dist <= 200 * fatorDist then
+nivel, passo = 2, pFora[2]
+else
+nivel, passo = 3, pFora[3]
+end
+else
+local pViz = perfil.PassosVizinha
+if dist <= 95 * fatorDist then
+nivel, passo = 0, pViz[1]
+elseif dist <= 185 * fatorDist then
+nivel, passo = 1, pViz[2]
+elseif dist <= 300 * fatorDist then
+nivel, passo = 2, pViz[3]
+else
+nivel, passo = 3, pViz[4]
+end
+end
+end
+
+if passo > 1 then
+plotsReduzidas += 1
+end
+
+self._passoPorTerreno[terreno] = passo
+self._terrenoAtivoNoQuadro[terreno] = (passo == 1) or (((self._quadroLOD + fase) % passo) == 0)
+
+local nivelAnterior = self._nivelPorTerreno[terreno]
+if executarVarreduraVisual or nivelAnterior ~= nivel then
+self._nivelPorTerreno[terreno] = nivel
+self:_AplicarVisualTerrenoLOD(terreno, nivel, perfil, ehMinhaPlot)
+end
+end
+
+self._plotsEmLOD = plotsReduzidas
+end
+
+--- Ajusta propriedades visuais secundárias (CastShadow dos minérios e MaxDistance/Enabled de BillboardGuis)
+--- nas plots conforme seu nível de LOD e o perfil escolhido pelo jogador.
+--- @param terreno Model
+--- @param nivel number
+--- @param perfil table
+--- @param ehMinhaPlot boolean
+function MineriosVisuais:_AplicarVisualTerrenoLOD(terreno, nivel, perfil, ehMinhaPlot)
+local pastaMinerios = terreno:FindFirstChild("Minerios")
+if not pastaMinerios then return end
+
+local sombraAtiva = if ehMinhaPlot then (nivel == 0) else (nivel == 0 and perfil.SombraVizinha)
+local dists = perfil.DistBillboard
+local maxDistBillboard = dists[math.clamp(nivel + 1, 1, #dists)] or 25
+
+for _, min in pastaMinerios:GetChildren() do
+if min:IsA("BasePart") then
+if min.CastShadow ~= sombraAtiva then
+min.CastShadow = sombraAtiva
+end
+local bb = min:FindFirstChildWhichIsA("BillboardGui")
+if bb then
+if maxDistBillboard <= 0 then
+if bb.Enabled then bb.Enabled = false end
+else
+if not bb.Enabled then bb.Enabled = true end
+if bb.MaxDistance ~= maxDistBillboard then
+bb.MaxDistance = maxDistBillboard
+end
+end
+end
+end
+end
+end
+
+--- Avalia em O(1) se um item (minério ou grupo de terreno) deve ter sua trajetória calculada
+--- e movida via BulkMoveTo no quadro atual.
+--- @param chave any
+--- @param valor any
+--- @return boolean
+function MineriosVisuais:_DeveAtualizarLOD(chave, valor)
+local instancia = if typeof(chave) == "Instance" then chave elseif typeof(valor) == "Instance" then valor else nil
+local tabela = if type(valor) == "table" then valor elseif type(chave) == "table" then chave else nil
+
+if not instancia and tabela then
+instancia = tabela.Parte or tabela.Minerio or tabela.Instancia
+if not instancia and type(tabela.Minerio) == "table" and type(tabela.Minerio.ObterParte) == "function" then
+instancia = tabela.Minerio:ObterParte()
+end
+end
+
+if not instancia then
+return true
+end
+
+if instancia:IsA("Model") then
+if not instancia.Parent then return true end
+local ativo = self._terrenoAtivoNoQuadro and self._terrenoAtivoNoQuadro[instancia]
+if ativo == false then
+self._poupadosNoQuadro = (self._poupadosNoQuadro or 0) + 1
+return false
+end
+return true
+end
+
+if not instancia.Parent then
+if self._jaPosicionadoLOD then self._jaPosicionadoLOD[instancia] = nil end
+if self._terrenoDaParteLOD then self._terrenoDaParteLOD[instancia] = nil end
+return true
+end
+
+if self._jaPosicionadoLOD and not self._jaPosicionadoLOD[instancia] then
+self._jaPosicionadoLOD[instancia] = true
+return true
+end
+
+local terreno = self._terrenoDaParteLOD and self._terrenoDaParteLOD[instancia]
+if not terreno or not terreno.Parent then
+terreno = (tabela and tabela.Terreno) or (instancia.Parent and instancia.Parent.Parent)
+if terreno and self._terrenoDaParteLOD then
+self._terrenoDaParteLOD[instancia] = terreno
+end
+end
+
+if terreno and self._terrenoAtivoNoQuadro and self._terrenoAtivoNoQuadro[terreno] == false then
+self._poupadosNoQuadro = (self._poupadosNoQuadro or 0) + 1
+return false
+end
+
+return true
 end
 
 return MineriosVisuais

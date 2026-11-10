@@ -331,7 +331,7 @@ Peso = billboardsAtivos * 2.5 + qtdBillboards * 0.2,
 },
 {
 Nome = "Minérios Renderizados no Cliente",
-Detalhe = string.format("%d movidos/frame de %d no mundo", metricasExtras.MineriosMovidosFrame or 0, totalMinerios),
+Detalhe = string.format("%d movidos/frame • %d poupados por LOD (de %d no mundo)", metricasExtras.MineriosMovidosFrame or 0, metricasExtras.MineriosPoupadosLOD or 0, totalMinerios),
 Peso = (metricasExtras.MineriosMovidosFrame or 0) * 3 + totalMinerios * 0.5,
 },
 {
