@@ -18,6 +18,8 @@ local function criarCarregador(ambiente, servicos, substituicoes)
 		setmetatable(objeto, { __index = function(_, nome)
 			if nome == "WaitForChild" then
 				return function(_, filho) return no(caminho .. "/" .. filho) end
+			elseif nome == "FindFirstChild" then
+				return function(_, filho) return nos[caminho .. "/" .. filho] end
 			elseif nome == "Parent" then
 				return no(caminho:match("^(.*)/[^/]+$"))
 			end
@@ -28,6 +30,8 @@ local function criarCarregador(ambiente, servicos, substituicoes)
 	-- Os testes recebem somente os servicos necessarios. HttpService usa JSON do runtime local e as raizes de
 	-- scripts apontam para arquivos da pasta do projeto.
 	local raizes = {
+		Players = { GetPlayerByUserId = function() return nil end },
+		Stats = {},
 		UserInputService = {TouchEnabled=false,KeyboardEnabled=true},
 		TextService = { GetTextSize = function(_, texto, _, _, limite)
 			return { X = limite.X, Y = math.max(15, math.ceil(#texto / 40) * 15) }
@@ -41,6 +45,17 @@ local function criarCarregador(ambiente, servicos, substituicoes)
 		ServerScriptService = no("src/server"),
 		ReplicatedStorage = { Shared = no("src/shared"), Packages = no("Packages") },
 	}
+	local replicado = servicos.ReplicatedStorage or raizes.ReplicatedStorage
+	if type(replicado) == "table" and not replicado.FindFirstChild then
+		replicado.FindFirstChild = function(self, nome) return self[nome] end
+	end
+	local run = servicos.RunService or {}
+	local servidor = not run.RenderStepped
+	local sinal = { Connect = function() return { Disconnect = function() end } end }
+	run.IsServer = run.IsServer or function() return servidor end
+	run.Heartbeat = run.Heartbeat or sinal
+	run.RenderStepped = run.RenderStepped or sinal
+	raizes.RunService = run
 	local jogo = setmetatable({ GetService = function(_, nome)
 		return assert(servicos[nome] or raizes[nome], "Servico nao simulado: " .. nome)
 	end },{__index=ambiente.game})

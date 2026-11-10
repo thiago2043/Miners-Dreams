@@ -304,7 +304,7 @@ do
 	corpo._emContato=false; sim._minerios[1].Movimento=nil
 	sim:Avancar(1/120)
 	local previsao=assert(movimento.Decodificar(minerio:ObterParte():GetAttribute("MovimentoMinerio")))
-	assert(previsao.Aceleracao==Vector3.zero and previsao.Duracao==.25)
+	assert(previsao.Aceleracao==Vector3.zero and previsao.Duracao>=continua)
 	local adiante=movimento.Avaliar(previsao,previsao.Inicio+.1)
 	assert((adiante.Position-corpo.CFrame.Position).Magnitude>.5,"A visualizacao deve continuar pela rampa.")
 	sim._Candidatos=busca

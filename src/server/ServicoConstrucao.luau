@@ -335,17 +335,11 @@ function ServicoConstrucao:Restaurar(jogador)
 
 		if destino then
 			self:_CriarMaquina(jogador, terreno, maquinas, destino, registro, dadosModelo)
-		elseif dadosModelo and dados:RegistrarRecolhimento(registro) then
-			warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao cabe no terreno e voltou ao inventario.")
+		elseif dados:RegistrarRecolhimento(registro) then
+			warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao foi restaurada e voltou ao inventario.")
 		else
-			-- [LPOO] Delega a recuperação da máquina órfã ao método público encapsulado em DadosJogador
-local recuperada = dados and type(dados.RecuperarMaquinaOrfa) == "function" and dados:RecuperarMaquinaOrfa(indice, registro)
-if recuperada then
-warn("A maquina " .. tostring(indice) .. " de " .. jogador.Name .. " nao cabe no terreno e voltou ao inventario.")
-else
-warn("Nao foi possivel restaurar a maquina " .. tostring(indice)
-.. " de " .. jogador.Name .. "; o registro foi preservado.")
-end
+			warn("Nao foi possivel restaurar a maquina " .. tostring(indice)
+				.. " de " .. jogador.Name .. "; o registro foi preservado.")
 		end
 		if dadosModelo then liberarModelo(dadosModelo) end
 	end

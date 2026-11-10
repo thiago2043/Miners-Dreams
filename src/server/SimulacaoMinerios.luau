@@ -470,9 +470,6 @@ local passo = SimulacaoMinerios.Passo
 local executados = 0
 local quantidade = math.min(SimulacaoMinerios.MaximoPassos, math.floor((self._acumulado+.000000001)/passo))
 if quantidade == 0 then return end
-if self._acumulado > SimulacaoMinerios.MaximoPassos * passo then
-self._acumulado = SimulacaoMinerios.MaximoPassos * passo
-end
 self._chamada += 1
 local cicloRegioes = math.floor(self._tempo * 4)
 if self._versaoRegioes ~= self._versao or self._cicloRegioes ~= cicloRegioes then
@@ -587,7 +584,7 @@ end
 end
 if not self._relogioAgora or agora-self._relogioAgora>=.1 then
 local taxa=if self._relogioAgora and agora>self._relogioAgora then (inicio-self._relogioTempo)/(agora-self._relogioAgora) else 1
-self._relogio=HttpService:JSONEncode({agora,inicio,math.clamp(taxa,0.35,1.05)})
+self._relogio=HttpService:JSONEncode({agora,inicio,math.clamp(taxa,0,1.05)})
 self._relogioAgora,self._relogioTempo=agora,inicio
 end
 for terreno in terrenos do

@@ -12,6 +12,8 @@ local function sinal()
 	return self
 end
 local quadro=sinal()
+local dispararQuadro=quadro.Fire
+function quadro:Fire() dispararQuadro(self,1/60) end
 local mundo={DescendantAdded=sinal(),DescendantRemoving=sinal(),partes={},agora=10,lotes=0}
 local camera={CFrame=CF.new(0,0,100),FieldOfView=70,ViewportSize=r.Vector2.new(1280,720)}
 function camera:GetRenderCFrame() return self.CFrame end
@@ -49,6 +51,7 @@ local carregar=require("./suporte/carregador")({workspace=mundo,CFrame=CF,Vector
 	end}})
 local Movimento=carregar("src/shared/MovimentoMinerio")
 local Visuais=carregar("src/client/MineriosVisuais")
+local ouvintesDoMonitor=quadro:Contar()
 assert(not Movimento.Decodificar(nil) and not Movimento.Decodificar("x") and not Movimento.Decodificar("[]"))
 local a=parte(); table.insert(mundo.partes,a)
 local origem=CF.new(1,2,3)*CF.Angles(.1,.2,.3)
@@ -77,7 +80,7 @@ mundo.DescendantAdded:Fire(b); quadro:Fire()
 assert(b.eventos:Contar()==3 and b.CFrame.Position.X==50,"Entrada tardia deve preservar a pose dinamica mais recente.")
 mundo.DescendantRemoving:Fire(a); assert(a.eventos:Contar()==0 and not visual._observados[a])
 visual:Destruir()
-assert(b.eventos:Contar()==0 and quadro:Contar()==0 and mundo.DescendantAdded:Contar()==0 and mundo.DescendantRemoving:Contar()==0)
+assert(b.eventos:Contar()==0 and quadro:Contar()==ouvintesDoMonitor and mundo.DescendantAdded:Contar()==0 and mundo.DescendantRemoving:Contar()==0)
 print("PASS: movimento visual sincronizado, troca de direcao, parada, entrada/saida e limpeza das conexoes.")
 
 table.clear(mundo.partes)
@@ -135,7 +138,7 @@ quadro:Fire(); assert(#visual._partes==1,"Borda vertical tambem deve considerar 
 camera.ViewportSize=r.Vector2.new(100,50); camera.FieldOfView=60
 quadro:Fire(); assert(#visual._partes==0)
 p.Size=V.one*20; p.tamanho:Fire()
-quadro:Fire(); assert(#visual._partes==1,"Redimensionar o minerio deve invalidar os limites.")
+quadro:Fire(); assert(p.LocalTransparencyModifier==.35,"Redimensionar o minerio deve invalidar os limites.")
 p.Size=V.one*.75; p.tamanho:Fire()
 p:SetAttribute("MovimentoMinerio",Movimento.Codificar(CF.new(0,0,0),V.new(.01,0,0),12))
 quadro:Fire(); assert(#visual._partes==1,"Camera dentro do volume nao pode descartar o grupo.")
@@ -151,7 +154,8 @@ mundo.agora=21; quadro:Fire(); assert(p.CFrame.Position==V.new(1,0,10))
 mundo.agora=11; quadro:Fire(); assert(p.CFrame.Position==V.new(0,0,10),"Recuo do relogio deve reconstruir os limites.")
 mundo.CurrentCamera=nil; quadro:Fire(); assert(#visual._partes==0)
 mundo.CurrentCamera=camera; camera.ViewportSize=r.Vector2.zero; quadro:Fire(); assert(#visual._partes==0)
-camera.ViewportSize=r.Vector2.new(50,100); quadro:Fire(); assert(#visual._partes==1)
+camera.ViewportSize=r.Vector2.new(50,100); quadro:Fire()
+assert(p.LocalTransparencyModifier==.35,"Recuperar o viewport mantém o minério visível sem reenviar a mesma pose.")
 camera.CFrame=CF.identity; quadro:Fire(); assert(p.LocalTransparencyModifier==1)
 p:SetAttribute("MovimentoMinerio",Movimento.Codificar(CF.new(0,0,12),V.zero,12))
 assert(p.CFrame.Position==V.new(0,0,12) and p.LocalTransparencyModifier==.35)
@@ -212,6 +216,50 @@ limite:Destruir()
 for _,e in sinaisJogador do assert(e:Contar()==0) end
 print('LIMITE_VISUAL_OK: limite por plot, zero, restauracao, reposicao de vaga e valor dos minerios preservado.')
 
+do
+	local plot = r.Instance.new("Model")
+	local piso = r.Instance.new("Part")
+	piso.CFrame, piso.Parent = CF.new(0,0,-400), plot
+	plot:SetAttribute("DonoUserId", 99)
+	plot:SetAttribute("RelogioMinerios", "[10,10,1]")
+	local comSombra, semSombra = parte(plot), parte(plot)
+	comSombra.CastShadow, semSombra.CastShadow = true, false
+	comSombra:SetAttribute("MovimentoMinerio",Movimento.Codificar(CF.new(0,0,-400),V.xAxis,10))
+	mundo.partes = {comSombra, semSombra}
+	camera.CFrame = CF.identity
+	jogador:SetAttribute("MineriosOutrasPlots",true)
+	jogador:SetAttribute("LimiteMineriosVisiveis",100)
+	jogador:SetAttribute("MostrarValoresMinerios","Oculto")
+	jogador:SetAttribute("LODPlots","Máximo")
+	local lod = Visuais.new(jogador)
+	mundo.agora=10.1
+	quadro:Fire()
+	local etiqueta = lod._etiquetas[comSombra]
+	assert(not etiqueta.Enabled and not comSombra.CastShadow)
+	assert(lod._terrenoAtivoNoQuadro[plot]==false and lod._grupos[plot].EstadoRelogio.Exibido==10.1,
+		"O relógio precisa avançar mesmo nos quadros em que o LOD pula o movimento.")
+	jogador:SetAttribute("MostrarValoresMinerios","Perto")
+	jogador:SetAttribute("DistanciaValores",15)
+	quadro:Fire()
+	assert(not etiqueta.Enabled, "O perfil máximo suprime etiquetas da plot distante.")
+	camera.CFrame = CF.new(0,0,-390)
+	quadro:Fire()
+	assert(etiqueta.Enabled and etiqueta.MaxDistance==15, "O LOD não pode aumentar a distância escolhida.")
+	jogador:SetAttribute("MostrarValoresMinerios","Oculto")
+	jogador:SetAttribute("LODPlots","Desativado")
+	quadro:Fire()
+	assert(not etiqueta.Enabled and comSombra.CastShadow and not semSombra.CastShadow,
+		"Desativar LOD restaura somente as sombras que ele suprimiu, sem reativar etiquetas ocultas.")
+	jogador:SetAttribute("MostrarValoresMinerios","Perto")
+	assert(etiqueta.Enabled and etiqueta.MaxDistance==15)
+	jogador:SetAttribute("MineriosOutrasPlots",false)
+	quadro:Fire()
+	assert(not etiqueta.Enabled and comSombra.LocalTransparencyModifier==1)
+	lod:Destruir()
+	plot:Destroy()
+end
+print("LOD_OK: preferências, distância, visibilidade de vizinhos e sombras preservadas.")
+
 table.clear(mundo.partes)
 mundo.agora=10
 camera.CFrame=CF.new(0,0,40); camera.FieldOfView=90; camera.ViewportSize=r.Vector2.new(100,100)
@@ -238,7 +286,7 @@ dinamico:SetAttribute('MovimentoMinerio',Movimento.Codificar(nova,velocidade,mun
 quadro:Fire()
 assert((dinamico.CFrame.Position-antes.Position).Magnitude<.00001,'Nao pode saltar ao receber uma correcao nem perder o ultimo quadro em atualizacoes agrupadas.')
 local inicio=mundo.agora
-for i=1,7 do mundo.agora=inicio+i/60; quadro:Fire() end
+for i=1,8 do mundo.agora=inicio+i/60; quadro:Fire() end
 local previsto=Movimento.Avaliar(visual._movimentos[dinamico],mundo.agora)
 assert((dinamico.CFrame.Position-previsto.Position).Magnitude<.00001,'A correcao visual precisa convergir ao estado autorizado.')
 local limitado=Movimento.Decodificar(queda)

@@ -5,7 +5,9 @@ local R={ModelosMaquinas=modelos}; function R:WaitForChild(id) return assert(sel
 local players={}
 local remoto
 local carregar,no=require("./suporte/carregador")({workspace=mundo,Instance=I,Vector3=V,CFrame=CF,Enum=r.Enum,Color3=r.Color3,typeof=r.typeof},{Players=players,ReplicatedStorage=R},{
-	["Packages/Networker"]={server={new=function(nome,servico,permitidos) assert(nome=="Upgrades" and #permitidos==2); remoto=servico end}},
+	["Packages/Networker"]={server={new=function(nome,servico,permitidos)
+		if nome=="Upgrades" then assert(#permitidos==2); remoto=servico end
+	end}},
 })
 R.Shared=no("src/shared")
 R.Packages=no("Packages")
@@ -34,6 +36,21 @@ modelo.Piso.Size=V.new(36,1,36); modelo.Piso.CFrame=cfInicial
 assert(Servico.new():Restaurar(jogador))
 assert(modelo.Piso.Size.X==84 and #modelo.Maquinas:GetChildren()==1)
 assert((modelo.Maquinas.MineradoraBasica:GetPivot().Position-pose.Position).Magnitude<.001)
+do
+	local variante = { MaquinaId="Esteira1x1", Posicao={0,0,0}, Rotacao={},
+		Modificacoes={Configuracao={Componentes={{Velocidade=13}}}} }
+	local invalida = { MaquinaId="Esteira2x2", Posicao={0,0,0}, Rotacao={}, Modificacoes="invalida" }
+	local estoqueInvalida = perfil.Data.Inventory.Esteira2x2
+	table.insert(perfil.Data.MaquinasColocadas,variante)
+	table.insert(perfil.Data.MaquinasColocadas,invalida)
+	modelo.Maquinas:ClearAllChildren()
+	local restauracao = Servico.new()
+	assert(restauracao:Restaurar(jogador) and restauracao:Restaurar(jogador))
+	assert(perfil.Data.Inventory.Esteira1x1==1 and #perfil.Data.MaquinasColocadas==2)
+	assert(perfil.Data.InventarioPersonalizado.Esteira1x1[1].Configuracao.Componentes[1].Velocidade==13)
+	assert(perfil.Data.MaquinasColocadas[2]==invalida and perfil.Data.Inventory.Esteira2x2==estoqueInvalida)
+	print("RECUPERACAO_OK: variante preservada, registro ilegível intacto e estoque sem duplicação.")
+end
 carregar("src/server/Upgrades.server")
 perfil.Data.Dinheiro="1000000000000"
 assert(remoto:Comprar(jogador,"Extracao",0,1) and perfil.Data.Dinheiro=="0")

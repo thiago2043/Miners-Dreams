@@ -657,19 +657,30 @@ end
 -- remove a construcao e aumenta o estoque; uma recusa nao autoriza destruir o modelo no mundo.
 function DadosJogador:RegistrarRecolhimento(registro)
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
+	if type(registro) ~= "table" or not CatalogoMaquinas[registro.MaquinaId] then
+		return false, "Registro de maquina invalido."
+	end
 	local registros = self._perfil.Data.MaquinasColocadas
 	local indice = type(registros) == "table" and table.find(registros, registro)
 	local quantidade = self:ObterQuantidade(registro.MaquinaId)
 	if not indice or not quantidade or quantidade >= 2 ^ 53 - 1 then
 		return false, "Nao foi possivel atualizar seu inventario."
 	end
-	if registro.Modificacoes and next(registro.Modificacoes) then
-		local variantes = table.clone(self:_ObterVariantes(registro.MaquinaId))
-		-- Ao recolher, conserva as diferencas numa variante. A quantidade total sobe uma vez, incluindo essa
-		-- unidade personalizada, sem acrescentar outra unidade comum.
-		table.insert(variantes, PersonalizacaoMaquina.new(registro.Modificacoes):ObterDados())
-		self:_GravarVariantes(registro.MaquinaId, variantes)
-	end
+	local ok, variantes = pcall(function()
+		local existentes = self:_ObterVariantes(registro.MaquinaId)
+		local personalizacao = PersonalizacaoMaquina.new(registro.Modificacoes)
+		local modificacoes = personalizacao:ObterDados()
+		if not next(modificacoes) then return nil end
+		personalizacao:Codificar()
+		if quantidade == #existentes and existentes[1] then
+			PersonalizacaoMaquina.new(existentes[1]):Codificar()
+		end
+		local copia = table.clone(existentes)
+		table.insert(copia, modificacoes)
+		return copia
+	end)
+	if not ok then return false, "Personalizacao ou inventario invalido." end
+	if variantes then self:_GravarVariantes(registro.MaquinaId, variantes) end
 	table.remove(registros, indice)
 	self:_DefinirQuantidade(registro.MaquinaId, quantidade + 1)
 	self:PublicarResumoPlot()
@@ -787,48 +798,6 @@ end
 --- @return table?
 function DadosJogador:ObterDadosPerfil()
 return self._perfil and self._perfil.Data or nil
-end
-
---- Recupera de forma encapsulada uma máquina salva na plot que não pôde ser restaurada fisicamente,
---- devolvendo 1 unidade ao estoque do inventário e removendo o registro órfão de MaquinasColocadas.
---- @param indice any -- Índice ou identificador da máquina colocada
---- @param registro table? -- Dados serializados da máquina
---- @return boolean, string? -- Sucesso da operação e ID da máquina no catálogo
-function DadosJogador:RecuperarMaquinaOrfa(indice, registro)
-if not self:EstaAtivo() or not self._perfil or type(self._perfil.Data) ~= "table" then
-return false, nil
-end
-local d = self._perfil.Data
-local maqId = type(registro) == "table" and (registro.MaquinaId or registro.Id or registro.Tipo) or nil
-local inv = d.Inventory or d.Inventario
-if type(maqId) ~= "string" or type(inv) ~= "table" then
-return false, nil
-end
-if type(inv[maqId]) == "number" then
-inv[maqId] += 1
-elseif type(inv[maqId]) == "table" and type(inv[maqId].Quantidade) == "number" then
-inv[maqId].Quantidade += 1
-else
-inv[maqId] = 1
-end
-if type(d.MaquinasColocadas) == "table" then
-if type(indice) == "number" and d.MaquinasColocadas[indice] == registro then
-table.remove(d.MaquinasColocadas, indice)
-else
-for k, v in d.MaquinasColocadas do
-if v == registro then
-if type(k) == "number" then
-table.remove(d.MaquinasColocadas, k)
-else
-d.MaquinasColocadas[k] = nil
-end
-break
-end
-end
-end
-end
-self:Sincronizar()
-return true, maqId
 end
 
 return DadosJogador

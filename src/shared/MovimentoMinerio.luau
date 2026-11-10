@@ -15,19 +15,12 @@ function MovimentoMinerio.TempoVisual(estado, dados, agora)
   if not dados[3] then return dados[2] + math.max(0, agora - dados[1]) end
   if estado.Amostra and dados[1] < estado.Amostra[1] then dados = estado.Amostra end
   estado.Amostra = dados
-  local taxa = math.clamp(dados[3], 0.25, 1.05)
-  local decorrido = math.clamp(agora - dados[1], 0, 0.5)
-  local alvo = dados[2] + decorrido * taxa
-  local exibido = estado.Exibido
-  if not exibido or math.abs(alvo - exibido) > 1.5 then
-    exibido = alvo
-  else
-    local dt = math.clamp(agora - (estado.Agora or agora), 0, 0.1)
-    local erro = alvo - exibido
-    local velocidade = math.clamp(taxa + erro * 3.5, taxa * 0.75, taxa * 1.2)
-    exibido += dt * velocidade
-    if math.abs(alvo - exibido) < 0.002 then exibido = alvo end
-  end
+  local taxa = math.clamp(dados[3], 0, 1.05)
+  local alvo = dados[2] + math.min(0.15, math.max(0, agora - dados[1]) * taxa)
+  local exibido = estado.Exibido or alvo
+  local erro = math.max(0, alvo - exibido)
+  local dt = math.clamp(agora - (estado.Agora or agora), 0, 0.1)
+  exibido += math.min(erro, dt * math.min(2.1, taxa + erro * 8))
   estado.Exibido, estado.Agora = exibido, agora
   return exibido
 end

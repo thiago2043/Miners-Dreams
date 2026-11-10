@@ -9,7 +9,7 @@ local function obterSinal(objeto, nome)
 	return sinais[objeto][nome]
 end
 -- O Lune nao emite eventos de arvore/propriedades; testes de invalidacao os disparam explicitamente.
-for _, nome in { "ChildAdded", "ChildRemoved", "DescendantAdded" } do
+for _, nome in { "ChildAdded", "ChildRemoved", "DescendantAdded", "DescendantRemoving" } do
 	roblox.implementProperty("Instance", nome, function(objeto) return obterSinal(objeto, nome) end)
 end
 roblox.implementMethod("Instance", "GetPropertyChangedSignal", function(objeto, nome) return obterSinal(objeto,"Propriedade:"..nome) end)

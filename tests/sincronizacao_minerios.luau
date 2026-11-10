@@ -25,6 +25,12 @@ assert(congelado<=estado.Amostra[2]+.15+.000001)
 local retomado=Movimento.TempoVisual(estado,{20,12.2,1},20+1/60)
 assert(retomado>=congelado and retomado-congelado<=2/60+.000001,"Retomada nao deve saltar para recuperar todo o atraso.")
 assert(Movimento.TempoVisual({}, {0,0,4},10)<=.15,"Recuperacao acelerada tambem precisa limitar a previsao.")
+local semRede = {}
+for quadro=0,240 do
+	assert(Movimento.TempoVisual(semRede, {0,0,1}, quadro/60)<=.15,
+		"O relogio deve parar mesmo quando continua recebendo quadros sem uma amostra nova.")
+end
+assert(Movimento.TempoVisual({}, {10,25,0}, 12)==25,"Uma amostra parada nao deve fingir que a fisica avancou.")
 print("RELOGIO_CARGA_OK: ritmo lento, amostras atrasadas/antigas, interrupcao e retomada sem recuar nem prever indefinidamente.")
 
 local solidos={}
@@ -62,8 +68,14 @@ local function separados(ajustar)
 	local lista=sim:_Candidatos(reg,1/120)
 	assert(#lista==2,"Geometrias diferentes nao podem ser unidas.")
 end
-separados(function() b.CFrame=CF.new(0,-.5,6.1) end)
-separados(function() b.CFrame=CF.new(0,-.4,6) end)
+separados(function()
+	b.CFrame=CF.new(0,-.5,6.1)
+	sim:RegistrarTransportador(componente,b,V.zAxis*6)
+end)
+separados(function()
+	b.CFrame=CF.new(0,-.4,6)
+	sim:RegistrarTransportador(componente,b,V.zAxis*6)
+end)
 separados(function() b.CFrame=CF.new(0,-.5,6); sim:RegistrarTransportador(componente,b,-V.zAxis*6) end)
 separados(function() sim:RegistrarTransportador(componente,b,V.zAxis*6,nil,{Centro=V.zero,Eixo=V.xAxis,Velocidade=6}) end)
 for _,rotacao in {CF.Angles(0,math.pi/2,0),CF.Angles(0,math.pi,0),CF.Angles(math.pi/4,0,0)} do
