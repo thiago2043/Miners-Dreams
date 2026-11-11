@@ -21,7 +21,7 @@ function Confirmacao.new(pai,jogador,nav)
 end
 function Confirmacao:Pedir(tipo,quantidade,callback,mensagem)
 	local modo=Config.Obter(self._jogador,"ConfirmarVenda")
-	local pedir=if tipo=="Administracao" or tipo=="LimparPlot" then true elseif tipo=="Renascimento" then Config.Obter(self._jogador,"ConfirmarRenascimento") else modo=="Sempre" or (modo=="Várias peças" and quantidade>1)
+	local pedir=if tipo=="Administracao" or tipo=="LimparPlot" or tipo=="Craft" then true elseif tipo=="Renascimento" then Config.Obter(self._jogador,"ConfirmarRenascimento") else modo=="Sempre" or (modo=="Várias peças" and quantidade>1)
 	if not pedir then return callback() end
 	if self._callback then return false end
 self._callback=callback; self._fundo.Visible=true

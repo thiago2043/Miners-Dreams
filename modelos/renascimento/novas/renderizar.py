@@ -15,9 +15,8 @@ renderizador = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(renderizador)
 
 
-def folha(nome, titulo, itens, verso=False):
+def folha(nome, titulo, itens, verso=False, colunas=4):
     w, h, rodape = 390, 302, 58
-    colunas = 4
     vistas = itens * 2 if verso else itens
     altura = 56 + (h + rodape) * ((len(vistas) + colunas - 1) // colunas)
     imagem = Image.new("RGB", (w * colunas, altura), "#17212e")

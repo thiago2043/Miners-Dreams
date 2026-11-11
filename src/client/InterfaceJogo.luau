@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local Networker = require(ReplicatedStorage.Packages.Networker)
 local PainelPecas = require(script.Parent.PainelPecas)
 local PainelBlueprints = require(script.Parent.PainelBlueprints)
+local PainelCraft = require(script.Parent.PainelCraft)
 local Configuracoes=require(ReplicatedStorage.Shared.Configuracoes)
 local MonitorRecursos=require(ReplicatedStorage.Shared.MonitorRecursos)
 local PainelConfiguracoes = require(script.Parent.PainelConfiguracoes)
@@ -52,6 +53,8 @@ self._interface = Instance.new("ScreenGui")
 	end
 	self._painelBlueprints = PainelBlueprints.new(self._interface, construcao,jogador)
 	self._paineisProgressao = {}
+	self._paineisProgressao.Craft = PainelCraft.new(self._interface, jogador, construcao.Navegacao,
+		Networker.client.new("Craft", {}), self._confirmacao)
 	self._paineisProgressao.Tutorial = PainelTutorial.new(self._interface, jogador, construcao.Navegacao)
 	self._paineisProgressao.Prestigio = PainelPrestigio.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Prestigio", {}))
 	self._paineisProgressao.Upgrades=PainelUpgrades.new(self._interface,jogador,construcao.Navegacao,Networker.client.new("Upgrades",{}))
@@ -169,10 +172,10 @@ function InterfaceJogo:_CriarMenuAbas()
 	-- A ordem desta lista e a ordem visual. Cada objeto Botao conserva o callback da sua propria aba.
 	for ordem, item in {
 		{ "Inventario", "Inventário" }, { "Loja", "Loja" }, { "Upgrades", "Upgrades" },
-		{ "Prestigio", "Prestígio" }, { "Blueprints", "Blueprints" }, { "Tutorial", "Tutorial" }, { "Classificacao", "Classificação" }, { "Configuracoes", "Configurações" }, {"Administracao","Administração"},
+		{ "Prestigio", "Prestígio" }, { "Craft", "Craft" }, { "Tutorial", "Tutorial" }, { "Classificacao", "Classificação" }, { "Configuracoes", "Configurações" }, { "Blueprints", "Blueprints" }, {"Administracao","Administração"},
 	} do
 		local aba = item[1]
-		local direita = aba == "Tutorial" or aba == "Classificacao" or aba == "Configuracoes" or aba=="Administracao"
+		local direita = aba == "Tutorial" or aba == "Classificacao" or aba == "Configuracoes" or aba == "Blueprints" or aba=="Administracao"
 		local botao = Botao.new(if direita then self._menuDireito else self._menuAbas, aba, function()
 			-- Reutiliza os mesmos metodos dos atalhos para clique e teclado respeitarem os mesmos estados e Q.
 			if aba == "Inventario" or aba == "Loja" then
@@ -193,7 +196,7 @@ function InterfaceJogo:_CriarMenuAbas()
 		local function mostrarDica()
 			self._dicaAba.Text, self._dicaAba.Visible = item[2], true
 			self._dicaAba.AnchorPoint = Vector2.new(if direita then 1 else 0, .5)
-			local quantidadeDireita = if self._jogador:GetAttribute("Administrador") == true then 4 else 3
+			local quantidadeDireita = if self._jogador:GetAttribute("Administrador") == true then 5 else 4
 			self._dicaAba.Position = if direita then UDim2.new(1, -larguraMenu - 20, .5, (ordem - 5 - (quantidadeDireita + 1) / 2) * (larguraMenu + 10))
 				else UDim2.new(0, larguraMenu + 20, .5, (ordem - 3) * (larguraMenu + 10))
 		end

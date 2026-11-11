@@ -34,7 +34,7 @@ function FichaMaquina.Descrever(definicao,jogador)
 	end
 	local transportes,vendedor={},false
 	for _,c in definicao.Componentes or {} do if c.Tipo=="Vendedor" then vendedor=true end end
-	if definicao.Renascimento then table.insert(linhas, "Renascimento • Permanente") end
+	if definicao.Obtencao then table.insert(linhas, definicao.Obtencao .. " • Permanente") end
 	-- A ficha percorre capacidades, nao nomes de modelos. Cada ramo traduz os parametros desse comportamento em
 	-- texto, incluindo unidades, para servir tambem a outras pecas com o mesmo Tipo.
 	for _, componente in definicao.Componentes or {} do

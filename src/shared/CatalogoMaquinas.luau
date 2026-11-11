@@ -182,8 +182,27 @@ for _, premio in require(script.Parent.RecompensasRenascimento) do
 		efeito.MultiplicadoresFaixas = premio.Faixas
 	end
 	item.Nome, item.Renascimento = premio.Nome, true
+	item.Obtencao = "Renascimento"
 	item.LoteRenascimento = premio.Lote
 	item.Raridade = "Renascimento"
 	catalogo[premio.Id] = item
+end
+
+for _, peca in require(script.Parent.ExpansaoMaquinas) do
+	local item
+	if peca.Tipo == "Soltador" then
+		item = mineradora("", peca.Preco, peca.Blocos, peca.Intervalo, peca.Valor)
+	elseif peca.Tipo == "Vendedor" then
+		item = fornalha("", peca.Preco, peca.Blocos, peca.Multiplicador)
+	else
+		item = modificador(peca.CodigoModificador, peca.Nome, peca.Preco, peca.Blocos, #peca.Faixas,
+			peca.Multiplicador, peca.Bonus or "0", peca.LimiteUsos, "0", peca.ValorMaximo, true)
+		item.Componentes[2].MultiplicadoresFaixas = peca.Faixas
+	end
+	item.Nome, item.CodigoVisual, item.Raridade = peca.Nome, peca.Codigo, "Mítico"
+	if peca.Receita then
+		item.Receita, item.Obtencao = peca.Receita, "Craft"
+	end
+	catalogo[peca.Id] = item
 end
 return catalogo

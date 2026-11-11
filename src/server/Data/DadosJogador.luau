@@ -510,6 +510,7 @@ function DadosJogador:ComprarMaquina(maquinaId)
 	local item = CatalogoMaquinas[maquinaId]
 	if not item then return false, "Maquina nao encontrada na loja." end
 	if item.Renascimento then return false, "Esta peca e obtida no renascimento." end
+	if item.Receita then return false, "Esta peça é obtida por craft." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	if not InteiroGrande.eValido(self:ObterSaldo()) then return false, "Saldo invalido." end
 	if type(self._perfil.Data.Inventory) ~= "table" then return false, "Inventario invalido." end
@@ -538,6 +539,7 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	local item = CatalogoMaquinas[maquinaId]
 	if not item then return false, "Maquina nao encontrada na loja." end
 	if item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
+	if item.Receita then return false, "Peças de craft são permanentes." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	local quantidade = self:ObterQuantidade(maquinaId)
 	if not quantidade or quantidade == 0 then return false, "Voce nao possui esta peca no inventario." end
@@ -567,6 +569,80 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	self:_DefinirQuantidade(maquinaId, quantidade - 1)
 	self:_DefinirSaldo(novoSaldo)
 	return true, "Peca vendida por $" .. AbreviarInteiro(item.Preco) .. "."
+end
+
+function DadosJogador:FabricarMaquina(maquinaId, ciclo, estoqueEsperado)
+	local item = type(maquinaId) == "string" and #maquinaId <= 64 and CatalogoMaquinas[maquinaId]
+	local receita = item and item.Receita
+	if not receita then return false, "Receita inválida." end
+	if not self:EstaAtivo() then return false, "Aguarde seus dados." end
+	local dados = self._perfil.Data
+	if ciclo ~= (dados.Reencarnacoes or 0) then return false, "O renascimento mudou. Confira a receita." end
+	if type(estoqueEsperado) ~= "table" or #estoqueEsperado ~= #receita then return false, "Confira os ingredientes." end
+	local premios = dados.RecompensasReencarnacao or {}
+	if type(dados.Inventory) ~= "table" or type(premios) ~= "table"
+		or (dados.InventarioPersonalizado ~= nil and type(dados.InventarioPersonalizado) ~= "table")
+	then return false, "Inventário inválido." end
+
+	-- Prepara todas as baixas e a próxima variante antes de modificar o perfil.
+	local ok, mudancas, erro = pcall(function()
+		local plano, naPlot = {}, {}
+		for _, registro in dados.MaquinasColocadas or {} do
+			local id = registro.MaquinaId
+			naPlot[id] = (naPlot[id] or 0) + 1
+		end
+		local function adicionar(id, quantidade, variantes, premio)
+			local proxima = if quantidade == #variantes then variantes[1] else nil
+			plano[id] = {
+				Quantidade = quantidade, Variantes = variantes, Premio = premio,
+				Configuracao = PersonalizacaoMaquina.new(proxima):Codificar(),
+			}
+		end
+		for i, id in receita do
+			local quantidade = self:ObterQuantidade(id)
+			if not quantidade or quantidade < 1 then return nil, "Falta: " .. CatalogoMaquinas[id].Nome .. "." end
+			local esperado = estoqueEsperado[i]
+			if type(esperado) ~= "table" or esperado.Quantidade ~= quantidade
+				or type(esperado.Configuracao) ~= "string"
+				or esperado.Configuracao ~= self._jogador:GetAttribute("ConfiguracaoInventario_" .. id)
+			then return nil, "O inventário mudou. Confira a receita." end
+			local variantes = table.clone(self:_ObterVariantes(id))
+			if quantidade == #variantes then
+				PersonalizacaoMaquina.new(variantes[1]):Codificar()
+				table.remove(variantes, 1)
+			end
+			local premio
+			if CatalogoMaquinas[id].Renascimento then
+				local anterior = premios[id]
+				local total = if anterior == nil then 0 else anterior.Quantidade
+				assert(quantidadeValida(total), "Quantidade de recompensa inválida.")
+				total = math.max(total, quantidade + (naPlot[id] or 0))
+				assert(quantidadeValida(total), "Quantidade de recompensa inválida.")
+				-- Uma entrada zerada mantém o tipo no sorteio de vidas extras.
+				premio = {Quantidade = total - 1}
+			end
+			adicionar(id, quantidade - 1, variantes, premio)
+		end
+		local quantidade = self:ObterQuantidade(maquinaId)
+		if not quantidade or quantidade >= 2^53 - 1 then return nil, "Inventário cheio para o resultado." end
+		adicionar(maquinaId, quantidade + 1, self:_ObterVariantes(maquinaId))
+		return plano
+	end)
+	if not ok then return false, "Dados dos ingredientes inválidos." end
+	if not mudancas then return false, erro end
+
+	dados.RecompensasReencarnacao = premios
+	dados.InventarioPersonalizado = dados.InventarioPersonalizado or {}
+	for id, mudanca in mudancas do
+		dados.Inventory[id] = mudanca.Quantidade
+		dados.InventarioPersonalizado[id] = if #mudanca.Variantes > 0 then mudanca.Variantes else nil
+		if mudanca.Premio then premios[id] = mudanca.Premio end
+	end
+	for id, mudanca in mudancas do
+		self._jogador:SetAttribute("ConfiguracaoInventario_" .. id, mudanca.Configuracao)
+		self._jogador:SetAttribute("Inventario_" .. id, mudanca.Quantidade)
+	end
+	return true, item.Nome .. " fabricada e enviada ao inventário."
 end
 
 -- Recebe o registro ja validado de uma peca e consome uma variante compativel ou unidade comum. Se nao houver
@@ -771,6 +847,7 @@ function DadosJogador:VenderConstrucoes(construcoes)
 		local maquinaId = type(registro) == "table" and registro.MaquinaId
 		local item = type(maquinaId) == "string" and CatalogoMaquinas[maquinaId]
 		if item and item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
+		if item and item.Receita then return false, "Peças de craft são permanentes." end
 		local indice = table.find(registros, registro)
 		if not indice or vistos[registro] or not item or not InteiroGrande.eValido(item.Preco) then
 			return false, "Uma das pecas nao pode ser vendida."

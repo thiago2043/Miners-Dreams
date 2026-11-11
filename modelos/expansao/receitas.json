@@ -1,0 +1,486 @@
+[
+  {
+    "id": "EscavadoraEstratos",
+    "ingredientes": [
+      "MineradoraBasica",
+      "MineradoraCobre",
+      "MineradoraFerro",
+      "MineradoraIndustrial",
+      "MineradoraAurora",
+      "MineradoraPulsar"
+    ]
+  },
+  {
+    "id": "EscavadoraDeCaldeira",
+    "ingredientes": [
+      "MineradoraPressurizada",
+      "MineradoraCristalina",
+      "MineradoraRessonante",
+      "MineradoraPlasma",
+      "MineradoraEterna"
+    ]
+  },
+  {
+    "id": "MineradoraEixoPolar",
+    "ingredientes": [
+      "MineradoraAtomica",
+      "MineradoraQuantica",
+      "MineradoraSingularidade",
+      "MineradoraEstelar",
+      "RessonanciaAbissal"
+    ]
+  },
+  {
+    "id": "MineradoraContrapeso",
+    "ingredientes": [
+      "MineradoraGalactica",
+      "MineradoraMagnetita",
+      "MineradoraGranito",
+      "MineradoraDeXisto",
+      "CouracaSolar"
+    ]
+  },
+  {
+    "id": "EscavadoraDoLimiar",
+    "ingredientes": [
+      "MineradoraCarbeto",
+      "MineradoraTectonica",
+      "MineradoraCriogenica",
+      "MineradoraPiroclastica",
+      "SondaUmbra"
+    ]
+  },
+  {
+    "id": "EscavadoraDoAfelio",
+    "ingredientes": [
+      "MineradoraAntigravitacional",
+      "MineradoraPeriastro",
+      "MineradoraParalaxe",
+      "EscavadoraMeridiano"
+    ]
+  },
+  {
+    "id": "ExtratoraCordilheira",
+    "ingredientes": [
+      "EscavadoraEstratos",
+      "EscavadoraDeCaldeira"
+    ]
+  },
+  {
+    "id": "ExtratoraDaMagnetosfera",
+    "ingredientes": [
+      "MineradoraEixoPolar",
+      "MineradoraContrapeso"
+    ]
+  },
+  {
+    "id": "ExtratoraNucleoDeEstrela",
+    "ingredientes": [
+      "EscavadoraDoLimiar",
+      "EscavadoraDoAfelio"
+    ]
+  },
+  {
+    "id": "EscavadoraConvergencia",
+    "ingredientes": [
+      "ExtratoraCordilheira",
+      "ExtratoraDaMagnetosfera",
+      "ExtratoraNucleoDeEstrela"
+    ]
+  },
+  {
+    "id": "FornalhaCrisolDuplo",
+    "ingredientes": [
+      "FornalhaBasica",
+      "FornalhaReforcada",
+      "FornalhaIndustrial",
+      "FornalhaTermica",
+      "FornalhaAurora",
+      "FornalhaSupernova"
+    ]
+  },
+  {
+    "id": "FornalhaEspelhoFundido",
+    "ingredientes": [
+      "FornalhaPlasma",
+      "FornalhaMolecular",
+      "FornalhaQuantica",
+      "FornalhaEterna"
+    ]
+  },
+  {
+    "id": "FornalhaCeramicaIonica",
+    "ingredientes": [
+      "FornalhaEstelar",
+      "FornalhaGalactica",
+      "FornalhaReverbero",
+      "FornalhaBastiao"
+    ]
+  },
+  {
+    "id": "FornalhaCamaraDeHelio",
+    "ingredientes": [
+      "FornalhaCadinhoBasalto",
+      "FornalhaArQuente",
+      "FornalhaContrafluxo",
+      "FornalhaMarDeVidro"
+    ]
+  },
+  {
+    "id": "FornalhaArcoAbissal",
+    "ingredientes": [
+      "FornalhaEspiralTermica",
+      "FornalhaSafira",
+      "FornalhaArcoSolar",
+      "FornalhaCiclotron"
+    ]
+  },
+  {
+    "id": "FornalhaChamaFria",
+    "ingredientes": [
+      "FornalhaPlanalto",
+      "FornalhaNacar",
+      "FornalhaLimitePolar",
+      "FornalhaCatedral"
+    ]
+  },
+  {
+    "id": "FornalhaCoroaRefrataria",
+    "ingredientes": [
+      "FornalhaCrisolDuplo",
+      "FornalhaEspelhoFundido"
+    ]
+  },
+  {
+    "id": "FornalhaBifurcacao",
+    "ingredientes": [
+      "FornalhaCeramicaIonica",
+      "FornalhaCamaraDeHelio"
+    ]
+  },
+  {
+    "id": "FornalhaAuroraTripla",
+    "ingredientes": [
+      "FornalhaArcoAbissal",
+      "FornalhaChamaFria"
+    ]
+  },
+  {
+    "id": "FornalhaConvergencia",
+    "ingredientes": [
+      "FornalhaCoroaRefrataria",
+      "FornalhaBifurcacao",
+      "FornalhaAuroraTripla"
+    ]
+  },
+  {
+    "id": "ComutadorFerroPrisma",
+    "ingredientes": [
+      "CamaraFissao",
+      "LaserQuantico",
+      "PrensaTripla",
+      "PrensaMinerio",
+      "NucleoAntimateria",
+      "SeloAurora",
+      "PrismaPulsar",
+      "NexusEterno"
+    ]
+  },
+  {
+    "id": "PeneiraPressurizada",
+    "ingredientes": [
+      "RefinadorCobre",
+      "PulsoEstelar",
+      "AnelParticulas",
+      "RefinadorIndustrial",
+      "CadinhoCeramico",
+      "GrampoDeCobalto"
+    ]
+  },
+  {
+    "id": "PonteDosCristais",
+    "ingredientes": [
+      "LaserIndustrial",
+      "RaioPlasma",
+      "BobinaInducao",
+      "CamaraMagnetica",
+      "LaminaFotovoltaica",
+      "PeneiraLuminosa"
+    ]
+  },
+  {
+    "id": "ColetorDeMarfim",
+    "ingredientes": [
+      "RefinadorMolecular",
+      "TunelCompressao",
+      "ProcessadorTermico",
+      "CamaraPlasma",
+      "SondaDeAmetista",
+      "BicoDeIrradiacao",
+      "BobinaDeMare"
+    ]
+  },
+  {
+    "id": "DobraTermica",
+    "ingredientes": [
+      "CatalisadorTermico",
+      "LaserDuplo",
+      "AnelGravitacional",
+      "RessonadorPlasma",
+      "RefinadorAtomico",
+      "LimiarDeBasalto",
+      "MatrizDeImpacto"
+    ]
+  },
+  {
+    "id": "BobinaCriomagnetica",
+    "ingredientes": [
+      "AceleradorModular",
+      "TunelMolecular",
+      "ProcessadorParticulas",
+      "FeixeMolecular",
+      "PorticoDeSafira",
+      "TrefilaDeTitanio"
+    ]
+  },
+  {
+    "id": "RefletorCobalto",
+    "ingredientes": [
+      "CamaraQuantica",
+      "CompressorAtomico",
+      "JatoMineral",
+      "LaserBasico",
+      "TriagemBoreal",
+      "AroDeMercurio",
+      "CisalhaHelio"
+    ]
+  },
+  {
+    "id": "CadinhoDeSol",
+    "ingredientes": [
+      "RessonadorQuantico",
+      "CamaraEstelar",
+      "Ionizador",
+      "BanhoCobre",
+      "MicrossondaFria",
+      "PolarizadorDeJade"
+    ]
+  },
+  {
+    "id": "EstranguladorDeCampo",
+    "ingredientes": [
+      "AmplificadorFase",
+      "BobinaDupla",
+      "RefinadorGalactico",
+      "Polarizador",
+      "BobinaEstelar",
+      "VenturiVioleta",
+      "VigiliaIonica"
+    ]
+  },
+  {
+    "id": "FendaDeQuartzo",
+    "ingredientes": [
+      "TunelFase",
+      "FeixeFotons",
+      "RessonadorEstelar",
+      "NucleoQuasar",
+      "CamaraDeNeve",
+      "CanalDeMarfim"
+    ]
+  },
+  {
+    "id": "CascataDeInducao",
+    "ingredientes": [
+      "CompressorGalactico",
+      "TunelHorizonte",
+      "FeixeSingularidade",
+      "LaserGalactico",
+      "CascataDeAmbar",
+      "ObeliscoDeFase",
+      "PulsadorDeNeodimio"
+    ]
+  },
+  {
+    "id": "ReleDeVapor",
+    "ingredientes": [
+      "PolarizadorCosmico",
+      "RessonadorVacuo",
+      "NucleoHorizonte",
+      "CamaraSingularidade",
+      "ReleDeRubi",
+      "RessonadorAzimutal"
+    ]
+  },
+  {
+    "id": "LinhaDeRadiante",
+    "ingredientes": [
+      "AmplificadorVacuo",
+      "PulsoDimensional",
+      "RessonadorDimensional",
+      "NucleoDimensional",
+      "PenteDeMagnetita",
+      "CorredorSolsticio",
+      "FatiaDeHorizonte"
+    ]
+  },
+  {
+    "id": "AmpolaDeEspectro",
+    "ingredientes": [
+      "MorsaDeCromo",
+      "FiltroVermiculita",
+      "DutoDeHidrogenio",
+      "PeneiraDeTurmalina",
+      "FoleGravitacional",
+      "InjetorDeArgonio",
+      "OsciladorDeQuartzo"
+    ]
+  },
+  {
+    "id": "GarraDaMagnetopausa",
+    "ingredientes": [
+      "PrensaDeCalcita",
+      "ReatorDeZinco",
+      "LeitorEspectral",
+      "TamborDeSeparacao",
+      "RetificadorDeIridio",
+      "BalizaUltravioleta"
+    ]
+  },
+  {
+    "id": "RessonadorDeBasalto",
+    "ingredientes": [
+      "BanhoRefratario",
+      "PrismaDeFluorita",
+      "PonteDeInducao",
+      "ColimadorBoreal",
+      "CondensadorNacar",
+      "CrivoDoPerielio"
+    ]
+  },
+  {
+    "id": "SondaDoAntipolo",
+    "ingredientes": [
+      "PorticoPiezoeletrico",
+      "CavidadeDeRubidio",
+      "TrilhoDeHafnio",
+      "BobinaDeSamario",
+      "PulsoDeFerrofluido",
+      "DinamoDePlatina",
+      "GarraDoEquinocio",
+      "RasgoDeEspectro"
+    ]
+  },
+  {
+    "id": "RetificadorDeMare",
+    "ingredientes": [
+      "DobradorDeLuz",
+      "RessonadorDeCobreBranco",
+      "MalhaDeSilicio",
+      "InversorDeFluxo",
+      "TrilhoDeApolonio",
+      "BaluarteMagnetico"
+    ]
+  },
+  {
+    "id": "PorticoDaForja",
+    "ingredientes": [
+      "GavetaDeAntimonio",
+      "DifusorDeHelio",
+      "LimiarDeIridio",
+      "ForquilhaDeCesio",
+      "CadenciaDoEclipse",
+      "CoroaDeAntiparticulas"
+    ]
+  },
+  {
+    "id": "CircuitoDeAntimateria",
+    "ingredientes": [
+      "CicatrizDePlasma",
+      "EstacaoDePenumbra",
+      "DivisorDeMarfim",
+      "PortalDeVanAllen",
+      "CupulaDeInercia",
+      "PortaDoMeridiano"
+    ]
+  },
+  {
+    "id": "MatrizDeAmplificacao",
+    "ingredientes": [
+      "ComutadorFerroPrisma",
+      "PeneiraPressurizada",
+      "PonteDosCristais",
+      "ColetorDeMarfim"
+    ]
+  },
+  {
+    "id": "NaveDeIrradiacao",
+    "ingredientes": [
+      "DobraTermica",
+      "BobinaCriomagnetica",
+      "RefletorCobalto"
+    ]
+  },
+  {
+    "id": "CoroaDeCisalha",
+    "ingredientes": [
+      "CadinhoDeSol",
+      "EstranguladorDeCampo",
+      "FendaDeQuartzo"
+    ]
+  },
+  {
+    "id": "ColetorDeDuasFases",
+    "ingredientes": [
+      "CascataDeInducao",
+      "ReleDeVapor",
+      "LinhaDeRadiante",
+      "AmpolaDeEspectro"
+    ]
+  },
+  {
+    "id": "CondutorDeEclipse",
+    "ingredientes": [
+      "GarraDaMagnetopausa",
+      "RessonadorDeBasalto",
+      "SondaDoAntipolo"
+    ]
+  },
+  {
+    "id": "MalhaDoZenite",
+    "ingredientes": [
+      "RetificadorDeMare",
+      "PorticoDaForja",
+      "CircuitoDeAntimateria"
+    ]
+  },
+  {
+    "id": "ReatorDaCoroaSolar",
+    "ingredientes": [
+      "MatrizDeAmplificacao",
+      "NaveDeIrradiacao"
+    ]
+  },
+  {
+    "id": "ArcoDosHorizontes",
+    "ingredientes": [
+      "CoroaDeCisalha",
+      "ColetorDeDuasFases"
+    ]
+  },
+  {
+    "id": "CamaraDoPontoZero",
+    "ingredientes": [
+      "CondutorDeEclipse",
+      "MalhaDoZenite"
+    ]
+  },
+  {
+    "id": "ModificadorConvergencia",
+    "ingredientes": [
+      "ReatorDaCoroaSolar",
+      "ArcoDosHorizontes",
+      "CamaraDoPontoZero"
+    ]
+  }
+]

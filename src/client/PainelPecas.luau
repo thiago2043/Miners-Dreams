@@ -63,7 +63,7 @@ self._grupo.Parent = pai
 
 self._ids = {}
 for id, item in Catalogo do
-if inventario or not item.Renascimento then
+if inventario or not item.Obtencao then
 table.insert(self._ids, id)
 end
 end
@@ -188,7 +188,7 @@ end
 function PainelPecas:Selecionar(id)
 if self._destruido or self._negociando then return end
 if self.Aba == "Inventario" and self._grade:ObterModo() ~= "Estoque"
-and self._jogador:GetAttribute("Inventario_" .. id) == 0 and not Catalogo[id].Renascimento
+and self._jogador:GetAttribute("Inventario_" .. id) == 0 and not Catalogo[id].Obtencao
 then
 self._ultimoClique = nil
 self._construcao:SelecionarMaquina(id, "Loja")
@@ -313,11 +313,11 @@ self._fichaValida = self._fichaValida and retratoValido
 for acao, botao in self._acoes do
 local disponivel = visivelFicha and item ~= nil and pronto and self._fichaValida and not self._negociando
 if acao == "Colocar" then disponivel = disponivel and (quantidade > 0 or copia) end
-if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Renascimento end
-if acao == "Comprar" then disponivel = disponivel and not item.Renascimento end
+if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Obtencao end
+if acao == "Comprar" then disponivel = disponivel and not item.Obtencao end
 botao:DefinirDisponivel(disponivel)
 botao:ObterInstancia().Text = self._negociando == acao and (acao == "Comprar" and "Comprando..." or "Vendendo...")
-or (item and item.Renascimento and acao ~= "Colocar" and "Renascimento")
+or (item and acao ~= "Colocar" and item.Obtencao)
 or (acao == "Colocar" and "Colocar" or (acao .. ": " .. (item and ("$" .. AbreviarInteiro(item.Preco)) or "—") .. (acao == "Vender" and " (100%)" or "")))
 end
 self._ficha:AtualizarDisponibilidade()

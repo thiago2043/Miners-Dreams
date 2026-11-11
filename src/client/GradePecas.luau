@@ -1160,7 +1160,7 @@ end
 if not self._loja and self._modo ~= "Estoque" then
 local cabecalho = if self._modo == "Plot"
 then string.format("%s • Na plot: %s • Estoque: %s", def.Nome, AbreviarInteiro(colocadas or 0), pronto and AbreviarInteiro(quantidade) or "...")
-else string.format("%s • Estoque: %s • Loja: %s", def.Nome, pronto and AbreviarInteiro(quantidade) or "...", def.Renascimento and "Renascimento" or ("$" .. AbreviarInteiro(def.Preco)))
+else string.format("%s • Estoque: %s • %s", def.Nome, pronto and AbreviarInteiro(quantidade) or "...", def.Obtencao or ("Loja: $" .. AbreviarInteiro(def.Preco)))
 item.Detalhes.Text = cabecalho .. "\n" .. (item.Descricao or "")
 end
 end
@@ -1230,7 +1230,7 @@ for ordem, id in ordenados do
 local item = self._itens[id]
 local def = Catalogo[id]
 local b = item.Botao:ObterInstancia()
-local podeComprar = not def.Renascimento and inteiroValido(self.Saldo) and inteiroValido(def.Preco) and compararInteiros(self.Saldo, def.Preco) >= 0
+local podeComprar = not def.Obtencao and inteiroValido(self.Saldo) and inteiroValido(def.Preco) and compararInteiros(self.Saldo, def.Preco) >= 0
 local disponivel = (item.QuantidadeValor or 0) > 0 or podeComprar
 local possui = true
 if not self._loja then

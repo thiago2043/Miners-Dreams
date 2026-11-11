@@ -585,7 +585,7 @@ function ServicoConstrucao:_ResumoBlueprint(blueprint)
     or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo
   then return nil end
   local pecas = {}
-  local custoTotal, renascimento = "0", 0
+  local custoTotal, renascimento, craft = "0", 0, 0
   local minX, minY, minZ = math.huge, math.huge, math.huge
   local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
   for indice, item in blueprint.Pecas do
@@ -612,6 +612,8 @@ function ServicoConstrucao:_ResumoBlueprint(blueprint)
     maxX, maxY, maxZ = math.max(maxX, pMax.X), math.max(maxY, pMax.Y), math.max(maxZ, pMax.Z)
     if cat.Renascimento then
       renascimento += 1
+    elseif cat.Receita then
+      craft += 1
     elseif InteiroGrande.eValido(cat.Preco) then
       custoTotal = InteiroGrande.somar(custoTotal, cat.Preco)
     end
@@ -628,7 +630,7 @@ function ServicoConstrucao:_ResumoBlueprint(blueprint)
   }
   return {
     Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #pecas,
-    Custo = custoTotal, Renascimento = renascimento, Blocos = blocos, Pecas = pecas,
+    Custo = custoTotal, Renascimento = renascimento, Craft = craft, Blocos = blocos, Pecas = pecas,
   }
 end
 

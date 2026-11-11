@@ -49,7 +49,7 @@ return texto
 end
 
 local function calcularMetricasPecas(pecas, modelosOriginais)
-local custoTotal, renascimento = "0", 0
+local custoTotal, renascimento, craft = "0", 0, 0
 local minX, minY, minZ = math.huge, math.huge, math.huge
 local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
 local quantidade = 0
@@ -59,6 +59,8 @@ if not cat then continue end
 quantidade += 1
 if cat.Renascimento then
 renascimento += 1
+elseif cat.Receita then
+craft += 1
 elseif InteiroGrande.eValido(cat.Preco) then
 custoTotal = InteiroGrande.somar(custoTotal, cat.Preco)
 end
@@ -77,21 +79,24 @@ minX, minY, minZ = math.min(minX, pMin.X), math.min(minY, pMin.Y), math.min(minZ
 maxX, maxY, maxZ = math.max(maxX, pMax.X), math.max(maxY, pMax.Y), math.max(maxZ, pMax.Z)
 end
 if quantidade == 0 then
-return "0", 0, { 0, 0, 0 }
+return "0", 0, { 0, 0, 0 }, 0
 end
 return custoTotal, renascimento, {
 math.max(1, math.round((maxX - minX) / bloco)),
 math.max(1, math.round((maxY - minY) / bloco)),
 math.max(1, math.round((maxZ - minZ) / bloco)),
-}
+}, craft
 end
 
-local function formatarTamanhoECusto(blocos, custo, renascimento)
+local function formatarTamanhoECusto(blocos, custo, renascimento, craft)
 local b = blocos or { 1, 1, 1 }
 local textoTamanho = string.format("Tamanho (L×C×A): %d × %d × %d blocos", b[1] or 1, b[3] or 1, b[2] or 1)
 local textoCusto = "Custo total: $" .. AbreviarInteiro(custo or "0")
 if (renascimento or 0) > 0 then
 textoCusto ..= string.format(" (+%d renasc.)", renascimento)
+end
+if (craft or 0) > 0 then
+textoCusto ..= string.format(" (+%d craft)", craft)
 end
 return textoTamanho, textoCusto
 end
@@ -426,8 +431,8 @@ caixaNome:GetPropertyChangedSignal("Text"):Connect(function()
 estado.Nome = caixaNome.Text
 end)
 
-local custoCalc, renascCalc, blocosCalc = calcularMetricasPecas(pecasAtivas, self._modelos)
-local txtTam, txtCusto = formatarTamanhoECusto(blocosCalc, custoCalc, renascCalc)
+local custoCalc, renascCalc, blocosCalc, craftCalc = calcularMetricasPecas(pecasAtivas, self._modelos)
+local txtTam, txtCusto = formatarTamanhoECusto(blocosCalc, custoCalc, renascCalc, craftCalc)
 
 local lblTam = self._janela:Texto(topo, "Tamanho", txtTam .. " • " .. #pecasAtivas .. " peça(s)", UDim2.fromOffset(recuo, 102), UDim2.new(1, -(recuo + 10), 0, 20), 14)
 lblTam.TextColor3 = Color3.fromRGB(195, 210, 230)
@@ -489,7 +494,7 @@ linha.Parent = self._lista
 arredondar(linha, 7)
 
 local d = peca.DeslocamentoInicial or Vector3.zero
-local precoTexto = if cat and cat.Renascimento then "Renascimento" else ("$" .. AbreviarInteiro((cat and cat.Preco) or "0"))
+local precoTexto = (cat and cat.Obtencao) or ("$" .. AbreviarInteiro((cat and cat.Preco) or "0"))
 local _, angulo = Rotacao.DecomporEsteira(peca.RotacaoInicial or CFrame.identity, cat)
 local extra = if angulo ~= 0 then " • 45°" else ""
 
@@ -619,7 +624,7 @@ local iniciou, erro = self._construcao:ColocarBlueprint(id)
 if not iniciou then self:_MostrarMensagem(erro) end
 end)
 
-local txtTam, txtCusto = formatarTamanhoECusto(blueprint.Blocos, blueprint.Custo, blueprint.Renascimento)
+local txtTam, txtCusto = formatarTamanhoECusto(blueprint.Blocos, blueprint.Custo, blueprint.Renascimento, blueprint.Craft)
 local lblTam = self._janela:Texto(cartao, "Tamanho", string.format("%d peça(s) • %s", blueprint.Quantidade, txtTam), UDim2.fromOffset(recuo, 32), UDim2.new(1, -(recuo + 8), 0, 19), 14)
 lblTam.TextColor3 = Color3.fromRGB(195, 210, 230)
 lblTam.TextWrapped, lblTam.TextTruncate = false, Enum.TextTruncate.AtEnd

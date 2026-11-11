@@ -1,4 +1,5 @@
 local R = game:GetService("ReplicatedStorage")
+local Catalogo = require(R.Shared.CatalogoMaquinas)
 local Premios = require(R.Shared.RecompensasRenascimento)
 local Regra = require(R.Shared.RegraRecompensas)
 local Personalizacao = require(R.Shared.PersonalizacaoMaquina)
@@ -11,31 +12,47 @@ end
 -- Trabalha no perfil proposto; uma falha nao altera o ciclo atual.
 function Recompensas.Aplicar(novo, anterior, vidas)
 	assert(quantidade(vidas) and vidas >= 1, "Quantidade de vidas invalida.")
+	local naPlot, variantesNaPlot = {}, {}
+	for _, registro in anterior.MaquinasColocadas or {} do
+		local id = registro.MaquinaId
+		local item = Catalogo[id]
+		if item and item.Obtencao then
+			naPlot[id] = (naPlot[id] or 0) + 1
+			if registro.Modificacoes and next(registro.Modificacoes) then
+				variantesNaPlot[id] = variantesNaPlot[id] or {}
+				table.insert(variantesNaPlot[id], registro.Modificacoes)
+			end
+		end
+	end
+	local function devolver(id, total)
+		assert(quantidade(total), "Quantidade de peça permanente inválida.")
+		local variantes = {}
+		for _, origem in {(anterior.InventarioPersonalizado or {})[id] or {}, variantesNaPlot[id] or {}} do
+			for _, dados in origem do table.insert(variantes, Personalizacao.new(dados):ObterDados()) end
+		end
+		assert(#variantes <= total, "Variantes de recompensa invalidas.")
+		novo.Inventory[id] = total
+		if #variantes > 0 then novo.InventarioPersonalizado[id] = variantes end
+	end
+	for id, item in Catalogo do
+		if item.Receita then
+			local estoque = (anterior.Inventory or {})[id] or 0
+			assert(quantidade(estoque), "Estoque de craft inválido.")
+			devolver(id, estoque + (naPlot[id] or 0))
+		end
+	end
 	local disponiveis={}
 	for _, premio in Premios do
 		local salvo = novo.RecompensasReencarnacao[premio.Id]
-		local total = salvo and salvo.Quantidade or 0
-		assert(quantidade(total), "Quantidade de recompensa invalida.")
-		if total>0 then table.insert(disponiveis,premio) end
-		local variantes = {}
-		for _, dados in (anterior.InventarioPersonalizado or {})[premio.Id] or {} do
-			table.insert(variantes, Personalizacao.new(dados):ObterDados())
-		end
-		for _, registro in anterior.MaquinasColocadas or {} do
-			if registro.MaquinaId==premio.Id and registro.Modificacoes and next(registro.Modificacoes) then
-				table.insert(variantes, Personalizacao.new(registro.Modificacoes):ObterDados())
-			end
-		end
-		assert(#variantes<=total, "Variantes de recompensa invalidas.")
-		novo.Inventory[premio.Id] = total
-		if #variantes>0 then novo.InventarioPersonalizado[premio.Id] = variantes end
+		devolver(premio.Id, if salvo == nil then 0 else salvo.Quantidade)
+		if salvo then table.insert(disponiveis, premio) end
 	end
 	local function entregar(premio)
 		local total = novo.Inventory[premio.Id]+1
 		assert(quantidade(total), "Limite de recompensas atingido.")
 		novo.Inventory[premio.Id] = total
+		if not novo.RecompensasReencarnacao[premio.Id] then table.insert(disponiveis, premio) end
 		novo.RecompensasReencarnacao[premio.Id] = {Quantidade=total}
-		if total == 1 then table.insert(disponiveis, premio) end
 	end
 	for _, premio in Regra.Garantidas((anterior.Reencarnacoes or 0) + 1) do
 		entregar(premio)
@@ -55,11 +72,11 @@ function Recompensas.Migrar(dados)
 	for ciclo = 1, math.min(ciclos, 50) do
 		for _, premio in Regra.Garantidas(ciclo) do
 			local salvo = dados.RecompensasReencarnacao[premio.Id]
-			local total = salvo and salvo.Quantidade or 0
-			assert(quantidade(total), "Quantidade de recompensa invalida.")
-			if total == 0 then
+			if salvo == nil then
 				dados.RecompensasReencarnacao[premio.Id] = {Quantidade=1}
 				dados.Inventory[premio.Id] = (dados.Inventory[premio.Id] or 0) + 1
+			else
+				assert(quantidade(salvo.Quantidade), "Quantidade de recompensa invalida.")
 			end
 		end
 	end

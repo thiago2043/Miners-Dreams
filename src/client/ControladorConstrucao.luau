@@ -1801,7 +1801,7 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 	local estado = self.Navegacao:Atual()
 	if estado and estado ~= "Inventario" and estado ~= "Loja" and estado ~= "FichaInventario"
 		and estado ~= "FichaLoja" and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
-		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia"
+		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia" and estado ~= "Craft"
 		and estado ~= "Colocacao"
 		and estado ~= "Rotacao" and estado ~= "Recolhimento"
 		and estado ~= "Selecao"
@@ -1816,7 +1816,7 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 		if acao then self:ExecutarAcaoPeca(acao); return end
 	end
 	-- Nas abas centrais simples, apenas os atalhos de paineis continuam ativos; cliques nao operam sobre a plot.
-	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao" or estado == "Administracao" or estado == "Tutorial" or estado == "HistoricoCopia") and tecla ~= Enum.KeyCode.U
+	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao" or estado == "Administracao" or estado == "Tutorial" or estado == "HistoricoCopia" or estado == "Craft") and tecla ~= Enum.KeyCode.U
 		and tecla ~= Enum.KeyCode.P and tecla ~= Enum.KeyCode.B
 		and tecla ~= Enum.KeyCode.E and tecla ~= Enum.KeyCode.F then return end
 
@@ -2233,7 +2233,7 @@ end
 
 -- As abas usam a mesma regiao central; trocar de aba preserva inventario e loja nas laterais.
 function ControladorConstrucao:AlternarPainelCentral(aba)
-  if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" then return false end
+  if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" and aba ~= "Craft" then return false end
   if self._destruido or self._colocando then return false end
   if (self._previa or self._movimento or self._modoSelecao) and not self:_EncerrarAcao() then return false end
   if self.Navegacao:Contem(aba) then

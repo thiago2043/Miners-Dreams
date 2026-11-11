@@ -435,6 +435,306 @@
         },
         "PortaDoMeridiano": {
           "$path": "modelos/renascimento/novas/assets/PortaDoMeridiano.rbxm"
+        },
+        "MineradoraMagnetita": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraMagnetita.rbxm"
+        },
+        "MineradoraGranito": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraGranito.rbxm"
+        },
+        "MineradoraDeXisto": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraDeXisto.rbxm"
+        },
+        "MineradoraCarbeto": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraCarbeto.rbxm"
+        },
+        "MineradoraTectonica": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraTectonica.rbxm"
+        },
+        "MineradoraCriogenica": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraCriogenica.rbxm"
+        },
+        "MineradoraPiroclastica": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraPiroclastica.rbxm"
+        },
+        "MineradoraAntigravitacional": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraAntigravitacional.rbxm"
+        },
+        "MineradoraPeriastro": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraPeriastro.rbxm"
+        },
+        "MineradoraParalaxe": {
+          "$path": "modelos/expansao/assets/Loja/MineradoraParalaxe.rbxm"
+        },
+        "FornalhaReverbero": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaReverbero.rbxm"
+        },
+        "FornalhaCadinhoBasalto": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaCadinhoBasalto.rbxm"
+        },
+        "FornalhaArQuente": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaArQuente.rbxm"
+        },
+        "FornalhaContrafluxo": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaContrafluxo.rbxm"
+        },
+        "FornalhaEspiralTermica": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaEspiralTermica.rbxm"
+        },
+        "FornalhaSafira": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaSafira.rbxm"
+        },
+        "FornalhaArcoSolar": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaArcoSolar.rbxm"
+        },
+        "FornalhaPlanalto": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaPlanalto.rbxm"
+        },
+        "FornalhaNacar": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaNacar.rbxm"
+        },
+        "FornalhaLimitePolar": {
+          "$path": "modelos/expansao/assets/Loja/FornalhaLimitePolar.rbxm"
+        },
+        "PenteDeMagnetita": {
+          "$path": "modelos/expansao/assets/Loja/PenteDeMagnetita.rbxm"
+        },
+        "MorsaDeCromo": {
+          "$path": "modelos/expansao/assets/Loja/MorsaDeCromo.rbxm"
+        },
+        "FiltroVermiculita": {
+          "$path": "modelos/expansao/assets/Loja/FiltroVermiculita.rbxm"
+        },
+        "DutoDeHidrogenio": {
+          "$path": "modelos/expansao/assets/Loja/DutoDeHidrogenio.rbxm"
+        },
+        "PeneiraDeTurmalina": {
+          "$path": "modelos/expansao/assets/Loja/PeneiraDeTurmalina.rbxm"
+        },
+        "PrensaDeCalcita": {
+          "$path": "modelos/expansao/assets/Loja/PrensaDeCalcita.rbxm"
+        },
+        "ReatorDeZinco": {
+          "$path": "modelos/expansao/assets/Loja/ReatorDeZinco.rbxm"
+        },
+        "LeitorEspectral": {
+          "$path": "modelos/expansao/assets/Loja/LeitorEspectral.rbxm"
+        },
+        "TamborDeSeparacao": {
+          "$path": "modelos/expansao/assets/Loja/TamborDeSeparacao.rbxm"
+        },
+        "BanhoRefratario": {
+          "$path": "modelos/expansao/assets/Loja/BanhoRefratario.rbxm"
+        },
+        "PrismaDeFluorita": {
+          "$path": "modelos/expansao/assets/Loja/PrismaDeFluorita.rbxm"
+        },
+        "PonteDeInducao": {
+          "$path": "modelos/expansao/assets/Loja/PonteDeInducao.rbxm"
+        },
+        "ColimadorBoreal": {
+          "$path": "modelos/expansao/assets/Loja/ColimadorBoreal.rbxm"
+        },
+        "PorticoPiezoeletrico": {
+          "$path": "modelos/expansao/assets/Loja/PorticoPiezoeletrico.rbxm"
+        },
+        "CavidadeDeRubidio": {
+          "$path": "modelos/expansao/assets/Loja/CavidadeDeRubidio.rbxm"
+        },
+        "TrilhoDeHafnio": {
+          "$path": "modelos/expansao/assets/Loja/TrilhoDeHafnio.rbxm"
+        },
+        "BobinaDeSamario": {
+          "$path": "modelos/expansao/assets/Loja/BobinaDeSamario.rbxm"
+        },
+        "PulsoDeFerrofluido": {
+          "$path": "modelos/expansao/assets/Loja/PulsoDeFerrofluido.rbxm"
+        },
+        "DobradorDeLuz": {
+          "$path": "modelos/expansao/assets/Loja/DobradorDeLuz.rbxm"
+        },
+        "RessonadorDeCobreBranco": {
+          "$path": "modelos/expansao/assets/Loja/RessonadorDeCobreBranco.rbxm"
+        },
+        "MalhaDeSilicio": {
+          "$path": "modelos/expansao/assets/Loja/MalhaDeSilicio.rbxm"
+        },
+        "InversorDeFluxo": {
+          "$path": "modelos/expansao/assets/Loja/InversorDeFluxo.rbxm"
+        },
+        "GavetaDeAntimonio": {
+          "$path": "modelos/expansao/assets/Loja/GavetaDeAntimonio.rbxm"
+        },
+        "DifusorDeHelio": {
+          "$path": "modelos/expansao/assets/Loja/DifusorDeHelio.rbxm"
+        },
+        "LimiarDeIridio": {
+          "$path": "modelos/expansao/assets/Loja/LimiarDeIridio.rbxm"
+        },
+        "ForquilhaDeCesio": {
+          "$path": "modelos/expansao/assets/Loja/ForquilhaDeCesio.rbxm"
+        },
+        "CicatrizDePlasma": {
+          "$path": "modelos/expansao/assets/Loja/CicatrizDePlasma.rbxm"
+        },
+        "EstacaoDePenumbra": {
+          "$path": "modelos/expansao/assets/Loja/EstacaoDePenumbra.rbxm"
+        },
+        "DivisorDeMarfim": {
+          "$path": "modelos/expansao/assets/Loja/DivisorDeMarfim.rbxm"
+        },
+        "PortalDeVanAllen": {
+          "$path": "modelos/expansao/assets/Loja/PortalDeVanAllen.rbxm"
+        },
+        "EscavadoraEstratos": {
+          "$path": "modelos/expansao/assets/Craft/EscavadoraEstratos.rbxm"
+        },
+        "EscavadoraDeCaldeira": {
+          "$path": "modelos/expansao/assets/Craft/EscavadoraDeCaldeira.rbxm"
+        },
+        "MineradoraEixoPolar": {
+          "$path": "modelos/expansao/assets/Craft/MineradoraEixoPolar.rbxm"
+        },
+        "MineradoraContrapeso": {
+          "$path": "modelos/expansao/assets/Craft/MineradoraContrapeso.rbxm"
+        },
+        "EscavadoraDoLimiar": {
+          "$path": "modelos/expansao/assets/Craft/EscavadoraDoLimiar.rbxm"
+        },
+        "EscavadoraDoAfelio": {
+          "$path": "modelos/expansao/assets/Craft/EscavadoraDoAfelio.rbxm"
+        },
+        "ExtratoraCordilheira": {
+          "$path": "modelos/expansao/assets/Craft/ExtratoraCordilheira.rbxm"
+        },
+        "ExtratoraDaMagnetosfera": {
+          "$path": "modelos/expansao/assets/Craft/ExtratoraDaMagnetosfera.rbxm"
+        },
+        "ExtratoraNucleoDeEstrela": {
+          "$path": "modelos/expansao/assets/Craft/ExtratoraNucleoDeEstrela.rbxm"
+        },
+        "EscavadoraConvergencia": {
+          "$path": "modelos/expansao/assets/Craft/EscavadoraConvergencia.rbxm"
+        },
+        "FornalhaCrisolDuplo": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaCrisolDuplo.rbxm"
+        },
+        "FornalhaEspelhoFundido": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaEspelhoFundido.rbxm"
+        },
+        "FornalhaCeramicaIonica": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaCeramicaIonica.rbxm"
+        },
+        "FornalhaCamaraDeHelio": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaCamaraDeHelio.rbxm"
+        },
+        "FornalhaArcoAbissal": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaArcoAbissal.rbxm"
+        },
+        "FornalhaChamaFria": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaChamaFria.rbxm"
+        },
+        "FornalhaCoroaRefrataria": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaCoroaRefrataria.rbxm"
+        },
+        "FornalhaBifurcacao": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaBifurcacao.rbxm"
+        },
+        "FornalhaAuroraTripla": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaAuroraTripla.rbxm"
+        },
+        "FornalhaConvergencia": {
+          "$path": "modelos/expansao/assets/Craft/FornalhaConvergencia.rbxm"
+        },
+        "ComutadorFerroPrisma": {
+          "$path": "modelos/expansao/assets/Craft/ComutadorFerroPrisma.rbxm"
+        },
+        "PeneiraPressurizada": {
+          "$path": "modelos/expansao/assets/Craft/PeneiraPressurizada.rbxm"
+        },
+        "PonteDosCristais": {
+          "$path": "modelos/expansao/assets/Craft/PonteDosCristais.rbxm"
+        },
+        "ColetorDeMarfim": {
+          "$path": "modelos/expansao/assets/Craft/ColetorDeMarfim.rbxm"
+        },
+        "DobraTermica": {
+          "$path": "modelos/expansao/assets/Craft/DobraTermica.rbxm"
+        },
+        "BobinaCriomagnetica": {
+          "$path": "modelos/expansao/assets/Craft/BobinaCriomagnetica.rbxm"
+        },
+        "RefletorCobalto": {
+          "$path": "modelos/expansao/assets/Craft/RefletorCobalto.rbxm"
+        },
+        "CadinhoDeSol": {
+          "$path": "modelos/expansao/assets/Craft/CadinhoDeSol.rbxm"
+        },
+        "EstranguladorDeCampo": {
+          "$path": "modelos/expansao/assets/Craft/EstranguladorDeCampo.rbxm"
+        },
+        "FendaDeQuartzo": {
+          "$path": "modelos/expansao/assets/Craft/FendaDeQuartzo.rbxm"
+        },
+        "CascataDeInducao": {
+          "$path": "modelos/expansao/assets/Craft/CascataDeInducao.rbxm"
+        },
+        "ReleDeVapor": {
+          "$path": "modelos/expansao/assets/Craft/ReleDeVapor.rbxm"
+        },
+        "LinhaDeRadiante": {
+          "$path": "modelos/expansao/assets/Craft/LinhaDeRadiante.rbxm"
+        },
+        "AmpolaDeEspectro": {
+          "$path": "modelos/expansao/assets/Craft/AmpolaDeEspectro.rbxm"
+        },
+        "GarraDaMagnetopausa": {
+          "$path": "modelos/expansao/assets/Craft/GarraDaMagnetopausa.rbxm"
+        },
+        "RessonadorDeBasalto": {
+          "$path": "modelos/expansao/assets/Craft/RessonadorDeBasalto.rbxm"
+        },
+        "SondaDoAntipolo": {
+          "$path": "modelos/expansao/assets/Craft/SondaDoAntipolo.rbxm"
+        },
+        "RetificadorDeMare": {
+          "$path": "modelos/expansao/assets/Craft/RetificadorDeMare.rbxm"
+        },
+        "PorticoDaForja": {
+          "$path": "modelos/expansao/assets/Craft/PorticoDaForja.rbxm"
+        },
+        "CircuitoDeAntimateria": {
+          "$path": "modelos/expansao/assets/Craft/CircuitoDeAntimateria.rbxm"
+        },
+        "MatrizDeAmplificacao": {
+          "$path": "modelos/expansao/assets/Craft/MatrizDeAmplificacao.rbxm"
+        },
+        "NaveDeIrradiacao": {
+          "$path": "modelos/expansao/assets/Craft/NaveDeIrradiacao.rbxm"
+        },
+        "CoroaDeCisalha": {
+          "$path": "modelos/expansao/assets/Craft/CoroaDeCisalha.rbxm"
+        },
+        "ColetorDeDuasFases": {
+          "$path": "modelos/expansao/assets/Craft/ColetorDeDuasFases.rbxm"
+        },
+        "CondutorDeEclipse": {
+          "$path": "modelos/expansao/assets/Craft/CondutorDeEclipse.rbxm"
+        },
+        "MalhaDoZenite": {
+          "$path": "modelos/expansao/assets/Craft/MalhaDoZenite.rbxm"
+        },
+        "ReatorDaCoroaSolar": {
+          "$path": "modelos/expansao/assets/Craft/ReatorDaCoroaSolar.rbxm"
+        },
+        "ArcoDosHorizontes": {
+          "$path": "modelos/expansao/assets/Craft/ArcoDosHorizontes.rbxm"
+        },
+        "CamaraDoPontoZero": {
+          "$path": "modelos/expansao/assets/Craft/CamaraDoPontoZero.rbxm"
+        },
+        "ModificadorConvergencia": {
+          "$path": "modelos/expansao/assets/Craft/ModificadorConvergencia.rbxm"
         }
       },
       "Packages": {
