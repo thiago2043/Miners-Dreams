@@ -17,6 +17,7 @@ local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
 local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local RotacaoConstrucao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
+local ElevadorVertical = require(ReplicatedStorage.Shared.ElevadorVertical)
 local RotacaoArraste = require(script.Parent.RotacaoArraste)
 local NavegacaoEstados = require(script.Parent.NavegacaoEstados)
 local passoGrade = Geometria.Passo
@@ -225,6 +226,7 @@ function ControladorConstrucao:_PublicarPreviaRemota()
     partesChave[i] = string.format("%s:%g,%g,%g:%g,%g,%g,%g,%g,%g:%d",
       a.maquinaId, a.minimo.X, a.minimo.Y, a.minimo.Z,
       c[4], c[5], c[6], c[7], c[8], c[9], a.livre and 1 or 0)
+    if a.elevador then partesChave[i] ..= ":" .. table.concat(a.elevador, ",") end
   end
   local chave = table.concat(partesChave, "|")
   if chave == self._ultimaChavePrevia then return end
@@ -239,6 +241,7 @@ function ControladorConstrucao:_PublicarPreviaRemota()
       a.maquinaId, a.minimo.X, a.minimo.Y, a.minimo.Z,
       c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11], c[12],
       a.livre and 1 or 0,
+      a.elevador,
     }
   end
   task.spawn(function()
@@ -2164,6 +2167,7 @@ self._previa:AtualizarVolumes(origem, deltaTime)
 		caixaDestino = caixaDestino,
 		volumeDestino = volumeDestino,
 		ocupado = ocupado,
+		elevador = self:_ConfigPreviaElevador(self._maquinaIdSelecionada, self._previa),
 	}
 
 if self._movimento and self._movimento.Grupo then
@@ -2227,6 +2231,14 @@ function ControladorConstrucao:_EncerrarAcao()
 end
 
 -- Abre ou fecha a lista de blueprints sem sobrepor um posicionamento ou outro modo de selecao ativo.
+function ControladorConstrucao:ConfigurarElevador(maquina, altura, entrada, saida, sentido)
+	local chamada, sucesso, mensagem = pcall(function()
+		return self._redeConstrucao:fetch("ConfigurarElevador", maquina, altura, entrada, saida, sentido)
+	end)
+	if not chamada then return false, "Não foi possível configurar o elevador." end
+	return sucesso == true, mensagem
+end
+
 function ControladorConstrucao:AlternarBlueprints()
 	return self:AlternarPainelCentral("Blueprints")
 end
@@ -2642,6 +2654,7 @@ function ControladorConstrucao:_AtualizarAlvosGrupo(alvoAncora, origem, deltaTim
 			maquinaId = peca.MaquinaId, minimo = minimo, rotacao = rotacao, ocupado = ocupado,
 			caixaDestino = caixaDestino, volumeDestino = Geometria.CFrameDoVolume(origem, minimo, ocupado),
 			livre = livre,
+			elevador = self:_ConfigPreviaElevador(peca.MaquinaId, peca.Previa),
 		}
 		table.insert(alvos, { Peca = peca, Alvo = alvo })
 	end
@@ -2685,6 +2698,7 @@ function ControladorConstrucao:_AtualizarAlvoRotacao(deltaTime)
 		maquinaId = self._maquinaIdSelecionada, minimo = minimo, rotacao = self._rotacao,
 		ocupado = ocupado, caixaDestino = destino, volumeDestino = Geometria.CFrameDoVolume(origem, minimo, ocupado),
 		livre = self._previa:VolumeLivre(origem, minimo, ocupado),
+		elevador = self:_ConfigPreviaElevador(self._maquinaIdSelecionada, self._previa),
 	}
 	self._ultimoEncaixe = minimo + Vector3.new(ocupado.X / 2, 0, ocupado.Z / 2)
 	if self._movimento and self._movimento.Grupo then
@@ -2725,22 +2739,43 @@ function ControladorConstrucao:_MaquinaSobMouse()
 end
 
 -- Esteiras usam 45 graus no X local; os outros eixos conservam os quartos de volta da construcao.
+function ControladorConstrucao:_ConfigPreviaElevador(id, previa)
+	if id ~= "ElevadorVertical" then return nil end
+	local c = ElevadorVertical.Ler(previa:ObterModelo())
+	return c and {c.Altura, c.Entrada, c.Saida, c.Sentido}
+end
+
+function ControladorConstrucao:_ColocacaoSomenteVertical()
+	local movimento = self._movimento
+	if not movimento or not movimento.Grupo then return self._maquinaIdSelecionada == "ElevadorVertical" end
+	if movimento.SomenteY == nil then
+		movimento.SomenteY = false
+		for _, peca in movimento.Pecas do
+			if CatalogoMaquinas[peca.MaquinaId].Vertical then movimento.SomenteY = true; break end
+		end
+	end
+	return movimento.SomenteY
+end
+
 function ControladorConstrucao:_DefinicaoRotacao()
 	local definicao=CatalogoMaquinas[self._maquinaIdSelecionada]
+	local permitirInclinar = true
 	if self._movimento and self._movimento.Grupo then
 		local direita=self._movimento.Pecas[1].RotacaoInicial.RightVector
 		for _,peca in self._movimento.Pecas do
-			if not RotacaoConstrucao.PermiteInclinar(CatalogoMaquinas[peca.MaquinaId])
-				or math.abs(direita:Dot(peca.RotacaoInicial.RightVector))<.999 then return definicao,false end
+			local item = CatalogoMaquinas[peca.MaquinaId]
+			if not RotacaoConstrucao.PermiteInclinar(item)
+				or math.abs(direita:Dot(peca.RotacaoInicial.RightVector))<.999 then permitirInclinar = false end
 		end
 	end
-	return definicao,true
+	return definicao, permitirInclinar, self:_ColocacaoSomenteVertical()
 end
 
 function ControladorConstrucao:Girar(eixo)
 	if self._destruido or self._colocando or self._arrasteColocacao or not self._previa then return end
 	local angulo = math.pi / 2
-	local definicao,permitirInclinar=self:_DefinicaoRotacao()
+	local definicao,permitirInclinar,somenteY=self:_DefinicaoRotacao()
+	if somenteY and eixo ~= "Y" then return end
 	if eixo == "X" and permitirInclinar and RotacaoConstrucao.PermiteInclinar(definicao) then
 		self._rotacao = self._rotacao*CFrame.Angles(math.pi/4,0,0)
 	elseif eixo == "X" then

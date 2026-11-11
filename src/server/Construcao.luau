@@ -37,6 +37,9 @@ end
 function Construcao:Refazer(jogador)
   return servico:Refazer(jogador)
 end
+function Construcao:ConfigurarElevador(jogador, maquina, altura, entrada, saida, sentido)
+	return servico:ConfigurarElevador(jogador, maquina, altura, entrada, saida, sentido)
+end
 function Construcao:AtualizarPrevia(jogador, previa)
   return servico:AtualizarPrevia(jogador, previa)
 end
@@ -136,5 +139,6 @@ Construcao.ColocarMultiplos,
 Construcao.Desfazer,
   Construcao.Refazer,
   Construcao.AtualizarPrevia,
+  Construcao.ConfigurarElevador,
 })
 return Construcao

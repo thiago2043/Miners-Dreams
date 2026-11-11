@@ -16,6 +16,7 @@ local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaq
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
 local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
+local ElevadorVertical = require(ReplicatedStorage.Shared.ElevadorVertical)
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
@@ -1049,6 +1050,19 @@ function ServicoConstrucao:Personalizar(jogador, maquina, modificacoes)
 	return true, "Peca personalizada.", nova
 end
 
+function ServicoConstrucao:ConfigurarElevador(jogador, maquina, altura, entrada, saida, sentido)
+	if not self:_PermitirPedido(jogador) then return false, "Muitos pedidos de construção." end
+	if not self:_ObterMaquina(jogador, maquina) or maquina.Name ~= "ElevadorVertical" then
+		return false, "Elevador indisponível."
+	end
+	local config = ElevadorVertical.Validar(altura, entrada, saida, sentido)
+	if not config then return false, "Configuração de elevador inválida." end
+	local mods = PersonalizacaoMaquina.DoModelo(maquina):ObterDados()
+	if PersonalizacaoMaquina.Iguais(config, ElevadorVertical.Ler(maquina)) then return true end
+	mods.Elevador = config
+	return self:Personalizar(jogador, maquina, mods)
+end
+
 -- Valida e captura o grupo antes de destruir suas instancias. O perfil conserva os registros na origem ate a
 -- confirmacao, assim uma sessao interrompida ainda pode restaurar as pecas no ponto anterior.
 function ServicoConstrucao:IniciarMovimento(jogador, maquinasSelecionadas)
@@ -1556,6 +1570,11 @@ function ServicoConstrucao:AtualizarPrevia(jogador, previa)
     if not rot then return false end
     local c = { rot:GetComponents() }
     limpo[i] = { item[1], item[2], item[3], item[4], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11], c[12], item[14] == 1 and 1 or 0 }
+    if item[1] == "ElevadorVertical" and item[15] ~= nil then
+      local v = item[15]
+      if type(v) ~= "table" or not ElevadorVertical.Validar(v[1], v[2], v[3], v[4]) then return false end
+      limpo[i][15] = {v[1], v[2], v[3], v[4]}
+    end
   end
   terreno:SetAttribute("PreviaConstrucao", game:GetService("HttpService"):JSONEncode(limpo))
   return true

@@ -13,8 +13,16 @@ local run={BindToRenderStep=function(_,nome,_,fn) render[nome]=fn end,UnbindFrom
 local cas={BindAction=function(_,nome,fn) acoes[nome]=fn end,UnbindAction=function(_,nome) acoes[nome]=nil end}
 local gui={mudou=ui.Sinal(),GetPropertyChangedSignal=function(self) return self.mudou end}
 local camera={ViewportSize=r.Vector2.new(800,600)}
+local function novo(classe)
+	local objeto=ui.NovaInstancia(classe)
+	local attrs={}
+	function objeto:SetAttribute(k,v) attrs[k]=v end
+	function objeto:GetAttribute(k) return attrs[k] end
+	return objeto
+end
 local carregar=require("./suporte/carregador")({
-	Instance={new=ui.NovaInstancia},Enum=r.Enum,Color3=r.Color3,UDim=r.UDim,UDim2=r.UDim2,Vector2=r.Vector2,Vector3=r.Vector3,
+	Instance={new=novo},Enum=r.Enum,Color3=r.Color3,UDim=r.UDim,UDim2=r.UDim2,Vector2=r.Vector2,Vector3=r.Vector3,
+	typeof=function(v) return if type(v)=="table" and v.ClassName then "Instance" else typeof(v) end,
 	workspace={CurrentCamera=camera},task=tarefa,
 },{UserInputService=input,RunService=run,GuiService=gui,ContextActionService=cas})
 local atributos={}
@@ -31,6 +39,7 @@ function c:FinalizarEntrada() self.finais+=1; self._arrasteSelecao=nil; self._ar
 function c:_AtualizarArrasteSelecao(posicao) self.areaAtualizada=true; self.fimArea=posicao end
 function c:Atualizar() self.atualizou=true end
 function c:Girar(eixo) self.eixo=eixo end
+function c:_ColocacaoSomenteVertical() return self.vertical == true end
 function c:_AjustarAlturaSelecao(n) self.alturaSelecao=n end
 function c:Cancelar() self.cancelou=true; nav:Voltar() end
 local interface={_interface=ui.NovaInstancia("ScreenGui"),_paineisProgressao={},_paineis={}}
@@ -73,6 +82,9 @@ camera.ViewportSize=r.Vector2.new(800,360); render.Fabrica_TeclasMovimento()
 assert(controle._barra.Position.Y.Offset==-36,"A barra em paisagem deve ficar abaixo da mira central.")
 input.TouchTapInWorld:Fire(r.Vector2.new(280,130),false); assert(c.cliques==2,"Um toque de posicionamento nao deve colocar sem confirmar.")
 assert(controle:Acao("Girar X") and c.eixo=="X")
+c.vertical=true; controle:Atualizar()
+assert(not controle._botoes["Girar X"]:ObterInstancia().Visible and controle._botoes["Girar Y"]:ObterInstancia().Visible)
+c.vertical=false
 c._alvoColocacao={minimo=r.Vector3.zero}
 controle:Acao("Subir"); assert(c._travamentoAltura.altura==3)
 c._previa=nil; c._modoSelecao="Selecao"

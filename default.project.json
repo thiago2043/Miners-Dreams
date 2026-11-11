@@ -220,6 +220,9 @@
         "Esteira1x1": {
           "$path": "modelos/esteiras/assets/Esteira1x1.rbxm"
         },
+        "ElevadorVertical": {
+          "$path": "modelos/elevador/ElevadorVertical.rbxm"
+        },
         "Centralizadora2x2": {
           "$path": "modelos/esteiras/assets/Centralizadora2x2.rbxm"
         },

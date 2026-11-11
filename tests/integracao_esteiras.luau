@@ -33,14 +33,15 @@ piso.Name,piso.Size,piso.CFrame,piso.Anchored,piso.Parent="Piso",V.new(128,1,128
 for _,nome in {"Maquinas","Minerios"} do local f=I.new("Folder"); f.Name,f.Parent=nome,terreno end
 local perfil={Data=serde.decode("json",serde.encode("json",Template))}
 function perfil:IsActive() return true end
-perfil.Data.Dinheiro="10000"
+perfil.Data.Dinheiro="100000000"
 for id in perfil.Data.Inventory do perfil.Data.Inventory[id]=0 end
 local dados=Manager.RegistrarPerfil(jogador,perfil)
 local servico=Construcao.new()
 local ids={"Esteira2x2","Esteira1x1","Centralizadora2x2","Centralizadora1x1","Parede1x1"}
 for _,id in ids do
 	local def,original=Catalogo[id],modelos[id]
-	assert(def.Preco=="25" and Template.Inventory[id]==(if id=="Esteira2x2" then 10 else 0))
+	local preco = if id == "Esteira1x1" or id == "Centralizadora1x1" then "1000000" else "25"
+	assert(def.Preco==preco and Template.Inventory[id]==(if id=="Esteira2x2" then 10 else 0))
 	assert(original:GetAttribute("SomenteModelagem")==false)
 	assert(original.HitboxConstrucao.Size==V.new(table.unpack(def.Blocos))*3)
 	assert(#def.Componentes==(if id=="Parede1x1" then 0 elseif id:find("Centralizadora") then 2 else 1))
@@ -54,7 +55,7 @@ for _,id in ids do
 	for _,giro in giros do
 		local saldo=perfil.Data.Dinheiro
 		assert(dados:ComprarMaquina(id) and dados:ObterQuantidade(id)==1)
-		assert(perfil.Data.Dinheiro==Inteiro.subtrair(saldo,"25"))
+		assert(perfil.Data.Dinheiro==Inteiro.subtrair(saldo,preco))
 		tempo+=1; assert(servico:Colocar(jogador,id,V.zero,giro))
 		assert(dados:ObterQuantidade(id)==0)
 		local modelo=terreno.Maquinas:GetChildren()[1]
@@ -68,7 +69,7 @@ for _,id in ids do
 		tempo+=1; local ok,_,copia=servico:Copiar(jogador,modelo)
 		assert(ok and next(copia.Modificacoes)==nil)
 		tempo+=1; assert(servico:Colocar(jogador,id,V.new(12,0,0),copia.Rotacao,copia.Token))
-		assert(perfil.Data.Dinheiro==Inteiro.subtrair(saldo,"50"))
+		assert(perfil.Data.Dinheiro==Inteiro.subtrair(saldo,Inteiro.somar(preco,preco)))
 		tempo+=1; local moveu,_,token=servico:IniciarMovimento(jogador,{modelo})
 		assert(moveu)
 		tempo+=1; assert(servico:Mover(jogador,token,V.new(24,0,0),giro))
@@ -79,7 +80,7 @@ for _,id in ids do
 		assert(dados:ObterQuantidade(id)==0 and perfil.Data.Dinheiro==saldo)
 	end
 end
-print("PASS: cinco tipos de $25; compra, previa, copia, movimento, recolhimento e venda em giros planos e inclinados.")
+print("PASS: preços, compra, prévia, cópia, movimento, recolhimento e venda nos cinco modelos.")
 for i,id in ids do
 	tempo+=1
 	local giro=if id=="Parede1x1" then CF.identity else CF.Angles(math.pi/4,0,0)

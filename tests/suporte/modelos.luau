@@ -52,6 +52,10 @@ roblox.implementMethod("Model", "GetBoundingBox", function(modelo)
 	return caixa(modelo, pivos[modelo] and pivos[modelo].Rotation or CFrame.identity)
 end)
 roblox.implementMethod("Model", "GetPivot", function(modelo)
+	local primaria = modelo.PrimaryPart
+	if primaria and (modelo:GetAttribute("AlturaBlocos") or modelo.Name == "Carro" or modelo.Name == "MesaGiratória") then
+		return primaria.CFrame * primaria.PivotOffset
+	end
 	if pivos[modelo] then return pivos[modelo] end
 	local cf = caixa(modelo, CFrame.identity)
 	return cf

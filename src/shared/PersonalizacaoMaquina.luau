@@ -148,6 +148,9 @@ end
 function PersonalizacaoMaquina:ObterDefinicao(original)
 	local definicao = copiar(original)
 	if self._dados.Configuracao then combinar(definicao, self._dados.Configuracao) end
+	if original.Vertical and self._dados.Elevador then
+		definicao.Blocos[2] = self._dados.Elevador.Altura
+	end
 	return definicao
 end
 
@@ -184,6 +187,7 @@ function PersonalizacaoMaquina:Aplicar(modelo)
 			end
 		end
 	end
+	if self._dados.Elevador then require(script.Parent.ElevadorVertical).Aplicar(modelo, self._dados.Elevador) end
 	self:Publicar(modelo)
 end
 
@@ -192,6 +196,7 @@ end
 -- visuais suportadas. Preserva a Configuracao ja existente e mede CFrames relativos aos pivos, permitindo
 -- recolocar a copia em outro lugar.
 function PersonalizacaoMaquina:Capturar(modelo, original)
+	if original:GetAttribute("AlturaBlocos") then return PersonalizacaoMaquina.new(self._dados) end
 	local EsteiraInclinada = require(script.Parent.EsteiraInclinada)
 	local dados = self:ObterDados()
 	local partes = {}

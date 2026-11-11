@@ -13,9 +13,12 @@ end
 local cacheOrientacoes={}
 local function orientacoes(definicao)
 	local inclinavel=RotacaoConstrucao.PermiteInclinar(definicao)
-	if cacheOrientacoes[inclinavel] then return cacheOrientacoes[inclinavel] end
+	local vertical = definicao and definicao.Vertical
+	local chave = if vertical then "Vertical" else inclinavel
+	if cacheOrientacoes[chave] then return cacheOrientacoes[chave] end
 	local resultado = {}
 	for _, direita in eixosGrade do for _, cima in eixosGrade do
+		if vertical and cima ~= Vector3.yAxis then continue end
 		if direita:Dot(cima) ~= 0 then continue end
 		local base = CFrame.fromMatrix(Vector3.zero, direita, cima, direita:Cross(cima))
 		table.insert(resultado, { Base = base, Angulo = 0, Rotacao = base })
@@ -25,7 +28,7 @@ local function orientacoes(definicao)
 			end
 		end
 	end end
-	cacheOrientacoes[inclinavel]=resultado
+	cacheOrientacoes[chave]=resultado
 	return resultado
 end
 
@@ -104,6 +107,7 @@ end
 function RotacaoConstrucao.ValidarNaGrade(rotacao, definicao)
 	local validada = RotacaoConstrucao.Validar(rotacao)
 	if not validada then return nil end
+	if definicao and definicao.Vertical and validada.UpVector ~= Vector3.yAxis then return nil end
 	if RotacaoConstrucao.PermiteInclinar(definicao) then
 		local candidata = RotacaoConstrucao.EncaixarNaGrade(validada, definicao)
 		if (candidata.RightVector-validada.RightVector).Magnitude < .0001

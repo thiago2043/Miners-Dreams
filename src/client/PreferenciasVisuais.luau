@@ -14,6 +14,7 @@ local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
 local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
+local ElevadorVertical = require(ReplicatedStorage.Shared.ElevadorVertical)
 local SetasTransporte = require(script.Parent.SetasTransporte)
 
 local tiposModificadores = {}
@@ -229,12 +230,17 @@ end
 self._previasRemotas[terreno] = nil
 end
 
-function Visuais:_CriarItemPreviaRemota(maquinaId, angulo, transparencia)
+function Visuais:_CriarItemPreviaRemota(maquinaId, angulo, transparencia, configElevador, chaveElevador)
 local original = self._modelosOriginais:FindFirstChild(maquinaId)
 local definicao = catalogo[maquinaId]
 if not original or not definicao then return nil end
 local modelo = original:Clone()
 modelo.Name = "PreviaRemota_" .. maquinaId
+if configElevador then
+ElevadorVertical.Aplicar(modelo, configElevador)
+definicao = table.clone(definicao)
+definicao.Blocos = {1, configElevador.Altura, 1}
+end
 if angulo ~= 0 then
 EsteiraInclinada.Aplicar(modelo, definicao, CFrame.Angles(angulo, 0, 0))
 end
@@ -259,6 +265,7 @@ modelo.Parent = self._pastaPrevias
 return {
 MaquinaId = maquinaId,
 Angulo = angulo,
+ChaveElevador = chaveElevador,
 Modelo = modelo,
 Caixa = partCaixa,
 Contorno = contorno,
@@ -309,14 +316,17 @@ local minimo = Vector3.new(dados[2], dados[3], dados[4])
 local rotacao = CFrame.new(0, 0, 0, dados[5], dados[6], dados[7], dados[8], dados[9], dados[10], dados[11], dados[12], dados[13])
 local livre = dados[14] == 1
 local baseRot, angulo = Rotacao.DecomporEsteira(rotacao, def)
+local dadosElevador = def.Vertical and dados[15]
+local configElevador = if type(dadosElevador) == "table" then ElevadorVertical.Validar(table.unpack(dadosElevador, 1, 4)) else nil
+local chaveElevador = configElevador and table.concat(dadosElevador, ",", 1, 4)
 
 local item = grupo.Itens[i]
-if not item or item.MaquinaId ~= id or item.Angulo ~= angulo then
+if not item or item.MaquinaId ~= id or item.Angulo ~= angulo or item.ChaveElevador ~= chaveElevador then
 if item then
 if item.Modelo then item.Modelo:Destroy() end
 if item.Caixa then item.Caixa:Destroy() end
 end
-item = self:_CriarItemPreviaRemota(id, angulo, transparencia)
+item = self:_CriarItemPreviaRemota(id, angulo, transparencia, configElevador, chaveElevador)
 grupo.Itens[i] = item
 end
 if not item then continue end

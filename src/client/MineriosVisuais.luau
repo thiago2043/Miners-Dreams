@@ -25,6 +25,7 @@ function MineriosVisuais.new(jogador)
   local self = setmetatable({
     _observados = {}, _etiquetas = {}, _textosValor = {}, _valoresPendentes = {},
     _vendas = {}, _movimentos = {}, _grupos = {}, _ocultos = {}, _partes = {}, _poses = {},
+    _elevadores = {}, _carrosEmMovimento = {},
     _configuracoes = {}, _mostrarValores = true, _animarVenda = true, _jogador = jogador, _ocultacao = {},
     _limitesVisuais = {}, _plotVisual = {}, _foraLimite = {}, _limiteVisivel = Config.Obter(jogador, "LimiteMineriosVisiveis"),
     _distanciaEtiqueta = 0, _distanciaLOD = {}, _semSombraLOD = {}, _sombrasRemovidas = {}, _terrenoAtivoNoQuadro = {},
@@ -173,7 +174,35 @@ function MineriosVisuais:_AnimarVenda(parte)
   Debris:AddItem(efeito, 0.3)
 end
 
+local function posicionarCarro(modelo, pose)
+  local carro = modelo:FindFirstChild("Carro")
+  local mesa = carro and carro:FindFirstChild("MesaGiratória")
+  if not (mesa and mesa.PrimaryPart and carro.PrimaryPart and modelo.PrimaryPart) then return false end
+  local pivo = modelo:GetPivot()
+  carro:PivotTo(pivo * CFrame.new(pose.Position))
+  mesa:PivotTo(pivo * pose)
+  return true
+end
+
 function MineriosVisuais:_Observar(parte)
+  if parte.Name == "ElevadorVertical" and parte:IsA("Model") and parte.Parent and parte.Parent.Name == "Maquinas" then
+    if self._elevadores[parte] then return end
+    local function atualizarCarro()
+      local trecho = Movimento.Decodificar(parte:GetAttribute("MovimentoCarroElevador"))
+      if trecho then
+        self._carrosEmMovimento[parte] = {Trecho = trecho, Relogio = {}}
+      else
+        self._carrosEmMovimento[parte] = nil
+        local entrada, direcao = parte:GetAttribute("PortaEntrada"), parte:GetAttribute("DirecaoEntrada")
+        if entrada and direcao then
+          posicionarCarro(parte, CFrame.new(0, entrada.Y, 0) * CFrame.Angles(0, math.atan2(direcao.X, direcao.Z), 0))
+        end
+      end
+    end
+    self._elevadores[parte] = parte:GetAttributeChangedSignal("MovimentoCarroElevador"):Connect(atualizarCarro)
+    atualizarCarro()
+    return
+  end
   if self._observados[parte] or not parte:IsA("BasePart") or parte.Name ~= "Minerio"
     or not parte.Parent or parte.Parent.Name ~= "Minerios" then return end
   self:_RegistrarLimite(parte)
@@ -207,7 +236,7 @@ function MineriosVisuais:_Observar(parte)
     self:_RegistrarLimite(parte)
     local movimento = Movimento.Decodificar(parte:GetAttribute("MovimentoMinerio"))
     if movimento and movimento.Velocidade == Vector3.zero and movimento.Aceleracao == Vector3.zero and movimento.Angular == Vector3.zero then
-      if anterior then parte.CFrame = movimento.Origem end
+      parte.CFrame = movimento.Origem
       movimento = nil
     end
     if not movimento or not parte.Parent.Parent then return end
@@ -244,6 +273,11 @@ function MineriosVisuais:_Observar(parte)
 end
 
 function MineriosVisuais:_Remover(parte)
+  if self._elevadores[parte] then
+    self._elevadores[parte]:Disconnect()
+    self._elevadores[parte], self._carrosEmMovimento[parte] = nil, nil
+    return
+  end
   if self._observados[parte] and parte:GetAttribute("Vendido") then self:_AnimarVenda(parte) end
   self:_RetirarLimite(parte)
   local etiqueta = self._etiquetas[parte]
@@ -363,6 +397,19 @@ function MineriosVisuais:Atualizar(agora)
       end
     end
   end
+  for modelo, estado in self._carrosEmMovimento do
+    local terreno = modelo.Parent and modelo.Parent.Parent
+    if not terreno then continue end
+    local grupo = self._grupos[terreno]
+    local texto = terreno:GetAttribute("RelogioMinerios")
+    if texto ~= estado.Texto then estado.Texto, estado.Amostra = texto, Movimento.DecodificarRelogio(texto) end
+    if not estado.Amostra then continue end
+    local tempo = Movimento.TempoVisual(grupo and grupo.EstadoRelogio or estado.Relogio, estado.Amostra, agora)
+    local trecho = estado.Trecho
+    if posicionarCarro(modelo, Movimento.Avaliar(trecho, tempo)) and tempo >= trecho.Inicio + trecho.Duracao then
+      self._carrosEmMovimento[modelo] = nil
+    end
+  end
 if #partes > 0 then workspace:BulkMoveTo(partes, poses, Enum.BulkMoveMode.FireCFrameChanged) end
 MonitorRecursos.DefinirMetrica("MineriosMovidosFrame", #partes)
 MonitorRecursos.DefinirMetrica("PlotsPuladasLOD", plotsPuladas)
@@ -377,6 +424,7 @@ function MineriosVisuais:Destruir()
   self._jogador = nil
   self._adicionado:Disconnect(); self._removido:Disconnect(); self._quadro:Disconnect()
   for _, conexao in self._configuracoes do conexao:Disconnect() end
+  for modelo in self._elevadores do self:_Remover(modelo) end
   for parte in self._observados do self:_Remover(parte) end
   table.clear(self._partes); table.clear(self._poses)
   table.clear(self._grupos)

@@ -220,9 +220,11 @@ function Controles:Atualizar()
 	self._instrucao.Visible=self._c._arrasteSelecao~=nil
 	self._instrucao.Text=controle and "Aponte o outro canto e confirme" or "Toque no outro canto e confirme"
 	local indice=0
+	local somenteY = self._c._previa and self._c:_ColocacaoSomenteVertical()
 	for i,item in acoes do
 		local b=self._botoes[item[1]]:ObterInstancia()
 		b.Visible=self._c._previa~=nil or item[1]:sub(1,5)~="Girar"
+		if somenteY and (item[1] == "Girar X" or item[1] == "Girar Z") then b.Visible = false end
 		local nome=item[1]
 		if nome=="Linha / área" then
 			nome=self._c._arrasteSelecao and "Concluir área" or self._c._arrasteColocacao and "Concluir linha"

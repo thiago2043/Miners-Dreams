@@ -16,7 +16,7 @@ Uma seta branca por correia indica o sentido de transporte durante a colocação
 
 Ao inclinar, o jogo adapta o comprimento e o corpo da mesma esteira para manter as pontas nas faces da grade. A ocupação vertical inclui o desnível e a folga do corpo. Não são tipos adicionais de rampa. O componente de transporte aplica tração enquanto o minério toca a correia; as centralizadoras corrigem a posição e a rolagem lateral no contato.
 
-Os cinco assets individuais têm `SomenteModelagem=false`, estão mapeados no Rojo e cadastrados na loja por $25 cada, conforme definido pelo usuário. As quatro esteiras usam velocidade 6 studs/s; as centralizadoras têm um transportador para cada metade. A parede usa colisão e não possui componentes de minério. O kit atual inclui dez Esteiras 2×2; as outras peças deste grupo começam zeradas. A esteira básica provisória permanece apenas para estoques e construções salvas, sem novas compras.
+Os cinco assets individuais têm `SomenteModelagem=false` e estão mapeados no Rojo. Na loja, a Esteira 1×1 e a Centralizadora 1×1 custam $1M cada. As duas versões 2×2 e a parede custam $25 cada. As quatro esteiras usam velocidade 6 studs/s. As centralizadoras têm um transportador para cada metade. A parede usa colisão e não possui componentes de minério. O kit atual inclui dez Esteiras 2×2. As outras peças deste grupo começam zeradas. A esteira básica provisória permanece apenas para estoques e construções salvas, sem novas compras.
 
 - `assets/*.rbxm`: cinco peças individuais, sem assets de rampa.
 - `GaleriaEsteiras.rbxm`: as cinco peças planas para inspeção.

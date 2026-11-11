@@ -10,7 +10,7 @@ local mesmaDirecao = math.cos(math.rad(25))
 
 -- Recebe a posicao inicial do mouse, a orientacao da camera no terreno, a rotacao atual e a esfera projetada
 -- na tela. Inicializa os acumuladores do gesto sem aplicar nenhum giro.
-function RotacaoArraste.new(mouse, cameraNoTerreno, rotacao, centroTela, raioTela, definicao, permitirInclinar)
+function RotacaoArraste.new(mouse, cameraNoTerreno, rotacao, centroTela, raioTela, definicao, permitirInclinar, somenteY)
 	-- Guarda a camera no inicio do gesto, a posicao anterior do cursor e acumuladores: um confirma mudanca de
 	-- direcao, outro determina quantos giros completos foram pedidos.
 	local self = setmetatable({
@@ -19,6 +19,7 @@ function RotacaoArraste.new(mouse, cameraNoTerreno, rotacao, centroTela, raioTel
 		_rotacao = rotacao, _mouseAnterior = mouse,
 		_definicao = definicao,
 		_permitirInclinar = permitirInclinar ~= false,
+		_somenteY = somenteY or (definicao and definicao.Vertical),
 		_movimentoDirecao = Vector2.zero,
 		_pixelsRepeticao = 0, _pixelsPendentes = 0,
 	}, RotacaoArraste)
@@ -74,7 +75,7 @@ function RotacaoArraste:Atualizar(mouse)
 	self._mouseAnterior = mouse
 	if deslocamento.Magnitude < 0.000001 then return self._rotacao end
 	local eixo, distancia = self:_EixoDoMovimento(anterior, deslocamento)
-	if not eixo then return self._rotacao end
+	if not eixo or (self._somenteY and eixo.Y == 0) then return self._rotacao end
 	local passos
 	-- No eixo confirmado, cada 96 pixels acrescenta um passo. Ao trocar de eixo/sentido, exige primeiro 48
 	-- pixels de confirmacao para nao girar por um tremor curto.

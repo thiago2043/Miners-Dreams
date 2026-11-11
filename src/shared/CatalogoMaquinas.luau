@@ -53,7 +53,7 @@ local catalogo = {
 		Componentes = { { Tipo = "Transportador", Parte = "Correia", Velocidade = 6 } },
 	},
 	Esteira1x1 = {
-		Nome = "Esteira 1×1", Preco = "25", Blocos = { 1, 1, 1 },
+		Nome = "Esteira 1×1", Preco = "1000000", Blocos = { 1, 1, 1 },
 		Componentes = { { Tipo = "Transportador", Parte = "Correia", Velocidade = 6 } },
 	},
 	Centralizadora2x2 = {
@@ -64,7 +64,7 @@ local catalogo = {
 		},
 	},
 	Centralizadora1x1 = {
-		Nome = "Centralizadora 1×1", Preco = "25", Blocos = { 1, 1, 1 },
+		Nome = "Centralizadora 1×1", Preco = "1000000", Blocos = { 1, 1, 1 },
 		Componentes = {
 			{ Tipo = "Transportador", Parte = "CorreiaEsquerda", Velocidade = 6 },
 			{ Tipo = "Transportador", Parte = "CorreiaDireita", Velocidade = 6 },
@@ -169,6 +169,17 @@ for _, grupo in grupos do
 	end
 end
 
+catalogo.ElevadorVertical = {
+	Nome = "Elevador vertical", Preco = "1000000000000", Blocos = {1, 2, 1},
+	Raridade = "Comum", Vertical = true,
+	Componentes = {
+		{Tipo = "Transportador", Parte = "CorreiaEntrada", Velocidade = 6},
+		{Tipo = "Transportador", Parte = "CorreiaSaida", Velocidade = 6},
+		{Tipo = "Elevador", Sensor = "SensorEntrada", Velocidade = 6},
+	},
+}
+
+local raridadesRenascimento = {"Despertar", "Avanço", "Apogeu", "Domínio", "Meridiano"}
 for _, premio in require(script.Parent.RecompensasRenascimento) do
 	local item
 	if premio.Tipo == "Soltador" then
@@ -184,11 +195,23 @@ for _, premio in require(script.Parent.RecompensasRenascimento) do
 	item.Nome, item.Renascimento = premio.Nome, true
 	item.Obtencao = "Renascimento"
 	item.LoteRenascimento = premio.Lote
-	item.Raridade = "Renascimento"
+	item.Raridade = raridadesRenascimento[math.ceil(premio.Lote / 10)]
 	catalogo[premio.Id] = item
 end
 
-for _, peca in require(script.Parent.ExpansaoMaquinas) do
+local expansao = require(script.Parent.ExpansaoMaquinas)
+local receitas = {}
+for _, peca in expansao do receitas[peca.Id] = peca.Receita end
+local function profundidade(receita)
+	local nivel = 1
+	for _, id in receita do
+		if receitas[id] then nivel = math.max(nivel, 1 + profundidade(receitas[id])) end
+	end
+	return nivel
+end
+local raridadesCraft = {"Forjada", "Composta", "Núcleo"}
+local finais = {CM10 = true, CF10 = true, CX30 = true}
+for _, peca in expansao do
 	local item
 	if peca.Tipo == "Soltador" then
 		item = mineradora("", peca.Preco, peca.Blocos, peca.Intervalo, peca.Valor)
@@ -199,9 +222,14 @@ for _, peca in require(script.Parent.ExpansaoMaquinas) do
 			peca.Multiplicador, peca.Bonus or "0", peca.LimiteUsos, "0", peca.ValorMaximo, true)
 		item.Componentes[2].MultiplicadoresFaixas = peca.Faixas
 	end
-	item.Nome, item.CodigoVisual, item.Raridade = peca.Nome, peca.Codigo, "Mítico"
+	item.Nome, item.CodigoVisual = peca.Nome, peca.Codigo
 	if peca.Receita then
 		item.Receita, item.Obtencao = peca.Receita, "Craft"
+		item.Raridade = if finais[peca.Codigo] then "Convergente" else raridadesCraft[profundidade(peca.Receita)]
+	else
+		local digitos = #peca.Preco
+		item.Raridade = if digitos >= 111 then "Elite" elseif digitos >= 81 then "Superior"
+			elseif digitos >= 61 then "Singular" elseif digitos >= 46 then "Anômala" else "Exótica"
 	end
 	catalogo[peca.Id] = item
 end

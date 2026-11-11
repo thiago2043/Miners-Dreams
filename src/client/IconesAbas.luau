@@ -9,6 +9,7 @@ local cores = {
 	Administracao = Color3.fromRGB(112,198,255),
 	Tutorial = Color3.fromRGB(101,228,196),
 	Craft = Color3.fromRGB(255,138,96),
+	Elevador = Color3.fromRGB(77,227,211),
 }
 
 -- Coordenadas de desenho usam uma placa de 56 unidades; Scale acompanha o tamanho real do botao.
@@ -37,6 +38,12 @@ local function linha(pai, cor, x1, y1, x2, y2, espessura)
 end
 
 local desenhos = {
+	Elevador = function(pai, cor)
+		for _, x in {13, 39} do retangulo(pai, cor, x, 11, 4, 34, 1) end
+		retangulo(pai, cor, 13, 11, 30, 4, 1)
+		retangulo(pai, cor, 13, 33, 30, 5, 1)
+		retangulo(pai, cor, 24, 24, 8, 8, 1)
+	end,
 	Craft = function(pai, cor)
 		linha(pai, cor, 15, 43, 36, 17, 6)
 		retangulo(pai, cor, 20, 12, 26, 11, 2, 39)

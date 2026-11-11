@@ -49,6 +49,8 @@ function FichaMaquina.Descrever(definicao,jogador)
 			local nivel=Upgrades.Valido(selecionado) and math.min(selecionado,Efeitos.Nivel(jogador,"Motores")) or 0
 			local texto="Transporte: " .. numero(Efeitos.Velocidade(componente.Velocidade,nivel)/bloco) .. " blocos/s"
 			if not vendedor and not transportes[texto] then table.insert(linhas,texto); transportes[texto]=true end
+		elseif componente.Tipo == "Elevador" then
+			table.insert(linhas, "Altura ajustável · entrada e saída nas quatro faces")
 		elseif componente.Tipo == "Modificador" then
 			table.insert(linhas, "Modificação: " .. efeito(componente))
 			if componente.Renascimento then

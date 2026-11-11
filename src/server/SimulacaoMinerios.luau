@@ -86,6 +86,7 @@ return setmetatable({
 _minerios = {}, _corpos = {}, _transportadores = {}, _sensores = {}, _consultas = {}, _consultasSensores = {}, _regioes = {},
 _sensoresPorTerreno = {}, _terrenoPorSensor = {},
 _relogios = {},
+_elevadoresAtivos = {},
 _trajetorias = setmetatable({}, {__mode="k"}), _passosReutilizaveis = {}, _proximoPasso = 1,
 _acumulado = 0, _passos = 0, _tempo = 0, _chamada = 0, _versao = 0,
 }, SimulacaoMinerios)
@@ -156,6 +157,44 @@ local registro = self._corpos[parte]
 if not registro then return nil end
 atualizarApoio(registro, self._passos)
 return registro.Corpo
+end
+
+function SimulacaoMinerios:MoverMinerioNoElevador(minerio, elevador, destino, duracao, impulso)
+local registro = self._corpos[minerio:ObterParte()]
+if not registro or (registro.Elevador and registro.Elevador.Componente ~= elevador) then return false end
+local corpo = self:ObterCorpo(registro.Parte)
+corpo._apoio, corpo._emContato, corpo.MomentoAngular = nil, true, Vector3.zero
+if duracao == 0 then corpo.Velocidade = Vector3.zero end
+registro.PassoPendente, registro.Livre, registro.TocouChao = nil, nil, false
+registro.Elevador = {Componente=elevador, Origem=corpo.CFrame, Inicio=self._tempo, Duracao=duracao,
+Velocidade=if duracao > 0 then (destino - corpo.CFrame.Position) / duracao else Vector3.zero, Impulso=impulso}
+return true
+end
+
+function SimulacaoMinerios:MoverCarroElevador(modelo, terreno, pose, velocidade, angular, duracao)
+self._elevadoresAtivos[modelo] = terreno
+modelo:SetAttribute("MovimentoCarroElevador", Movimento.Codificar(pose, velocidade, self._tempo, Vector3.zero, angular, duracao))
+end
+
+function SimulacaoMinerios:PararCarroElevador(modelo)
+self._elevadoresAtivos[modelo] = nil
+if modelo.Parent then modelo:SetAttribute("MovimentoCarroElevador", nil) end
+end
+
+function SimulacaoMinerios:_AvancarMinerioNoElevador(registro, passo)
+local movimento, corpo = registro.Elevador, registro.Corpo
+local ativo = movimento.Componente:EstaAtivo()
+if ativo and movimento.Duracao == 0 then return end
+local t = math.clamp(self._tempo + passo - movimento.Inicio, 0, movimento.Duracao)
+if ativo then
+corpo.CFrame = movimento.Origem + movimento.Velocidade * t
+corpo.Velocidade = movimento.Velocidade
+end
+if not ativo or (movimento.Impulso and t >= movimento.Duracao - 1e-7) then
+corpo.Velocidade = if ativo then movimento.Impulso else Vector3.zero
+registro.Elevador, registro.Movimento = nil, nil
+registro.PosicaoRepouso, registro.ParadoDesde = corpo.CFrame.Position, self._tempo
+end
 end
 
 --- Método público LPOO (SimulacaoMinerios:RegistrarTransportador).
@@ -456,7 +495,7 @@ if not precisa and not falha then continue end
 if CorpoRigido.Intersecao(corpo.CFrame, corpo.Tamanho, sensor.CFrame, sensor.Tamanho) then
 if precisa then sensor.Componente:Receber(minerio, sensor.Parte)
 else sensor.Componente:RegistrarFalha(minerio,sensor.Parte) end
-if not parte.Parent or parte:GetAttribute("Processado") then return end
+if registro.Elevador or not parte.Parent or parte:GetAttribute("Processado") then return end
 end
 end
 end
@@ -496,7 +535,10 @@ self._corpos[parte] = nil
 self._minerios[indice] = self._minerios[#self._minerios]
 self._minerios[#self._minerios] = nil
 else
-if registro.Livre ~= self._chamada or registro.Versao ~= self._versao then
+if registro.Elevador then
+self:_AvancarMinerioNoElevador(registro, passo)
+if registro.Elevador then continue end
+elseif registro.Livre ~= self._chamada or registro.Versao ~= self._versao then
 self:_Simular(registro, passo, (quantidade-executados)*passo)
 end
 local corpo = registro.Corpo
@@ -507,7 +549,7 @@ end
 if not registro.PosicaoRepouso or (posicao - registro.PosicaoRepouso).Magnitude > corpo.Tamanho.Magnitude / 2 then
 registro.PosicaoRepouso, registro.ParadoDesde = posicao, self._tempo
 end
-if parte.Parent and not parte:GetAttribute("Processado") and (registro.TocouChao or (registro.ParadoDesde and self._tempo + passo - registro.ParadoDesde + 0.000000001 >= 5)) then
+if not registro.Elevador and parte.Parent and not parte:GetAttribute("Processado") and (registro.TocouChao or (registro.ParadoDesde and self._tempo + passo - registro.ParadoDesde + 0.000000001 >= 5)) then
 local jogador = Players:GetPlayerByUserId(registro.Terreno:GetAttribute("DonoUserId"))
 local dados = jogador and DataManager.ObterDados(jogador)
 local valor = registro.Minerio:CalcularValor("0.1")
@@ -532,6 +574,15 @@ for _, registro in self._minerios do
 local parte = registro.Parte
 if not parte.Parent or parte:GetAttribute("Processado") then continue end
 terrenos[registro.Terreno] = true
+if registro.Elevador then
+local trecho = registro.Elevador
+if registro.Movimento ~= trecho then
+registro.Movimento = trecho
+parte:SetAttribute("MovimentoMinerio", Movimento.Codificar(trecho.Origem, trecho.Velocidade,
+trecho.Inicio, Vector3.zero, Vector3.zero, trecho.Duracao))
+end
+continue
+end
 atualizarApoio(registro, self._passos)
 local corpo, movimento = registro.Corpo, registro.Movimento
 local angular=corpo:VelocidadeAngular()
@@ -582,6 +633,9 @@ table.insert(partes, parte); table.insert(poses, registro.Corpo.CFrame)
 registro.PosePublicada = registro.Corpo.CFrame
 end
 end
+for modelo, terreno in self._elevadoresAtivos do
+if modelo.Parent then terrenos[terreno] = true else self._elevadoresAtivos[modelo] = nil end
+end
 if not self._relogioAgora or agora-self._relogioAgora>=.1 then
 local taxa=if self._relogioAgora and agora>self._relogioAgora then (inicio-self._relogioTempo)/(agora-self._relogioAgora) else 1
 self._relogio=HttpService:JSONEncode({agora,inicio,math.clamp(taxa,0,1.05)})
@@ -611,6 +665,7 @@ table.clear(self._consultas)
 table.clear(self._consultasSensores)
 table.clear(self._regioes)
 table.clear(self._relogios)
+table.clear(self._elevadoresAtivos)
 end
 
 --- Retorna a quantidade atual de minérios ativos sendo simulados na plot.

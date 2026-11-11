@@ -6,6 +6,7 @@ local Networker = require(ReplicatedStorage.Packages.Networker)
 local PainelPecas = require(script.Parent.PainelPecas)
 local PainelBlueprints = require(script.Parent.PainelBlueprints)
 local PainelCraft = require(script.Parent.PainelCraft)
+local PainelElevador = require(script.Parent.PainelElevador)
 local Configuracoes=require(ReplicatedStorage.Shared.Configuracoes)
 local MonitorRecursos=require(ReplicatedStorage.Shared.MonitorRecursos)
 local PainelConfiguracoes = require(script.Parent.PainelConfiguracoes)
@@ -55,6 +56,7 @@ self._interface = Instance.new("ScreenGui")
 	self._paineisProgressao = {}
 	self._paineisProgressao.Craft = PainelCraft.new(self._interface, jogador, construcao.Navegacao,
 		Networker.client.new("Craft", {}), self._confirmacao)
+	self._paineisProgressao.Elevador = PainelElevador.new(self._interface, jogador, construcao)
 	self._paineisProgressao.Tutorial = PainelTutorial.new(self._interface, jogador, construcao.Navegacao)
 	self._paineisProgressao.Prestigio = PainelPrestigio.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Prestigio", {}))
 	self._paineisProgressao.Upgrades=PainelUpgrades.new(self._interface,jogador,construcao.Navegacao,Networker.client.new("Upgrades",{}))
@@ -320,7 +322,6 @@ local botao = Botao.new(self._menuPeca, acaoBotao, function()
         self._estatisticasVisiveis = not self._estatisticasVisiveis
         self._estatisticasPeca.Visible = self._estatisticasVisiveis
         AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, self._estatisticasVisiveis, "Flutuante")
-        self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, self._estatisticasVisiveis and alturaDetalhesPeca or alturaMenuPeca)
         self:_AtualizarDescricaoPeca()
         self:_AtualizarMenuPeca()
       else
@@ -351,6 +352,17 @@ local botao = Botao.new(self._menuPeca, acaoBotao, function()
 		end
 		self._botoesPecaContexto[acaoBotao] = botao
 	end
+	local configurar = Botao.new(self._menuPeca, "ConfigurarElevador", function()
+		self._paineisProgressao.Elevador:Abrir(self._maquinaFocada)
+	end)
+	local botao = configurar:ObterInstancia()
+	botao.Position, botao.Size = UDim2.fromOffset(10, 196), UDim2.fromOffset(188, 35)
+	botao.Text, botao.TextSize, botao.Font = "Configurar elevador", 16, Enum.Font.SourceSansBold
+	botao.BackgroundColor3, botao.TextColor3 = Color3.fromRGB(25, 51, 54), Color3.fromRGB(134, 244, 230)
+	botao.Visible, botao.Selectable, botao.ZIndex = false, true, 3
+	acabamento(botao, 7, Color3.fromRGB(56, 132, 131))
+	configurar:DefinirDisponivel(true)
+	self._botoesPecaContexto.ConfigurarElevador = configurar
 
 	self._volumePeca = Instance.new("Part")
 	self._volumePeca.Name, self._volumePeca.Anchored, self._volumePeca.Transparency = "VolumePecaSelecionada", true, 1
@@ -410,6 +422,16 @@ function InterfaceJogo:_AtualizarMenuPeca()
   end
   local quantidade = #self._construcao:ObterPecasFocadas()
   local definicao = Catalogo[maquina.Name]
+  local temElevador = quantidade == 1 and definicao and definicao.Vertical == true
+  self._botoesPecaContexto.ConfigurarElevador:ObterInstancia().Visible = temElevador == true
+  local adicional = if temElevador then 39 else 0
+  local alturaMenu = (if self._estatisticasVisiveis then alturaDetalhesPeca else alturaMenuPeca) + adicional
+  if self._menuPeca.Size.Y.Offset ~= alturaMenu then
+    self._menuPeca.Size = UDim2.fromOffset(larguraMenuPeca, alturaMenu)
+  end
+  if self._areaEstatisticasPeca.Position.Y.Offset ~= 198 + adicional then
+    self._areaEstatisticasPeca.Position = UDim2.fromOffset(10, 198 + adicional)
+  end
   self._tituloPeca.Text = if quantidade > 1 then "Seleção de peças" else definicao and definicao.Nome or "Peça"
   self._selecaoPeca.Text = if quantidade == 1 then "1 selecionada" else quantidade .. " selecionadas"
   local tipo = "Peça"
@@ -417,6 +439,7 @@ function InterfaceJogo:_AtualizarMenuPeca()
     if componente.Tipo == "Vendedor" then tipo = "Fornalha"; break
     elseif componente.Tipo == "Soltador" then tipo = "Mineradora"
     elseif componente.Tipo == "Modificador" then tipo = "Modificador"
+    elseif componente.Tipo == "Elevador" then tipo = "Transporte vertical"
     elseif componente.Tipo == "Transportador" then tipo = "Esteira" end
   end
   self._tipoPeca.Text = if quantidade > 1 then "Grupo" else tipo

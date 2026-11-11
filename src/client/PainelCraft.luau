@@ -4,6 +4,7 @@ local Catalogo = require(R.Shared.CatalogoMaquinas)
 local Expansao = require(R.Shared.ExpansaoMaquinas)
 local Abreviar = require(R.Shared.AbreviarInteiro)
 local Ficha = require(script.Parent.FichaMaquina)
+local Raridades = require(script.Parent.Raridades)
 local Janela = require(script.Parent.PainelProgressao)
 
 local Painel = {}
@@ -73,10 +74,12 @@ function Painel.new(pai, jogador, navegacao, rede, confirmacao)
 		self:_Mostrar(table.remove(self._trilha))
 	end)
 	self._titulo = janela:Texto(detalhes, "Resultado", "", UDim2.new(), altura(0), 20, true)
+	self._raridade = janela:Texto(detalhes, "Raridade", "", UDim2.new(), altura(20), 15, true)
 	self._efeito = janela:Texto(detalhes, "Estatísticas", "", UDim2.new(), altura(0), 15)
 	self._titulo.AutomaticSize, self._efeito.AutomaticSize = Enum.AutomaticSize.Y, Enum.AutomaticSize.Y
 	local titulo = janela:Texto(detalhes, "Ingredientes", "Ingredientes no inventário", UDim2.new(), altura(25), 16, true)
-	self._voltar:ObterInstancia().LayoutOrder, self._titulo.LayoutOrder, self._efeito.LayoutOrder, titulo.LayoutOrder = 1, 2, 3, 4
+	self._voltar:ObterInstancia().LayoutOrder, self._titulo.LayoutOrder = 1, 2
+	self._raridade.LayoutOrder, self._efeito.LayoutOrder, titulo.LayoutOrder = 3, 4, 5
 	for i = 1, maxIngredientes do
 		local botao = janela:Botao(detalhes, "Ingrediente" .. i, UDim2.new(), altura(46), function()
 			local id = Catalogo[self._id].Receita[i]
@@ -84,15 +87,15 @@ function Painel.new(pai, jogador, navegacao, rede, confirmacao)
 			self:_Mostrar(id)
 		end)
 		local instancia = botao:ObterInstancia()
-		instancia.LayoutOrder, instancia.TextSize = 4 + i, 14
+		instancia.LayoutOrder, instancia.TextSize = 5 + i, 14
 		self._ingredientes[i] = botao
 	end
 	self._fabricar = janela:Botao(detalhes, "Fabricar", UDim2.new(), altura(44), function() self:Fabricar() end)
-	self._fabricar:ObterInstancia().LayoutOrder = 5 + maxIngredientes
+	self._fabricar:ObterInstancia().LayoutOrder = 6 + maxIngredientes
 	self._fabricar:ObterInstancia().BackgroundColor3 = janela.Cor
 	self._fabricar:ObterInstancia().TextColor3 = Color3.fromRGB(24, 25, 31)
 	self._resposta = janela:Texto(detalhes, "Resposta", "", UDim2.new(), altura(0), 15)
-	self._resposta.LayoutOrder, self._resposta.AutomaticSize = 6 + maxIngredientes, Enum.AutomaticSize.Y
+	self._resposta.LayoutOrder, self._resposta.AutomaticSize = 7 + maxIngredientes, Enum.AutomaticSize.Y
 	self:_AtualizarTela()
 	return self
 end
@@ -138,6 +141,8 @@ function Painel:_AtualizarTela()
 	if not item then return end
 
 	self._titulo.Text = item.CodigoVisual .. " · " .. item.Nome
+	local raridade = Raridades.Obter(item)
+	self._raridade.Text, self._raridade.TextColor3 = raridade.Nome, raridade.Cores.Keypoints[1].Value
 	self._efeito.Text = Ficha.Descrever(item, self._jogador)
 	self._voltar:DefinirDisponivel(not self._enviando)
 	self._voltar:ObterInstancia().Text = if #self._trilha > 0 then "‹ Receita anterior" else "‹ Receitas"

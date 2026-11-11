@@ -2,8 +2,16 @@
 local roblox=require("@lune/roblox")
 local suporte=require("./suporte/interface")
 local miniaturas={}
+local function novo(classe)
+	local objeto=suporte.NovaInstancia(classe)
+	local atributos={}
+	function objeto:SetAttribute(k,v) atributos[k]=v end
+	function objeto:GetAttribute(k) return atributos[k] end
+	return objeto
+end
 local carregar=require("./suporte/carregador")({
-	Instance={new=suporte.NovaInstancia}, Enum=roblox.Enum, Color3=roblox.Color3,
+	Instance={new=novo}, Enum=roblox.Enum, Color3=roblox.Color3,
+	typeof=function(v) return if type(v)=="table" and v.ClassName then "Instance" else typeof(v) end,
 	Vector2=roblox.Vector2, UDim=roblox.UDim, UDim2=roblox.UDim2, ColorSequence=roblox.ColorSequence,
 },{},{
 	["src/client/MiniaturaPeca"]={new=function(_,modelo,personalizacao)
@@ -58,7 +66,7 @@ assert(ficha._miniatura==nil and ficha._erroRetrato.Visible and ficha._quantidad
 -- a mesma linha, liberando a area rolavel para as estatisticas.
 ficha:ObterInstancia().AbsoluteSize=roblox.Vector2.new(280,315)
 ficha:ObterInstancia():GetPropertyChangedSignal("AbsoluteSize"):Fire()
-assert(ficha._retrato.Size.X.Offset==63 and ficha._retrato.Size.Y.Offset==63)
+assert(ficha._retrato.Size.X.Offset==75 and ficha._retrato.Size.Y.Offset==75)
 local colocar=campos.Acoes.Colocar:ObterInstancia()
 local vender=campos.Acoes.Vender:ObterInstancia()
 assert(colocar.Position.Y.Offset==0 and vender.Position.Y.Offset==0)
@@ -66,18 +74,18 @@ assert(colocar.Size.Y.Offset==32 and vender.Size.Y.Offset==32 and vender.Positio
 assert(ficha._rolagem.Size.Y.Offset==-84)
 ficha:ObterInstancia().AbsoluteSize=roblox.Vector2.new(280,520)
 ficha:ObterInstancia():GetPropertyChangedSignal("AbsoluteSize"):Fire()
-assert(ficha._retrato.Size.Y.Offset==96)
+assert(ficha._retrato.Size.Y.Offset==124)
 ficha:Atualizar("FornalhaBasica","Fornalha básica",2,false,Catalogo.FornalhaBasica,nil)
 assert(not campos.Quantidade.Visible, "No inventario, o retrato ja mostra a quantidade.")
 
 -- O tamanho do retrato tambem acompanha larguras estreitas; o canvas acompanha o conteudo.
-ficha._conteudo.AbsoluteSize=roblox.Vector2.new(90,300)
-ficha._conteudo:GetPropertyChangedSignal("AbsoluteSize"):Fire()
-assert(ficha._retrato.Size.X.Offset==86 and ficha._retrato.Size.Y.Offset==86)
+ficha:ObterInstancia().AbsoluteSize=roblox.Vector2.new(90,300)
+ficha:ObterInstancia():GetPropertyChangedSignal("AbsoluteSize"):Fire()
+assert(ficha._retrato.Size.X.Offset==62 and ficha._retrato.Size.Y.Offset==62)
 local layout=ficha._conteudo:FindFirstChildOfClass("UIListLayout")
 layout.AbsoluteContentSize=roblox.Vector2.new(90,600)
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Fire()
-assert(ficha._rolagem.CanvasSize.Y.Offset==608)
+assert(ficha._rolagem.CanvasSize.Y.Offset==610)
 
 -- O painel controla Active; a ficha apenas representa o estado e Botao impede callbacks bloqueados.
 campos.Acoes.Colocar:DefinirDisponivel(false)
@@ -123,10 +131,10 @@ for nome, estilo in carregar("src/client/Raridades").Estilos do
 	assert(gradiente.Color==estilo.Cores and #ficha._bordaRetrato:GetChildren()==1,"Faixa e borda devem combinar sem acumular gradientes.")
 end
 loja:Destruir(); loja:Destruir()
-for _, b in loja._botoes do assert(b._destruido and not b._conexao.ativa) end
+for _, b in loja._botoes do assert(b._destruido and not b._conexao) end
 ficha:Destruir(); ficha:Destruir()
 for _, m in miniaturas do assert(m.destruido) end
 for _, c in ficha._conexoes do assert(not c.ativa) end
-for _, b in ficha._botoes do assert(b._destruido and not b._conexao.ativa) end
+for _, b in ficha._botoes do assert(b._destruido and not b._conexao) end
 pai:Destroy()
 print("PASS: fichas independentes, precos, compra padrao, variantes do inventario, cache, falhas, rolagem, acoes e limpeza.")

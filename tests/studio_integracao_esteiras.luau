@@ -11,7 +11,8 @@ do
 	local ids={"Esteira2x2","Esteira1x1","Centralizadora2x2","Centralizadora1x1","Parede1x1"}
 	for _,id in ids do
 		local modelo=assert(R.ModelosMaquinas:FindFirstChild(id),"Asset nao sincronizado: "..id)
-		assert(Catalogo[id].Preco=="25" and modelo:GetAttribute("SomenteModelagem")==false)
+		local preco = if id == "Esteira1x1" or id == "Centralizadora1x1" then "1000000" else "25"
+		assert(Catalogo[id].Preco==preco and modelo:GetAttribute("SomenteModelagem")==false)
 		assert(modelo.HitboxConstrucao.Size==Vector3.new(table.unpack(Catalogo[id].Blocos))*3)
 	end
 	local raiz=Instance.new("Folder"); raiz.Name="TesteIntegracaoEsteiras"; raiz.Parent=workspace
@@ -73,7 +74,7 @@ do
 			if p==parede.NucleoParede then achou=true end
 		end
 		assert(achou,"Parede ausente da consulta espacial nativa.")
-		print("STUDIO_INTEGRACAO_ESTEIRAS_OK",#ids,"tipos de $25;",percursos,"percursos planos/inclinados e parede com colisao.")
+		print("STUDIO_INTEGRACAO_ESTEIRAS_OK",#ids,"tipos;",percursos,"percursos planos/inclinados e parede com colisao.")
 	end)
 	for _,objeto in objetos do objeto:Destruir() end
 	sim:Destruir(); raiz:Destroy()

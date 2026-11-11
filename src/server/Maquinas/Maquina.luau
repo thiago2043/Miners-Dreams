@@ -12,6 +12,7 @@ local tiposComponentes = {
   Transportador = require(script.Parent.Parent.Componentes.TransportadorMinerio),
   Modificador = require(script.Parent.Parent.Componentes.ModificadorMinerio),
   Vendedor = require(script.Parent.Parent.Componentes.VendedorMinerio),
+  Elevador = require(script.Parent.Parent.Componentes.ElevadorMinerio),
 }
 local Maquina = {}
 Maquina.__index = Maquina
