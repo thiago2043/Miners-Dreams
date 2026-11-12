@@ -9,7 +9,7 @@ local mundo=I.new("Workspace")
 local base=I.new("Part"); base.Name,base.Size,base.CFrame,base.CanCollide,base.Parent="Baseplate",V.new(512,20,512),CF.new(0,-10,0),true,mundo
 local terrenos=I.new("Folder"); terrenos.Name,terrenos.Parent="Terrenos",mundo
 assert(M.QuantidadePlots==8)
-for id=1,8 do Terreno.new(id,M.CFramePlot(id,.5),terrenos) end
+for id=1,8 do Terreno.new(id,M.CFramePlot(id,.5),terrenos,M.CFrameEntradaPlot(id,1.5)) end
 local c=Cenario.Criar(base,terrenos,mundo)
 assert(math.abs(M.Inicio-terrenos.Terreno_1.Piso.CFrame.Position.Z)<.001)
 assert(math.abs(M.Fim-terrenos.Terreno_8.Piso.CFrame.Position.Z)<.001)
@@ -36,6 +36,16 @@ end
 assert(placas==16 and partes<1200,"Cenario deve evitar excesso de pecas estaticas: "..partes)
 for _,plot in terrenos:GetChildren() do
  local piso=plot.Piso
+ local spawn = plot.Spawn.CFrame
+ local x = spawn.Position.X
+ assert(spawn.LookVector:Dot(V.xAxis * math.sign(x)) > .999, "Spawn deve apontar para a plot")
+ assert(math.abs(x) - plot.Spawn.Size.Z/2 > M.Raio + M.LarguraEstrada/2, "Spawn invade a pista")
+ assert(math.abs(x) + plot.Spawn.Size.Z/2 < 24, "Spawn invade a reserva da plot")
+ local acesso = false
+ for _, parte in c.Decoracoes:GetChildren() do
+  if parte.Name == "Entrada" and (parte.CFrame.Position - spawn.Position).Magnitude < 1.5 then acesso = true; break end
+ end
+ assert(acesso, "Spawn deve ficar sobre o acesso da plot")
  local origem=piso.CFrame*CF.new(-piso.Size.X/2,0,-piso.Size.Z/2)
  local centro=(origem*CF.new(M.LadoPlot/2,0,M.LadoPlot/2)).Position
  local x0,z0=centro.X-M.LadoPlot/2,centro.Z-M.LadoPlot/2
@@ -50,6 +60,7 @@ for _,plot in terrenos:GetChildren() do
   assert(not(p.X-ex<x0+M.LadoPlot-.001 and p.X+ex>x0+.001 and p.Z-ez<z0+M.LadoPlot-.001 and p.Z+ez>z0+.001),"Objeto invade expansao: "..o.Name)
  end
  carregar("src/server/ExpansaoPlot").Aplicar(plot,5)
+ assert(plot.Spawn.CFrame == spawn, "Expansão deslocou o spawn")
  local depois=plot.Piso.CFrame*CF.new(-M.LadoPlot/2,0,-M.LadoPlot/2)
  assert((depois.Position-origem.Position).Magnitude<.001,"Expansao alterou origem salva")
 end

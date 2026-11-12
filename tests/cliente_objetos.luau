@@ -189,8 +189,8 @@ catalogo.EsteiraRapida = {
 }
 local modeloRapido = modelos.Esteira2x2:Clone()
 modeloRapido.Name, modeloRapido.Parent = "EsteiraRapida", modelos
-local t1 = Terreno.new(1, CFrame.identity, terrenos)
-local t2 = Terreno.new(2, CFrame.new(100, 0, 0), terrenos)
+local t1 = Terreno.new(1, CFrame.identity, terrenos, CFrame.new(0, 1, -29))
+local t2 = Terreno.new(2, CFrame.new(100, 0, 0), terrenos, CFrame.new(100, 1, -29))
 t1._modelo.Piso.Size=Vector3.new(48,1,48); t2._modelo.Piso.Size=Vector3.new(48,1,48)
 assert(t1:Atribuir(p1) and t2:Atribuir(p2))
 assert(not t1:Atribuir(p2))

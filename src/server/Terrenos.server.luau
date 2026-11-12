@@ -29,16 +29,22 @@ local function atribuirTerreno(jogador)
 	if jogador.Parent ~= Players or terrenoPorJogador[jogador] then return end
 	for _, terreno in terrenos do
 		if terreno:Atribuir(jogador) then
-			terrenoPorJogador[jogador] = terreno
+			local vinculo = { Terreno = terreno }
+			terrenoPorJogador[jogador] = vinculo
+			local function posicionar(personagem)
+				if terrenoPorJogador[jogador] ~= vinculo or jogador.Character ~= personagem
+					or vinculo.Personagem == personagem then return end
+				vinculo.Personagem = personagem
+				terreno:PosicionarPersonagem(personagem)
+			end
+			vinculo.Conexao = jogador.CharacterAdded:Connect(posicionar)
+			local personagem = jogador.Character
+			if personagem then task.spawn(function() posicionar(personagem) end) end
 			-- A espera pelos recursos da construcao nao deve impedir a criacao e atribuicao das plots.
 			task.spawn(function()
 				local Construcao = require(ServerScriptService:WaitForChild("Construcao"))
-				if terrenoPorJogador[jogador] == terreno then Construcao.Restaurar(jogador) end
+				if terrenoPorJogador[jogador] == vinculo then Construcao.Restaurar(jogador) end
 			end)
-			if jogador.Character then
-				local personagem = jogador.Character
-				task.spawn(function() terreno:PosicionarPersonagem(personagem) end)
-			end
 			return
 		end
 	end
@@ -48,15 +54,17 @@ end
 -- Consulta o terreno associado ao jogador que saiu, remove essa associacao e pede a liberacao da plot. Nao faz
 -- nada quando ele nao chegou a receber um terreno.
 local function liberarTerreno(jogador)
-	local terreno = terrenoPorJogador[jogador]
-	if not terreno then return end
+	local vinculo = terrenoPorJogador[jogador]
+	if not vinculo then return end
 	terrenoPorJogador[jogador] = nil
-	terreno:Liberar()
+	vinculo.Conexao:Disconnect()
+	vinculo.Terreno:Liberar()
 end
 
 -- As origens das duas fileiras fazem as expansoes crescerem para fora da estrada.
 for id = 1, quantidadeTerrenos do
-	table.insert(terrenos, Terreno.new(id, Mapa.CFramePlot(id, alturaChao + 0.5), pastaTerrenos))
+	table.insert(terrenos, Terreno.new(id, Mapa.CFramePlot(id, alturaChao + 0.5), pastaTerrenos,
+		Mapa.CFrameEntradaPlot(id, alturaChao + 1.5)))
 end
 
 -- Conecta entradas futuras e, abaixo, atribui plots aos jogadores ja presentes. A guarda dentro de

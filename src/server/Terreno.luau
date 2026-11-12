@@ -1,13 +1,13 @@
 -- Possui a plot, seu dono e o spawn; atribuir/liberar controla o acesso do jogador e a limpeza dos objetos
 -- desse terreno.
 local Terreno = {}
+local RunService = game:GetService("RunService")
 local bloco = require(game:GetService("ReplicatedStorage").Shared.Medidas).Bloco
 local ladoInicial = require(game:GetService("ReplicatedStorage").Shared.Upgrades).TamanhosPlot[1]*bloco
 Terreno.__index = Terreno
 
--- Recebe identificador, CFrame do piso e pasta pai. Cria uma plot vazia com piso, spawn desativado e pastas
--- Maquinas/Minerios, e devolve o objeto que controla sua atribuicao.
-function Terreno.new(id, cframe, pastaTerrenos)
+-- Cria uma plot vazia com piso, entrada e pastas Maquinas/Minerios.
+function Terreno.new(id, cframe, pastaTerrenos, cframeSpawn)
 	local modelo = Instance.new("Model")
 	modelo.Name = "Terreno_" .. id
 
@@ -26,12 +26,10 @@ function Terreno.new(id, cframe, pastaTerrenos)
 	piso.Color = Color3.fromRGB(145, 145, 145)
 	piso.Parent = modelo
 
-	-- O spawn comeca desativado porque ainda nao ha dono. Seu CFrame e relativo ao piso; a atribuicao define
-	-- RespawnLocation para o jogador correto.
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "Spawn"
 	spawn.Size = Vector3.new(6, 1, 6)
-	spawn.CFrame = piso.CFrame * CFrame.new(ladoInicial/4, 1, -ladoInicial/4)
+	spawn.CFrame = cframeSpawn
 	spawn.Anchored = true
 	spawn.Neutral = true
 	spawn.AllowTeamChangeOnTouch = false
@@ -76,13 +74,19 @@ function Terreno:Atribuir(jogador)
 	return true
 end
 
--- Aguarda por ate dez segundos a raiz do personagem e o move para cima do spawn. Antes de mover, confere
--- novamente dono e Character, pois eles podem ter mudado durante a espera.
 function Terreno:PosicionarPersonagem(personagem)
 	local jogador = self._jogador
-	if not jogador then return end
-	local raiz = personagem:WaitForChild("HumanoidRootPart", 10)
-	if raiz and self._jogador == jogador and jogador.Character == personagem then
+	if not jogador or jogador.Character ~= personagem then return end
+	if not personagem:WaitForChild("HumanoidRootPart", 10) then return end
+
+	-- CharacterAdded dispara antes de o motor inserir e posicionar o avatar no mapa.
+	local restante = 10
+	while not personagem:IsDescendantOf(workspace) do
+		if restante <= 0 or self._jogador ~= jogador or jogador.Character ~= personagem then return end
+		restante -= RunService.Heartbeat:Wait()
+	end
+	RunService.Heartbeat:Wait()
+	if self._jogador == jogador and jogador.Character == personagem and personagem:IsDescendantOf(workspace) then
 		personagem:PivotTo(self._modelo.Spawn.CFrame * CFrame.new(0, 4, 0))
 	end
 end

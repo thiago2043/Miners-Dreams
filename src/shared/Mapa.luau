@@ -16,6 +16,12 @@ function M.CFramePlot(id, y)
 	return CFrame.new(esquerda and -(24+meio) or (24+meio),y,z)*CFrame.Angles(0,esquerda and -math.pi/2 or 0,0)
 end
 
+function M.CFrameEntradaPlot(id, y)
+	local centro = M.CFramePlot(id, y).Position
+	local entrada = centro - Vector3.xAxis * (math.sign(centro.X) * (M.MeioPlotInicial + 5))
+	return CFrame.lookAt(entrada, centro)
+end
+
 -- Percurso fechado: duas retas e duas meias circunferencias, sem salto nas emendas.
 function M.Ponto(distancia)
 	local s, reta, r = distancia%M.Comprimento, M.Fim-M.Inicio, M.Raio

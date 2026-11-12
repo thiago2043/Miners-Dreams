@@ -78,7 +78,7 @@ function Cenario.Criar(baseplate,terrenos,destino)
   local id=plot:GetAttribute("TerrenoId")
   local lado=id%2==1 and -1 or 1
   local z=40+math.floor((id-1)/2)*Mapa.PassoPlot
-  p(decor,"Entrada",Vector3.new(10,.1,10),Vector3.new(lado*19,y+.05,z+Mapa.MeioPlotInicial),cores.pedra)
+  p(decor,"Entrada",Vector3.new(10,.1,10),Mapa.CFrameEntradaPlot(id,y+.05).Position,cores.pedra)
   for _,dz in {3,39,60,78} do flores(lado*19,z+dz,id) end
   -- A placa fisica pequena nao acompanha a camera nem atravessa as outras bases.
   local placa=parte(sinais,"Placa",Vector3.new(5.5,2.2,.25),CFrame.lookAt(Vector3.new(lado*18,y+3.1,z+12),Vector3.new(0,y+3.1,z+12)),cores.metal)
