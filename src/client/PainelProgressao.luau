@@ -5,7 +5,6 @@ local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
 local PainelProgressao = {}
 PainelProgressao.__index = PainelProgressao
 local cores = {Blueprints=Color3.fromRGB(49,211,240), Upgrades=Color3.fromRGB(176,137,255), Configuracoes=Color3.fromRGB(255,214,78), Classificacao=Color3.fromRGB(255,190,86),Administracao=Color3.fromRGB(112,198,255),Tutorial=Color3.fromRGB(101,228,196),Craft=Color3.fromRGB(255,138,96)}
-cores.Elevador = Color3.fromRGB(77, 227, 211)
 
 local function arredondar(objeto, raio)
 	local canto=Instance.new("UICorner")

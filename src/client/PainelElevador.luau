@@ -1,86 +1,170 @@
-local Elevador = require(game:GetService("ReplicatedStorage").Shared.ElevadorVertical)
-local Janela = require(script.Parent.PainelProgressao)
+local Shared = game:GetService("ReplicatedStorage").Shared
+local Elevador = require(Shared.ElevadorVertical)
+local definicao = require(Shared.CatalogoMaquinas).ElevadorVertical
+local Botao = require(script.Parent.Botao)
+local Setas = require(script.Parent.SetasTransporte)
 local Painel = {}
 Painel.__index = Painel
 
-local nomesFaces = {["+Z"] = "Frente (+Z)", ["+X"] = "Direita (+X)", ["-Z"] = "Trás (−Z)", ["-X"] = "Esquerda (−X)"}
+local faces = {["+Z"] = "Frente", ["+X"] = "Direita", ["-Z"] = "Trás", ["-X"] = "Esquerda"}
+local branco = Color3.fromRGB(237, 241, 249)
+local ambar = Color3.fromRGB(255, 186, 70)
+local turquesa = Color3.fromRGB(93, 247, 224)
 
-function Painel.new(pai, jogador, construcao)
-	local nav = construcao.Navegacao
-	local janela = Janela.new(pai, nav, "Elevador", "Configurar elevador", nil, nil, 348, jogador)
-	local self = setmetatable({_janela = janela, _grupo = janela:ObterInstancia(), _nav = nav, _construcao = construcao}, Painel)
-	local area = janela:ObterConteudo()
-	area.CanvasSize = UDim2.fromOffset(0, 257)
-	local function ajustar(passo)
-		if self._enviando or not self._config then return end
-		self._config.Altura = math.clamp(self._config.Altura + passo, Elevador.AlturaMinima, Elevador.AlturaMaxima)
-		self:_AtualizarCampos()
+local function canto(objeto, raio)
+	local cantos = Instance.new("UICorner")
+	cantos.CornerRadius, cantos.Parent = UDim.new(0, raio), objeto
+end
+
+function Painel.new(pai, construcao)
+	local grupo = Instance.new("Frame")
+	grupo.Name, grupo.Size, grupo.AnchorPoint = "Elevador", UDim2.fromOffset(208, 216), Vector2.new(.5, .5)
+	grupo.BackgroundColor3, grupo.BorderSizePixel = Color3.fromRGB(23, 25, 29), 0
+	grupo.Active, grupo.Visible, grupo.Parent = true, false, pai
+	canto(grupo, 16)
+	local borda = Instance.new("UIStroke")
+	borda.Color, borda.Thickness, borda.Parent = Color3.fromRGB(53, 61, 72), 2, grupo
+	local escala = Instance.new("UIScale")
+	escala.Parent = grupo
+	local self = setmetatable({
+		_grupo = grupo, _escala = escala, _nav = construcao.Navegacao, _construcao = construcao,
+		_botoes = {}, _envios = {},
+	}, Painel)
+
+	local function texto(nome, conteudo, x, y, w, h, tamanho, cor)
+		local label = Instance.new("TextLabel")
+		label.Name, label.Text, label.Position, label.Size = nome, conteudo, UDim2.fromOffset(x, y), UDim2.fromOffset(w, h)
+		label.BackgroundTransparency, label.Font, label.TextSize = 1, Enum.Font.SourceSansBold, tamanho
+		label.TextWrapped, label.TextColor3, label.ZIndex, label.Parent = true, cor or branco, 4, grupo
+		return label
 	end
-	self._menos = janela:Botao(area, "−", UDim2.fromOffset(0, 0), UDim2.fromOffset(44, 42), function() ajustar(-1) end)
-	self._mais = janela:Botao(area, "+", UDim2.new(1, -50, 0, 0), UDim2.fromOffset(44, 42), function() ajustar(1) end)
-	self._altura = janela:Texto(area, "Altura", "", UDim2.fromOffset(49, 0), UDim2.new(1, -104, 0, 42), 17, true)
-	self._altura.TextXAlignment = Enum.TextXAlignment.Center
+	local function botao(nome, x, y, w, h, callback, cor)
+		local b = Botao.new(grupo, nome, callback)
+		local i = b:ObterInstancia()
+		i.Position, i.Size, i.Font, i.TextSize = UDim2.fromOffset(x, y), UDim2.fromOffset(w, h), Enum.Font.SourceSansBold, 15
+		i.BackgroundColor3, i.TextColor3, i.BorderSizePixel = Color3.fromRGB(38, 45, 54), cor or branco, 0
+		i.TextWrapped, i.Selectable, i.ZIndex = true, true, 3
+		canto(i, 7)
+		b:DefinirDisponivel(true)
+		table.insert(self._botoes, b)
+		return b
+	end
+
+	texto("Título", "Configurar elevador", 9, 5, 151, 36, 17).TextXAlignment = Enum.TextXAlignment.Left
+	botao("×", 164, 5, 35, 35, function() self._nav:Fechar("Elevador") end)
+	local function altura(passo)
+		self:_Alterar(function(c) c.Altura = math.clamp(c.Altura + passo, Elevador.AlturaMinima, Elevador.AlturaMaxima) end)
+	end
+	self._menos = botao("−", 9, 45, 42, 42, function() altura(-1) end)
+	self._mais = botao("+", 157, 45, 42, 42, function() altura(1) end)
+	self._altura = texto("Altura", "", 53, 45, 102, 42, 16)
 	self._faces = {}
 	for i, campo in {"Entrada", "Saida"} do
-		local botao = janela:Botao(area, campo, UDim2.new((i - 1) / 2, 0, 0, 50), UDim2.new(.5, -6, 0, 52), function()
-			if self._enviando or not self._config then return end
-			local atual = table.find(Elevador.Faces, self._config[campo])
-			self._config[campo] = Elevador.Faces[atual % #Elevador.Faces + 1]
-			self:_AtualizarCampos()
-		end)
-		botao:ObterInstancia().TextColor3 = if i == 1 then Color3.fromRGB(255, 189, 93) else janela.Cor
-		self._faces[campo] = botao
+		self._faces[campo] = botao(campo, if i == 1 then 9 else 107, 92, 92, 48, function()
+			self:_Alterar(function(c) c[campo] = Elevador.ProximaFace(c[campo]) end)
+		end, if i == 1 then ambar else turquesa)
 	end
-	self._sentido = janela:Botao(area, "Sentido", UDim2.fromOffset(0, 110), UDim2.new(1, -6, 0, 42), function()
-		if self._enviando or not self._config then return end
-		self._config.Sentido = if self._config.Sentido == "subir" then "descer" else "subir"
-		self:_AtualizarCampos()
+	self._sentido = botao("Sentido", 9, 145, 190, 39, function()
+		self:_Alterar(function(c) c.Sentido = if c.Sentido == "subir" then "descer" else "subir" end)
 	end)
-	self._aplicar = janela:Botao(area, "Aplicar", UDim2.fromOffset(0, 160), UDim2.new(1, -6, 0, 44), function() self:_Aplicar() end)
-	local aplicar = self._aplicar:ObterInstancia()
-	aplicar.BackgroundColor3, aplicar.TextColor3 = janela.Cor, Color3.fromRGB(22, 23, 29)
-	self._resposta = janela:Texto(area, "Mensagem", "", UDim2.fromOffset(0, 211), UDim2.new(1, -6, 0, 44), 15)
-	self._resposta.TextColor3 = Color3.fromRGB(255, 181, 145)
+	self._resposta = texto("Mensagem", "", 9, 185, 190, 27, 13, ambar)
 	return self
 end
 
 function Painel:_AtualizarCampos()
-	local c = self._config
-	self._altura.Text = "Altura · " .. c.Altura .. " blocos"
-	self._faces.Entrada:ObterInstancia().Text = "Entrada\n" .. nomesFaces[c.Entrada]
-	self._faces.Saida:ObterInstancia().Text = "Saída\n" .. nomesFaces[c.Saida]
+	local c = self._sessao.Config
+	self._altura.Text = c.Altura .. " blocos"
+	self._faces.Entrada:ObterInstancia().Text = "Entrada\n" .. faces[c.Entrada]
+	self._faces.Saida:ObterInstancia().Text = "Saída\n" .. faces[c.Saida]
 	self._sentido:ObterInstancia().Text = if c.Sentido == "subir" then "Sentido · Subir ↑" else "Sentido · Descer ↓"
-	self._menos:DefinirDisponivel(not self._enviando and c.Altura > Elevador.AlturaMinima)
-	self._mais:DefinirDisponivel(not self._enviando and c.Altura < Elevador.AlturaMaxima)
-	self._aplicar:DefinirDisponivel(not self._enviando)
+	self._menos:DefinirDisponivel(c.Altura > Elevador.AlturaMinima)
+	self._mais:DefinirDisponivel(c.Altura < Elevador.AlturaMaxima)
+end
+
+function Painel:_LimparSetas()
+	if self._setas then self._setas:Destroy() end
+	self._setas, self._modeloSetas = nil, nil
 end
 
 function Painel:Abrir(maquina)
 	local config = maquina and Elevador.Ler(maquina)
-	if not config or self._enviando then return end
-	self._maquina, self._config, self._resposta.Text = maquina, config, ""
+	local id = maquina and maquina:GetAttribute("IdUnidade")
+	if not config or not id or not maquina.Parent then return end
+	self._sessao = self._envios[id] or {Id = id, Config = config, Confirmado = config}
+	self._sessao.Modelo, self._sessao.Pasta = maquina, maquina.Parent
+	self._resposta.Text = ""
 	self:_AtualizarCampos()
 	self._nav:Fechar("MenuPeca")
-	if not self._nav:Focar("Elevador") then self._nav:Abrir("Elevador") end
+	self._nav:Abrir("Elevador", function()
+		self._sessao, self._grupo.Visible = nil, false
+		self:_LimparSetas()
+	end)
 end
 
-function Painel:_Aplicar()
-	if self._enviando or not self._maquina then return end
-	self._enviando, self._resposta.Text = true, ""
+function Painel:_Alterar(mudar)
+	local sessao = self._sessao
+	if not sessao then return end
+	local novo = table.clone(sessao.Config)
+	mudar(novo)
+	sessao.Config = novo
+	self._resposta.Text = ""
 	self:_AtualizarCampos()
-	local c = self._config
-	local ok, mensagem = self._construcao:ConfigurarElevador(self._maquina, c.Altura, c.Entrada, c.Saida, c.Sentido)
-	if self._destruido then return end
-	self._enviando = false
-	self:_AtualizarCampos()
-	if ok then self._nav:Fechar("Elevador") else self._resposta.Text = mensagem or "Elevador indisponível." end
+	if self._envios[sessao.Id] then return end
+	self._envios[sessao.Id] = sessao
+	while not self._destruido do
+		local c = sessao.Config
+		local ok, mensagem = self._construcao:ConfigurarElevador(sessao.Id, c.Altura, c.Entrada, c.Saida, c.Sentido)
+		if ok then
+			sessao.Confirmado, sessao.AguardarAte = c, os.clock() + 2
+		end
+		if sessao.Config == c then
+			if not ok then
+				sessao.Config = sessao.Confirmado
+				if self._sessao == sessao then
+					self._resposta.Text = mensagem or "Elevador indisponível."
+					self:_AtualizarCampos()
+				end
+			end
+			break
+		end
+	end
+	self._envios[sessao.Id] = nil
 end
 
-function Painel:Atualizar() self._janela:Atualizar() end
+function Painel:Atualizar()
+	local sessao = self._sessao
+	if not sessao then return nil end
+	local modelo = sessao.Modelo
+	if modelo.Parent ~= sessao.Pasta then
+		for _, outro in sessao.Pasta:GetChildren() do
+			if outro:GetAttribute("IdUnidade") == sessao.Id then
+				sessao.Modelo, modelo = outro, outro
+				break
+			end
+		end
+	end
+	if modelo.Parent ~= sessao.Pasta then
+		if not self._envios[sessao.Id] and os.clock() > (sessao.AguardarAte or 0) then
+			self._nav:Fechar("Elevador")
+			return nil
+		end
+		return sessao.UltimaPosicao
+	end
+	if not self._setas or self._modeloSetas ~= modelo then
+		self:_LimparSetas()
+		self._setas, self._modeloSetas = Setas.Criar(modelo, definicao, workspace), modelo
+	end
+	local caixa = modelo:FindFirstChild("HitboxConstrucao")
+	if caixa then sessao.UltimaPosicao = caixa.CFrame.Position end
+	return sessao.UltimaPosicao
+end
 
 function Painel:Destruir()
 	self._destruido = true
-	self._janela:Destruir()
+	self._nav:Fechar("Elevador")
+	self:_LimparSetas()
+	for _, b in self._botoes do b:Destruir() end
+	self._grupo:Destroy()
 end
 
 return Painel

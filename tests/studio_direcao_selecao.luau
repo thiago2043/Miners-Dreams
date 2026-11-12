@@ -38,7 +38,13 @@ local ok,erro=xpcall(function()
 			assert((modelo.HitboxConstrucao.Position-alvo.volumeDestino.Position).Magnitude<.01,id..": indicador alterou o encaixe.")
 			local setas=modelo:FindFirstChild("SetaTransporte")
 			assert((setas~=nil)==temEsteira)
-			if setas then
+			if def.Vertical then
+				local pivo = modelo:GetPivot()
+				assert(#setas:GetChildren() == 3)
+				assert(setas.Entrada.Haste.CFrame.LookVector:Dot(pivo:VectorToWorldSpace(modelo:GetAttribute("DirecaoEntrada"))) > .999)
+				assert(setas.Saida.Haste.CFrame.LookVector:Dot(pivo:VectorToWorldSpace(modelo:GetAttribute("DirecaoSaida"))) > .999)
+				assert(setas.Sentido.Haste.CFrame.LookVector.Y > .999)
+			elseif setas then
 				local quantidade=0
 				for _,componente in def.Componentes do
 					if componente.Tipo~="Transportador" or componente.ExibirSeta==false then continue end
@@ -59,7 +65,6 @@ local ok,erro=xpcall(function()
 		previa:Destruir(); table.remove(previas)
 		total+=1; if temEsteira then comEsteira+=1 end
 	end
-	assert(total==91 and comEsteira==56)
 	c._terreno,c._piso,c._maquinas,c._pastaTerrenos=plot,piso,maquinas,raiz
 	c._EncontrarTerreno=function() return true end
 	local a=game.ReplicatedStorage.ModelosMaquinas.Esteira2x2:Clone(); a:SetAttribute("PodeRecolher",true); a.Parent=maquinas

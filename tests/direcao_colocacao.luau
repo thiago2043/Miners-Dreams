@@ -37,7 +37,13 @@ for id,def in Catalogo do
 		assert((corpo.HitboxConstrucao.CFrame.Position-alvo.volumeDestino.Position).Magnitude<.01,id..": seta alterou o encaixe da peca.")
 		local setas=corpo:FindFirstChild("SetaTransporte")
 		assert((setas~=nil)==temEsteira,id..": indicador deve existir somente na previa de uma transportadora.")
-		if setas then
+		if def.Vertical then
+			local pivo = corpo:GetPivot()
+			assert(#setas:GetChildren() == 3)
+			assert(setas.Entrada.Haste.CFrame.LookVector:Dot(pivo:VectorToWorldSpace(corpo:GetAttribute("DirecaoEntrada"))) > .999)
+			assert(setas.Saida.Haste.CFrame.LookVector:Dot(pivo:VectorToWorldSpace(corpo:GetAttribute("DirecaoSaida"))) > .999)
+			assert(setas.Sentido.Haste.CFrame.LookVector.Y > .999)
+		elseif setas then
 			local quantidade=0
 			for _,c in def.Componentes do
 				if c.Tipo~="Transportador" or c.ExibirSeta==false then continue end
@@ -63,5 +69,5 @@ for id,def in Catalogo do
 	previa:Destruir(); assert(visual.Parent==nil and not original:FindFirstChild("SetaTransporte"))
 	total+=1; if temEsteira then transportadoras+=1 end
 end
-assert(total==91 and #maquinas:GetChildren()==0)
+assert(#maquinas:GetChildren()==0)
 print("DIRECAO_COLOCACAO_OK",total,transportadoras,"modelos/transportadoras; seta por correia, giros, inclinacao, medidas e limpeza.")

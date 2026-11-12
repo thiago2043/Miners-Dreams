@@ -45,7 +45,9 @@ end
 
 function ControladorConstrucao:Cancelar()
 	if self._destruido or self._salvandoBlueprint or (self._colocando and self._movimento) then return end
-	if self.Navegacao:Atual() == "Reposicionamento" and self._movimento then
+	if self._etapaElevador and self.Navegacao:Atual() == "Colocacao" and not self._colocando then
+		self:_ReiniciarEntradaElevador()
+	elseif self.Navegacao:Atual() == "Reposicionamento" and self._movimento then
 		self:CancelarReposicionamento()
 	else
 		self.Navegacao:Voltar()
@@ -200,7 +202,8 @@ function ControladorConstrucao:_LimparPreviaRemota()
 end
 
 function ControladorConstrucao:_PublicarPreviaRemota()
-  if self._destruido or not self._previa or self._previa:ObterModelo().Parent ~= workspace or not self._alvoColocacao then
+  if self._destruido or not self._previa or self:FaseElevador() == "Entrada"
+    or self._previa:ObterModelo().Parent ~= workspace or not self._alvoColocacao then
     self:_LimparPreviaRemota()
     return
   end
@@ -315,6 +318,7 @@ end
 -- Destruir a previa libera suas hitboxes e recursos. As instancias movidas ja foram apagadas pelo servidor;
 -- somente ConfirmarMovimento cria substitutas, enquanto o cancelamento as devolve ao inventario.
 function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
+  self._etapaElevador = nil
   if self._previa and self._rotacao then
     self._rotacaoPreservada = self._rotacao
   end
@@ -430,6 +434,7 @@ if self._rotacaoPreservada then
   end
   self._rotacaoPreservada = self._rotacao
 self._previa = PreviaConstrucao.new(self._modelosOriginais[self._maquinaIdSelecionada], personalizacao, definicao, self._maquinas)
+if self:FaseElevador() then self:_ReiniciarEntradaElevador() end
 self._consulta.FilterDescendantsInstances = { self._piso, self._previa:ObterPastaVolumes() }
 if self._travamentoAltura ~= nil then
 local _, ocupadoNovo = self._previa:ObterVolume(self._rotacao):Calcular(self._rotacao)
@@ -510,6 +515,9 @@ end
 -- So envia o pedido quando ha uma previa visivel e um alvo livre. O servidor recebe tipo, canto na grade,
 -- orientacao e a origem da configuracao; a resposta informa sucesso ou a razao da recusa.
 function ControladorConstrucao:ConfirmarColocacao()
+	if self._etapaElevador and not self._colocando then
+		self:_AtualizarSaidaElevador(Geometria.Origem(self._piso), 0)
+	end
 	if self._colocando or not self._previa or self._previa:ObterModelo().Parent ~= workspace
 		or not self._alvoColocacao
 	then
@@ -529,6 +537,10 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	if not livre then
 		warn("Nao ha espaco livre nessa altura do terreno.")
+		return
+	end
+	if self:FaseElevador() == "Entrada" then
+		self:_FixarEntradaElevador(alvo)
 		return
 	end
 
@@ -566,7 +578,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 		end
 		return self._redeConstrucao:fetch(
 			"Colocar", alvo.maquinaId, alvo.minimo, alvo.rotacao, self._copia and self._copia.Token,
-			self._abaColocacao == "Loja"
+			self._abaColocacao == "Loja", self._etapaElevador and alvo.elevador
 		)
 	end)
 
@@ -596,6 +608,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 		self._alvoColocacao = nil
 		self._previa:ForcarAtualizacao()
 		self:_EncerrarArrasteColocacao()
+		if self._etapaElevador then self:_ReiniciarEntradaElevador() end
 		self:_AtualizarConfiguracaoInventario()
 		print(mensagem)
 	else
@@ -1879,7 +1892,8 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 					or UserInputService:IsKeyDown(Enum.KeyCode.RightShift),
 			}
 			self:_CapturarRodaSelecao()
-		elseif self._previa and (not self._movimento or (self._movimento.Copia and #self._movimento.Pecas == 1)) then
+		elseif self._previa and not self:FaseElevador()
+			and (not self._movimento or (self._movimento.Copia and #self._movimento.Pecas == 1)) then
 			self:_IniciarArrasteColocacao()
 		else
 			self:ConfirmarColocacao()
@@ -1928,9 +1942,10 @@ elseif tecla == Enum.KeyCode.F then
     return
   end
 
-	if tecla == Enum.KeyCode.T then
+	if tecla == Enum.KeyCode.T and not self._etapaElevador then
 		self:AlternarAltura()
 	elseif tecla == Enum.KeyCode.R and not self._rPressionado then
+		if self:FaseElevador() then self:Girar("Y"); return end
 		self._rPressionado = true
 		self._rConsumido = false
 		self._ancoraRotacao = self._alvoColocacao
@@ -2001,6 +2016,11 @@ self:_AtualizarTransparenciaAltura()
 	local origem = Geometria.Origem(self._piso)
 
 self._previa:AtualizarVolumes(origem, deltaTime)
+  if self._etapaElevador then
+    self:_AtualizarSaidaElevador(origem, deltaTime)
+    self:_PublicarPreviaRemota()
+    return
+  end
   if self._arrasteColocacao then
     self:_AtualizarArrasteColocacao(self:ObterPonteiro(), deltaTime)
     self:_PublicarPreviaRemota()
@@ -2218,6 +2238,7 @@ end
 -- listas da loja e do inventario permanecem na pilha.
 function ControladorConstrucao:_EncerrarAcao()
 	if self._movimento and not self:CancelarReposicionamento() then return false end
+	self.Navegacao:Fechar("Elevador")
 	self.Navegacao:Fechar("MenuPeca")
 	self.Navegacao:Fechar("Selecao")
 	self.Navegacao:Fechar("Rotacao")
@@ -2711,7 +2732,8 @@ end
 -- Quando a variante publicada do estoque muda, recria a previa com essa configuracao. Ignora compras em
 -- andamento, copias e colocacao pela loja, pois esses modos usam outras fontes de configuracao.
 function ControladorConstrucao:_AtualizarConfiguracaoInventario()
-	if self._destruido or self._colocando or self._arrasteColocacao or self._movimento or self._copia or not self._previa or self._abaColocacao == "Loja" then return end
+	if self._destruido or self._colocando or self._arrasteColocacao or self._etapaElevador
+		or self._movimento or self._copia or not self._previa or self._abaColocacao == "Loja" then return end
 	local texto = self._jogador:GetAttribute("ConfiguracaoInventario_" .. self._maquinaIdSelecionada)
 	if texto and texto ~= self._configuracaoInventario then
 		self:IniciarColocacao()
@@ -2739,6 +2761,78 @@ function ControladorConstrucao:_MaquinaSobMouse()
 end
 
 -- Esteiras usam 45 graus no X local; os outros eixos conservam os quartos de volta da construcao.
+function ControladorConstrucao:FaseElevador()
+	if self._previa and self._maquinaIdSelecionada == "ElevadorVertical" and not self._movimento then
+		return if self._etapaElevador then "Saida" else "Entrada"
+	end
+	return nil
+end
+
+function ControladorConstrucao:_ReiniciarEntradaElevador()
+	local config = ElevadorVertical.Ler(self._previa:ObterModelo())
+	config.Altura, config.Sentido = ElevadorVertical.AlturaMinima, "subir"
+	self._etapaElevador, self._alvoColocacao = nil, nil
+	self._previa:ConfigurarElevador(config, true)
+end
+
+function ControladorConstrucao:_FixarEntradaElevador(alvo)
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+	local origem = Geometria.Origem(self._piso)
+	local centro = origem:PointToWorldSpace(alvo.minimo + Vector3.one * (passoGrade / 2))
+	local a = camera:WorldToViewportPoint(centro)
+	local b = camera:WorldToViewportPoint(centro + origem.UpVector * passoGrade)
+	local projecao = Vector2.new(b.X - a.X, b.Y - a.Y)
+	if a.Z <= 0 or b.Z <= 0 or projecao.Magnitude < 12 then
+		projecao = Vector2.new(0, -24)
+	end
+	local abaixo = math.round(alvo.minimo.Y / passoGrade)
+	local acima = math.floor(Geometria.AlturaDoTerreno(self._piso.Size) / passoGrade) - abaixo - 1
+	self._etapaElevador = {
+		Entrada = alvo.minimo, Rotacao = self._rotacao, Config = ElevadorVertical.Ler(self._previa:ObterModelo()),
+		Ponteiro = self:ObterPonteiro(), Projecao = projecao, Desnivel = if acima > 0 then 1 else -1,
+		Abaixo = abaixo, Acima = acima,
+	}
+	self:_AtualizarSaidaElevador(origem, 0)
+end
+
+function ControladorConstrucao:AjustarSaidaElevador(passo)
+	local etapa = self._etapaElevador
+	if not etapa or self._colocando then return false end
+	local novo = etapa.Desnivel + passo
+	if novo == 0 then novo = passo end
+	etapa.Manual = math.clamp(novo, -etapa.Abaixo, etapa.Acima)
+	etapa.PonteiroManual = self:ObterPonteiro()
+	self:_AtualizarSaidaElevador(Geometria.Origem(self._piso), 0)
+	return true
+end
+
+function ControladorConstrucao:_AtualizarSaidaElevador(origem, deltaTime)
+	local etapa = self._etapaElevador
+	local ponteiro = self:ObterPonteiro()
+	local projecao = etapa.Projecao
+	local desnivel = if etapa.PonteiroManual == ponteiro then etapa.Manual
+		else math.round((ponteiro - etapa.Ponteiro):Dot(projecao) / projecao:Dot(projecao))
+	desnivel = math.clamp(desnivel, -etapa.Abaixo, etapa.Acima)
+	if desnivel == 0 then desnivel = math.sign(etapa.Desnivel) end
+	etapa.Desnivel = desnivel
+	local config = etapa.Config
+	config.Altura = math.abs(desnivel) + 1
+	config.Sentido = if desnivel > 0 then "subir" else "descer"
+	self._previa:ConfigurarElevador(config, false)
+	local _, ocupado = self._previa:ObterVolume(etapa.Rotacao):Calcular(etapa.Rotacao)
+	local minimo = etapa.Entrada + Vector3.yAxis * (math.min(0, desnivel) * passoGrade)
+	local volume = Geometria.CFrameDoVolume(origem, minimo, ocupado)
+	local livre = Geometria.DentroDoTerreno(minimo, ocupado, self._piso.Size)
+		and self._previa:VolumeLivre(origem, minimo, ocupado)
+	self._alvoColocacao = {
+		maquinaId = "ElevadorVertical", minimo = minimo, rotacao = etapa.Rotacao, ocupado = ocupado,
+		caixaDestino = volume * etapa.Rotacao, volumeDestino = volume, livre = livre,
+		elevador = {config.Altura, config.Entrada, config.Saida, config.Sentido},
+	}
+	self._previa:Animar(self._alvoColocacao, deltaTime)
+end
+
 function ControladorConstrucao:_ConfigPreviaElevador(id, previa)
 	if id ~= "ElevadorVertical" then return nil end
 	local c = ElevadorVertical.Ler(previa:ObterModelo())
@@ -2773,6 +2867,14 @@ end
 
 function ControladorConstrucao:Girar(eixo)
 	if self._destruido or self._colocando or self._arrasteColocacao or not self._previa then return end
+	if self._etapaElevador then
+		if eixo == "Y" then
+			local config = self._etapaElevador.Config
+			config.Saida = ElevadorVertical.ProximaFace(config.Saida)
+			self:_AtualizarSaidaElevador(Geometria.Origem(self._piso), 0)
+		end
+		return
+	end
 	local angulo = math.pi / 2
 	local definicao,permitirInclinar,somenteY=self:_DefinicaoRotacao()
 	if somenteY and eixo ~= "Y" then return end

@@ -7,6 +7,7 @@ local PainelPecas = require(script.Parent.PainelPecas)
 local PainelBlueprints = require(script.Parent.PainelBlueprints)
 local PainelCraft = require(script.Parent.PainelCraft)
 local PainelElevador = require(script.Parent.PainelElevador)
+local SetasTransporte = require(script.Parent.SetasTransporte)
 local Configuracoes=require(ReplicatedStorage.Shared.Configuracoes)
 local MonitorRecursos=require(ReplicatedStorage.Shared.MonitorRecursos)
 local PainelConfiguracoes = require(script.Parent.PainelConfiguracoes)
@@ -56,7 +57,6 @@ self._interface = Instance.new("ScreenGui")
 	self._paineisProgressao = {}
 	self._paineisProgressao.Craft = PainelCraft.new(self._interface, jogador, construcao.Navegacao,
 		Networker.client.new("Craft", {}), self._confirmacao)
-	self._paineisProgressao.Elevador = PainelElevador.new(self._interface, jogador, construcao)
 	self._paineisProgressao.Tutorial = PainelTutorial.new(self._interface, jogador, construcao.Navegacao)
 	self._paineisProgressao.Prestigio = PainelPrestigio.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Prestigio", {}))
 	self._paineisProgressao.Upgrades=PainelUpgrades.new(self._interface,jogador,construcao.Navegacao,Networker.client.new("Upgrades",{}))
@@ -75,6 +75,7 @@ self._paineisProgressao.HistoricoCopia=PainelHistoricoCopia.new(self._interface,
 table.insert(self._conexoes, RunService.RenderStepped:Connect(function()
 local tHud = MonitorRecursos.Iniciar()
 self:_AtualizarMenuPeca()
+self:_AtualizarEditorElevador()
 if self._resumoPlotAlterado then
 self._resumoPlotAlterado=false
 for _,painel in self._paineis do painel:Atualizar() end
@@ -256,6 +257,7 @@ function InterfaceJogo:_CriarMenuPeca(playerGui)
   self._menuGui.Name, self._menuGui.ResetOnSpawn = "MenuContextualPeca", false
   self._menuGui.IgnoreGuiInset, self._menuGui.DisplayOrder = true, 0
   self._menuGui.Parent = playerGui
+  self._painelElevador = PainelElevador.new(self._menuGui, self._construcao)
 
 	self._menuPeca = Instance.new("Frame")
 	self._menuPeca.Name, self._menuPeca.Visible = "AcoesPeca", false
@@ -353,7 +355,8 @@ local botao = Botao.new(self._menuPeca, acaoBotao, function()
 		self._botoesPecaContexto[acaoBotao] = botao
 	end
 	local configurar = Botao.new(self._menuPeca, "ConfigurarElevador", function()
-		self._paineisProgressao.Elevador:Abrir(self._maquinaFocada)
+		self._painelElevador:Abrir(self._maquinaFocada)
+		self:_AtualizarEditorElevador()
 	end)
 	local botao = configurar:ObterInstancia()
 	botao.Position, botao.Size = UDim2.fromOffset(10, 196), UDim2.fromOffset(188, 35)
@@ -391,6 +394,10 @@ end
 function InterfaceJogo:_MostrarPeca(maquina)
   local anterior = self._maquinaFocada
   self._maquinaFocada = maquina
+  if self._setasElevador then self._setasElevador:Destroy(); self._setasElevador = nil end
+  if maquina and maquina.Name == "ElevadorVertical" then
+    self._setasElevador = SetasTransporte.Criar(maquina, Catalogo.ElevadorVertical, workspace)
+  end
   self._estatisticasVisiveis = false
   self._estatisticasPeca.Visible = false
   AnimacaoInterface.DefinirVisivel(self._areaEstatisticasPeca, false, "Flutuante")
@@ -443,31 +450,39 @@ function InterfaceJogo:_AtualizarMenuPeca()
     elseif componente.Tipo == "Transportador" then tipo = "Esteira" end
   end
   self._tipoPeca.Text = if quantidade > 1 then "Grupo" else tipo
-  local camera = workspace.CurrentCamera
-  if not camera then
-    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Flutuante")
-    self._contornoPeca.Visible = false
-    return
-  end
   local caixa, tamanho = Geometria.CaixaDeConstrucao(maquina)
   self._volumePeca.CFrame, self._volumePeca.Size = caixa, tamanho
-  local ponto, dentro = camera:WorldToViewportPoint(caixa.Position)
-  local viewport = camera.ViewportSize
-  if not dentro or ponto.Z <= 0 or viewport.X <= 16 or viewport.Y <= 16 then
-    AnimacaoInterface.DefinirVisivel(self._menuPeca, false, "Flutuante")
-    self._contornoPeca.Visible = false
-    return
-  end
-  AnimacaoInterface.DefinirVisivel(self._menuPeca, true, "Flutuante")
-  self._contornoPeca.Visible = true
-	local altura = self._menuPeca.Size.Y.Offset
+  local visivel = self:_PosicionarMenuFlutuante(self._menuPeca, self._escalaMenuPeca, caixa.Position)
+  AnimacaoInterface.DefinirVisivel(self._menuPeca, visivel, "Flutuante")
+  self._contornoPeca.Visible = visivel
+end
+
+function InterfaceJogo:_AtualizarEditorElevador()
+	local painel = self._painelElevador
+	local posicao = painel:Atualizar()
+	painel._grupo.Visible = posicao ~= nil and self:_PosicionarMenuFlutuante(painel._grupo, painel._escala, posicao, true)
+end
+
+function InterfaceJogo:_PosicionarMenuFlutuante(menu, escalaGui, posicao, lateral)
+	local camera = workspace.CurrentCamera
+	if not camera then return false end
+	local ponto, dentro = camera:WorldToViewportPoint(posicao)
+	local viewport = camera.ViewportSize
+	if not dentro or ponto.Z <= 0 or viewport.X <= 16 or viewport.Y <= 16 then return false end
+	local largura, altura = menu.Size.X.Offset, menu.Size.Y.Offset
 	local preferencia=Configuracoes.Obter(self._jogador,"EscalaInterface")
-	local escala = math.min(1, (viewport.X - 16) / (larguraMenuPeca*preferencia), (viewport.Y - 16) / (altura*preferencia))
-	self._escalaMenuPeca.Scale = escala
-	local metade = Vector2.new(larguraMenuPeca, altura) * escala * preferencia / 2
-	local x = math.clamp(ponto.X, metade.X + 8, viewport.X - metade.X - 8)
+	local escala = math.min(1, (viewport.X - 16) / (largura*preferencia), (viewport.Y - 16) / (altura*preferencia))
+	escalaGui.Scale = escala
+	local metade = Vector2.new(largura, altura) * escala * preferencia / 2
+	local x = ponto.X
+	if lateral then
+		local distancia = metade.X + 44
+		x += if x < viewport.X / 2 then distancia else -distancia
+	end
+	x = math.clamp(x, metade.X + 8, viewport.X - metade.X - 8)
 	local y = math.clamp(ponto.Y, metade.Y + 8, viewport.Y - metade.Y - 8)
-	self._menuPeca.Position = UDim2.fromOffset(x/preferencia, y/preferencia)
+	menu.Position = UDim2.fromOffset(x/preferencia, y/preferencia)
+	return true
 end
 
 -- Recebe nome, posicao, tamanho e ponto de ancora e devolve um TextLabel no ScreenGui. Centraliza o estilo dos
@@ -521,6 +536,8 @@ function InterfaceJogo:Destruir()
 	self._botaoLimparPlot:Destruir()
 	for _, painel in self._paineis do painel:Destruir() end
 	self._painelBlueprints:Destruir()
+	self._painelElevador:Destruir()
+	if self._setasElevador then self._setasElevador:Destroy() end
 	for _, painel in self._paineisProgressao do painel:Destruir() end
 	for _, botao in self._botoesAbas do botao:Destruir() end
 	for _, botao in self._botoesPecaContexto do botao:Destruir() end

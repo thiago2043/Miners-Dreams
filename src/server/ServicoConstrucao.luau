@@ -352,7 +352,7 @@ end
 
 -- Valida o pedido e escolhe a configuracao a partir do token de copia, do padrao da loja ou do estoque do
 -- servidor. Se o destino for livre, registra o consumo/compra e cria o modelo; devolve sucesso e mensagem.
-function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao)
+function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao, elevador)
 	if not self:_PermitirPedido(jogador) then
 		return false, "Muitos pedidos de construcao. Aguarde um instante."
 	end
@@ -394,7 +394,16 @@ function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCop
 	else
 		modificacoes = dados:ObterModificacoesInventario(maquinaId)
 	end
-	local preparou, preparado = pcall(self._PrepararModelo, self, maquinaId, modificacoes, rotacao)
+	local modificacoesFinais = modificacoes
+	if elevador ~= nil then
+		local config = maquinaId == "ElevadorVertical" and type(elevador) == "table"
+			and ElevadorVertical.Validar(elevador[1], elevador[2], elevador[3], elevador[4])
+		if not config then return false, "Configuração de elevador inválida." end
+		modificacoesFinais = table.clone(modificacoes or {})
+		local padrao = ElevadorVertical.Ler(dadosModelo.Modelo)
+		modificacoesFinais.Elevador = if PersonalizacaoMaquina.Iguais(config, padrao) then nil else config
+	end
+	local preparou, preparado = pcall(self._PrepararModelo, self, maquinaId, modificacoesFinais, rotacao)
 	if not preparou then return false, "Configuracao da peca invalida." end
 	dadosModelo = preparado
 
@@ -423,6 +432,10 @@ function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCop
 	-- somente o sucesso autoriza criar o modelo definitivo.
 local sucesso, mensagem = dados:RegistrarColocacao(registro)
   if not sucesso then liberarModelo(dadosModelo); return false, mensagem end
+  if modificacoesFinais ~= modificacoes then
+    -- O inventário consome a variante de origem. O registro recebe a nova geometria depois do consumo.
+    registro.Modificacoes = if next(modificacoesFinais) then modificacoesFinais else nil
+  end
   self:_CriarMaquina(jogador, terreno, maquinas, destino, registro, dadosModelo)
   liberarModelo(dadosModelo)
   self:_RegistrarAcaoHistorico(jogador, {
@@ -1052,6 +1065,7 @@ end
 
 function ServicoConstrucao:ConfigurarElevador(jogador, maquina, altura, entrada, saida, sentido)
 	if not self:_PermitirPedido(jogador) then return false, "Muitos pedidos de construção." end
+	if type(maquina) == "string" then maquina = self:_LocalizarPorId(jogador, maquina) end
 	if not self:_ObterMaquina(jogador, maquina) or maquina.Name ~= "ElevadorVertical" then
 		return false, "Elevador indisponível."
 	end
@@ -1059,8 +1073,11 @@ function ServicoConstrucao:ConfigurarElevador(jogador, maquina, altura, entrada,
 	if not config then return false, "Configuração de elevador inválida." end
 	local mods = PersonalizacaoMaquina.DoModelo(maquina):ObterDados()
 	if PersonalizacaoMaquina.Iguais(config, ElevadorVertical.Ler(maquina)) then return true end
-	mods.Elevador = config
-	return self:Personalizar(jogador, maquina, mods)
+	local padrao = ElevadorVertical.Ler(self._modelos.ElevadorVertical.Modelo)
+	mods.Elevador = if PersonalizacaoMaquina.Iguais(config, padrao) then nil else config
+	local sucesso, mensagem, nova = self:Personalizar(jogador, maquina, mods)
+	if mensagem == "A peca modificada nao cabe nessa posicao." then mensagem = "Sem espaço na coluna." end
+	return sucesso, mensagem, nova
 end
 
 -- Valida e captura o grupo antes de destruir suas instancias. O perfil conserva os registros na origem ate a

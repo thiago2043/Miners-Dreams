@@ -2,7 +2,9 @@
 
 O modelo usado no jogo começa com 1×1×2 blocos. A prévia ilustra a altura de 4 blocos. `H` conta o volume reservado, então o desnível entre as bocas é `H − 1` blocos. A reserva cobre a coluna inteira. As duas bocas encostam na face da célula e alinham com o topo da esteira 1×1 no respectivo nível.
 
-A entrada é âmbar e a saída é turquesa. Na plot, selecione a peça e use **Configurar elevador** para escolher cada face, altura e sentido. A configuração é salva com a unidade. A coluna precisa caber dentro da plot e estar livre da reserva de outras peças. A bandeja leva os minérios por lotes e retorna à entrada.
+Na colocação, gire a entrada com **R** e clique para fixar a célula. Mova o mouse para escolher o nível de saída acima ou abaixo da entrada. Use **R** para girar a saída e clique para colocar. As setas mostram a entrada em âmbar, a saída em turquesa e o sentido vertical em branco.
+
+Na plot, selecione a peça e abra **Configurar elevador** para ajustar as faces, a altura e o sentido. Cada ajuste é salvo com a unidade assim que o servidor valida o espaço da coluna. A bandeja leva os minérios por lotes e retorna à entrada.
 
 Para gerar outra configuração, execute da raiz do projeto:
 

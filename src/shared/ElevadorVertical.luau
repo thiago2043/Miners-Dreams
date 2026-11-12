@@ -19,6 +19,10 @@ function Elevador.Ler(modelo)
 		modelo:GetAttribute("FaceSaida"), modelo:GetAttribute("Sentido"))
 end
 
+function Elevador.ProximaFace(face)
+	return Elevador.Faces[table.find(Elevador.Faces, face) % #Elevador.Faces + 1]
+end
+
 function Elevador.Aplicar(modelo, config)
 	local antigo = assert(Elevador.Ler(modelo), "Modelo de elevador inválido.")
 	config = assert(Elevador.Validar(config.Altura, config.Entrada, config.Saida, config.Sentido), "Configuração de elevador inválida.")

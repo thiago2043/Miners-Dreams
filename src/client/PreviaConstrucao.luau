@@ -4,6 +4,7 @@ local VolumeConstrucao = require(ReplicatedStorage.Shared.VolumeConstrucao)
 local Geometria = require(ReplicatedStorage.Shared.GeometriaColocacao)
 local Rotacao = require(ReplicatedStorage.Shared.RotacaoConstrucao)
 local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
+local Elevador = require(ReplicatedStorage.Shared.ElevadorVertical)
 local passoGrade = Geometria.Passo
 local Config = require(ReplicatedStorage.Shared.Configuracoes)
 local Players = game:GetService("Players")
@@ -79,6 +80,40 @@ end
 -- Devolve o Model temporario do Roblox, usado para exibir a previa e conferir se ela ainda esta na cena.
 -- Alterar esse modelo nao altera o recurso original que foi clonado.
 function PreviaConstrucao:ObterModelo() return self._modelo end
+
+function PreviaConstrucao:ConfigurarElevador(config, soEntrada)
+	local chave = table.concat({config.Altura, config.Entrada, config.Saida, config.Sentido}, "/")
+	if self._configElevador == chave and self._soEntradaElevador == soEntrada then return end
+	local modelo = self._modelo
+	if self._configElevador == nil or self._soEntradaElevador ~= soEntrada then
+		modelo = self._original:Clone()
+		modelo.Name = "Previa" .. self._original.Name
+		self._personalizacao:Aplicar(modelo)
+		prepararVisual(modelo)
+		self._modelo:Destroy()
+		self._modelo = modelo
+	else
+		local setas = modelo:FindFirstChild("SetaTransporte")
+		if setas then setas:Destroy() end
+	end
+	Elevador.Aplicar(modelo, config)
+	local caixa, tamanho = Geometria.CaixaDeConstrucao(modelo)
+	if soEntrada then
+		tamanho = Vector3.one * passoGrade
+		caixa = modelo:GetPivot() * CFrame.new(0, passoGrade / 2, 0)
+		for _, parte in modelo:GetDescendants() do
+			if parte:IsA("BasePart") and parte.Name ~= "BaseModelo" and parte.Name:sub(-7) ~= "Entrada" then
+				parte.Transparency = 1
+			end
+		end
+	end
+	self._tamanho = tamanho
+	self._caixaParaPivo = caixa:ToObjectSpace(modelo:GetPivot())
+	self._volume = VolumeConstrucao.new(tamanho, nil, self._definicao)
+	self._configElevador, self._soEntradaElevador = chave, soEntrada
+	self._cframeVisual = nil
+	SetasTransporte.Criar(modelo, self._definicao, nil, soEntrada)
+end
 -- Devolve o objeto VolumeConstrucao usado para calcular as dimensoes visuais e os blocos ocupados sob cada
 -- rotacao.
 function PreviaConstrucao:ObterVolume(rotacao)

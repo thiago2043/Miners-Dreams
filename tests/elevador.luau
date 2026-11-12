@@ -12,9 +12,13 @@ function jogador:SetAttribute(k,v) self.atributos[k] = v end
 
 local carregar, no = require("./suporte/carregador")({
 	workspace=mundo, Instance=I, Vector3=V, CFrame=CF, Color3=r.Color3, Enum=r.Enum, typeof=r.typeof,
+	Vector2=r.Vector2, ColorSequence=r.ColorSequence, ColorSequenceKeypoint=r.ColorSequenceKeypoint,
 	OverlapParams={new=function() return {} end},
-}, {Players=Players, ReplicatedStorage=replicado})
+}, {Players=Players, ReplicatedStorage=replicado, ContextActionService={},
+	UserInputService={GetFocusedTextBox=function() return nil end, IsKeyDown=function() return false end},
+}, {["Packages/Networker"]={}})
 replicado.Shared = no("src/shared")
+replicado.Packages = no("Packages")
 local Catalogo = carregar("src/shared/CatalogoMaquinas")
 local Elevador = carregar("src/shared/ElevadorVertical")
 local Construcao = carregar("src/server/ServicoConstrucao")
@@ -142,7 +146,74 @@ local function testarFluxo(elevadorAtual, varios)
 end
 
 testarFluxo(elevador, false)
-ok, erro, nova = servico:ConfigurarElevador(jogador, elevador, 16, "-Z", "-Z", "descer")
+ok, erro, nova = servico:ConfigurarElevador(jogador, elevador:GetAttribute("IdUnidade"), 16, "-Z", "-Z", "descer")
 assert(ok, erro)
 testarFluxo(nova, true)
+
+local Previa = carregar("src/client/PreviaConstrucao")
+local Controller = carregar("src/client/ControladorConstrucao")
+local Personalizacao = carregar("src/shared/PersonalizacaoMaquina")
+local Geometria = carregar("src/shared/GeometriaColocacao")
+local mods = dados:ObterModificacoesInventario(id)
+assert(mods.Elevador, "A colocação deve consumir a variante comprada ou recolhida.")
+local personalizacao = Personalizacao.new(mods)
+local previa = Previa.new(modelos[id], personalizacao, personalizacao:ObterDefinicao(Catalogo[id]), pasta)
+local camera = I.new("Camera")
+camera.Parent, mundo.CurrentCamera = mundo, camera
+r.implementMethod("Camera", "WorldToViewportPoint", function(_, pos) return V.new(pos.X * 8, -pos.Y * 8, 1), true end)
+local ponteiro = r.Vector2.new(300, 250)
+local pedidos = 0
+local ctrl = setmetatable({
+	_previa = previa, _piso = piso, _jogador = jogador, _atalhosMaquinas = {}, _rotacao = CF.identity,
+	_maquinaIdSelecionada = id, _ponteiro = function() return ponteiro end,
+	_AtualizarConfiguracaoInventario = function() end,
+	Navegacao = {Atual=function() return "Colocacao" end},
+	_redeConstrucao = {fetch = function(_, acao, ...) assert(acao == "Colocar"); pedidos += 1; return servico:Colocar(jogador, ...) end},
+}, Controller)
+ctrl:_ReiniciarEntradaElevador()
+local origem = Geometria.Origem(piso)
+local entrada = V.new(45, 12, 45)
+local ocupado = V.one * 3
+local alvo = {minimo=entrada, ocupado=ocupado, rotacao=CF.identity, livre=true,
+	caixaDestino=Geometria.CFrameDoVolume(origem, entrada, ocupado), volumeDestino=Geometria.CFrameDoVolume(origem, entrada, ocupado)}
+previa:Animar(alvo, 0)
+ctrl._alvoColocacao = alvo
+assert(previa:ObterTamanho() == ocupado and #previa:ObterModelo().SetaTransporte:GetChildren() == 1)
+local tecla = {UserInputType=r.Enum.UserInputType.Keyboard, KeyCode=r.Enum.KeyCode.R}
+local clique = {UserInputType=r.Enum.UserInputType.MouseButton1, KeyCode=r.Enum.KeyCode.Unknown}
+ctrl:ProcessarEntrada(tecla, false)
+local giroEntrada = ctrl._rotacao
+assert(giroEntrada ~= CF.identity)
+ctrl:ProcessarEntrada(clique, false)
+assert(ctrl:FaseElevador() == "Saida" and pedidos == 0)
+assert(ctrl._alvoColocacao.rotacao == giroEntrada)
+ponteiro -= r.Vector2.new(0, 48)
+ctrl:_AtualizarSaidaElevador(origem, 0)
+assert(ctrl._alvoColocacao.minimo == entrada and ctrl._alvoColocacao.elevador[1] == 3)
+assert(previa:ObterModelo().SetaTransporte.Sentido.Haste.CFrame.LookVector.Y > .999)
+ponteiro += r.Vector2.new(0, 48)
+ponteiro += r.Vector2.new(0, 72)
+ctrl:ProcessarEntrada(tecla, false)
+local destino = V.new(45, 3, 45)
+assert(ctrl._alvoColocacao.minimo == destino and ctrl._alvoColocacao.rotacao == giroEntrada)
+assert(ctrl._alvoColocacao.elevador[3] == Elevador.ProximaFace(mods.Elevador.Saida))
+assert(ctrl._alvoColocacao.elevador[1] == 4 and ctrl._alvoColocacao.elevador[4] == "descer")
+assert(previa:ObterModelo().SetaTransporte.Sentido.Haste.CFrame.LookVector.Y < -.999)
+local saldo = perfil.Data.Dinheiro
+local quantidade = dados:ObterQuantidade(id)
+assert(servico:Colocar(jogador, "Parede1x1", V.new(45, 6, 45), CF.identity))
+previa:AtualizarVolumes(origem, 1)
+ctrl:ProcessarEntrada(clique, false)
+assert(pedidos == 0 and ctrl._alvoColocacao.livre == false)
+assert(not servico:Colocar(jogador, id, destino, giroEntrada, nil, false, ctrl._alvoColocacao.elevador))
+assert(dados:ObterQuantidade(id) == quantidade)
+assert(servico:Recolher(jogador, pasta:FindFirstChild("Parede1x1")))
+previa:AtualizarVolumes(origem, 1)
+ctrl:ProcessarEntrada(clique, false)
+assert(pedidos == 1 and ctrl:FaseElevador() == "Entrada" and dados:ObterQuantidade(id) == quantidade - 1)
+assert(perfil.Data.Dinheiro == saldo)
+local colocado = perfil.Data.MaquinasColocadas[#perfil.Data.MaquinasColocadas]
+assert(colocado.Modificacoes.Elevador.Altura == 4 and colocado.Modificacoes.Elevador.Sentido == "descer")
+previa:Destruir()
 print("ELEVADOR_OK", "compra, rotação, colisão, perfil, blueprint, inventário, subida e descida com espera superior a 5 s")
+print("ELEVADOR_COLOCACAO_OK", "dois cliques, faces independentes, descida, setas e variante de origem preservada")

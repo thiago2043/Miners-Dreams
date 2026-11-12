@@ -114,7 +114,7 @@ end
 
 function Controles:Movimentar()
 	local camera=workspace.CurrentCamera
-	if camera and camera.ViewportSize~=self._viewport then self:Atualizar() end
+	if (camera and camera.ViewportSize~=self._viewport) or self._c:FaseElevador() ~= self._faseElevador then self:Atualizar() end
 	if self:Controle() or self._tipo==Enum.UserInputType.Touch then return end
 	local mudou=false
 	for original in direcoes do if Config.Tecla(self._jogador,original)~=original then mudou=true end end
@@ -135,6 +135,7 @@ function Controles:Focar()
 	local grupo
 	if nav:Contem("Confirmacao") then grupo=self._interface._confirmacao._fundo
 	elseif estado=="MenuPeca" then grupo=self._interface._menuPeca
+	elseif estado=="Elevador" then grupo=self._interface._painelElevador._grupo
 	else
 		local painel=self._interface._paineisProgressao[estado]
 		if painel then grupo=painel._grupo end
@@ -186,6 +187,7 @@ function Controles:Acao(acao)
 		if c._arrasteColocacao or c._arrasteSelecao then c:FinalizarEntrada(clique); return true end
 		c:ProcessarEntrada(clique,false); c:FinalizarEntrada(clique)
 	elseif acao=="Linha / área" then
+		if c:FaseElevador() then return false end
 		if c._arrasteColocacao or c._arrasteSelecao then c:FinalizarEntrada(clique)
 		else
 			c:ProcessarEntrada(clique,false)
@@ -197,6 +199,8 @@ function Controles:Acao(acao)
 	elseif acao=="Subir" or acao=="Descer" then
 		local passo=acao=="Subir" and 1 or -1
 		if c._arrasteSelecao then c:_AjustarAlturaSelecao(passo)
+		elseif c:FaseElevador() == "Saida" then
+			if not c:AjustarSaidaElevador(passo) then return false end
 		elseif c._previa and c._alvoColocacao and not c._colocando then
 			c._travamentoAltura={altura=math.max(0,c._alvoColocacao.minimo.Y+passo*Bloco),ancora=Vector3.zero}
 		else return false end
@@ -208,24 +212,41 @@ end
 function Controles:Atualizar()
 	local controle=self:Controle()
 	local especial=controle or self._tipo==Enum.UserInputType.Touch
+	local fase=self._c:FaseElevador()
+	self._faseElevador = fase
 	local camera=workspace.CurrentCamera
 	local viewport=camera and camera.ViewportSize or Vector2.new(800,600)
 	if viewport~=self._viewport then self._viewport=viewport; self._toque=nil end
 	local recuo=if controle or (viewport.X>=600 and viewport.X>viewport.Y) then 36 else 160
-	local largura=math.min(332,viewport.X-24)
+	local largura=math.min(if fase and not especial then 470 else 332,viewport.X-24)
 	self._barra.Position,self._barra.Size=UDim2.new(.5,0,1,-recuo),UDim2.fromOffset(largura,100)
-	self._barra.Visible=especial and not self._c.Navegacao:Contem("Confirmacao") and (self._c._previa~=nil or self._c._modoSelecao~=nil)
+	local navegacao = self._c.Navegacao
+	self._barra.Visible=not navegacao:Contem("Confirmacao") and not navegacao:Contem("Elevador")
+		and (fase ~= nil or (especial and (self._c._previa~=nil or self._c._modoSelecao~=nil)))
 	self._mira.Visible=controle and not Gui.SelectedObject
 	self._menu:ObterInstancia().Visible=controle
-	self._instrucao.Visible=self._c._arrasteSelecao~=nil
-	self._instrucao.Text=controle and "Aponte o outro canto e confirme" or "Toque no outro canto e confirme"
+	self._instrucao.Visible=fase~=nil or self._c._arrasteSelecao~=nil
+	self._instrucao.TextWrapped = fase ~= nil
+	if fase then
+		local tecla = Config.Tecla(self._jogador, "R")
+		self._instrucao.Text = if fase == "Entrada"
+			then (if especial then "Posicione a entrada" else tecla .. " para girar a entrada • Clique para fixar")
+			else (if especial then "Escolha o nível da saída" else tecla .. " para girar a saída • Mouse ↑/↓ para a altura • Clique para colocar")
+	else
+		self._instrucao.Text=controle and "Aponte o outro canto e confirme" or "Toque no outro canto e confirme"
+	end
 	local indice=0
 	local somenteY = self._c._previa and self._c:_ColocacaoSomenteVertical()
 	for i,item in acoes do
 		local b=self._botoes[item[1]]:ObterInstancia()
-		b.Visible=self._c._previa~=nil or item[1]:sub(1,5)~="Girar"
+		b.Visible=especial and (self._c._previa~=nil or item[1]:sub(1,5)~="Girar")
 		if somenteY and (item[1] == "Girar X" or item[1] == "Girar Z") then b.Visible = false end
 		local nome=item[1]
+		if fase then
+			if nome == "Linha / área" then b.Visible = false end
+			if nome == "Confirmar" then nome = if fase == "Entrada" then "Fixar entrada" else "Colocar" end
+			if nome == "Girar Y" then nome = if fase == "Entrada" then "Girar entrada" else "Girar saída" end
+		end
 		if nome=="Linha / área" then
 			nome=self._c._arrasteSelecao and "Concluir área" or self._c._arrasteColocacao and "Concluir linha"
 				or self._c._previa and "Iniciar linha" or "Selecionar área"

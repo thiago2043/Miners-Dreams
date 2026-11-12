@@ -6,6 +6,34 @@ local Players = game:GetService("Players")
 local passoGrade = require(R.Shared.Medidas).Bloco
 local Setas = {}; Setas.__index = Setas
 
+local function desenharSeta(pasta, nome, centro, direcao, cima, comprimento, cor, vertical)
+	local seta = Instance.new("Folder")
+	seta.Name, seta.Parent = nome, pasta
+	local intensidade = Config.Obter(Players.LocalPlayer, "IntensidadeSetas")
+	local function segmento(nome, a, b, normal)
+		local parte = Instance.new("Part")
+		parte.Name, parte.Size = nome, Vector3.new(passoGrade * .08, passoGrade * .045, (b-a).Magnitude)
+		local tras = (a-b).Unit
+		local lado = normal:Cross(tras).Unit
+		parte.CFrame = CFrame.fromMatrix((a+b)/2, lado, tras:Cross(lado), tras)
+		parte.Color, parte.Material = cor, Enum.Material.Neon
+		parte.Transparency = .6 * (1 - intensidade)
+		parte.Anchored, parte.CanCollide, parte.CanTouch, parte.CanQuery = true, false, false, false
+		parte.CastShadow, parte.Parent = false, seta
+	end
+	local ponta = centro + direcao * comprimento / 2
+	segmento("Haste", centro - direcao * comprimento / 2, ponta, cima)
+	local function pontaEmPlano(normal)
+		local direita = direcao:Cross(normal).Unit
+		for _, sinal in {-1, 1} do
+			segmento(if sinal < 0 then "AbaEsquerda" else "AbaDireita",
+				centro + direcao * comprimento * .12 + direita * sinal * comprimento * .25, ponta, normal)
+		end
+	end
+	pontaEmPlano(cima)
+	if vertical then pontaEmPlano(direcao:Cross(cima)) end
+end
+
 local function criarSeta(parte, pasta)
 	local direcao = parte.CFrame:VectorToWorldSpace(parte:GetAttribute("DirecaoSuperficie")
 		or parte:GetAttribute("DirecaoTransporte") or Vector3.zAxis)
@@ -13,34 +41,36 @@ local function criarSeta(parte, pasta)
 	direcao = direcao.Unit
 	local cima = parte.CFrame.UpVector
 	cima = (cima - direcao * cima:Dot(direcao)).Unit
-	local direita = direcao:Cross(cima).Unit
 	local comprimento = math.min(math.min(parte.Size.X, parte.Size.Z) * .65, passoGrade * 1.5)
 	local centro = parte.CFrame:PointToWorldSpace(Vector3.new(0, parte.Size.Y / 2, 0))
 		+ cima * (passoGrade * .035 + passoGrade * .045 / 2)
-	local seta = Instance.new("Folder")
-	seta.Name, seta.Parent = parte.Name, pasta
-	local function segmento(nome, a, b)
-		local parte = Instance.new("Part")
-		parte.Name, parte.Size = nome, Vector3.new(passoGrade * .08, passoGrade * .045, (b-a).Magnitude)
-		local tras = (a-b).Unit
-		local lado = cima:Cross(tras).Unit
-		parte.CFrame = CFrame.fromMatrix((a+b)/2, lado, tras:Cross(lado), tras)
-		parte.Color, parte.Material = Color3.new(1, 1, 1), Enum.Material.Neon
-		local intensidade=Config.Obter(Players.LocalPlayer,"IntensidadeSetas")
-		parte.Transparency=intensidade=="Suave" and .6 or intensidade=="Normal" and .25 or 0
-		parte.Anchored, parte.CanCollide, parte.CanTouch, parte.CanQuery = true, false, false, false
-		parte.CastShadow, parte.Parent = false, seta
+	desenharSeta(pasta, parte.Name, centro, direcao, cima, comprimento, Color3.new(1, 1, 1))
+end
+
+local function setasElevador(modelo, pai, soEntrada)
+	local entrada, saida = modelo:GetAttribute("PortaEntrada"), modelo:GetAttribute("PortaSaida")
+	local entrar, sair = modelo:GetAttribute("DirecaoEntrada"), modelo:GetAttribute("DirecaoSaida")
+	if not (entrada and saida and entrar and sair and modelo.PrimaryPart) then return nil end
+	local pivo = modelo:GetPivot()
+	local pasta = Instance.new("Folder")
+	pasta.Name, pasta.Parent = "SetaTransporte", pai or modelo
+	local altura = Vector3.yAxis * .34
+	desenharSeta(pasta, "Entrada", pivo:PointToWorldSpace(entrada + entrar * .52 + altura),
+		pivo:VectorToWorldSpace(entrar), pivo.UpVector, .82, Color3.fromRGB(255, 186, 70))
+	if not soEntrada then
+		desenharSeta(pasta, "Saida", pivo:PointToWorldSpace(saida - sair * .52 + altura),
+			pivo:VectorToWorldSpace(sair), pivo.UpVector, .82, Color3.fromRGB(93, 247, 224))
+		local desnivel = saida.Y - entrada.Y
+		desenharSeta(pasta, "Sentido", pivo:PointToWorldSpace(Vector3.yAxis * ((entrada.Y + saida.Y) / 2)),
+			pivo.UpVector * math.sign(desnivel), pivo.LookVector, math.min(math.abs(desnivel) * .66, passoGrade * 1.5),
+			Color3.new(1, 1, 1), true)
 	end
-	local ponta = centro + direcao * comprimento / 2
-	segmento("Haste", centro - direcao * comprimento / 2, ponta)
-	for _, sinal in {-1, 1} do
-		segmento(if sinal < 0 then "AbaEsquerda" else "AbaDireita",
-			centro + direcao * comprimento * .12 + direita * sinal * comprimento * .25, ponta)
-	end
+	return pasta
 end
 
 -- Os indicadores nascem depois da medicao para nao alterar a hitbox nem o encaixe.
-function Setas.Criar(modelo, definicao, pai)
+function Setas.Criar(modelo, definicao, pai, soEntrada)
+	if definicao.Vertical then return setasElevador(modelo, pai, soEntrada) end
 	local pasta
 	for _, componente in definicao.Componentes or {} do
 		if componente.Tipo ~= "Transportador" or componente.ExibirSeta == false then continue end

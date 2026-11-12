@@ -40,6 +40,8 @@ function c:_AtualizarArrasteSelecao(posicao) self.areaAtualizada=true; self.fimA
 function c:Atualizar() self.atualizou=true end
 function c:Girar(eixo) self.eixo=eixo end
 function c:_ColocacaoSomenteVertical() return self.vertical == true end
+function c:FaseElevador() return self.faseElevador end
+function c:AjustarSaidaElevador(passo) self.passoElevador=passo; return true end
 function c:_AjustarAlturaSelecao(n) self.alturaSelecao=n end
 function c:Cancelar() self.cancelou=true; nav:Voltar() end
 local interface={_interface=ui.NovaInstancia("ScreenGui"),_paineisProgressao={},_paineis={}}
@@ -84,6 +86,10 @@ input.TouchTapInWorld:Fire(r.Vector2.new(280,130),false); assert(c.cliques==2,"U
 assert(controle:Acao("Girar X") and c.eixo=="X")
 c.vertical=true; controle:Atualizar()
 assert(not controle._botoes["Girar X"]:ObterInstancia().Visible and controle._botoes["Girar Y"]:ObterInstancia().Visible)
+c.faseElevador="Saida"; controle:Atualizar()
+assert(controle._botoes.Confirmar:ObterInstancia().Text=="Colocar" and not controle:Acao("Linha / área"))
+assert(controle:Acao("Descer") and c.passoElevador==-1)
+c.faseElevador=nil
 c.vertical=false
 c._alvoColocacao={minimo=r.Vector3.zero}
 controle:Acao("Subir"); assert(c._travamentoAltura.altura==3)

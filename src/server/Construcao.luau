@@ -17,8 +17,8 @@ function Construcao.Restaurar(jogador)
 end
 -- Recebe o pedido remoto de colocacao e o encaminha integralmente ao servico. minimo e o canto na grade;
 -- tokenCopia identifica uma captura do servidor e usarPadrao solicita o catalogo da loja.
-function Construcao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao)
-	return servico:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao)
+function Construcao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao, elevador)
+	return servico:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao, elevador)
 end
 function Construcao:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
 	return servico:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
