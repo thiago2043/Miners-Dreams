@@ -12,7 +12,9 @@ Decisões de Projeto:
 ]]
 
 local Janela = require(script.Parent.PainelProgressao)
-local Config = require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
+local Shared = game:GetService("ReplicatedStorage").Shared
+local Config = require(Shared.Configuracoes)
+local Beta = require(Shared.RecompensasBeta)
 local Input = game:GetService("UserInputService")
 local Deslizante = require(script.Parent.ControleDeslizante)
 local GerenciadorJanelas = require(script.Parent.GerenciadorJanelas)
@@ -34,6 +36,7 @@ local self = setmetatable({
 _janela = janela,
 _grupo = janela:ObterInstancia(),
 _jogador = jogador,
+_navegacao = navegacao,
 _rede = rede,
 _opcoes = {},
 _deslizantes = {},
@@ -43,10 +46,37 @@ _rotulosAtalhos = {},
 _conexoes = {},
 _opcoesPendentes = {},
 _filaAtalhos = {},
+_opcoesGerais = {},
+_emotesBeta = {},
 }, Painel)
 
+self._tituloBeta = janela:Texto(conteudo, "RecompensasBeta", "Recompensas do teste beta", UDim2.new(), UDim2.new(), 18, true)
+self._temaBeta = janela:Botao(conteudo, "TemaBeta", UDim2.new(), UDim2.new(), function()
+	local temas = {Beta.Padrao}
+	for _, nome in {Beta.Participacao, Beta.E308} do
+		if Beta.PodeUsar(jogador, nome) then table.insert(temas, nome) end
+	end
+	local indice = table.find(temas, Config.Obter(jogador, "TemaBeta")) or 1
+	self:_PedirBeta("SalvarOpcao", "TemaBeta", temas[indice % #temas + 1])
+end)
+local temaBeta = self._temaBeta:ObterInstancia()
+temaBeta.TextSize = 16
+for _, nome in {Beta.Participacao, Beta.E308} do
+	local tema = Beta.Temas[nome]
+	local botao = janela:Botao(conteudo, tema.Emote, UDim2.new(), UDim2.new(), function()
+		self:_PedirBeta("EmoteBeta", nome)
+	end)
+	self._emotesBeta[nome] = botao
+	table.insert(self._conexoes, jogador:GetAttributeChangedSignal(tema.Atributo):Connect(function() self:Atualizar() end))
+end
+self._avisoBeta = janela:Texto(conteudo, "AvisoBeta", "", UDim2.new(), UDim2.new(), 15)
+table.insert(self._conexoes, jogador:GetAttributeChangedSignal("TemaBeta"):Connect(function() self:Atualizar() end))
+
 -- Criação dos controles de cada opção definida em Configuracoes.Opcoes
-for i, opcao in Config.Opcoes do
+for _, opcao in Config.Opcoes do
+if opcao.Id == "TemaBeta" then continue end
+table.insert(self._opcoesGerais, opcao)
+local i = #self._opcoesGerais
 self._rotulos[opcao.Id] = janela:Texto(conteudo, opcao.Id, opcao.Nome, UDim2.fromOffset(0, (i - 1) * 64), UDim2.new(1, -162, 0, 54), 16, true)
 if type(opcao.Valores[1]) == "number" or opcao.Deslizante then
 local controle = Deslizante.new(
@@ -73,7 +103,7 @@ end))
 end
 
 -- Botão para restaurar o layout padrão de todas as janelas
-local y = #Config.Opcoes * 64 + 10
+local y = #self._opcoesGerais * 64 + 10
 self._botaoRestaurarJanelas = janela:Botao(conteudo, "RestaurarJanelas", UDim2.fromOffset(0, y), UDim2.new(1, -8, 0, 34), function()
 GerenciadorJanelas.ResetarTodas()
 end)
@@ -128,10 +158,25 @@ end))
 table.insert(self._conexoes, conteudo:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 self:_Layout()
 end))
+table.insert(self._conexoes, self._grupo:GetAttributeChangedSignal("AnimandoUI"):Connect(function() self:_Layout() end))
 
 self:_Layout()
 self:Atualizar()
 return self
+end
+
+function Painel:_PedirBeta(metodo, ...)
+	if self._pedidoBeta then return end
+	self._pedidoBeta = true
+	self:Atualizar()
+	self._rede = self._rede or GerenciadorJanelas.ObterRede()
+	local ok, sucesso, mensagem
+	if self._rede then ok, sucesso, mensagem = pcall(self._rede.fetch, self._rede, metodo, ...) end
+	if self._destruido then return end
+	self._pedidoBeta = false
+	self._avisoBeta.Text = if ok and sucesso then "" else (mensagem or "Tente novamente em instantes.")
+	if ok and sucesso and metodo == "EmoteBeta" then self._navegacao:Fechar("Configuracoes") end
+	self:Atualizar()
 end
 
 --- Envia de forma assíncrona o novo valor de uma opção para salvamento no servidor.
@@ -192,11 +237,31 @@ local largColOp = math.floor((larguraUtil - (colsOp - 1) * 14) / colsOp)
 local estreita = largColOp < 290
 local alturaOp = estreita and 84 or 56
 
-for i, opcao in Config.Opcoes do
+local yBeta = 0
+if self._tituloBeta.Visible then
+	self._tituloBeta.Size = UDim2.fromOffset(larguraUtil, 26)
+	local tema = self._temaBeta:ObterInstancia()
+	tema.Position, tema.Size = UDim2.fromOffset(0, 28), UDim2.fromOffset(larguraUtil, 40)
+	yBeta = 74
+	for _, nome in {Beta.Participacao, Beta.E308} do
+		local emote = self._emotesBeta[nome]:ObterInstancia()
+		if emote.Visible then
+			emote.Position, emote.Size = UDim2.fromOffset(0, yBeta), UDim2.fromOffset(larguraUtil, 40)
+			yBeta += 46
+		end
+	end
+	if self._avisoBeta.Visible then
+		self._avisoBeta.Position, self._avisoBeta.Size = UDim2.fromOffset(0, yBeta), UDim2.fromOffset(larguraUtil, 38)
+		yBeta += 42
+	end
+	yBeta += 10
+end
+
+for i, opcao in self._opcoesGerais do
 local col = (i - 1) % colsOp
 local lin = math.floor((i - 1) / colsOp)
 local xBase = col * (largColOp + 14)
-local yBase = lin * alturaOp
+local yBase = yBeta + lin * alturaOp
 local texto = self._rotulos[opcao.Id]
 local b = self._opcoes[opcao.Id]:ObterInstancia()
 if estreita then
@@ -213,8 +278,8 @@ b.Size = UDim2.fromOffset(largControle, 36)
 end
 end
 
-local linhasOp = math.ceil(#Config.Opcoes / colsOp)
-local y = linhasOp * alturaOp + 8
+local linhasOp = math.ceil(#self._opcoesGerais / colsOp)
+local y = yBeta + linhasOp * alturaOp + 8
 local bRest = self._botaoRestaurarJanelas:ObterInstancia()
 bRest.Position = UDim2.fromOffset(0, y)
 bRest.Size = UDim2.fromOffset(larguraUtil, 34)
@@ -264,7 +329,28 @@ end
 function Painel:Atualizar()
 if self._destruido then return end
 self._janela:Atualizar()
-for _, opcao in Config.Opcoes do
+local temRecompensa = false
+local mudouLayout = false
+for nome, botao in self._emotesBeta do
+	local possui = Beta.PodeUsar(self._jogador, nome)
+	local emote = botao:ObterInstancia()
+	mudouLayout = mudouLayout or emote.Visible ~= possui
+	emote.Visible = possui
+	botao:DefinirDisponivel(possui and not self._pedidoBeta)
+	temRecompensa = temRecompensa or possui
+end
+local temaAtual = Config.Obter(self._jogador, "TemaBeta")
+if not Beta.PodeUsar(self._jogador, temaAtual) then temaAtual = Beta.Padrao end
+local tema = self._temaBeta:ObterInstancia()
+tema.Text, tema.Visible = "Trocar tema · " .. temaAtual, temRecompensa
+self._temaBeta:DefinirDisponivel(temRecompensa and not self._pedidoBeta)
+self._tituloBeta.Visible = temRecompensa
+local mostrarAviso = temRecompensa and self._avisoBeta.Text ~= ""
+if mudouLayout or self._avisoBeta.Visible ~= mostrarAviso then
+	self._avisoBeta.Visible = mostrarAviso
+	self:_Layout()
+end
+for _, opcao in self._opcoesGerais do
 local valor = Config.Obter(self._jogador, opcao.Id)
 local texto = if type(valor) == "boolean"
 then (valor and "Ativado" or "Desativado")

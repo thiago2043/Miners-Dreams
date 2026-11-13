@@ -92,6 +92,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local pacotes = ReplicatedStorage:FindFirstChild("Packages")
 if pacotes and pacotes:FindFirstChild("Networker") then
   local Networker = require(pacotes.Networker)
+  local CosmeticosBeta = require(script.Parent.Parent.CosmeticosBeta)
   local ServicoConfiguracoes = {}
   function ServicoConfiguracoes:SalvarOpcao(jogador, id, valor)
     return DataManager.DefinirConfiguracao(jogador, id, valor)
@@ -102,10 +103,14 @@ if pacotes and pacotes:FindFirstChild("Networker") then
   function ServicoConfiguracoes:SalvarJanela(jogador, id, rect)
     return DataManager.DefinirJanela(jogador, id, rect)
   end
+  function ServicoConfiguracoes:EmoteBeta(jogador, tema)
+    return CosmeticosBeta.Emote(jogador, tema)
+  end
   Networker.server.new("Configuracoes", ServicoConfiguracoes, {
     ServicoConfiguracoes.SalvarOpcao,
     ServicoConfiguracoes.SalvarAtalho,
     ServicoConfiguracoes.SalvarJanela,
+    ServicoConfiguracoes.EmoteBeta,
   })
 end
 

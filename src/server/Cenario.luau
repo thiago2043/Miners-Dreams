@@ -1,4 +1,6 @@
-local Mapa = require(game:GetService("ReplicatedStorage").Shared.Mapa)
+local Shared = game:GetService("ReplicatedStorage").Shared
+local Mapa = require(Shared.Mapa)
+local Beta = require(Shared.RecompensasBeta)
 local Cenario = {}
 local cores = {
  grama=Color3.fromRGB(101,190,68),folha=Color3.fromRGB(43,143,69),clara=Color3.fromRGB(125,201,64),
@@ -15,6 +17,26 @@ local function parte(pai,nome,tamanho,cf,cor,material,forma)
  if forma then p.Shape=forma end
  p.Parent=pai
  return p
+end
+
+local function bordaBeta(piso, lado)
+ local gui=Instance.new("SurfaceGui")
+ gui.Name,gui.Face,gui.CanvasSize="BordaTesteBeta",Enum.NormalId.Top,Vector2.new(768,768)
+ gui.LightInfluence,gui.Enabled,gui.Parent=.4,false,piso
+ local moldura=Instance.new("Frame")
+ moldura.Position,moldura.Size=UDim2.fromScale(.01,.01),UDim2.fromScale(.98,.98)
+ moldura.BackgroundTransparency,moldura.Parent=1,gui
+ local contorno=Instance.new("UIStroke")
+ contorno.Thickness,contorno.Transparency,contorno.Parent=5,.18,moldura
+ local selo=Instance.new("TextLabel")
+ local esquerda=lado==-1
+ selo.AnchorPoint=Vector2.new(.5,.5)
+ selo.Position=if esquerda then UDim2.fromScale(.5,.04) else UDim2.fromScale(.04,.5)
+ selo.Size,selo.BackgroundColor3=UDim2.fromOffset(205,28),Color3.fromRGB(31,32,39)
+ selo.BorderSizePixel,selo.Font,selo.TextSize=0,Enum.Font.GothamBold,18
+ selo.Rotation=if esquerda then 0 else 90
+ selo.Parent=gui
+ return gui,contorno,selo
 end
 
 function Cenario.Criar(baseplate,terrenos,destino)
@@ -91,12 +113,23 @@ function Cenario.Criar(baseplate,terrenos,destino)
   texto.TextColor3,texto.Font,texto.TextSize=Color3.fromRGB(244,255,235),Enum.Font.GothamBold,38
   texto.TextWrapped,texto.Parent=true,gui
   local verso=gui:Clone(); verso.Face,verso.Parent=Enum.NormalId.Back,placa
+  local borda,contorno,selo=bordaBeta(plot.Piso,lado)
   local function atualizar()
    local dono=plot:GetAttribute("DonoNome")
+   local tema=Beta.Temas[plot:GetAttribute("TemaBeta")]
    texto.Text="LOTE "..id.."\n"..(type(dono)=="string" and dono~="" and dono or "Disponível")
-   verso.Nome.Text=texto.Text
+   if tema then texto.Text..="\n"..tema.Selo end
+   texto.TextColor3=if tema then Color3.fromRGB(table.unpack(tema.Cor)) else Color3.fromRGB(244,255,235)
+   texto.TextSize=if tema then 31 else 38
+   verso.Nome.Text,verso.Nome.TextColor3,verso.Nome.TextSize=texto.Text,texto.TextColor3,texto.TextSize
+   borda.Enabled=tema~=nil
+   if tema then
+    contorno.Color=Color3.fromRGB(table.unpack(tema.Cristal))
+    selo.Text,selo.TextColor3=tema.Selo,texto.TextColor3
+   end
   end
   atualizar(); plot:GetAttributeChangedSignal("DonoNome"):Connect(atualizar)
+  plot:GetAttributeChangedSignal("TemaBeta"):Connect(atualizar)
  end
  for fila=0,3 do
   local z=40+fila*Mapa.PassoPlot

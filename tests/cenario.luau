@@ -69,6 +69,21 @@ terrenos.Terreno_1:GetAttributeChangedSignal("DonoNome"):Fire()
 local achou=false
 for _,o in c.Sinalizacao:GetDescendants() do if o:IsA("TextLabel") and o.Text:find("JogadorTeste",1,true) then achou=true end end
 assert(achou)
+local plot=terrenos.Terreno_1
+local beta=carregar("src/shared/RecompensasBeta")
+local borda=plot.Piso.BordaTesteBeta
+assert(not borda.Enabled)
+plot:SetAttribute("TemaBeta",beta.E308)
+plot:GetAttributeChangedSignal("TemaBeta"):Fire()
+assert(borda.Enabled and borda:FindFirstChildOfClass("TextLabel").Text==beta.Temas[beta.E308].Selo)
+local placasBeta=0
+for _,o in c.Sinalizacao:GetDescendants() do
+ if o:IsA("TextLabel") and o.Text:find(beta.Temas[beta.E308].Selo,1,true) then placasBeta+=1 end
+end
+assert(placasBeta==2)
+plot:SetAttribute("TemaBeta",nil)
+plot:GetAttributeChangedSignal("TemaBeta"):Fire()
+assert(not borda.Enabled)
 for s=0,M.Comprimento,.2 do
  local p,d=M.Ponto(s)
  assert(math.abs(d.Magnitude-1)<.001)

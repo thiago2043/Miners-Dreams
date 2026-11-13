@@ -108,6 +108,7 @@ function Terreno:Liberar()
 	self._modelo.Spawn.Enabled = false
 	self._modelo.Piso.Color = Color3.fromRGB(145, 145, 145)
 self._modelo:SetAttribute("PreviaConstrucao", nil)
+  self._modelo:SetAttribute("TemaBeta", nil)
   self._modelo:SetAttribute("DonoUserId", 0)
   self._modelo:SetAttribute("DonoNome", "")
   print(self._modelo.Name .. " foi liberado.")

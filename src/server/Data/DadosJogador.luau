@@ -14,6 +14,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Configuracoes = require(ReplicatedStorage.Shared.Configuracoes)
+local Beta = require(ReplicatedStorage.Shared.RecompensasBeta)
 local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
@@ -217,6 +218,7 @@ end
 function DadosJogador:Sincronizar()
 	self:RegistrarRecorde("Vidas", string.format("%.0f", self._perfil.Data.Vidas or 1))
 	self:RegistrarRecorde("Dinheiro", self:ObterSaldo())
+	self._jogador:SetAttribute("MarcoDinheiroE308", Beta.AtingiuE308((self._perfil.Data.Recordes or {}).Dinheiro))
 	for _,item in Upgrades.Itens do self._jogador:SetAttribute("Upgrade_"..item.Id,self:ObterUpgrade(item.Id)) end
 	self._jogador:SetAttribute("VelocidadeMotores",self:ObterVelocidadeMotores())
 	self._jogador:SetAttribute("Dinheiro", self:ObterSaldo())
@@ -320,6 +322,9 @@ function DadosJogador:DefinirConfiguracao(id, valor)
   if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
   local normalizado, opcao = Configuracoes.NormalizarOpcao(id, valor)
   if normalizado == nil or not opcao then return false, "Configuracao invalida." end
+  if id == "TemaBeta" and not Beta.PodeUsar(self._jogador, normalizado) then
+    return false, "Tema reservado a quem conquistou o emblema no teste beta."
+  end
   local opcoesSalvas = type(self._perfil.Data.Configuracoes) == "table" and self._perfil.Data.Configuracoes or {}
   self._perfil.Data.Configuracoes = opcoesSalvas
   opcoesSalvas[id] = if normalizado ~= opcao.Padrao then normalizado else nil
@@ -354,6 +359,11 @@ function DadosJogador:RegistrarRecorde(id, valor)
 	local anterior = Classificacao.Normalizar(recordes[id]) or "0"
 	if not Classificacao.Maior(normalizado, anterior) then return false end
 	recordes[id] = normalizado
+	if id == "Dinheiro" and #normalizado >= 309 then
+		if not Beta.AtingiuE308(anterior) and Beta.AtingiuE308(normalizado) then
+			self._jogador:SetAttribute("MarcoDinheiroE308", true)
+		end
+	end
 	return true
 end
 

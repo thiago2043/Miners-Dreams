@@ -1,4 +1,5 @@
 local C={}
+local Beta = require(script.Parent.RecompensasBeta)
 local quantidades={}
 for n=0,5000,100 do table.insert(quantidades,n) end
 C.Opcoes={
@@ -17,6 +18,7 @@ C.Opcoes={
 {Id="ConfirmarVenda",Nome="Confirmar venda de peças",Valores={"Nunca","Várias peças","Sempre"},Padrao="Várias peças"},
 {Id="ConfirmarRenascimento",Nome="Confirmar renascimento",Valores={true,false},Padrao=true},
 {Id="IntensidadeSetas",Nome="Setas de colocação",Valores={0,.5,1},Passo=.01,Padrao=1,Percentual=true,Deslizante=true},
+{Id="TemaBeta",Nome="Tema do teste beta",Valores={Beta.Padrao,Beta.Participacao,Beta.E308},Padrao=Beta.Padrao},
 }
 C.Atalhos={{"W","Andar para frente"},{"S","Andar para trás"},{"A","Andar para a esquerda"},{"D","Andar para a direita"},{"Q","Cancelar / voltar"},
 	{"E","Inventário"},{"F","Loja"},{"B","Blueprints"},{"U","Upgrades"},{"P","Prestígio"},
