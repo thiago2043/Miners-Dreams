@@ -68,7 +68,7 @@ function Cenario.Criar(baseplate,terrenos,destino)
   local cf=CFrame.new((a+b)/2+Vector3.new(0,y+.09,0))*CFrame.Angles(0,math.atan2(b.X-a.X,b.Z-a.Z),0)
   local pista=parte(estrada,"Pista",Vector3.new(Mapa.LarguraEstrada,.12,(b-a).Magnitude+sobreposicao),cf,cores.estrada)
   pista.CanCollide=true
-  pista.AssemblyLinearVelocity=(b-a).Unit*Mapa.Velocidade
+  pista.AssemblyLinearVelocity=Vector3.zero
   for _,lado in {-1,1} do
    parte(estrada,"Borda",Vector3.new(.16,.035,(b-a).Magnitude+sobreposicao),cf*CFrame.new(lado*3.8,.08,0),cores.luz,Enum.Material.Neon)
   end

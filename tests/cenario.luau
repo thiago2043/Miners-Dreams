@@ -22,8 +22,7 @@ for _,o in c:GetDescendants() do
   partes+=1
   assert(o.Anchored and o.CanCollide==(o.Name=="Pista") and not o.CanTouch and not o.CanQuery)
   if o.Name=="Pista" then
-   assert(math.abs(o.AssemblyLinearVelocity.Magnitude-M.Velocidade)<.001 and math.abs(o.AssemblyLinearVelocity.Y)<.001)
-   assert(o.AssemblyLinearVelocity.Unit:Dot(-o.CFrame.LookVector)>.999,"Esteira no sentido errado")
+   assert(o.AssemblyLinearVelocity==V.zero,"A pista não deve aplicar um segundo empurrão físico")
   end
   if o.Name=="Placa" then
    assert(24-math.abs(o.CFrame.Position.X)-.125>=5,"Placa perto demais da plot")
