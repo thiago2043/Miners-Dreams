@@ -553,7 +553,10 @@ if not registro.Elevador and parte.Parent and not parte:GetAttribute("Processado
 local jogador = Players:GetPlayerByUserId(registro.Terreno:GetAttribute("DonoUserId"))
 local dados = jogador and DataManager.ObterDados(jogador)
 local valor = registro.Minerio:CalcularValor("0.1")
-if dados and valor and dados:AdicionarDinheiro(valor) then registro.Minerio:Consumir(true) end
+if dados and valor and dados:AdicionarDinheiro(valor) then
+if dados.RegistrarQuedaTutorial then dados:RegistrarQuedaTutorial(posicao) end
+registro.Minerio:Consumir(true)
+end
 end
 end
 end

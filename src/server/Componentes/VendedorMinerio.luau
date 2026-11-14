@@ -34,6 +34,7 @@ function VendedorMinerio:AoTocar(minerio)
 	local dados = self._maquina:ObterDadosDono()
 	if valor then valor=Efeitos.Fundicao(valor,self._maquina:ObterNivelUpgrade("Fundicao")) end
 	if not dados or not dados:AdicionarDinheiro(valor) then return end
+	if dados.RegistrarVendaTutorial then dados:RegistrarVendaTutorial(valor, minerio.ModificadoNaLinha) end
 	-- O credito ja foi aceito pelos dados do dono. Agora calcula o total da fornalha e consome a unidade; a
 	-- marca Processado e a destruicao impedem uma segunda venda.
 	local novoTotal = InteiroGrande.somar(total, valor)

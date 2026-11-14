@@ -1244,7 +1244,9 @@ end
 end
 local bateBusca = termo == "" or item.Busca:find(termo, 1, true) ~= nil
 local visivel = possui and bateBusca and self:_PertenceCategoria(id) and self:_AtendeFiltrosAvancados(item)
-b.Visible, b.LayoutOrder = visivel, ordem
+local guiado = id == self._pecaTutorial and (self._loja or (item.QuantidadeValor or 0) > 0)
+visivel = visivel or guiado
+b.Visible, b.LayoutOrder = visivel, if guiado then 0 else ordem
 item.SeloPrioridade.Visible = visivel and self:_ItemBateAlvoPrioridadeExato(item)
 if visivel then visiveis += 1 end
 end
@@ -1320,6 +1322,13 @@ function GradePecas:ObterInstancia() return self._grupo end
 --- Retorna o rótulo exibido quando nenhuma peça corresponde aos filtros.
 --- @return TextLabel
 function GradePecas:ObterTextoVazio() return self._vazio end
+
+function GradePecas:DestacarNoTutorial(id)
+	if self._pecaTutorial == id then return end
+	self._pecaTutorial = id
+	self:ConcluirAtualizacao()
+	if id then self._area.CanvasPosition = Vector2.zero end
+end
 
 --- Retorna a instância de Botao associada ao ID de uma máquina.
 --- @param id string

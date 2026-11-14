@@ -537,6 +537,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	if not livre then
 		warn("Nao ha espaco livre nessa altura do terreno.")
+		if self.AoColocarTutorial then self.AoColocarTutorial(nil, "Esse espaço está ocupado. Encaixe a prévia em uma área livre.") end
 		return
 	end
 	if self:FaseElevador() == "Entrada" then
@@ -589,9 +590,11 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	if not comunicou then
 		warn("Nao foi possivel confirmar a colocacao.")
+		if self.AoColocarTutorial then self.AoColocarTutorial(nil, "Não foi possível confirmar. Tente colocar de novo.") end
 	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
 		warn("Resposta invalida do servidor.")
 	elseif sucesso then
+		if self.AoColocarTutorial then self.AoColocarTutorial(alvo.maquinaId) end
 		if movimento and movimento.Copia then
 			self._alvoColocacao = nil
 			for _, peca in movimento.Pecas do peca.Previa:ForcarAtualizacao() end
@@ -613,6 +616,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 		print(mensagem)
 	else
 		warn(mensagem)
+		if self.AoColocarTutorial then self.AoColocarTutorial(nil, mensagem) end
 	end
 end
 
@@ -1161,7 +1165,7 @@ function ControladorConstrucao:_SalvarBlueprintDaSelecao()
 
 local idSubstituir = self._idBlueprintEmSubstituicao
   self._salvandoBlueprint, self._colocando = true, true
-  local comunicou, sucesso, mensagem, blueprint = pcall(function()
+  local comunicou, sucesso, mensagem = pcall(function()
     if idSubstituir then
       return self._redeConstrucao:fetch("SubstituirBlueprint", idSubstituir, self._nomeBlueprintEmCriacao, maquinas)
     end

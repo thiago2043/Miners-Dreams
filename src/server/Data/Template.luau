@@ -16,6 +16,7 @@ return {
 	NomeJogador = "",
 	Monitoramento = {Tempo=0,Amostras={},Eventos={},Alteracoes={},Bytes={}},
 	Recordes = { Vidas = "1", DinheiroPorSegundo = "0", Minerio = "0", Dinheiro = "0" },
+	Tutorial = {Modo = "Convite", Etapa = 0},
 	-- Operacoes e vidas sao contadores diferentes: saltar vidas nao multiplica o custo dos proximos ciclos.
 	Reencarnacoes = 0, Vidas = 1,
 	Upgrades = {Extracao=0,Fundicao=0,Motores=0,Calibracao=0}, VelocidadeMotores=0, ExpansaoPlot=0, VersaoExpansaoPlot=2,

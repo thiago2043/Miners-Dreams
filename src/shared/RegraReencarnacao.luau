@@ -1,10 +1,11 @@
 local ProgressaoLogaritmica = require(script.Parent.ProgressaoLogaritmica)
 local RegraReencarnacao = {}
 RegraReencarnacao.__index = RegraReencarnacao
+RegraReencarnacao.PrimeiroRequisito = "1000000000000000000000"
 
 -- 1Sx = 10^21; cada marco seguinte multiplica o requisito por mil.
 function RegraReencarnacao.new()
-	return setmetatable({ _escala = ProgressaoLogaritmica.new("1000000000000000000000") }, RegraReencarnacao)
+	return setmetatable({ _escala = ProgressaoLogaritmica.new(RegraReencarnacao.PrimeiroRequisito) }, RegraReencarnacao)
 end
 
 local function inteiro(valor, minimo)

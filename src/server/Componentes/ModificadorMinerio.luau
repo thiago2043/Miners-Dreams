@@ -77,6 +77,7 @@ end
 
 function ModificadorMinerio:AoTocar(minerio, sensor)
   if not self:PrecisaReceber(minerio, sensor) then return end
+  local valorAnterior = not minerio.ModificadoNaLinha and minerio:ObterValor()
   local parte, config = minerio:ObterParte(), self._configuracao
   local etapa = if sensor then table.find(self._sensores or {}, sensor) else 1
   local passagem = self._passagens[parte] or { Etapas = {}, Iniciada = false }
@@ -92,6 +93,7 @@ function ModificadorMinerio:AoTocar(minerio, sensor)
     local valor = minerio:CalcularValor(multiplicador, config.Bonus, true)
     if not valor or not minerio:DefinirValor(valor) then return end
   end
+  if valorAnterior and minerio:ObterValor() ~= valorAnterior then minerio.ModificadoNaLinha = true end
   if not passagem.Iniciada and config.LimiteUsos then
     if minerio.IncrementarUsosModificador then
       minerio:IncrementarUsosModificador(self._chaveUsos)

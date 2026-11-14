@@ -170,7 +170,14 @@ function Controles:AlternarFoco()
 	if Gui.SelectedObject then self._emMenus=false; Gui.SelectedObject=nil
 	else
 		self:Focar()
-		if not Gui.SelectedObject then self._emMenus=true; Gui.SelectedObject=self._interface._botoesAbas.Inventario:ObterInstancia() end
+		if not Gui.SelectedObject then
+			local guia = self._interface._guiaTutorial
+			local foco = guia and guia:BotaoParaFoco()
+			if foco and foco == self._ultimoFocoGuia then foco = nil end
+			self._ultimoFocoGuia = foco
+			self._emMenus=true
+			Gui.SelectedObject = foco or self._interface._botoesAbas.Inventario:ObterInstancia()
+		end
 	end
 	self:Atualizar()
 end

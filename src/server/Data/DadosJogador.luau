@@ -15,6 +15,7 @@ local InteiroGrande = require(ServerScriptService:WaitForChild("InteiroGrande"))
 local CatalogoMaquinas = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Configuracoes = require(ReplicatedStorage.Shared.Configuracoes)
 local Beta = require(ReplicatedStorage.Shared.RecompensasBeta)
+local PrimeiraFabrica = require(ReplicatedStorage.Shared.PrimeiraFabrica)
 local Upgrades = require(ReplicatedStorage.Shared.Upgrades)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
@@ -25,7 +26,7 @@ local ReinicioProgresso = require(script.Parent.ReinicioProgresso)
 local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
@@ -225,12 +226,60 @@ function DadosJogador:Sincronizar()
 	-- Perfis antigos recebem os campos por Reconcile; os valores iniciais tambem permitem consultar dados legados.
 	self._jogador:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
 	self._jogador:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
+	self:SincronizarTutorial()
 for maquinaId in CatalogoMaquinas do
     self:_PublicarInventario(maquinaId)
   end
   self:_SincronizarConfiguracoes()
   self:PublicarResumoPlot()
   self:PublicarRecebimentos()
+end
+
+function DadosJogador:SincronizarTutorial()
+	local dados = self._perfil.Data
+	local tutorial = dados.Tutorial
+	if type(tutorial) ~= "table" then tutorial = {Modo = "Convite", Etapa = 0}; dados.Tutorial = tutorial end
+	if type(tutorial.Etapa) ~= "number" then tutorial.Etapa = PrimeiraFabrica.Etapas.Venda end
+	if tutorial.Modo ~= "Convite" and tutorial.Modo ~= "Ativo" and tutorial.Modo ~= "Pulado" then tutorial.Modo = "Convite" end
+	-- Os marcos 2 a 4 dos perfis antigos já vinham depois da primeira venda com modificador.
+	if (dados.Reencarnacoes or 0) > 0 or tutorial.Etapa > PrimeiraFabrica.Etapas.Modificador then
+		tutorial.Etapa = PrimeiraFabrica.Etapas.Concluido
+		if tutorial.Modo == "Convite" then tutorial.Modo = "Pulado" end
+	end
+	self._jogador:SetAttribute("TutorialEtapa", tutorial.Etapa)
+	self._jogador:SetAttribute("TutorialModo", tutorial.Modo)
+	if tutorial.Modo ~= "Ativo" or tutorial.Etapa ~= PrimeiraFabrica.Etapas.Venda then self._jogador:SetAttribute("TutorialQueda", nil) end
+end
+
+function DadosJogador:DefinirTutorial(acao)
+	if not self:EstaAtivo() or (acao ~= "Ativo" and acao ~= "Pulado") then return false end
+	if type(self._perfil.Data.Tutorial) ~= "table" then self:SincronizarTutorial() end
+	local tutorial = self._perfil.Data.Tutorial
+	if tutorial.Modo ~= acao then
+		tutorial.Modo = acao
+		self._jogador:SetAttribute("TutorialModo", acao)
+		if acao == "Pulado" then self._jogador:SetAttribute("TutorialQueda", nil) end
+	end
+	return true
+end
+
+function DadosJogador:RegistrarVendaTutorial(valor, modificado)
+	local tutorial = self._perfil.Data.Tutorial
+	if not tutorial or tutorial.Etapa >= PrimeiraFabrica.Etapas.Concluido then return end
+	if valor == "0" then return end
+	local etapa = if modificado then PrimeiraFabrica.Etapas.Concluido else PrimeiraFabrica.Etapas.Modificador
+	if etapa <= tutorial.Etapa then return end
+	tutorial.Etapa = etapa
+	self._jogador:SetAttribute("TutorialEtapa", etapa)
+	self._jogador:SetAttribute("TutorialQueda", nil)
+end
+
+function DadosJogador:RegistrarQuedaTutorial(posicao)
+	local tutorial = self._perfil.Data.Tutorial
+	if not tutorial or tutorial.Etapa ~= PrimeiraFabrica.Etapas.Venda
+		or tutorial.Modo ~= "Ativo" or (self._proximaQuedaTutorial or 0) > os.clock() then return end
+	self._proximaQuedaTutorial = os.clock() + 8
+	self._jogador:SetAttribute("TutorialQueda", posicao)
 end
 
 --- Método auxiliar privado (DadosJogador:_SincronizarConfiguracoes) encapsulado na classe.

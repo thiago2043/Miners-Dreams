@@ -14,6 +14,7 @@ local PainelConfiguracoes = require(script.Parent.PainelConfiguracoes)
 local PainelUpgrades = require(script.Parent.PainelUpgrades)
 local PainelClassificacao = require(script.Parent.PainelClassificacao)
 local PainelTutorial = require(script.Parent.PainelTutorial)
+local GuiaPrimeiraFabrica = require(script.Parent.GuiaPrimeiraFabrica)
 local PainelAdministracao = require(script.Parent.PainelAdministracao)
 local PainelHistoricoCopia = require(script.Parent.PainelHistoricoCopia)
 local Confirmacao = require(script.Parent.Confirmacao)
@@ -66,11 +67,15 @@ self._interface = Instance.new("ScreenGui")
 	self._paineisProgressao.Administracao=PainelAdministracao.new(self._interface,jogador,construcao.Navegacao,Networker.client.new("Administracao",{}),self._confirmacao)
 self._paineisProgressao.HistoricoCopia=PainelHistoricoCopia.new(self._interface,jogador,construcao)
 	self:_CriarMenuAbas()
+	self._guiaTutorial = GuiaPrimeiraFabrica.new(self, jogador, construcao)
+	construcao.AoColocarTutorial = function(id, mensagem) self._guiaTutorial:Colocou(id, mensagem) end
+	self._paineisProgressao.Tutorial.Guia = self._guiaTutorial
 	self:_CriarBotaoLimparPlot()
 	self:_ObservarMenusLaterais()
 	self:_CriarMenuPeca(playerGui)
 	table.insert(self._conexoes, construcao.PecaFocada:Connect(function(maquina)
 		self:_MostrarPeca(maquina)
+		self._guiaTutorial:Atualizar()
 	end))
 table.insert(self._conexoes, RunService.RenderStepped:Connect(function()
 local tHud = MonitorRecursos.Iniciar()
@@ -97,6 +102,9 @@ end))
 	end))
 	for _, atributo in { "Reencarnacoes", "Vidas" } do
 		table.insert(self._conexoes, jogador:GetAttributeChangedSignal(atributo):Connect(function() self._paineisProgressao.Prestigio:Atualizar() end))
+	end
+	for _, atributo in { "TutorialModo", "TutorialEtapa" } do
+		table.insert(self._conexoes, jogador:GetAttributeChangedSignal(atributo):Connect(function() self._paineisProgressao.Tutorial:Atualizar() end))
 	end
 	for _,atributo in {"Upgrade_Extracao","Upgrade_Fundicao","Upgrade_Motores","Upgrade_Calibracao","VelocidadeMotores"} do
 		table.insert(self._conexoes,jogador:GetAttributeChangedSignal(atributo):Connect(function()
@@ -531,6 +539,8 @@ function InterfaceJogo:Destruir()
 	for _, conexao in self._conexoes do conexao:Disconnect() end
 	table.clear(self._conexoes)
 	self._painelMoedas:Destruir()
+	self._guiaTutorial:Destruir()
+	self._construcao.AoColocarTutorial = nil
 	self._construcao.Confirmacao=nil
 	self._confirmacao:Destruir()
 	self._botaoLimparPlot:Destruir()

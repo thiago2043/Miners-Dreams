@@ -106,11 +106,16 @@ if pacotes and pacotes:FindFirstChild("Networker") then
   function ServicoConfiguracoes:EmoteBeta(jogador, tema)
     return CosmeticosBeta.Emote(jogador, tema)
   end
+  function ServicoConfiguracoes:DefinirTutorial(jogador, acao)
+    local dados = DataManager.ObterDados(jogador)
+    return dados ~= nil and dados:DefinirTutorial(acao)
+  end
   Networker.server.new("Configuracoes", ServicoConfiguracoes, {
     ServicoConfiguracoes.SalvarOpcao,
     ServicoConfiguracoes.SalvarAtalho,
     ServicoConfiguracoes.SalvarJanela,
     ServicoConfiguracoes.EmoteBeta,
+    ServicoConfiguracoes.DefinirTutorial,
   })
 end
 

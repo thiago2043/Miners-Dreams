@@ -1,4 +1,5 @@
 local Tutorial=require(game:GetService("ReplicatedStorage").Shared.Tutorial)
+local Etapas=require(game:GetService("ReplicatedStorage").Shared.PrimeiraFabrica).Etapas
 local Janela=require(script.Parent.PainelProgressao)
 local Botao=require(script.Parent.Botao)
 local AnimacaoInterface=require(script.Parent.AnimacaoInterface)
@@ -77,6 +78,11 @@ function Painel:_Abrir(indice)
   self:_Desenhar()
   AnimacaoInterface.TransicaoSubAba(self._corpo)
 end
+function Painel:AbrirCapitulo(id)
+	for indice, licao in Tutorial.Licoes do
+		if licao.Id == id then self:_Abrir(indice); return end
+	end
+end
 function Painel:_Desenhar()
   if self._destruido then return end
   self:_Limpar()
@@ -88,6 +94,29 @@ local function atualizarCanvas()
   end
   table.insert(self._conexoes,layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(atualizarCanvas))
 	if not self._atual then
+		if self.Guia then
+			local modo = self._jogador:GetAttribute("TutorialModo")
+			local etapa = self._jogador:GetAttribute("TutorialEtapa")
+			if modo and (etapa or Etapas.Venda) <= Etapas.Modificador then
+				self:_Texto("GuiaInterativo", "Monte sua primeira fábrica", 19, true)
+				local faixa = self:_Faixa("AcoesGuia")
+				local rotulo = if modo == "Convite" then "Começar" elseif modo == "Ativo" then "Continuar" else "Retomar"
+				local acoes = {{"RetomarGuia", rotulo, "Ativo"}}
+				if modo ~= "Pulado" then table.insert(acoes, {"PularGuia", "Pular tutorial", "Pulado"}) end
+				for i, acao in acoes do
+					local botao
+					botao = self:_Botao(faixa, acao[1], acao[2], function()
+						if self.Guia:DefinirModo(acao[3]) then
+							if acao[3] == "Pulado" then self:_Desenhar() end
+						elseif not self._destruido and botao.Parent then
+							botao.Text = "Tente novamente"
+						end
+					end):ObterInstancia()
+					botao.Position = UDim2.fromScale((i - 1) / #acoes, 0)
+					botao.Size, botao.Selectable = UDim2.new(1 / #acoes, -4, 1, 0), true
+				end
+			end
+		end
 		self:_Texto("Introducao","Escolha um tema ou pesquise uma dúvida.",17)
 		local busca=Instance.new("TextBox")
 		busca.Name,busca.Text,busca.PlaceholderText="Pesquisar",self._busca,"Pesquisar: modificadores, área, renascimento…"
@@ -152,7 +181,10 @@ end
 function Painel:Atualizar()
   if self._destruido then return end
   self._janela:Atualizar()
-  if self._grupo.Visible and not self._visivel then self:_Desenhar() end
+  local modo = self.Guia and self._jogador:GetAttribute("TutorialModo")
+  local etapa = self.Guia and self._jogador:GetAttribute("TutorialEtapa")
+  if self._grupo.Visible and (not self._visivel or modo ~= self._modoGuia or etapa ~= self._etapaGuia) then self:_Desenhar() end
+  self._modoGuia, self._etapaGuia = modo, etapa
   self._visivel=self._grupo.Visible
 end
 function Painel:Destruir()

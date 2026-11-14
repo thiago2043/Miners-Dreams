@@ -223,7 +223,7 @@ local function circuito(fps)
 	local player = { UserId = 123, atributos = {} }
 	function player:SetAttribute(k, v) self.atributos[k] = v end
 	jogadores[123] = player
-	local perfil = { Data = { Dinheiro = "0" } }
+	local perfil = { Data = { Dinheiro = "0", Tutorial = {Modo = "Ativo", Etapa = 0} } }
 	function perfil:IsActive() return true end
 	carregar("src/server/Data/DataManager").RegistrarPerfil(player, perfil)
 	caixa("Piso", CFrame.new(0, -1, 0), Vector3.new(64, 1, 64), plot)
@@ -241,6 +241,8 @@ local function circuito(fps)
 	local valor = perfil.Data.Dinheiro
 	assert(tonumber(valor) > 0 and tonumber(valor) % 10 == 0, "Circuito deve transportar, multiplicar e vender.")
 	assert(vendedor:GetAttribute("TotalRecebido") == valor)
+	assert(player.atributos.TutorialEtapa == carregar("src/shared/PrimeiraFabrica").Etapas.Concluido,
+		"A primeira venda de um minério modificado deve concluir o guia.")
 	local corpos = {}
 	for _, entrada in fabrica._simulacao._minerios do table.insert(corpos, estado(entrada.Corpo)) end
 	fabrica:Destruir()

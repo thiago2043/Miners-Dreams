@@ -36,6 +36,15 @@ local function linha(pai, cor, x1, y1, x2, y2, espessura)
 	return forma
 end
 
+function IconesAbas.DesenharSeta(pai, cor)
+	for ordem, camada in {{fundo, 12}, {cor, 7}} do
+		local corTraco, espessura = camada[1], camada[2]
+		linha(pai, corTraco, 11, 28, 48, 28, espessura).ZIndex = pai.ZIndex + ordem
+		linha(pai, corTraco, 32, 12, 48, 28, espessura).ZIndex = pai.ZIndex + ordem
+		linha(pai, corTraco, 48, 28, 32, 44, espessura).ZIndex = pai.ZIndex + ordem
+	end
+end
+
 local desenhos = {
 	Craft = function(pai, cor)
 		linha(pai, cor, 15, 43, 36, 17, 6)
