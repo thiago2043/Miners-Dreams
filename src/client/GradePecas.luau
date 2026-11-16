@@ -11,7 +11,8 @@ Gerencia a grade visual de peças do Inventário e da Loja, incluindo:
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Configuracoes)
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
-local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local AbreviarPadrao = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local Efeitos = require(ReplicatedStorage.Shared.EfeitosUpgrades)
 local FichaMaquina = require(script.Parent.FichaMaquina)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
@@ -45,8 +46,8 @@ k = 3, m = 6, b = 9, t = 12,
 qa = 15, qi = 18, sx = 21, sp = 24,
 oc = 27, no = 30, dc = 33,
 }
-for exp = 3, 99, 3 do
-local ok, abreviado = pcall(AbreviarInteiro, "1" .. string.rep("0", exp))
+for exp = 3, 306, 3 do
+local ok, abreviado = pcall(AbreviarPadrao, "1" .. string.rep("0", exp))
 local sufixo = ok and type(abreviado) == "string" and abreviado:match("^1(.+)$")
 if sufixo then
 mapaSufixos[sufixo:lower()] = exp
@@ -198,7 +199,7 @@ local semDimensoes = descricao
 :gsub("%d+%s*×%s*%d+%s*×%s*%d+", "")
 :gsub("%d+%s*[xX]%s*%d+%s*[xX]%s*%d+", "")
 local multsDescricao = {}
-for numeroTexto in semDimensoes:gmatch("×%s*([%d%.%,]+[A-Za-z]*)") do
+for numeroTexto in semDimensoes:gmatch("×%s*([%d%.%,]+%w*)") do
 local n = converterNumeroOuMoeda(numeroTexto)
 if n and n > 0 then
 adicionarMult(n)
@@ -228,7 +229,7 @@ ValorLimite = valorLimite,
 }
 end
 
-function GradePecas.new(pai, ids, modelosOriginais, aoSelecionar, aoFechar, aba)
+function GradePecas.new(pai, ids, modelosOriginais, aoSelecionar, aoFechar, aba, aoFixar)
 local administrativo = aba == "CatalogoADM"
 local loja = aba == "Loja" or administrativo
 local cor = if administrativo then Color3.fromRGB(112,198,255)
@@ -277,7 +278,11 @@ self._bordaGrupo.Transparency = 0.45
 
 local jogador = game:GetService("Players").LocalPlayer
 local teclaAba = loja and "F" or "E"
-self._titulo = criarTexto(self._grupo, "Titulo", "", UDim2.fromOffset(14, 10), UDim2.new(1, -60, 0, 28), 21, cor)
+self._titulo = criarTexto(self._grupo, "Titulo", "", UDim2.fromOffset(14, 10), UDim2.new(1, if aoFixar then -110 else -60, 0, 28), 21, cor)
+self._titulo.TextScaled = true
+self._titulo.TextTruncate = Enum.TextTruncate.AtEnd
+local tamanhoTitulo = Instance.new("UITextSizeConstraint")
+tamanhoTitulo.MinTextSize,tamanhoTitulo.MaxTextSize,tamanhoTitulo.Parent = 13,21,self._titulo
 local function atualizarTitulo()
 self._titulo.Text = if administrativo then "Catálogo ADM"
 	else (loja and "Loja [" or "Inventário [") .. Config.Tecla(jogador, teclaAba) .. "]"
@@ -292,6 +297,21 @@ local x = fechar:ObterInstancia()
 x.Position, x.Size, x.Text = UDim2.new(1, -40, 0, 10), UDim2.fromOffset(28, 28), "×"
 x.BackgroundColor3, x.TextColor3, x.TextSize = cor, Color3.fromRGB(22, 23, 29), 24
 arredondar(x, 14)
+
+if aoFixar then
+	local botao
+	botao = self:_Botao(self._grupo, "Fixar", function()
+		local fixa = aoFixar()
+		local b = botao:ObterInstancia()
+		b.Text = if fixa then "Fixa" else "Fixar"
+		b.BackgroundColor3 = if fixa then cor else Color3.fromRGB(37,39,47)
+		b.TextColor3 = if fixa then Color3.fromRGB(22,23,29) else cor
+	end)
+	local b = botao:ObterInstancia()
+	b.Position, b.Size = UDim2.new(1,-94,0,10), UDim2.fromOffset(48,28)
+	b.Text,b.TextSize,b.BackgroundColor3,b.TextColor3 = "Fixar",13,Color3.fromRGB(37,39,47),cor
+	arredondar(b,7)
+end
 
 if not loja then
 self:_CriarModos()

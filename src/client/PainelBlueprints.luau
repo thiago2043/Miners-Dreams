@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
-local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local Formatar = require(script.Parent.FormatarNumero)
+local AbreviarInteiro = Formatar.Inteiro
 local InteiroGrande = require(ReplicatedStorage.Shared.InteiroGrande)
 local Personalizacao = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local EsteiraInclinada = require(ReplicatedStorage.Shared.EsteiraInclinada)
@@ -535,6 +536,7 @@ end
 
 function PainelBlueprints:_Desenhar()
   if self._destruido then return end
+  self._notacaoExibida = Formatar.Modo()
   self:_LimparLista()
   local chaveSubAba = if self._editando then ("Editor_" .. self._editando.Blueprint.Id) elseif self._renomeandoId then ("Renomear_" .. self._renomeandoId) else "Lista"
   local mudouSubAba = self._ultimaSubAba and self._ultimaSubAba ~= chaveSubAba
@@ -718,6 +720,8 @@ end
 end
 if not self._jaVisivel or resultado then
 self:_CarregarLista()
+elseif not self._renomeandoId and not self._editando and self._notacaoExibida ~= Formatar.Modo() then
+self:_Desenhar()
 end
 else
 self._renomeandoId = nil

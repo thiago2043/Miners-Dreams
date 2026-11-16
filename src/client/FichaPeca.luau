@@ -1,5 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local Botao = require(script.Parent.Botao)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local Personalizacao = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)

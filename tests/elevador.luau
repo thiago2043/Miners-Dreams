@@ -267,3 +267,31 @@ ctrlAdm:EncerrarColocacao()
 ctrlAdm._gradeTerreno:Destruir()
 ctrlAdm._setasTerreno:Destruir()
 print("PREVIA_ADM_OK", "troca da plot pelo cursor, chamada autorizada e cancelamento fora das plots")
+
+local abas={Inventario=true,Loja=true,CatalogoADM=true,FichaInventario=true}
+local saidaColocacao, preservou
+jogador:SetAttribute("Inventario_Esteira2x2", 1)
+local ctrlFixacao=setmetatable({
+	_jogador=jogador,
+	Navegacao={
+		Contem=function(_,aba) return abas[aba] end,
+		Fechar=function(_,aba) abas[aba],abas["Ficha"..aba]=nil,nil end,
+		Focar=function() end,
+		Abrir=function(_,_,aoSair) saidaColocacao=aoSair end,
+	},
+	_selecoes={Obter=function() return {Id=1,MaquinaId="Esteira2x2",Rotacao=CF.identity} end,GuardarRotacao=function() end},
+	_EncontrarTerreno=function() return true end,
+	_EncerrarAcao=function() return true end,
+	IniciarColocacao=function(self) self._previa=true end,
+	EncerrarColocacao=function(self,preservar) self._previa=nil; preservou=preservar end,
+},Controller)
+assert(ctrlFixacao:AlternarFixacaoAba("Inventario"))
+assert(ctrlFixacao:AlternarFixacaoAba("CatalogoADM"))
+assert(ctrlFixacao:ColocarSelecionada("Inventario",true))
+assert(abas.Inventario and abas.FichaInventario and abas.CatalogoADM and not abas.Loja)
+saidaColocacao(); assert(preservou and abas.Inventario)
+assert(not ctrlFixacao:AlternarFixacaoAba("Inventario"))
+assert(ctrlFixacao:ColocarSelecionada("Inventario",true))
+assert(not abas.Inventario and abas.CatalogoADM)
+saidaColocacao(); assert(not preservou)
+print("ABAS_FIXADAS_OK", "colocação conserva apenas listas fixadas")

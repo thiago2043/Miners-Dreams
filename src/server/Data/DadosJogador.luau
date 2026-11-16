@@ -666,7 +666,7 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	self:_GravarVariantes(maquinaId, variantes)
 	self:_DefinirQuantidade(maquinaId, quantidade - 1)
 	self:_DefinirSaldo(novoSaldo)
-	return true, "Peca vendida por $" .. AbreviarInteiro(item.Preco) .. "."
+	return true, "Peca vendida por $" .. AbreviarInteiro(item.Preco, false, self._jogador:GetAttribute("NotacaoNumerica")) .. "."
 end
 
 function DadosJogador:FabricarMaquina(maquinaId, ciclo, estoqueEsperado)
@@ -961,7 +961,7 @@ function DadosJogador:VenderConstrucoes(construcoes)
 	for _, indice in indices do table.remove(registros, indice) end
 	self:_DefinirSaldo(novoSaldo)
 	self:PublicarResumoPlot()
-	return true, "Pecas vendidas por $" .. AbreviarInteiro(total) .. "."
+	return true, "Pecas vendidas por $" .. AbreviarInteiro(total, false, self._jogador:GetAttribute("NotacaoNumerica")) .. "."
 end
 
 --- Retorna a instância do jogador associada a este controlador de dados.

@@ -9,7 +9,7 @@ da janela e a EscalaInterface.
 local R = game:GetService("ReplicatedStorage")
 local U = require(R.Shared.Upgrades)
 local Config = require(R.Shared.Configuracoes)
-local Abreviar = require(R.Shared.AbreviarInteiro)
+local Abreviar = require(script.Parent.FormatarNumero).Inteiro
 local Janela = require(script.Parent.PainelProgressao)
 
 local Painel = {}

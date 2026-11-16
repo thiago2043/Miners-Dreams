@@ -2,11 +2,13 @@
 local roblox = require("@lune/roblox")
 local suporte = require("./suporte/interface")
 local animacoes,descartes={},{}
+local modo
+local jogador={GetAttribute=function(_,id) if id=="NotacaoNumerica" then return modo end end}
 local carregar = require("./suporte/carregador")({
 	Instance = { new = suporte.NovaInstancia }, Enum = roblox.Enum, Color3 = roblox.Color3,
 	Vector2 = roblox.Vector2, UDim = roblox.UDim, UDim2 = roblox.UDim2, ColorSequence = roblox.ColorSequence, task=require("@lune/task"),
 	TweenInfo={new=function(duracao) return {Time=duracao} end},
-}, {TweenService={Create=function(_,objeto,info,destino)
+}, {Players={LocalPlayer=jogador},TweenService={Create=function(_,objeto,info,destino)
 	table.insert(animacoes,{Objeto=objeto,Info=info,Destino=destino}); return {Play=function() end}
 end},Debris={AddItem=function(_,objeto,prazo) table.insert(descartes,{objeto,prazo}) end}})
 local Painel = carregar("src/client/PainelMoedas")
@@ -28,6 +30,14 @@ end
 assert(painel._valores.Dinheiro.Text == "Carregando...")
 painel:AtualizarTaxa("12500")
 assert(painel._taxa.Text == "+$12,5K/s")
+modo="Científica"
+painel:AtualizarTaxa("12500"); painel:AtualizarDinheiro("123456789")
+assert(painel._taxa.Text == "+$1,25e4/s" and painel._valores.Dinheiro.Text=="1,23e8")
+modo="Semicientífica"
+painel:AtualizarTaxa("12500"); painel:AtualizarDinheiro("123456789")
+assert(painel._taxa.Text == "+$12,5e3/s" and painel._valores.Dinheiro.Text=="123,45e6")
+modo="Abreviação"
+painel:AtualizarDinheiro(nil)
 painel:AtualizarTaxa(nil)
 assert(painel._taxa.Text == "—/s")
 assert(painel._valores.Dinheiro.TextSize == 20)

@@ -1,8 +1,22 @@
 local r=require("@lune/roblox")
 local s=require("./suporte/interface")
 local input=s.Sinal()
-local carregar=require("./suporte/carregador")({Instance={new=s.NovaInstancia},Enum=r.Enum,Color3=r.Color3,
-	Vector2=r.Vector2,UDim=r.UDim,UDim2=r.UDim2,task=require("@lune/task")},{UserInputService={InputBegan=input,InputChanged=s.Sinal(),InputEnded=s.Sinal(),WindowFocusReleased=s.Sinal()}})
+local function instancia(classe)
+	local o=s.NovaInstancia(classe)
+	local attrs={}
+	o.GetAttribute=function(_,id) return attrs[id] end
+	o.SetAttribute=function(_,id,valor) attrs[id]=valor end
+	o.GetAttributeChangedSignal=function(self,id) return self:GetPropertyChangedSignal("Atributo_"..id) end
+	return o
+end
+local carregar=require("./suporte/carregador")({Instance={new=instancia},Enum=r.Enum,Color3=r.Color3,
+	typeof=function(v) return type(v)=="table" and v.ClassName and "Instance" or r.typeof(v) end,
+	Vector2=r.Vector2,UDim=r.UDim,UDim2=r.UDim2,task=require("@lune/task")},{
+	UserInputService={InputBegan=input,InputChanged=s.Sinal(),InputEnded=s.Sinal(),WindowFocusReleased=s.Sinal(),IsKeyDown=function() return false end},
+},{
+	["src/client/AnimacaoInterface"]={DefinirVisivel=function(g,v,_,callback) g.Visible=v; if callback then callback() end end,EstaVisivel=function(g) return g.Visible end},
+	["src/client/GerenciadorJanelas"]={Registrar=function() end,ObterRede=function() end},
+})
 local nav=carregar("src/client/NavegacaoEstados").new()
 local pai=s.NovaInstancia("ScreenGui")
 local atributos,sinais={},{}
@@ -12,8 +26,20 @@ function jogador:GetAttributeChangedSignal(id) sinais[id]=sinais[id] or s.Sinal(
 function jogador:SetAttribute(id,v) atributos[id]=v; self:GetAttributeChangedSignal(id):Fire() end
 local C=carregar("src/shared/Configuracoes")
 assert(C.Obter(jogador,"AnimarVendaMinerios")); jogador:SetAttribute("AnimarVendaMinerios",false); assert(not C.Obter(jogador,"AnimarVendaMinerios"))
-local painel=carregar("src/client/PainelConfiguracoes").new(pai,jogador,nav)
+local notacoes={}
+local redeConfig={fetch=function(_,metodo,id,valor)
+	if metodo=="SalvarOpcao" and id=="NotacaoNumerica" then table.insert(notacoes,valor) end
+	return true
+end}
+local painel=carregar("src/client/PainelConfiguracoes").new(pai,jogador,nav,redeConfig)
 nav:Abrir("Configuracoes"); painel:Atualizar()
+local seletor=painel._opcoes.NotacaoNumerica:ObterInstancia()
+assert(C.Obter(jogador,"NotacaoNumerica")=="Abreviação")
+for _,modo in {"Científica","Semicientífica","Abreviação"} do
+	seletor.Activated:Fire()
+	require("@lune/task").wait()
+	assert(C.Obter(jogador,"NotacaoNumerica")==modo and notacoes[#notacoes]==modo and seletor.Text==modo)
+end
 painel._atalhos.R:ObterInstancia().Activated:Fire()
 input:Fire({UserInputType=r.Enum.UserInputType.Keyboard,KeyCode=r.Enum.KeyCode.E})
 assert(atributos.Atalho_R==nil and atributos.CapturandoAtalho)

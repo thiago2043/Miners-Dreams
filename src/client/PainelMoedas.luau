@@ -1,4 +1,4 @@
-local AbreviarInteiro = require(game:GetService("ReplicatedStorage").Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local NomeNumero = require(game:GetService("ReplicatedStorage").Shared.NomeNumero)
 local DicaNumero = require(script.Parent.DicaNumero)
 local Inteiro=require(game:GetService("ReplicatedStorage").Shared.InteiroGrande)

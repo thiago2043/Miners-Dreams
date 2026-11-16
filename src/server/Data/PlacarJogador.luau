@@ -8,11 +8,12 @@ return function(jogador)
 	dinheiro.Name, dinheiro.Parent = "Dinheiro", placar
 	local function atualizar()
 		vidas.Value = jogador:GetAttribute("Vidas") or 1
-		dinheiro.Value = "$" .. Abreviar(jogador:GetAttribute("Dinheiro") or "0")
+		dinheiro.Value = "$" .. Abreviar(jogador:GetAttribute("Dinheiro") or "0", false, jogador:GetAttribute("NotacaoNumerica"))
 	end
 	local conexoes = {
 		jogador:GetAttributeChangedSignal("Vidas"):Connect(atualizar),
 		jogador:GetAttributeChangedSignal("Dinheiro"):Connect(atualizar),
+		jogador:GetAttributeChangedSignal("NotacaoNumerica"):Connect(atualizar),
 	}
 	jogador.Destroying:Connect(function() for _, conexao in conexoes do conexao:Disconnect() end end)
 	atualizar()

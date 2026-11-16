@@ -3,7 +3,7 @@ local RegraReencarnacao = require(ReplicatedStorage.Shared.RegraReencarnacao)
 local RegraAscensao = require(ReplicatedStorage.Shared.RegraAscensao)
 local RegraRecompensas = require(ReplicatedStorage.Shared.RegraRecompensas)
 local Config=require(ReplicatedStorage.Shared.Configuracoes)
-local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local Formatar = require(script.Parent.FormatarNumero)
 local BarraProgressao = require(script.Parent.BarraProgressao)
 local Botao = require(script.Parent.Botao)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
@@ -19,10 +19,7 @@ local function acabamento(objeto, raio)
 	canto.CornerRadius, canto.Parent = UDim.new(0, raio), objeto
 end
 
-local function marco(expoente)
-	if expoente <= 38 then return AbreviarInteiro("1" .. string.rep("0", expoente)) end
-	return "1e" .. string.format("%.0f", expoente)
-end
+local AbreviarInteiro, marco = Formatar.Inteiro, Formatar.Potencia10
 
 -- A ficha possui apresentacao e botoes. Navegacao controla P/Q, regra calcula a estimativa e rede
 -- apenas solicita a operacao; nenhum clique altera dinheiro ou vidas diretamente no cliente.

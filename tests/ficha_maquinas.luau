@@ -71,8 +71,19 @@ assert(Ficha.FormatarMultiplicador("1234567.891")=="1,23M")
 assert(Ficha.Descrever({Componentes={{Tipo="Vendedor",Multiplicador="1.728"}}})=="Venda: ×1,73")
 
 local roblox = require("@lune/roblox")
+local ui = require("./suporte/interface")
+local function instancia(classe)
+	local objeto, atributos = ui.NovaInstancia(classe), {}
+	function objeto:GetAttribute(id) return atributos[id] end
+	function objeto:SetAttribute(id, valor) atributos[id] = valor end
+	return objeto
+end
+function jogador:GetAttributeChangedSignal() return ui.Sinal() end
 local carregarGrade = require("./suporte/carregador")(
-	{Color3=roblox.Color3, ColorSequence=roblox.ColorSequence}, {TweenService={}}
+	{Color3=roblox.Color3, ColorSequence=roblox.ColorSequence, ColorSequenceKeypoint=roblox.ColorSequenceKeypoint,
+		Instance={new=instancia}, Vector2=roblox.Vector2, UDim2=roblox.UDim2, UDim=roblox.UDim, Enum=roblox.Enum,
+		typeof=function(v) return if type(v)=="table" and v.ClassName then "Instance" else typeof(v) end},
+	{TweenService={}, Players={LocalPlayer=jogador}}
 )
 local Grade = carregarGrade("src/client/GradePecas")
 local itens = {CamaraFissao={}, PrensaTripla={}, PortalDeVanAllen={}, FornalhaBasica={}}
@@ -99,3 +110,20 @@ assert(grade:_AtendeFiltrosAvancados(itens.PrensaTripla))
 grade._filtroMultMin="1,74"
 assert(not grade:_AtendeFiltrosAvancados(itens.PrensaTripla))
 print("GRADE_FICHA_OK: limite efetivo, fator com duas casas e filtro por valor exibido ou exato.")
+
+local fixada, fechou = false, false
+local loja = Grade.new(instancia("Frame"), {"Esteira1x1"}, {}, function() end, function() fechou=true end,
+	"Loja", function() fixada=not fixada; return fixada end)
+local pin = loja._grupo:FindFirstChild("Fixar")
+local fechar = loja._grupo:FindFirstChild("Fechar")
+assert(pin.Position.X.Offset + pin.Size.X.Offset < fechar.Position.X.Offset)
+pin.Activated:Fire(); assert(fixada and pin.Text=="Fixa")
+fechar.Activated:Fire(); assert(fechou)
+pin.Activated:Fire(); assert(not fixada and pin.Text=="Fixar")
+loja:AtualizarItem("Esteira1x1",0,true,false,false)
+assert(loja._itens.Esteira1x1.Quantidade.Text=="$1M")
+attrs.NotacaoNumerica="Científica"
+loja:AtualizarItem("Esteira1x1",0,true,false,false)
+assert(loja._itens.Esteira1x1.Quantidade.Text=="$1e6")
+loja:Destruir()
+print("FIXACAO_LOJA_OK: botão alterna o estado, fechamento manual e preço segue a preferência.")

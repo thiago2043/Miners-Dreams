@@ -1,6 +1,7 @@
 local R = game:GetService("ReplicatedStorage")
 local Regras = require(R.Shared.Classificacao)
-local Abreviar = require(R.Shared.AbreviarInteiro)
+local Formatar = require(script.Parent.FormatarNumero)
+local Abreviar = Formatar.Inteiro
 local NomeNumero = require(R.Shared.NomeNumero)
 local Configuracoes = require(R.Shared.Configuracoes)
 local DicaNumero = require(script.Parent.DicaNumero)
@@ -47,6 +48,7 @@ for i, categoria in Regras.Categorias do
 end
 
 function Painel:_Desenhar()
+	self._notacaoExibida = Formatar.Modo()
 	local lista = self._dados and self._dados.Tabelas[self._categoria] or {}
 	for id, botao in self._abas do
 		botao:ObterInstancia().BackgroundColor3 = if id == self._categoria then self._janela.Cor:Lerp(Color3.new(0, 0, 0), .65) else Color3.fromRGB(34, 37, 46)
@@ -90,7 +92,8 @@ function Painel:Atualizar()
 	local anterior = self._grupo.Visible
 	self._janela:Atualizar()
 	if not self._grupo.Visible then self._dica:Ocultar() end
-	if self._grupo.Visible and not anterior then self:Carregar() end
+	if self._grupo.Visible and not anterior then self:Carregar()
+	elseif self._grupo.Visible and self._notacaoExibida ~= Formatar.Modo() then self:_Desenhar() end
 end
 
 function Painel:Destruir()

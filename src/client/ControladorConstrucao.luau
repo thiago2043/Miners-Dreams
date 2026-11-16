@@ -2531,9 +2531,15 @@ function ControladorConstrucao:_AbrirDetalhes(aba)
 	end)
 end
 
+function ControladorConstrucao:AlternarFixacaoAba(aba)
+	self._abasFixadas = self._abasFixadas or {}
+	self._abasFixadas[aba] = not self._abasFixadas[aba]
+	return self._abasFixadas[aba]
+end
+
 -- Inicia a previa a partir da ficha da aba recebida; devolve false se a selecao ou o estoque nao permitem
 -- isso. fecharAbas=true e usado pelas acoes que iniciam colocacao a partir da ficha: captura a escolha,
--- fecha os paineis e preserva a peca para a colocacao.
+-- fecha os paineis sem fixacao e preserva a peca para a colocacao.
 function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	aba = aba or self._abaSelecionada
 	local selecao = self._selecoes:Obter(aba)
@@ -2548,10 +2554,11 @@ function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	if fecharAbas and not administrativo and not self:_EncontrarTerreno() then return false end
 	if not self:_EncerrarAcao() then return false end
 	-- A selecao local foi capturada antes de fechar as fichas, preservando a configuracao do clique duplo.
+	local fixadas = self._abasFixadas or {}
 	if fecharAbas then
-		self.Navegacao:Fechar("Inventario")
-		self.Navegacao:Fechar("Loja")
-		self.Navegacao:Fechar("CatalogoADM")
+		for _, lista in {"Inventario","Loja","CatalogoADM"} do
+			if not fixadas[lista] then self.Navegacao:Fechar(lista) end
+		end
 	end
 	self._abaSelecionada, self._abaColocacao = aba, aba
 	self._abaDaPeca = aba
@@ -2564,7 +2571,7 @@ function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	-- possui o mesmo Id; fechar abas no clique duplo nao recria uma selecao descartada.
 	self.Navegacao:Abrir("Colocacao", function()
 		self._selecoes:GuardarRotacao(aba, selecao.Id, self._rotacao)
-		self:EncerrarColocacao(not fecharAbas)
+		self:EncerrarColocacao(not fecharAbas or self.Navegacao:Contem("Ficha" .. aba))
 		self._abaColocacao = nil
 	end)
 	return true

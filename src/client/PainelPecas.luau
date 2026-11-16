@@ -13,7 +13,7 @@ Princípios LPOO Aplicados:
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
-local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local FichaMaquina = require(script.Parent.FichaMaquina)
 local Efeitos = require(ReplicatedStorage.Shared.EfeitosUpgrades)
 local GradePecas = require(script.Parent.GradePecas)
@@ -79,7 +79,8 @@ self._ids,
 ReplicatedStorage:WaitForChild("ModelosMaquinas"),
 function(id) self:Selecionar(id) end,
 function() construcao:AlternarAba(aba) end,
-aba
+aba,
+function() return construcao:AlternarFixacaoAba(aba) end
 )
 self._grade:DefinirAoMudarModo(function()
 self:Atualizar()
@@ -120,7 +121,7 @@ local idJanelaFicha = "Ficha_" .. aba
 GerenciadorJanelas.Registrar(idJanelaLista, self._painelLista, {
 Jogador = jogador,
 AlturaBarra = 42,
-RecuoDireitoBarra = 46,
+RecuoDireitoBarra = 100,
 MinLargura = 210,
 MinAltura = 260,
 LarguraPadrao = 284,
@@ -261,7 +262,7 @@ local chaveDescricao = ""
 for _, a in { "Extracao", "Fundicao", "Motores", "Calibracao" } do
 chaveDescricao ..= tostring(self._jogador:GetAttribute("Upgrade_" .. a)) .. ":"
 end
-chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores"))
+chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores")) .. ":" .. tostring(self._jogador:GetAttribute("NotacaoNumerica"))
 local calibracao = Efeitos.Nivel(jogadorFicha, "Calibracao")
 
 for _, id in self._ids do

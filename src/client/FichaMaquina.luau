@@ -1,6 +1,6 @@
 -- Traduz a definicao de componentes em estatisticas legiveis, sem alterar o catalogo ou as propriedades da
 -- peca.
-local AbreviarInteiro = require(game:GetService("ReplicatedStorage").Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local Efeitos=require(game:GetService("ReplicatedStorage").Shared.EfeitosUpgrades)
 local Upgrades=require(game:GetService("ReplicatedStorage").Shared.Upgrades)
 local Inteiro=require(game:GetService("ReplicatedStorage").Shared.InteiroGrande)

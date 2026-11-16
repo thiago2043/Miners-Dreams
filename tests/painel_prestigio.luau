@@ -1,5 +1,6 @@
 local roblox = require("@lune/roblox")
 local suporte = require("./suporte/interface")
+local players = {}
 local function instancia(classe)
 	local objeto = suporte.NovaInstancia(classe)
 	local atributos = {}
@@ -11,7 +12,7 @@ local carregar = require("./suporte/carregador")({
 	Instance = { new = instancia }, Enum = roblox.Enum, Color3 = roblox.Color3,
 	Vector2 = roblox.Vector2, UDim = roblox.UDim, UDim2 = roblox.UDim2, ColorSequence = roblox.ColorSequence,
 	typeof = function(valor) return if type(valor) == "table" and valor.ClassName then "Instance" else typeof(valor) end,
-}, {}, {
+}, {Players=players}, {
 	["src/client/AnimacaoInterface"] = {DefinirVisivel = function(p, v, _, callback) p.Visible = v; if callback then callback() end end,
 		EstaVisivel = function(p) return p.Visible end},
 	["src/client/GerenciadorJanelas"] = {Registrar = function() end},
@@ -22,6 +23,7 @@ local Barra = carregar("src/client/BarraProgressao")
 local pai, nav = suporte.NovaInstancia("ScreenGui"), Navegacao.new()
 local atributos = { Dinheiro = "1"..string.rep("0",33), Reencarnacoes = 0, Vidas = 1, Ascensoes = 0, Transicoes = 0, GeracaoProgresso = 0 }
 local jogador = { GetAttribute = function(_, nome) return atributos[nome] end }
+players.LocalPlayer = jogador
 local pedidos, pedidosAscensao, falhar, malformar = 0, 0, false, false
 local painel
 local rede = { fetch = function(_, metodo, indice, geracao)
@@ -83,7 +85,13 @@ painel:Atualizar()
 painel.Confirmacao = confirmacao
 atributos.ConfirmarVenda, atributos.ConfirmarRenascimento = "Nunca", false
 painel._abas["Ascensão"]:ObterInstancia().Activated:Fire()
-assert(painel._requisito.Text == "Requisito: $1e308" and not painel._ascender:EstaDisponivel())
+assert(painel._requisito.Text == "Requisito: $100UCe" and not painel._ascender:EstaDisponivel())
+atributos.NotacaoNumerica = "Semicientífica"
+painel:Atualizar()
+assert(painel._requisito.Text == "Requisito: $100e306")
+atributos.NotacaoNumerica = "Científica"
+painel:Atualizar()
+assert(painel._requisito.Text == "Requisito: $1e308")
 atributos.Dinheiro = "1" .. string.rep("0", 318)
 painel:Atualizar()
 assert(painel._ascender:EstaDisponivel() and painel._ascender:ObterInstancia().Text:find("+2", 1, true))

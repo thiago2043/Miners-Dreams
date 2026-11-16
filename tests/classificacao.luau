@@ -1,8 +1,22 @@
 local r = require("./suporte/modelos")
 local ui = require("./suporte/interface")
 local task = require("@lune/task")
-local carregar = require("./suporte/carregador")({ Instance = { new = ui.NovaInstancia }, Enum = r.Enum, Color3 = r.Color3,
-	Vector2 = r.Vector2, UDim = r.UDim, UDim2 = r.UDim2, task = task }, {})
+local players = {}
+local function novaInstancia(classe)
+	local objeto, atributos = ui.NovaInstancia(classe), {}
+	function objeto:GetAttribute(id) return atributos[id] end
+	function objeto:SetAttribute(id, valor) atributos[id] = valor end
+	return objeto
+end
+local carregar = require("./suporte/carregador")({ Instance = { new = novaInstancia }, Enum = r.Enum, Color3 = r.Color3,
+	typeof = function(v) return if type(v) == "table" and v.ClassName then "Instance" else typeof(v) end,
+	Vector2 = r.Vector2, UDim = r.UDim, UDim2 = r.UDim2, task = task }, {Players=players}, {
+	["src/client/AnimacaoInterface"] = {
+		DefinirVisivel = function(p, visivel) p.Visible = visivel end,
+		TransicaoSubAba = function() end,
+	},
+	["src/client/GerenciadorJanelas"] = {Registrar = function() end},
+})
 local Regras = carregar("src/shared/Classificacao")
 local Servico = carregar("src/server/ServicoClassificacao")
 local valores, falhar, durante = {}, false, nil
@@ -78,6 +92,9 @@ local placar = carregar("src/server/Data/PlacarJogador")(modeloJogador)
 assert(#placar:GetChildren()==2 and placar:FindFirstChild("Vidas").Value==1)
 modeloJogador:SetAttribute("Dinheiro", grande); modeloJogador:SetAttribute("Vidas",42)
 assert(placar:FindFirstChild("Vidas").Value==42 and placar:FindFirstChild("Dinheiro").Value=="$"..carregar("src/shared/AbreviarInteiro")(grande))
+modeloJogador:SetAttribute("NotacaoNumerica", "Científica")
+assert(placar:FindFirstChild("Dinheiro").Value == "$1,23e39")
+modeloJogador:SetAttribute("NotacaoNumerica", nil)
 modeloJogador.Destroying:Fire()
 for _,s in modeloJogador.sinais do for _,c in s.conexoes do assert(not c.ativa) end end
 dados:_DefinirSaldo("1"..string.rep("0",50))
@@ -85,11 +102,15 @@ assert(dados:Reencarnar(0))
 assert(perfil.Data.Recordes.Dinheiro=="1"..string.rep("0",50) and tonumber(perfil.Data.Recordes.Vidas)>1)
 
 local nav = carregar("src/client/NavegacaoEstados").new()
+players.LocalPlayer = modeloJogador
 local painel = carregar("src/client/PainelClassificacao").new(ui.NovaInstancia("ScreenGui"), modeloJogador, nav, {fetch=function() return reiniciado:Consultar() end})
 nav:Abrir("Classificacao"); painel:Atualizar(); task.wait()
 assert(painel._grupo.Visible and painel._linhas[1].Nome.Text=="1.  @Teste")
 painel._abas.Dinheiro:ObterInstancia().Activated:Fire()
 assert(painel._linhas[1].Nome.Text=="1.  @Outro" and not painel._linhas[3].Nome.Visible)
+modeloJogador:SetAttribute("NotacaoNumerica", "Semicientífica")
+painel:Atualizar()
+assert(painel._linhas[1].Valor.Text == "$1,23e39")
 painel._linhas[1].Valor.MouseEnter:Fire()
 assert(painel._dica._caixa.Visible and painel._dica._texto.Text==carregar("src/shared/NomeNumero")(maior))
 painel._abas.Vidas:ObterInstancia().Activated:Fire(); assert(not painel._dica._caixa.Visible)

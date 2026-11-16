@@ -110,6 +110,13 @@ end))
 	table.insert(self._conexoes, jogador:GetAttributeChangedSignal("GanhosPorSegundo"):Connect(function()
 		self._painelMoedas:AtualizarTaxa(jogador:GetAttribute("GanhosPorSegundo"))
 	end))
+	table.insert(self._conexoes, jogador:GetAttributeChangedSignal("NotacaoNumerica"):Connect(function()
+		self:AtualizarDinheiro()
+		self._painelMoedas:AtualizarTaxa(jogador:GetAttribute("GanhosPorSegundo"))
+		self:AtualizarInventario()
+		self:_AtualizarDescricaoPeca()
+		self._guiaTutorial:Atualizar()
+	end))
 	for _, atributo in { "Reencarnacoes", "Vidas", "Ascensoes", "Transicoes", "GeracaoProgresso" } do
 		table.insert(self._conexoes, jogador:GetAttributeChangedSignal(atributo):Connect(function() self._paineisProgressao.Prestigio:Atualizar() end))
 	end

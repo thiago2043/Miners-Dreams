@@ -10,7 +10,7 @@ for indice = 10, 101 do
 end
 
 -- Somente apresentacao; compra, saldo e ordenacao conservam o inteiro decimal completo.
-return function(valor, preservarPrecisao)
+return function(valor, preservarPrecisao, notacao)
 	if type(valor) == "number" and valor >= 0 and valor < 2 ^ 53 and valor % 1 == 0 then
 		valor = string.format("%.0f", valor)
 	end
@@ -19,8 +19,11 @@ return function(valor, preservarPrecisao)
 	if valor == "" then return "0" end
 	if #valor <= 3 then return valor end
 	local grupo = math.floor((#valor - 1) / 3)
-	local inteiros = #valor - grupo * 3
+	local expoente = if notacao == "Científica" then #valor - 1 else grupo * 3
+	local inteiros = #valor - expoente
 	local fracao = valor:sub(inteiros + 1, preservarPrecisao and #valor or inteiros + 2):gsub("0+$", "")
+	local sufixo = if notacao == "Científica" or notacao == "Semicientífica" then "e" .. expoente
+		else sufixos[grupo + 1] or ("e" .. expoente)
 	return valor:sub(1, inteiros) .. (fracao ~= "" and "," .. fracao or "")
-		.. (sufixos[grupo + 1] or ("e" .. grupo * 3))
+		.. sufixo
 end

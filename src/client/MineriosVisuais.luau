@@ -15,7 +15,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local Movimento = require(game:GetService("ReplicatedStorage").Shared.MovimentoMinerio)
-local AbreviarInteiro = require(game:GetService("ReplicatedStorage").Shared.AbreviarInteiro)
+local AbreviarInteiro = require(script.Parent.FormatarNumero).Inteiro
 local Config = require(game:GetService("ReplicatedStorage").Shared.Configuracoes)
 local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
 local MineriosVisuais = {}
@@ -48,6 +48,12 @@ function MineriosVisuais.new(jogador)
     for _, id in { "LimiteMineriosVisiveis", "MostrarValoresMinerios", "AnimarVendaMinerios", "DistanciaValores", "TamanhoValores", "MineriosOutrasPlots" } do
       table.insert(self._configuracoes, jogador:GetAttributeChangedSignal(id):Connect(configurar))
     end
+    table.insert(self._configuracoes, jogador:GetAttributeChangedSignal("NotacaoNumerica"):Connect(function()
+      for parte, etiqueta in self._etiquetas do
+        if etiqueta.Enabled then self:_AtualizarTextoValor(parte)
+        else self._valoresPendentes[parte] = true end
+      end
+    end))
     configurar()
   end
   self._adicionado = workspace.DescendantAdded:Connect(function(parte) self:_Observar(parte) end)
@@ -61,7 +67,7 @@ function MineriosVisuais:_AtualizarTextoValor(parte)
   local texto = self._textosValor[parte]
   if not texto then return end
   local valor = parte:GetAttribute("Valor")
-  texto.Text = if type(valor) == "string" and valor:match("^[0-9]+$") then "$" .. AbreviarInteiro(valor) else "—"
+  texto.Text = if type(valor) == "string" and valor:match("^[0-9]+$") then "$" .. AbreviarInteiro(valor,self._jogador) else "—"
   self._valoresPendentes[parte] = nil
 end
 

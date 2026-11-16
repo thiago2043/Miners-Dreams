@@ -11,6 +11,12 @@ local atributos={}
 local jogador={UserId=123,Name="Teste",SetAttribute=function(_,id,v) atributos[id]=v end}
 local perfil={Data=Reinicio.new(Template,{}):Preparar({}),IsActive=function() return true end}
 local dados=Dados.new(jogador,perfil)
+assert(dados:DefinirConfiguracao("NotacaoNumerica","Científica"))
+assert(perfil.Data.Configuracoes.NotacaoNumerica=="Científica" and atributos.NotacaoNumerica=="Científica")
+assert(not dados:DefinirConfiguracao("NotacaoNumerica","Inexistente"))
+Dados.new(jogador,perfil)
+assert(atributos.NotacaoNumerica=="Científica")
+assert(dados:DefinirConfiguracao("NotacaoNumerica","Abreviação") and not perfil.Data.Configuracoes.NotacaoNumerica)
 local Inteiro=carregar("src/server/InteiroGrande")
 local migracao=carregar("src/server/Data/MigracaoExpansaoPlot")
 for antigo=0,3 do
