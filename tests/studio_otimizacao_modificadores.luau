@@ -36,7 +36,7 @@ do
 		local primeiro=unidades[1]
 		assert(mod:PrecisaReceber(primeiro,mod._sensores[2]))
 		mod:Receber(primeiro,mod._sensores[2])
-		assert(primeiro:ObterValor()=="40" and primeiro:ObterParte():GetAttribute("UsosModificador_N05")==1)
+		assert(primeiro:ObterValor()=="40" and primeiro:ObterUsosModificador("UsosModificador_N05")==1)
 		sim:ObterCorpo(primeiro:ObterParte()).CFrame+=Vector3.new(100,0,0)
 		maquina:Atualizar(2)
 		assert(intersecoes==101 and not mod._passagens[primeiro:ObterParte()])
@@ -46,6 +46,7 @@ do
 		assert(not copia:PrecisaReceber(primeiro,copia._sensores[1]))
 		local prensa,faixa,p=criar("PrensaMinerio")
 		local recusado=ore("100",p.SensorEntrada.CFrame)
+		for _=1,4 do recusado:IncrementarUsosModificador("UsosModificador_V1") end
 		local antes=intersecoes
 		for _=1,120 do assert(not faixa:PrecisaReceber(recusado,faixa._sensores[1])) end
 		faixa:Receber(recusado,faixa._sensores[1]); prensa:Atualizar(1)
@@ -61,15 +62,15 @@ do
 		assert(intersecoes==antes+2)
 		e.SensorEntrada.CFrame+=Vector3.new(100,0,0); jato:Atualizar(3)
 		assert(not emissor._passagens[m:ObterParte()])
-		local _,aditivo=criar("CamaraFissao")
+		local _,fissao=criar("CamaraFissao")
 		local _,magnetica,c=criar("CamaraMagnetica")
 		local reavaliado=ore("24990",c.SensorEntrada.CFrame)
-		assert(not magnetica:PrecisaReceber(reavaliado,magnetica._sensores[1]))
-		aditivo:Receber(reavaliado,aditivo._sensores[1])
-		assert(reavaliado:ObterValor()=="25000" and magnetica:PrecisaReceber(reavaliado,magnetica._sensores[1]))
+		assert(magnetica:PrecisaReceber(reavaliado,magnetica._sensores[1]))
+		fissao:Receber(reavaliado,fissao._sensores[1])
+		assert(reavaliado:ObterValor()=="29988")
 		magnetica:Receber(reavaliado,magnetica._sensores[1]); magnetica:Receber(reavaliado,magnetica._sensores[2])
-		assert(reavaliado:ObterValor()=="56250")
-		print("MODIFICADORES_OTIMIZADOS_STUDIO_OK: 100 passagens/120 passos = 100 intersecoes; corpo fisico, volume, emissor externo, faixa, valor reavaliado, copias e etapas no mesmo uso.")
+		assert(reavaliado:ObterValor()=="67473")
+		print("MODIFICADORES_OTIMIZADOS_STUDIO_OK: 100 passagens/120 passos = 100 intersecoes; corpo fisico, volume, emissor externo, copias e etapas no mesmo uso.")
 	end,debug.traceback)
 	Corpo.Intersecao=intersecao
 	for _, m in objetos do m:Destruir() end

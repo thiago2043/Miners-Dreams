@@ -11,12 +11,12 @@ local function mineradora(nome, preco, blocos, intervalo, valor, atalho)
 	}
 end
 
-local function modificador(codigo, nome, preco, blocos, etapas, multiplicador, bonus, limite, minimo, maximo, temEsteira)
+local function modificador(codigo, nome, preco, blocos, etapas, multiplicador, limite, temEsteira)
 	local componentes = {}
 	if temEsteira then table.insert(componentes, { Tipo = "Transportador", Parte = "Correia", Velocidade = 6 }) end
 	table.insert(componentes, {
 		Tipo = "Modificador", Sensor = "SensorEntrada", TipoModificador = codigo, Etapas = etapas,
-		Multiplicador = multiplicador, Bonus = bonus, LimiteUsos = limite, ValorMinimo = minimo, ValorMaximo = maximo,
+		Multiplicador = multiplicador, LimiteUsos = limite,
 	})
 	return { Nome = nome, Preco = preco, Blocos = blocos, Componentes = componentes }
 end
@@ -83,61 +83,61 @@ local catalogo = {
 	FornalhaEstelar     = fornalha("estelar",    "100000000000000000",   { 4, 5, 5 }, "35"),
 	FornalhaGalactica   = fornalha("galáctica",  "10000000000000000000", { 5, 5, 5 }, "60"),
 	-- Tipos da proposta revisada: usos contam a peca inteira, nao cada etapa.
-	JatoMineral               = modificador("A0", "Jato mineral", "100000000000000000000", { 1, 1, 1 }, 1, "2.5", "0", 1, "0", nil, false),
-	BanhoCobre                = modificador("H1", "Banho de cobre", "3000000000000000000000000", { 3, 1, 2 }, 1, "2", "0", 1, "0", nil, true),
-	PrensaTripla              = modificador("N01", "Prensa tripla", "750", { 4, 2, 4 }, 3, "1.75", "0", 3, "0", nil, true),
-	PrensaMinerio             = modificador("V1", "Prensa de minério", "10000", { 3, 2, 2 }, 1, "2", "0", nil, "0", "100", true),
-	LaserBasico               = modificador("N02", "Laser básico", "300000000000000000000", { 1, 1, 1 }, 1, "4", "0", 1, "0", nil, false),
-	RefinadorCobre            = modificador("H2", "Refinador de cobre", "75000", { 4, 2, 3 }, 2, "1.3", "0", 12, "0", "1000", true),
-	BobinaDupla               = modificador("N03", "Bobina dupla", "40000000000000000000000000", { 3, 1, 3 }, 1, "4.5", "0", 1, "0", nil, true),
-	Ionizador                 = modificador("N04", "Ionizador", "1000000000000000000000000", { 2, 3, 2 }, 1, "1.4", "0", 4, "0", nil, false),
-	RefinadorIndustrial       = modificador("V2", "Refinador industrial", "1500000", { 4, 3, 4 }, 2, "1.25", "0", nil, "0", "2500", true),
-	LaserIndustrial           = modificador("N05", "Laser industrial", "20000000", { 4, 1, 2 }, 2, "2", "0", 1, "0", nil, true),
-	RaioPlasma                = modificador("N06", "Raio de plasma", "75000000", { 4, 3, 3 }, 1, "2.75", "0", 1, "0", nil, true),
-	BobinaInducao             = modificador("N07", "Bobina de indução", "250000000", { 4, 3, 3 }, 2, "1.8", "0", 2, "0", nil, true),
-	CamaraMagnetica           = modificador("V3", "Câmara magnética", "250000000", { 4, 2, 2 }, 2, "1.5", "0", nil, "25000", "100000", true),
-	RefinadorMolecular        = modificador("V4", "Refinador molecular", "1000000000", { 4, 2, 3 }, 3, "1.3", "0", nil, "0", "1000000", true),
-	TunelCompressao           = modificador("N08", "Túnel de compressão", "4000000000", { 4, 3, 4 }, 4, "1.25", "0", 4, "0", nil, true),
-	ProcessadorTermico        = modificador("H3", "Processador térmico", "5000000000", { 4, 2, 3 }, 2, "1.75", "0", 7, "0", "3500000", true),
-	CatalisadorTermico        = modificador("N09", "Catalisador térmico", "5000000000000", { 2, 2, 2 }, 1, "3", "0", 1, "0", nil, false),
-	CamaraPlasma              = modificador("V5", "Câmara de plasma", "5000000000000", { 5, 4, 4 }, 2, "1.6", "0", nil, "500000", "5000000", true),
-	LaserDuplo                = modificador("N10", "Laser duplo", "25000000000000", { 4, 2, 3 }, 2, "2", "0", 2, "0", nil, true),
-	Polarizador               = modificador("N11", "Polarizador", "250000000000000000000000000", { 3, 2, 3 }, 1, "1.6", "0", 4, "0", nil, true),
-	RessonadorPlasma          = modificador("N12", "Ressonador de plasma", "300000000000000", { 4, 2, 4 }, 2, "3", "0", 2, "0", nil, true),
-	RefinadorAtomico          = modificador("V6", "Refinador atômico", "5000000000000000", { 5, 5, 5 }, 3, "1.25", "0", nil, "0", "50000000", true),
-	AceleradorModular         = modificador("N13", "Acelerador modular", "40000000000000000", { 4, 1, 5 }, 4, "1.15", "0", 10, "0", nil, true),
-	TunelMolecular            = modificador("N14", "Túnel molecular", "150000000000000000", { 5, 4, 5 }, 3, "1.5", "0", 3, "0", nil, true),
-	ProcessadorParticulas     = modificador("H4", "Processador de partículas", "250000000000000000", { 4, 2, 4 }, 3, "1.3", "0", 12, "0", "500000000", true),
-	FeixeMolecular            = modificador("N15", "Feixe molecular", "500000000000000000", { 4, 3, 3 }, 1, "3.25", "0", 1, "0", nil, true),
-	CamaraQuantica            = modificador("V7", "Câmara quântica", "2500000000000000000", { 5, 4, 3 }, 2, "1.5", "0", nil, "100000000", "2500000000", true),
-	CompressorAtomico         = modificador("N16", "Compressor atômico", "40000000000000000000", { 4, 2, 2 }, 2, "2", "0", 2, "0", nil, true),
-	CamaraFissao              = modificador("N17", "Câmara de fissão", "50", { 4, 4, 3 }, 1, "1", "10", nil, "0", nil, true),
-	NucleoAntimateria         = modificador("N18", "Núcleo de antimatéria", "50000", { 4, 3, 3 }, 1, "2", "0", 1, "0", nil, true),
-	RessonadorQuantico        = modificador("N19", "Ressonador quântico", "1500000000000000000000", { 5, 2, 2 }, 2, "3", "0", 2, "0", nil, true),
-	CamaraEstelar             = modificador("V8", "Câmara estelar", "5000000000000000000000", { 5, 5, 5 }, 3, "1.75", "0", nil, "1000000000", "25000000000", true),
-	AnelParticulas            = modificador("N20", "Anel de partículas", "750000", { 4, 3, 1 }, 1, "2.4", "0", 1, "0", nil, true),
-	LaserQuantico             = modificador("N21", "Laser quântico", "150", { 4, 2, 1 }, 1, "1", "25", 3, "0", "100", true),
-	AmplificadorFase          = modificador("N22", "Amplificador de fase", "6000000000000000000000000", { 4, 1, 5 }, 2, "2.75", "0", 2, "0", nil, true),
-	PulsoEstelar              = modificador("N23", "Pulso estelar", "150000", { 4, 5, 3 }, 1, "1.5", "0", 2, "0", nil, true),
-	RefinadorGalactico        = modificador("V9", "Refinador galáctico", "50000000000000000000000000", { 5, 3, 4 }, 3, "1.35", "0", nil, "0", "1000000000000", true),
-	AnelGravitacional         = modificador("N24", "Anel gravitacional", "100000000000000", { 4, 3, 2 }, 1, "2.25", "0", 1, "0", nil, true),
-	BobinaEstelar             = modificador("N25", "Bobina estelar", "4000000000000000000000000000", { 5, 4, 3 }, 2, "2", "0", 2, "0", nil, true),
-	TunelFase                 = modificador("N26", "Túnel de fase", "6000000000000000000000000000", { 4, 2, 5 }, 3, "1.5", "0", 3, "0", nil, true),
-	FeixeFotons               = modificador("N27", "Feixe de fótons", "7500000000000000000000000000", { 2, 1, 1 }, 1, "3.5", "0", 1, "0", nil, false),
-	RessonadorEstelar         = modificador("N28", "Ressonador estelar", "40000000000000000000000000000", { 4, 2, 3 }, 2, "2.5", "0", 2, "0", nil, true),
-	NucleoQuasar              = modificador("N29", "Núcleo de quasar", "100000000000000000000000000000", { 5, 3, 4 }, 1, "5", "0", 1, "0", nil, true),
-	CompressorGalactico       = modificador("N30", "Compressor galáctico", "600000000000000000000000000000", { 5, 3, 3 }, 2, "3", "0", 2, "0", nil, true),
-	TunelHorizonte            = modificador("N31", "Túnel de horizonte", "1500000000000000000000000000000", { 5, 5, 3 }, 3, "1.75", "0", 3, "0", nil, true),
-	FeixeSingularidade        = modificador("N32", "Feixe de singularidade", "4000000000000000000000000000000", { 1, 5, 2 }, 1, "4", "0", 1, "0", nil, false),
-	LaserGalactico            = modificador("N33", "Laser galáctico", "6000000000000000000000000000000", { 3, 1, 1 }, 1, "2", "0", 1, "0", nil, true),
-	PolarizadorCosmico        = modificador("N34", "Polarizador cósmico", "10000000000000000000000000000000", { 4, 2, 4 }, 1, "2.25", "0", 1, "0", nil, true),
-	RessonadorVacuo           = modificador("N35", "Ressonador de vácuo", "20000000000000000000000000000000", { 4, 2, 4 }, 2, "3", "0", 2, "0", nil, true),
-	NucleoHorizonte           = modificador("N36", "Núcleo de horizonte", "90000000000000000000000000000000", { 5, 5, 4 }, 1, "6", "0", 1, "0", nil, true),
-	CamaraSingularidade       = modificador("V10", "Câmara de singularidade", "250000000000000000000000000000000", { 5, 5, 5 }, 3, "2.5", "0", nil, "250000000000", "25000000000000", true),
-	AmplificadorVacuo         = modificador("N37", "Amplificador de vácuo", "5000000000000000000000000000000000", { 4, 1, 5 }, 2, "2.5", "0", 2, "0", nil, true),
-	PulsoDimensional          = modificador("N38", "Pulso dimensional", "15000000000000000000000000000000000", { 4, 3, 2 }, 1, "4", "0", 1, "0", nil, true),
-	RessonadorDimensional     = modificador("N39", "Ressonador dimensional", "50000000000000000000000000000000000", { 5, 3, 3 }, 2, "3.5", "0", 2, "0", nil, true),
-	NucleoDimensional         = modificador("N40", "Núcleo dimensional", "250000000000000000000000000000000000", { 5, 5, 5 }, 1, "5", "0", 1, "0", nil, true),
+	JatoMineral               = modificador("A0", "Jato mineral", "100000000000000000000", { 1, 1, 1 }, 1, "3.8", 1, false),
+	BanhoCobre                = modificador("H1", "Banho de cobre", "3000000000000000000000000", { 3, 1, 2 }, 1, "4.5", 1, true),
+	PrensaTripla              = modificador("N01", "Prensa tripla", "750", { 4, 2, 4 }, 3, "1.2", 3, true),
+	PrensaMinerio             = modificador("V1", "Prensa de minério", "10000", { 3, 2, 2 }, 1, "1.4", 4, true),
+	LaserBasico               = modificador("N02", "Laser básico", "300000000000000000000", { 1, 1, 1 }, 1, "5.5", 1, false),
+	RefinadorCobre            = modificador("H2", "Refinador de cobre", "75000", { 4, 2, 3 }, 2, "1.37", 4, true),
+	BobinaDupla               = modificador("N03", "Bobina dupla", "40000000000000000000000000", { 3, 1, 3 }, 1, "8", 1, true),
+	Ionizador                 = modificador("N04", "Ionizador", "1000000000000000000000000", { 2, 3, 2 }, 1, "1.6", 4, false),
+	RefinadorIndustrial       = modificador("V2", "Refinador industrial", "1500000", { 4, 3, 4 }, 2, "1.45", 4, true),
+	LaserIndustrial           = modificador("N05", "Laser industrial", "20000000", { 4, 1, 2 }, 2, "2", 1, true),
+	RaioPlasma                = modificador("N06", "Raio de plasma", "75000000", { 4, 3, 3 }, 1, "3.1", 1, true),
+	BobinaInducao             = modificador("N07", "Bobina de indução", "250000000", { 4, 3, 3 }, 2, "1.8", 2, true),
+	CamaraMagnetica           = modificador("V3", "Câmara magnética", "250000000", { 4, 2, 2 }, 2, "1.5", 2, true),
+	RefinadorMolecular        = modificador("V4", "Refinador molecular", "1000000000", { 4, 2, 3 }, 3, "1.3", 4, true),
+	TunelCompressao           = modificador("N08", "Túnel de compressão", "4000000000", { 4, 3, 4 }, 4, "1.35", 4, true),
+	ProcessadorTermico        = modificador("H3", "Processador térmico", "5000000000", { 4, 2, 3 }, 2, "1.85", 3, true),
+	CatalisadorTermico        = modificador("N09", "Catalisador térmico", "5000000000000", { 2, 2, 2 }, 1, "3", 1, false),
+	CamaraPlasma              = modificador("V5", "Câmara de plasma", "5000000000000", { 5, 4, 4 }, 2, "1.8", 3, true),
+	LaserDuplo                = modificador("N10", "Laser duplo", "25000000000000", { 4, 2, 3 }, 2, "2.05", 2, true),
+	Polarizador               = modificador("N11", "Polarizador", "250000000000000000000000000", { 3, 2, 3 }, 1, "2.2", 4, true),
+	RessonadorPlasma          = modificador("N12", "Ressonador de plasma", "300000000000000", { 4, 2, 4 }, 2, "3", 2, true),
+	RefinadorAtomico          = modificador("V6", "Refinador atômico", "5000000000000000", { 5, 5, 5 }, 3, "1.45", 4, true),
+	AceleradorModular         = modificador("N13", "Acelerador modular", "40000000000000000", { 4, 1, 5 }, 4, "1.36", 4, true),
+	TunelMolecular            = modificador("N14", "Túnel molecular", "150000000000000000", { 5, 4, 5 }, 3, "1.65", 3, true),
+	ProcessadorParticulas     = modificador("H4", "Processador de partículas", "250000000000000000", { 4, 2, 4 }, 3, "1.38", 4, true),
+	FeixeMolecular            = modificador("N15", "Feixe molecular", "500000000000000000", { 4, 3, 3 }, 1, "4.3", 1, true),
+	CamaraQuantica            = modificador("V7", "Câmara quântica", "2500000000000000000", { 5, 4, 3 }, 2, "2.1", 3, true),
+	CompressorAtomico         = modificador("N16", "Compressor atômico", "40000000000000000000", { 4, 2, 2 }, 2, "2.45", 2, true),
+	CamaraFissao              = modificador("N17", "Câmara de fissão", "50", { 4, 4, 3 }, 1, "1.2", 2, true),
+	NucleoAntimateria         = modificador("N18", "Núcleo de antimatéria", "50000", { 4, 3, 3 }, 1, "1.85", 1, true),
+	RessonadorQuantico        = modificador("N19", "Ressonador quântico", "1500000000000000000000", { 5, 2, 2 }, 2, "3.1", 2, true),
+	CamaraEstelar             = modificador("V8", "Câmara estelar", "5000000000000000000000", { 5, 5, 5 }, 3, "1.9", 3, true),
+	AnelParticulas            = modificador("N20", "Anel de partículas", "750000", { 4, 3, 1 }, 1, "2.65", 1, true),
+	LaserQuantico             = modificador("N21", "Laser quântico", "150", { 4, 2, 1 }, 1, "1.55", 3, true),
+	AmplificadorFase          = modificador("N22", "Amplificador de fase", "6000000000000000000000000", { 4, 1, 5 }, 2, "2.95", 2, true),
+	PulsoEstelar              = modificador("N23", "Pulso estelar", "150000", { 4, 5, 3 }, 1, "1.65", 2, true),
+	RefinadorGalactico        = modificador("V9", "Refinador galáctico", "50000000000000000000000000", { 5, 3, 4 }, 3, "1.75", 4, true),
+	AnelGravitacional         = modificador("N24", "Anel gravitacional", "100000000000000", { 4, 3, 2 }, 1, "2.8", 1, true),
+	BobinaEstelar             = modificador("N25", "Bobina estelar", "4000000000000000000000000000", { 5, 4, 3 }, 2, "3", 2, true),
+	TunelFase                 = modificador("N26", "Túnel de fase", "6000000000000000000000000000", { 4, 2, 5 }, 3, "1.95", 3, true),
+	FeixeFotons               = modificador("N27", "Feixe de fótons", "7500000000000000000000000000", { 2, 1, 1 }, 1, "6.3", 1, false),
+	RessonadorEstelar         = modificador("N28", "Ressonador estelar", "40000000000000000000000000000", { 4, 2, 3 }, 2, "3.5", 2, true),
+	NucleoQuasar              = modificador("N29", "Núcleo de quasar", "100000000000000000000000000000", { 5, 3, 4 }, 1, "7.1", 1, true),
+	CompressorGalactico       = modificador("N30", "Compressor galáctico", "600000000000000000000000000000", { 5, 3, 3 }, 2, "3", 2, true),
+	TunelHorizonte            = modificador("N31", "Túnel de horizonte", "1500000000000000000000000000000", { 5, 5, 3 }, 3, "2.4", 3, true),
+	FeixeSingularidade        = modificador("N32", "Feixe de singularidade", "4000000000000000000000000000000", { 1, 5, 2 }, 1, "6.5", 1, false),
+	LaserGalactico            = modificador("N33", "Laser galáctico", "6000000000000000000000000000000", { 3, 1, 1 }, 1, "9.4", 1, true),
+	PolarizadorCosmico        = modificador("N34", "Polarizador cósmico", "10000000000000000000000000000000", { 4, 2, 4 }, 1, "8.1", 1, true),
+	RessonadorVacuo           = modificador("N35", "Ressonador de vácuo", "20000000000000000000000000000000", { 4, 2, 4 }, 2, "3.65", 2, true),
+	NucleoHorizonte           = modificador("N36", "Núcleo de horizonte", "90000000000000000000000000000000", { 5, 5, 4 }, 1, "13", 1, true),
+	CamaraSingularidade       = modificador("V10", "Câmara de singularidade", "250000000000000000000000000000000", { 5, 5, 5 }, 3, "2.7", 3, true),
+	AmplificadorVacuo         = modificador("N37", "Amplificador de vácuo", "5000000000000000000000000000000000", { 4, 1, 5 }, 2, "3.2", 2, true),
+	PulsoDimensional          = modificador("N38", "Pulso dimensional", "15000000000000000000000000000000000", { 4, 3, 2 }, 1, "9", 1, true),
+	RessonadorDimensional     = modificador("N39", "Ressonador dimensional", "50000000000000000000000000000000000", { 5, 3, 3 }, 2, "4.55", 2, true),
+	NucleoDimensional         = modificador("N40", "Núcleo dimensional", "250000000000000000000000000000000000", { 5, 5, 5 }, 1, "15", 1, true),
 }
 
 -- A progressao de preco e relativa a cada categoria; transportes e parede permanecem comuns.
@@ -187,7 +187,7 @@ for _, premio in require(script.Parent.RecompensasRenascimento) do
 	elseif premio.Tipo == "Vendedor" then
 		item = fornalha("", "0", premio.Blocos, premio.Multiplicador)
 	else
-		item = modificador(premio.Codigo, premio.Nome, "0", premio.Blocos, #premio.Faixas, premio.Multiplicador, "0", premio.LimiteUsos, "0", nil, true)
+		item = modificador(premio.Codigo, premio.Nome, "0", premio.Blocos, #premio.Faixas, premio.Multiplicador, premio.LimiteUsos, true)
 		local efeito = item.Componentes[2]
 		efeito.Renascimento = true
 		efeito.MultiplicadoresFaixas = premio.Faixas
@@ -219,7 +219,7 @@ for _, peca in expansao do
 		item = fornalha("", peca.Preco, peca.Blocos, peca.Multiplicador)
 	else
 		item = modificador(peca.CodigoModificador, peca.Nome, peca.Preco, peca.Blocos, #peca.Faixas,
-			peca.Multiplicador, peca.Bonus or "0", peca.LimiteUsos, "0", peca.ValorMaximo, true)
+			peca.Multiplicador, peca.LimiteUsos, true)
 		item.Componentes[2].MultiplicadoresFaixas = peca.Faixas
 	end
 	item.Nome, item.CodigoVisual = peca.Nome, peca.Codigo

@@ -100,7 +100,7 @@ end))
 	table.insert(self._conexoes, jogador:GetAttributeChangedSignal("GanhosPorSegundo"):Connect(function()
 		self._painelMoedas:AtualizarTaxa(jogador:GetAttribute("GanhosPorSegundo"))
 	end))
-	for _, atributo in { "Reencarnacoes", "Vidas" } do
+	for _, atributo in { "Reencarnacoes", "Vidas", "Ascensoes", "Transicoes", "GeracaoProgresso" } do
 		table.insert(self._conexoes, jogador:GetAttributeChangedSignal(atributo):Connect(function() self._paineisProgressao.Prestigio:Atualizar() end))
 	end
 	for _, atributo in { "TutorialModo", "TutorialEtapa" } do

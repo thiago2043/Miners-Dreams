@@ -15,11 +15,26 @@ local function numero(valor)
 	return (tostring(valor):gsub("%.", ","))
 end
 
+function FichaMaquina.FormatarMultiplicador(valor)
+	if type(valor) == "number" then
+		local texto = tostring(valor)
+		valor = if Inteiro.eDecimalValido(texto) then texto else string.format("%.2f", valor)
+	end
+	if Inteiro.eValido(valor) then return AbreviarInteiro(valor) end
+
+	local centesimos = "00" .. Inteiro.multiplicarArredondado("100", valor)
+	local inteiro = centesimos:sub(1, -3):gsub("^0+", "")
+	local fracao = centesimos:sub(-2):gsub("0+$", "")
+	if inteiro == "" then inteiro = "0" end
+	if #inteiro > 3 or fracao == "" then return AbreviarInteiro(inteiro) end
+	return inteiro .. "," .. fracao
+end
+
 -- Monta a expressao de multiplicador e bonus mostrada na ficha, omitindo um bonus igual a zero.
 local function efeito(configuracao)
 	local bonus=configuracao.Bonus and configuracao.Bonus~="0"
 	local multiplicador=configuracao.Multiplicador or "1"
-	local texto = bonus and multiplicador=="1" and "" or "×" .. numero(multiplicador)
+	local texto = bonus and multiplicador=="1" and "" or "×" .. FichaMaquina.FormatarMultiplicador(multiplicador)
 	if bonus then texto ..= (texto=="" and "+" or " + ") .. numero(configuracao.Bonus) end
 	return texto
 end
@@ -52,22 +67,12 @@ function FichaMaquina.Descrever(definicao,jogador)
 		elseif componente.Tipo == "Elevador" then
 			table.insert(linhas, "Altura ajustável · entrada e saída nas quatro faces")
 		elseif componente.Tipo == "Modificador" then
-			table.insert(linhas, "Modificação: " .. efeito(componente))
+			table.insert(linhas, "Modificação: ×" .. FichaMaquina.FormatarMultiplicador(Efeitos.MultiplicadorTotalModificador(componente)))
 			if componente.Renascimento then
 				table.insert(linhas, "Cópias: +50% por unidade adicional")
-				table.insert(linhas, "Entrada inicial: minério processado ×10K")
 			end
-			local limites = {}
-			if componente.LimiteUsos then table.insert(limites, numero(componente.LimiteUsos)) end
-			local minimo,maximo=Efeitos.Limites(componente,Efeitos.Nivel(jogador,"Calibracao"))
-			minimo=minimo or "0"
-			if maximo then
-				maximo = "$" .. AbreviarInteiro(maximo, true)
-				table.insert(limites, minimo:match("^0+$") and maximo or ("$" .. AbreviarInteiro(minimo, true) .. "~" .. maximo))
-			elseif not minimo:match("^0+$") then
-				table.insert(limites, "≥$" .. AbreviarInteiro(minimo, true))
-			end
-			table.insert(linhas, "Limite: " .. (#limites > 0 and table.concat(limites, " e ") or "inf"))
+			local limite = Efeitos.UsosModificador(componente.LimiteUsos, Efeitos.Nivel(jogador,"Calibracao"))
+			table.insert(linhas, "Limite: " .. (limite and numero(limite) or "inf"))
 		elseif componente.Tipo == "Vendedor" then
 			local nivel=Efeitos.Nivel(jogador,"Fundicao")
 			local venda=efeito(componente)
@@ -76,7 +81,7 @@ function FichaMaquina.Descrever(definicao,jogador)
 				local base=venda
 				venda=efeito({Multiplicador=Inteiro.multiplicarDecimal(componente.Multiplicador or "1",fator),Bonus=Inteiro.multiplicarDecimal(componente.Bonus or "0",fator)})
 				-- A venda original arredonda antes do bonus de fundicao; fundir decimais nao e exato por unidade.
-				if (componente.Multiplicador or "1"):find("%.") then venda="≈"..venda.."\nCálculo: ("..base..") → ×"..numero(fator) end
+				if (componente.Multiplicador or "1"):find("%.") then venda="≈"..venda.."\nCálculo: ("..base..") → ×"..FichaMaquina.FormatarMultiplicador(fator) end
 			end
 			table.insert(linhas, "Venda: " .. venda)
 		end

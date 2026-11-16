@@ -22,11 +22,14 @@ local Limites = require(ReplicatedStorage.Shared.LimitesConstrucao)
 local Classificacao = require(ReplicatedStorage.Shared.Classificacao)
 local PersonalizacaoMaquina = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local RegraReencarnacao = require(ReplicatedStorage.Shared.RegraReencarnacao)
+local RegraAscensao = require(ReplicatedStorage.Shared.RegraAscensao)
 local ReinicioProgresso = require(script.Parent.ReinicioProgresso)
 local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
+local PremiosAscensao = require(script.Parent.PremiosAscensao)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial", "Ascensoes", "Transicoes", "RecompensasAscensao" })
+local reinicioAscensao = ReinicioProgresso.new(Template, { "NomeJogador", "RecompensasAscensao" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
@@ -219,13 +222,16 @@ end
 function DadosJogador:Sincronizar()
 	self:RegistrarRecorde("Vidas", string.format("%.0f", self._perfil.Data.Vidas or 1))
 	self:RegistrarRecorde("Dinheiro", self:ObterSaldo())
-	self._jogador:SetAttribute("MarcoDinheiroE308", Beta.AtingiuE308((self._perfil.Data.Recordes or {}).Dinheiro))
+	self._jogador:SetAttribute("MarcoDinheiroE308", (self._perfil.Data.Ascensoes or 0) > 0 or Beta.AtingiuE308((self._perfil.Data.Recordes or {}).Dinheiro))
 	for _,item in Upgrades.Itens do self._jogador:SetAttribute("Upgrade_"..item.Id,self:ObterUpgrade(item.Id)) end
 	self._jogador:SetAttribute("VelocidadeMotores",self:ObterVelocidadeMotores())
 	self._jogador:SetAttribute("Dinheiro", self:ObterSaldo())
 	-- Perfis antigos recebem os campos por Reconcile; os valores iniciais tambem permitem consultar dados legados.
 	self._jogador:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
 	self._jogador:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
+	self._jogador:SetAttribute("Ascensoes", self._perfil.Data.Ascensoes or 0)
+	self._jogador:SetAttribute("Transicoes", self._perfil.Data.Transicoes or 0)
+	self._jogador:SetAttribute("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
 	self:SincronizarTutorial()
 for maquinaId in CatalogoMaquinas do
     self:_PublicarInventario(maquinaId)
@@ -489,7 +495,10 @@ function DadosJogador:Reencarnar(indiceEsperado)
 		or (dados.RecompensasReencarnacao ~= nil and type(dados.RecompensasReencarnacao) ~= "table")
 	then return false, "Dados persistentes invalidos; nenhum progresso foi reiniciado." end
 	local novo = reinicioReencarnacao:Preparar(dados)
-	local preparou = pcall(PremiosRenascimento.Aplicar, novo, dados, estado.VidasDisponiveis)
+	local preparou = pcall(function()
+		PremiosRenascimento.Aplicar(novo, dados, estado.VidasDisponiveis)
+		PremiosAscensao.Preservar(novo, dados)
+	end)
 	if not preparou then return false, "Recompensas invalidas; nenhum progresso foi reiniciado." end
 	novo.Reencarnacoes, novo.Vidas = estado.Reencarnacoes + 1, estado.VidaDestino
 	Historico.Evento(novo,"Renascimento",{VidasAntes=dados.Vidas,VidasDepois=novo.Vidas,Dinheiro=dados.Dinheiro})
@@ -499,6 +508,34 @@ function DadosJogador:Reencarnar(indiceEsperado)
 	self._jogador:SetAttribute("GanhosPorSegundo","0")
 	self:RegistrarRecorde("Vidas", string.format("%.0f", novo.Vidas))
 	return true, "Reencarnou: +" .. estado.VidasDisponiveis .. " vida(s).", estado
+end
+
+function DadosJogador:Ascender(indiceEsperado, geracaoEsperada)
+	if not self:EstaAtivo() then return false, "Perfil indisponível." end
+	local dados = self._perfil.Data
+	local geracao = dados.GeracaoProgresso or 0
+	local estado = RegraAscensao.Calcular(dados.Dinheiro, dados.Ascensoes or 0, dados.Transicoes or 0)
+	if not estado or indiceEsperado ~= estado.Ascensoes or geracaoEsperada ~= geracao then
+		return false, "O progresso mudou. Confira a aba Prestígio novamente."
+	end
+	if estado.Disponiveis == 0 then return false, "Saldo insuficiente para ascender." end
+	local ok, novo = pcall(function()
+		local novo = reinicioAscensao:Preparar(dados)
+		novo.GeracaoProgresso = geracao + 1
+		novo.Ascensoes, novo.Transicoes = estado.Ascensoes + 1, estado.Transicoes + estado.Disponiveis
+		PremiosAscensao.Preservar(novo, dados)
+		PremiosAscensao.Entregar(novo)
+		Historico.Evento(novo, "Ascensão", {Ascensoes = novo.Ascensoes, Transicoes = novo.Transicoes, Ganhas = estado.Disponiveis})
+		return novo
+	end)
+	if not ok then return false, "Dados de Ascensão inválidos. O progresso foi preservado." end
+	self._perfil.Data = novo
+	self._ganhos, self._ultimaTaxa, self._recebido = "0", "0", "0"
+	table.clear(self._amostrasGanhos)
+	self._proximaQuedaTutorial = nil
+	self._jogador:SetAttribute("GanhosPorSegundo", "0")
+	self._jogador:SetAttribute("TutorialQueda", nil)
+	return true, "Ascensão concluída · +" .. estado.Disponiveis .. (if estado.Disponiveis == 1 then " transição." else " transições."), estado
 end
 
 -- Grava a nova contagem no perfil e publica quantidade/configuracao para o cliente. E um metodo interno: a
@@ -570,6 +607,7 @@ function DadosJogador:ComprarMaquina(maquinaId)
 	if not item then return false, "Maquina nao encontrada na loja." end
 	if item.Renascimento then return false, "Esta peca e obtida no renascimento." end
 	if item.Receita then return false, "Esta peça é obtida por craft." end
+	if item.Obtencao == "Ascensão" then return false, "Esta peça é obtida por Ascensão." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	if not InteiroGrande.eValido(self:ObterSaldo()) then return false, "Saldo invalido." end
 	if type(self._perfil.Data.Inventory) ~= "table" then return false, "Inventario invalido." end
@@ -599,6 +637,7 @@ function DadosJogador:VenderMaquina(maquinaId, configuracaoEsperada)
 	if not item then return false, "Maquina nao encontrada na loja." end
 	if item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
 	if item.Receita then return false, "Peças de craft são permanentes." end
+	if item.Obtencao == "Ascensão" then return false, "Máquinas de Ascensão são permanentes." end
 	if not self:EstaAtivo() then return false, "Dados ainda nao estao disponiveis." end
 	local quantidade = self:ObterQuantidade(maquinaId)
 	if not quantidade or quantidade == 0 then return false, "Voce nao possui esta peca no inventario." end
@@ -907,6 +946,7 @@ function DadosJogador:VenderConstrucoes(construcoes)
 		local item = type(maquinaId) == "string" and CatalogoMaquinas[maquinaId]
 		if item and item.Renascimento then return false, "Recompensas de renascimento sao permanentes." end
 		if item and item.Receita then return false, "Peças de craft são permanentes." end
+		if item and item.Obtencao == "Ascensão" then return false, "Máquinas de Ascensão são permanentes." end
 		local indice = table.find(registros, registro)
 		if not indice or vistos[registro] or not item or not InteiroGrande.eValido(item.Preco) then
 			return false, "Uma das pecas nao pode ser vendida."

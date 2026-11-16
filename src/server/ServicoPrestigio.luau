@@ -18,4 +18,12 @@ function ServicoPrestigio:Reencarnar(jogador, indiceEsperado)
 	end)
 end
 
+function ServicoPrestigio:Ascender(jogador, indiceEsperado, geracaoEsperada)
+	if jogador.Parent ~= Players then return false, "Jogador indisponível." end
+	if type(indiceEsperado) ~= "number" or type(geracaoEsperada) ~= "number" then return false, "Ascensão inválida." end
+	return self._construcao.ReiniciarProgresso(jogador, function(dados)
+		return dados:Ascender(indiceEsperado, geracaoEsperada)
+	end)
+end
+
 return ServicoPrestigio

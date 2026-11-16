@@ -29,9 +29,7 @@ Reencarnação | Saldo exigido      | Entrega garantida                         
 50º          | $10^308 ($100UCe)  | Meridiano, Catedral e XR39 a XR43          | 7
 ```
 
-A confirmação do **50º renascimento** com $`10^308` ($100UCe) registra o desbloqueio permanente da nova mecânica antes de zerar o saldo. A projeção para o 51º é $`10^318` ($1e318) e para o 55º é $`10^359` ($100e357). O balanceamento após o 50º depende da mecânica nova.
-
-Os requisitos da tabela são metas do plano completo. A seção de produção separa a renda do catálogo atual do ganho que os próximos itens e mecânicas precisam trazer.
+No 50º marco, $10^308 ($100UCe) com 49 Renascimentos concluídos dá acesso à escolha entre Renascimento e Ascensão. A [progressão completa](Progressao_renascimento_loja_intermediaria.md) detalha as consequências dessa escolha e a rota de compra.
 
 ## Mineradoras
 
@@ -69,7 +67,7 @@ x10^31 (x10N)          | 50º     | 6x5x6  | 2x2 / piso
 
 **De quatro a oito aplicações por tipo, por minério.** A coluna Limite indica o máximo de cada modelo. Cada unidade física conta uma vez. O uso começa quando a primeira faixa válida aplica o efeito. As outras faixas completam a mesma passagem. Se o minério voltar pela mesma unidade, a correia continua transportando.
 
-A primeira aplicação de renascimento exige que o processamento anterior eleve o minério a **×`10^4` (×10K)** o valor de saída da mineradora, já considerando Extração. Um minério base da Aurora sai com $`7,5·10^8` ($750M) e precisa chegar a $`7,5·10^12` ($7,5T) antes da primeira aplicação. Depois da ativação, os tipos seguintes aceitam o valor corrente sem teto monetário. A especificação trata essa condição inicial separadamente da faixa ajustável pela Calibração.
+A tabela usa o limite base. A Calibração acrescenta 20% por nível, até 100%, com arredondamento ao inteiro mais próximo. Qualquer minério válido pode receber a primeira aplicação.
 
 ```text
 Uso do mesmo tipo         | Efeito
@@ -78,7 +76,7 @@ Uso do mesmo tipo         | Efeito
 2º até o limite do modelo | Soma +50 pontos percentuais por unidade adicional.
 ```
 
-Os bônus de tipos diferentes se somam. **Valor de venda = valor processado × (1 + bônus de cópias) × fator da fornalha.** Quatro unidades de um tipo resultam em **×2,5** sobre o valor processado. Oito resultam em **×4,5**. O efeito de um tipo isolado tem teto de **×`10^3` (×1K)**, incluindo as cópias permitidas. A Porta do Meridiano aplica ×`4·10^2` (×400) na primeira unidade e atinge ×`10^3` (×1K) com quatro. A linha pode combinar efeitos de tipos diferentes. Uma cópia com duas faixas reparte os 50 pontos percentuais em **25 + 25**. Com três faixas, a divisão é **16 + 17 + 17**. Cada faixa aplica sua parte quando o minério a atravessa. O jogo mostra o valor efetivo durante o trajeto. Os cálculos usam aritmética decimal inteira, com arredondamento ao inteiro mais próximo e meio para cima.
+Os bônus de tipos diferentes se somam. **Valor de venda = valor processado × (1 + bônus de cópias) × fator da fornalha.** Quatro unidades de um tipo resultam em **×2,5** sobre o valor processado. Oito resultam em **×4,5**. O dimensionamento original limita a ×`10^3` (×1K) o efeito combinado com as cópias do limite base. A Porta do Meridiano aplica ×`4·10^2` (×400) na primeira unidade, chega a ×`10^3` (×1K) com quatro e a ×`1,8·10^3` (×1,8K) com oito após Calibração máxima. A linha pode combinar efeitos de tipos diferentes. Uma cópia com duas faixas reparte os 50 pontos percentuais em **25 + 25**. Com três faixas, a divisão é **16 + 17 + 17**. Cada faixa aplica sua parte quando o minério a atravessa. O jogo mostra o valor efetivo durante o trajeto. Os cálculos usam aritmética decimal inteira, com arredondamento ao inteiro mais próximo e meio para cima.
 
 Todos os modificadores têm correia própria. **L×C / nível / desvio** indica largura, comprimento, nível acima do piso e posição lateral em X local, em blocos. O desvio só aparece quando a correia fica fora do eixo da hitbox. Piso, +1 e +2 correspondem a **0,9375**, **3,9375** e **6,9375 studs** acima da base. A velocidade base de referência do catálogo é **6 studs/s** ou **2 blocos/s**.
 
@@ -137,32 +135,7 @@ limite | multiplicadores por faixa na 1ª aplicação                 | entrega 
 
 ## Referência de produção
 
-O primeiro lote parte da força da loja. A Mineradora galáctica gera $`5·10^8` ($500M) a cada 1,25 s e a Fornalha galáctica vende a ×`6·10^1` (×60). A Aurora gera $`7,5·10^8` ($750M) por segundo, a Fornalha aurora vende a ×`10^2` (×100) e o Selo começa em ×`2·10^1` (×20).
-
-A referência usa os efeitos atuais da loja que aceitam minério de alto valor. Seleciona os maiores fatores por passagem dentro dos limites reais, usa uma unidade de cada modificador de renascimento liberado e vende um minério por segundo com o melhor par disponível. A renda de linhas paralelas entra somada. Os fatores só se multiplicam quando atuam sobre o mesmo minério.
-
-A última coluna mostra **quanto falta multiplicar a renda de referência** para reunir o saldo-alvo em **1.000 segundos de operação**. Um fator próximo de 1 pode ser coberto com mais tempo. Os fatores maiores mostram a dependência de novos conteúdos para o ritmo planejado.
-
-```text
-Depois do lote | Aplicações da loja | Fator da loja           | Fator acumulado de renascimento | Renda de referência          | Meta planejada           | Ganho adicional para 1.000 s
-
-5º             | 24                 | ≈ x4,01·10^20 (x401Qn)  | ≈ x2·10^1 (x20)                 | ≈ $6,01·10^32 ($601N)/s      | 10º · $10^36 ($1UDe)     | ≈ x1,66·10^0 (x1,66)
-10º            | 26                 | ≈ x9,02·10^21 (x9,02Sx) | ≈ x4,8·10^2 (x480)              | ≈ $4,33·10^39 ($4,33DDe)/s   | 15º · $10^43 ($10TDe)    | ≈ x2,31·10^0 (x2,31)
-15º            | 28                 | ≈ x1,44·10^23 (x144Sx)  | ≈ x1,44·10^4 (x14,4K)           | ≈ $2,08·10^48 ($2,08QiDe)/s  | 20º · $10^52 ($10SxDe)   | ≈ x4,81·10^0 (x4,81)
-20º            | 30                 | ≈ x2,31·10^24 (x2,31Sp) | ≈ x1,34·10^12 (x1,34T)          | ≈ $3,09·10^65 ($309Vi)/s     | 25º · $10^75 ($1QaVi)    | ≈ x3,24·10^6 (x3,24M)
-25º            | 33                 | ≈ x1,48·10^26 (x148Sp)  | ≈ x3,54·10^24 (x3,54Sp)         | ≈ $5,23·10^79 ($52,3QiVi)/s  | 30º · $10^108 ($1QiTg)   | ≈ x1,91·10^25 (x19,1Sp)
-30º            | 34                 | ≈ x5,91·10^26 (x591Sp)  | ≈ x8,91·10^35 (x891De)          | ≈ $5,27·10^101 ($527DTg)/s   | 35º · $10^155 ($100Qig)  | ≈ x1,9·10^50 (x190QiDe)
-35º            | 37                 | ≈ x3,31·10^28 (x33,1O)  | ≈ x3,84·10^49 (x38,4QiDe)       | ≈ $1,27·10^117 ($1,27OTg)/s  | 40º · $10^202 ($10SxSxg) | ≈ x7,87·10^81 (x7,87SxVi)
-40º            | 40                 | ≈ x1,27·10^30 (x1,27N)  | ≈ x6,11·10^61 (x61,1NDe)        | ≈ $7,77·10^143 ($777SxQag)/s | 45º · $10^257 ($100QaOg) | ≈ x1,29·10^110 (x129QiTg)
-45º            | 46                 | ≈ x1,67·10^33 (x1,67De) | ≈ x2,28·10^76 (x22,8QaVi)       | ≈ $3,8·10^161 ($380DQig)/s   | 50º · $10^308 ($100UCe)  | ≈ x2,63·10^143 (x263SxQag)
-50º            | 48                 | ≈ x1,38·10^34 (x13,8De) | ≈ x3,32·10^88 (x33,2OVi)        | ≈ $4,57·10^189 ($4,57DSxg)/s | 55º · $10^359 ($100e357) | ≈ x2,19·10^166 (x21,9QaQig)
-```
-
-Com o lote do 45º e o catálogo atual, a linha de referência chega a **≈ $`3,8·10^161` ($380DQig)/s**. A meta do 50º continua em **$`10^308` ($100UCe)**. Para o prazo de referência, a renda ainda precisa crescer **≈ ×`2,63·10^143` (×263SxQag)**. A mecânica liberada pelo 50º entra na conta dos ciclos seguintes.
-
-Para contabilizar itens novos, medir o ganho líquido em relação à fábrica de referência. Se uma peça substituir outra, usar a razão entre os dois efeitos na rota. Se uma mecânica aumentar a quantidade vendida, contabilizar a nova vazão. Os efeitos e os marcos de liberação desses conteúdos ainda precisam ser definidos. Antes de fechar as metas, medir uma rota que caiba na plot e que o jogador consiga financiar com as entregas garantidas até aquele ponto.
-
-Os tempos da referência começam com a fábrica pronta. O relato de até duas horas para o primeiro $`10^21` ($1Sx) inclui montagem e serve de referência para medir o começo.
+A [rota de compra por reinício](Progressao_renascimento_loja_intermediaria.md) detalha os 50 marcos usando os multiplicadores atuais, a loja existente, as novas máquinas e alternativas de craft.
 
 ## Referências no projeto
 

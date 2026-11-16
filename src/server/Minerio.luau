@@ -10,7 +10,6 @@ function Minerio.new(parte)
   return setmetatable({
     _parte = parte,
     _valor = parte:GetAttribute("Valor"),
-    _valorInicial = parte:GetAttribute("Valor"),
     _processado = parte:GetAttribute("Processado") == true,
     _vendido = parte:GetAttribute("Vendido") == true,
     _usos = {},
@@ -38,7 +37,6 @@ function Minerio.Criar(definicao, cframe, terreno, dadosDono)
   local self = Minerio.new(parte)
   self._dadosDono = dadosDono
   assert(self:DefinirValor(definicao.Valor), "Valor inicial de minerio invalido.")
-  self._valorInicial = definicao.Valor
   assert(self:DefinirTamanho(Vector3.new(table.unpack(definicao.Tamanho))), "Tamanho inicial de minerio invalido.")
   parte.CFrame = cframe
   parte.Color = Color3.fromRGB(140, 100, 65)
@@ -134,17 +132,13 @@ function Minerio:CalcularValor(multiplicador, bonus, principal)
   return InteiroGrande.somar(InteiroGrande.multiplicarArredondado(valor, multiplicador or "1"), bonus or "0")
 end
 
-function Minerio:PodeReceberRenascimento(unidade)
-  if self._unidadesRenascimento and self._unidadesRenascimento[unidade] then return false end
-  if self._renascimentoAtivo then return true end
-  local inicial = self._valorInicial or self:ObterValor()
-  return InteiroGrande.eValido(inicial) and not InteiroGrande.menor(self:ObterValor(), inicial .. "0000")
+function Minerio:JaRecebeuRenascimento(unidade)
+  return self._unidadesRenascimento ~= nil and self._unidadesRenascimento[unidade] == true
 end
 
 function Minerio:RegistrarRenascimento(unidade)
   self._unidadesRenascimento = self._unidadesRenascimento or {}
   self._unidadesRenascimento[unidade] = true
-  self._renascimentoAtivo = true
 end
 
 function Minerio:AdicionarBonusCopias(pontos)

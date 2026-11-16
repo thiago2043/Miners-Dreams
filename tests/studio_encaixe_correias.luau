@@ -37,7 +37,7 @@ local sucesso,erro=pcall(function()
    fabrica=Fabrica.new(raiz)
    local altura=alturaPadrao+nivel*3+.375
    local inicial=Vector3.new(x,altura,-correia.Size.Z/2-4.5)
-   local valor=config.ValorMinimo=="0" and "5" or config.ValorMinimo
+   local valor="5"
    local minerio=Minerio.Criar({Valor=valor,Tamanho={.75,.75,.75}},transformacao*CFrame.new(inicial),terreno)
    fabrica._simulacao:RegistrarMinerio(minerio,10,{Elasticidade=0})
    local passou=false

@@ -1,0 +1,1118 @@
+[
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM01",
+    "final": false,
+    "id": "CraftLojaAscM01",
+    "ingredientes": [
+      "LojaPosAscM01",
+      "LojaPosAscM02"
+    ],
+    "serieLoja": 1
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM02",
+    "final": false,
+    "id": "CraftLojaAscM02",
+    "ingredientes": [
+      "LojaPosAscM03",
+      "LojaPosAscM04",
+      "CraftLojaAscM01"
+    ],
+    "serieLoja": 2
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM03",
+    "final": false,
+    "id": "CraftLojaAscM03",
+    "ingredientes": [
+      "LojaPosAscM05",
+      "LojaPosAscM06"
+    ],
+    "serieLoja": 3
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM04",
+    "final": false,
+    "id": "CraftLojaAscM04",
+    "ingredientes": [
+      "LojaPosAscM07",
+      "LojaPosAscM08",
+      "CraftLojaAscM03"
+    ],
+    "serieLoja": 4
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM05",
+    "final": false,
+    "id": "CraftLojaAscM05",
+    "ingredientes": [
+      "LojaPosAscM09",
+      "LojaPosAscM10",
+      "CraftLojaAscM02",
+      "CraftLojaAscM04"
+    ],
+    "serieLoja": 5
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM06",
+    "final": false,
+    "id": "CraftLojaAscM06",
+    "ingredientes": [
+      "LojaPosAscM11",
+      "LojaPosAscM12"
+    ],
+    "serieLoja": 6
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM07",
+    "final": false,
+    "id": "CraftLojaAscM07",
+    "ingredientes": [
+      "LojaPosAscM13",
+      "LojaPosAscM14",
+      "CraftLojaAscM06"
+    ],
+    "serieLoja": 7
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM08",
+    "final": false,
+    "id": "CraftLojaAscM08",
+    "ingredientes": [
+      "LojaPosAscM15",
+      "LojaPosAscM16"
+    ],
+    "serieLoja": 8
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM09",
+    "final": false,
+    "id": "CraftLojaAscM09",
+    "ingredientes": [
+      "LojaPosAscM17",
+      "LojaPosAscM18",
+      "CraftLojaAscM08"
+    ],
+    "serieLoja": 9
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CIM10",
+    "final": false,
+    "id": "CraftLojaAscM10",
+    "ingredientes": [
+      "LojaPosAscM19",
+      "LojaPosAscM20",
+      "CraftLojaAscM05",
+      "CraftLojaAscM07",
+      "CraftLojaAscM09"
+    ],
+    "serieLoja": 10
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM01",
+    "final": false,
+    "id": "EscavadoraDeArcoForjado",
+    "ingredientes": [
+      "MineradoraAurora",
+      "MineradoraPulsar"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM02",
+    "final": false,
+    "id": "MineradoraDasDuasMares",
+    "ingredientes": [
+      "MineradoraEterna",
+      "RessonanciaAbissal"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM03",
+    "final": false,
+    "id": "EscavadoraDeCobaltoBranco",
+    "ingredientes": [
+      "CouracaSolar",
+      "SondaUmbra"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM04",
+    "final": false,
+    "id": "MineradoraDeLigaEclipse",
+    "ingredientes": [
+      "EscavadoraDeArcoForjado",
+      "EscavadoraMeridiano"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM05",
+    "final": false,
+    "id": "EscavadoraDeReleTriplo",
+    "ingredientes": [
+      "MineradoraDasDuasMares",
+      "CouracaSolar"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM06",
+    "final": false,
+    "id": "MineradoraDaTramaPolar",
+    "ingredientes": [
+      "EscavadoraDeCobaltoBranco",
+      "MineradoraEterna"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM07",
+    "final": false,
+    "id": "EscavadoraDeContrafase",
+    "ingredientes": [
+      "MineradoraDeLigaEclipse",
+      "EscavadoraDeReleTriplo"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM08",
+    "final": false,
+    "id": "MineradoraDeNexoInterno",
+    "ingredientes": [
+      "EscavadoraDeContrafase",
+      "SondaUmbra"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM09",
+    "final": false,
+    "id": "MineradoraDeNexoExterno",
+    "ingredientes": [
+      "MineradoraDaTramaPolar",
+      "EscavadoraConvergencia"
+    ]
+  },
+  {
+    "categoria": "Mineradoras",
+    "codigo": "CAM10",
+    "final": true,
+    "id": "MineradoraSinteseDaAscensao",
+    "ingredientes": [
+      "MineradoraDeNexoInterno",
+      "MineradoraDeNexoExterno",
+      "CraftLojaAscM10"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF01",
+    "final": false,
+    "id": "CraftLojaAscF01",
+    "ingredientes": [
+      "LojaPosAscF01",
+      "LojaPosAscF02"
+    ],
+    "serieLoja": 1
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF02",
+    "final": false,
+    "id": "CraftLojaAscF02",
+    "ingredientes": [
+      "LojaPosAscF03",
+      "LojaPosAscF04",
+      "CraftLojaAscF01"
+    ],
+    "serieLoja": 2
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF03",
+    "final": false,
+    "id": "CraftLojaAscF03",
+    "ingredientes": [
+      "LojaPosAscF05",
+      "LojaPosAscF06"
+    ],
+    "serieLoja": 3
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF04",
+    "final": false,
+    "id": "CraftLojaAscF04",
+    "ingredientes": [
+      "LojaPosAscF07",
+      "LojaPosAscF08",
+      "CraftLojaAscF03"
+    ],
+    "serieLoja": 4
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF05",
+    "final": false,
+    "id": "CraftLojaAscF05",
+    "ingredientes": [
+      "LojaPosAscF09",
+      "LojaPosAscF10",
+      "CraftLojaAscF02",
+      "CraftLojaAscF04"
+    ],
+    "serieLoja": 5
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF06",
+    "final": false,
+    "id": "CraftLojaAscF06",
+    "ingredientes": [
+      "LojaPosAscF11",
+      "LojaPosAscF12"
+    ],
+    "serieLoja": 6
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF07",
+    "final": false,
+    "id": "CraftLojaAscF07",
+    "ingredientes": [
+      "LojaPosAscF13",
+      "LojaPosAscF14",
+      "CraftLojaAscF06"
+    ],
+    "serieLoja": 7
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF08",
+    "final": false,
+    "id": "CraftLojaAscF08",
+    "ingredientes": [
+      "LojaPosAscF15",
+      "LojaPosAscF16"
+    ],
+    "serieLoja": 8
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF09",
+    "final": false,
+    "id": "CraftLojaAscF09",
+    "ingredientes": [
+      "LojaPosAscF17",
+      "LojaPosAscF18",
+      "CraftLojaAscF08"
+    ],
+    "serieLoja": 9
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CIF10",
+    "final": false,
+    "id": "CraftLojaAscF10",
+    "ingredientes": [
+      "LojaPosAscF19",
+      "LojaPosAscF20",
+      "CraftLojaAscF05",
+      "CraftLojaAscF07",
+      "CraftLojaAscF09"
+    ],
+    "serieLoja": 10
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF01",
+    "final": false,
+    "id": "FornalhaDeArcoForjado",
+    "ingredientes": [
+      "FornalhaAurora",
+      "FornalhaSupernova"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF02",
+    "final": false,
+    "id": "FornalhaDeNacarIonico",
+    "ingredientes": [
+      "FornalhaEterna",
+      "FornalhaBastiao"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF03",
+    "final": false,
+    "id": "FornalhaDaTramaCarmim",
+    "ingredientes": [
+      "FornalhaMarDeVidro",
+      "FornalhaCiclotron"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF04",
+    "final": false,
+    "id": "FornalhaDeLigaCeleste",
+    "ingredientes": [
+      "FornalhaDeArcoForjado",
+      "FornalhaCatedral"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF05",
+    "final": false,
+    "id": "FornalhaDaCaldeiraPolar",
+    "ingredientes": [
+      "FornalhaDeNacarIonico",
+      "FornalhaMarDeVidro"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF06",
+    "final": false,
+    "id": "FornalhaDeCanaisTriplos",
+    "ingredientes": [
+      "FornalhaDaTramaCarmim",
+      "FornalhaEterna"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF07",
+    "final": false,
+    "id": "FornalhaDaForjaBranca",
+    "ingredientes": [
+      "FornalhaDeLigaCeleste",
+      "FornalhaDaCaldeiraPolar"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF08",
+    "final": false,
+    "id": "FornalhaDeNexoTermico",
+    "ingredientes": [
+      "FornalhaDaForjaBranca",
+      "FornalhaCiclotron"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF09",
+    "final": false,
+    "id": "FornalhaDeNexoIonico",
+    "ingredientes": [
+      "FornalhaDeCanaisTriplos",
+      "FornalhaConvergencia"
+    ]
+  },
+  {
+    "categoria": "Fornalhas",
+    "codigo": "CAF10",
+    "final": true,
+    "id": "FornalhaSinteseDaAscensao",
+    "ingredientes": [
+      "FornalhaDeNexoTermico",
+      "FornalhaDeNexoIonico",
+      "CraftLojaAscF10"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX01",
+    "final": false,
+    "id": "CraftLojaAscX01",
+    "ingredientes": [
+      "LojaPosAscX01",
+      "LojaPosAscX04"
+    ],
+    "serieLoja": 1
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX02",
+    "final": false,
+    "id": "CraftLojaAscX02",
+    "ingredientes": [
+      "LojaPosAscX02",
+      "LojaPosAscX05"
+    ],
+    "serieLoja": 1
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX03",
+    "final": false,
+    "id": "CraftLojaAscX03",
+    "ingredientes": [
+      "LojaPosAscX03",
+      "LojaPosAscX06"
+    ],
+    "serieLoja": 1
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX04",
+    "final": false,
+    "id": "CraftLojaAscX04",
+    "ingredientes": [
+      "LojaPosAscX07",
+      "LojaPosAscX10",
+      "CraftLojaAscX01"
+    ],
+    "serieLoja": 2
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX05",
+    "final": false,
+    "id": "CraftLojaAscX05",
+    "ingredientes": [
+      "LojaPosAscX08",
+      "LojaPosAscX11",
+      "CraftLojaAscX02"
+    ],
+    "serieLoja": 2
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX06",
+    "final": false,
+    "id": "CraftLojaAscX06",
+    "ingredientes": [
+      "LojaPosAscX09",
+      "LojaPosAscX12",
+      "CraftLojaAscX03"
+    ],
+    "serieLoja": 2
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX07",
+    "final": false,
+    "id": "CraftLojaAscX07",
+    "ingredientes": [
+      "LojaPosAscX13",
+      "LojaPosAscX16"
+    ],
+    "serieLoja": 3
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX08",
+    "final": false,
+    "id": "CraftLojaAscX08",
+    "ingredientes": [
+      "LojaPosAscX14",
+      "LojaPosAscX17"
+    ],
+    "serieLoja": 3
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX09",
+    "final": false,
+    "id": "CraftLojaAscX09",
+    "ingredientes": [
+      "LojaPosAscX15",
+      "LojaPosAscX18"
+    ],
+    "serieLoja": 3
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX10",
+    "final": false,
+    "id": "CraftLojaAscX10",
+    "ingredientes": [
+      "LojaPosAscX19",
+      "LojaPosAscX22",
+      "CraftLojaAscX07"
+    ],
+    "serieLoja": 4
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX11",
+    "final": false,
+    "id": "CraftLojaAscX11",
+    "ingredientes": [
+      "LojaPosAscX20",
+      "LojaPosAscX23",
+      "CraftLojaAscX08"
+    ],
+    "serieLoja": 4
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX12",
+    "final": false,
+    "id": "CraftLojaAscX12",
+    "ingredientes": [
+      "LojaPosAscX21",
+      "LojaPosAscX24",
+      "CraftLojaAscX09"
+    ],
+    "serieLoja": 4
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX13",
+    "final": false,
+    "id": "CraftLojaAscX13",
+    "ingredientes": [
+      "LojaPosAscX25",
+      "LojaPosAscX28",
+      "CraftLojaAscX04",
+      "CraftLojaAscX10"
+    ],
+    "serieLoja": 5
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX14",
+    "final": false,
+    "id": "CraftLojaAscX14",
+    "ingredientes": [
+      "LojaPosAscX26",
+      "LojaPosAscX29",
+      "CraftLojaAscX05",
+      "CraftLojaAscX11"
+    ],
+    "serieLoja": 5
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX15",
+    "final": false,
+    "id": "CraftLojaAscX15",
+    "ingredientes": [
+      "LojaPosAscX27",
+      "LojaPosAscX30",
+      "CraftLojaAscX06",
+      "CraftLojaAscX12"
+    ],
+    "serieLoja": 5
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX16",
+    "final": false,
+    "id": "CraftLojaAscX16",
+    "ingredientes": [
+      "LojaPosAscX31",
+      "LojaPosAscX34"
+    ],
+    "serieLoja": 6
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX17",
+    "final": false,
+    "id": "CraftLojaAscX17",
+    "ingredientes": [
+      "LojaPosAscX32",
+      "LojaPosAscX35"
+    ],
+    "serieLoja": 6
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX18",
+    "final": false,
+    "id": "CraftLojaAscX18",
+    "ingredientes": [
+      "LojaPosAscX33",
+      "LojaPosAscX36"
+    ],
+    "serieLoja": 6
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX19",
+    "final": false,
+    "id": "CraftLojaAscX19",
+    "ingredientes": [
+      "LojaPosAscX37",
+      "LojaPosAscX40",
+      "CraftLojaAscX16"
+    ],
+    "serieLoja": 7
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX20",
+    "final": false,
+    "id": "CraftLojaAscX20",
+    "ingredientes": [
+      "LojaPosAscX38",
+      "LojaPosAscX41",
+      "CraftLojaAscX17"
+    ],
+    "serieLoja": 7
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX21",
+    "final": false,
+    "id": "CraftLojaAscX21",
+    "ingredientes": [
+      "LojaPosAscX39",
+      "LojaPosAscX42",
+      "CraftLojaAscX18"
+    ],
+    "serieLoja": 7
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX22",
+    "final": false,
+    "id": "CraftLojaAscX22",
+    "ingredientes": [
+      "LojaPosAscX43",
+      "LojaPosAscX46"
+    ],
+    "serieLoja": 8
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX23",
+    "final": false,
+    "id": "CraftLojaAscX23",
+    "ingredientes": [
+      "LojaPosAscX44",
+      "LojaPosAscX47"
+    ],
+    "serieLoja": 8
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX24",
+    "final": false,
+    "id": "CraftLojaAscX24",
+    "ingredientes": [
+      "LojaPosAscX45",
+      "LojaPosAscX48"
+    ],
+    "serieLoja": 8
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX25",
+    "final": false,
+    "id": "CraftLojaAscX25",
+    "ingredientes": [
+      "LojaPosAscX49",
+      "LojaPosAscX52",
+      "CraftLojaAscX22"
+    ],
+    "serieLoja": 9
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX26",
+    "final": false,
+    "id": "CraftLojaAscX26",
+    "ingredientes": [
+      "LojaPosAscX50",
+      "LojaPosAscX53",
+      "CraftLojaAscX23"
+    ],
+    "serieLoja": 9
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX27",
+    "final": false,
+    "id": "CraftLojaAscX27",
+    "ingredientes": [
+      "LojaPosAscX51",
+      "LojaPosAscX54",
+      "CraftLojaAscX24"
+    ],
+    "serieLoja": 9
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX28",
+    "final": false,
+    "id": "CraftLojaAscX28",
+    "ingredientes": [
+      "LojaPosAscX55",
+      "LojaPosAscX58",
+      "CraftLojaAscX13",
+      "CraftLojaAscX19",
+      "CraftLojaAscX25"
+    ],
+    "serieLoja": 10
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX29",
+    "final": false,
+    "id": "CraftLojaAscX29",
+    "ingredientes": [
+      "LojaPosAscX56",
+      "LojaPosAscX59",
+      "CraftLojaAscX14",
+      "CraftLojaAscX20",
+      "CraftLojaAscX26"
+    ],
+    "serieLoja": 10
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CIX30",
+    "final": false,
+    "id": "CraftLojaAscX30",
+    "ingredientes": [
+      "LojaPosAscX57",
+      "LojaPosAscX60",
+      "CraftLojaAscX15",
+      "CraftLojaAscX21",
+      "CraftLojaAscX27"
+    ],
+    "serieLoja": 10
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX01",
+    "final": false,
+    "id": "LacreDePrataForjada",
+    "ingredientes": [
+      "SeloAurora",
+      "PrismaPulsar",
+      "NexusEterno"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX02",
+    "final": false,
+    "id": "GrampoDeLigaPolar",
+    "ingredientes": [
+      "LaminaFotovoltaica",
+      "GrampoDeCobalto",
+      "CadinhoCeramico"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX03",
+    "final": false,
+    "id": "ReleDeBrasaBranca",
+    "ingredientes": [
+      "PeneiraLuminosa",
+      "SondaDeAmetista",
+      "BobinaDeMare"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX04",
+    "final": false,
+    "id": "PenteDeLuzForjada",
+    "ingredientes": [
+      "TrefilaDeTitanio",
+      "BicoDeIrradiacao",
+      "PorticoDeSafira"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX05",
+    "final": false,
+    "id": "CruzetaDeNacar",
+    "ingredientes": [
+      "LimiarDeBasalto",
+      "TriagemBoreal",
+      "MatrizDeImpacto"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX06",
+    "final": false,
+    "id": "PrismaDeLigaSolar",
+    "ingredientes": [
+      "AroDeMercurio",
+      "VenturiVioleta",
+      "PolarizadorDeJade"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX07",
+    "final": false,
+    "id": "FatiaDeCobaltoBranco",
+    "ingredientes": [
+      "MicrossondaFria",
+      "CisalhaHelio"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX08",
+    "final": false,
+    "id": "GeradorDeMareForjada",
+    "ingredientes": [
+      "VigiliaIonica",
+      "CanalDeMarfim"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX09",
+    "final": false,
+    "id": "LaminaDoEclipseForjado",
+    "ingredientes": [
+      "ReleDeRubi",
+      "RessonadorAzimutal"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX10",
+    "final": false,
+    "id": "GaiolaDeArgonioClaro",
+    "ingredientes": [
+      "CamaraDeNeve",
+      "CascataDeAmbar"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX11",
+    "final": false,
+    "id": "FendaDoReleTriplo",
+    "ingredientes": [
+      "PulsadorDeNeodimio",
+      "ObeliscoDeFase"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX12",
+    "final": false,
+    "id": "CelulaDeLigaClara",
+    "ingredientes": [
+      "OsciladorDeQuartzo",
+      "InjetorDeArgonio"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX13",
+    "final": false,
+    "id": "ArcoDeVaporForjado",
+    "ingredientes": [
+      "CorredorSolsticio",
+      "FatiaDeHorizonte"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX14",
+    "final": false,
+    "id": "CrivoDaTramaVioleta",
+    "ingredientes": [
+      "RetificadorDeIridio",
+      "FoleGravitacional"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX15",
+    "final": false,
+    "id": "MatrizDeHelioBranco",
+    "ingredientes": [
+      "RasgoDeEspectro",
+      "TrilhoDeApolonio"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX16",
+    "final": false,
+    "id": "PorticoDeLigaIonica",
+    "ingredientes": [
+      "GarraDoEquinocio",
+      "CondensadorNacar"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX17",
+    "final": false,
+    "id": "BobinaDaForjaRubra",
+    "ingredientes": [
+      "BalizaUltravioleta",
+      "DinamoDePlatina"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX18",
+    "final": false,
+    "id": "PolarizadorDeNexoClaro",
+    "ingredientes": [
+      "CrivoDoPerielio",
+      "BaluarteMagnetico"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX19",
+    "final": false,
+    "id": "TrefilaDeNexoRubra",
+    "ingredientes": [
+      "CupulaDeInercia",
+      "CadenciaDoEclipse"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX20",
+    "final": false,
+    "id": "TurbinaDeNexoPolar",
+    "ingredientes": [
+      "CoroaDeAntiparticulas",
+      "PortaDoMeridiano"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX21",
+    "final": false,
+    "id": "RelicarioDeCondutores",
+    "ingredientes": [
+      "LacreDePrataForjada",
+      "GrampoDeLigaPolar",
+      "ReleDeBrasaBranca"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX22",
+    "final": false,
+    "id": "RelicarioDeProcessadores",
+    "ingredientes": [
+      "PenteDeLuzForjada",
+      "CruzetaDeNacar",
+      "PrismaDeLigaSolar"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX23",
+    "final": false,
+    "id": "RelicarioDeEmissores",
+    "ingredientes": [
+      "FatiaDeCobaltoBranco",
+      "GeradorDeMareForjada",
+      "LaminaDoEclipseForjado",
+      "GaiolaDeArgonioClaro"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX24",
+    "final": false,
+    "id": "RelicarioDeRessonadores",
+    "ingredientes": [
+      "FendaDoReleTriplo",
+      "CelulaDeLigaClara",
+      "ArcoDeVaporForjado"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX25",
+    "final": false,
+    "id": "RelicarioDeCompressores",
+    "ingredientes": [
+      "CrivoDaTramaVioleta",
+      "MatrizDeHelioBranco",
+      "PorticoDeLigaIonica",
+      "BobinaDaForjaRubra"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX26",
+    "final": false,
+    "id": "RelicarioDePortais",
+    "ingredientes": [
+      "PolarizadorDeNexoClaro",
+      "TrefilaDeNexoRubra",
+      "TurbinaDeNexoPolar"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX27",
+    "final": false,
+    "id": "NexoDaForjaSolar",
+    "ingredientes": [
+      "RelicarioDeCondutores",
+      "RelicarioDeProcessadores"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX28",
+    "final": false,
+    "id": "NexoDaForjaPolar",
+    "ingredientes": [
+      "RelicarioDeEmissores",
+      "RelicarioDeRessonadores"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX29",
+    "final": false,
+    "id": "NexoDaForjaAstral",
+    "ingredientes": [
+      "RelicarioDeCompressores",
+      "RelicarioDePortais"
+    ]
+  },
+  {
+    "categoria": "Modificadores",
+    "codigo": "CAX30",
+    "final": true,
+    "id": "ModificadorSinteseDaAscensao",
+    "ingredientes": [
+      "NexoDaForjaSolar",
+      "NexoDaForjaPolar",
+      "NexoDaForjaAstral",
+      "ModificadorConvergencia",
+      "CraftLojaAscX28",
+      "CraftLojaAscX29",
+      "CraftLojaAscX30"
+    ]
+  }
+]

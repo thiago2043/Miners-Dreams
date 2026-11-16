@@ -1,0 +1,1506 @@
+[
+  {
+    "ancoraAnterior": "Pulso de ferrofluido",
+    "ancoraSeguinte": "Dobrador de luz",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX01.rbxm",
+    "blocos": [
+      2,
+      1,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX01",
+    "etapas": 1,
+    "expoente": 64,
+    "id": "LojaIntermediariaX01",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Escova de latão",
+    "preco": "37130000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Pulso de ferrofluido",
+    "ancoraSeguinte": "Dobrador de luz",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM01.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM01",
+    "expoente": 66,
+    "id": "LojaIntermediariaM01",
+    "nome": "Mineradora de cassiterita",
+    "preco": "1724000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Mineradora piroclástica",
+    "ancoraSeguinte": "Ressonador de cobre branco",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX02.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX02",
+    "etapas": 1,
+    "expoente": 69,
+    "id": "LojaIntermediariaX02",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pulsador de solda",
+    "preco": "8000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Ressonador de cobre branco",
+    "ancoraSeguinte": "Fornalha de arco solar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF01.rbxm",
+    "blocos": [
+      2,
+      3,
+      1
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF01",
+    "expoente": 73,
+    "id": "LojaIntermediariaF01",
+    "nome": "Fornalha de banho de sal",
+    "preco": "80000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Malha de silício",
+    "ancoraSeguinte": "RS01 Colimador de marés longas",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX03.rbxm",
+    "blocos": [
+      2,
+      2,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX03",
+    "etapas": 2,
+    "expoente": 78,
+    "id": "LojaIntermediariaX03",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Sapatas de flúor",
+    "preco": "4000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Malha de silício",
+    "ancoraSeguinte": "RS01 Colimador de marés longas",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX04.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX04",
+    "etapas": 2,
+    "expoente": 80,
+    "id": "LojaIntermediariaX04",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Grampo de cobre anódico",
+    "preco": "200000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "ancoraAnterior": "Inversor de fluxo",
+    "ancoraSeguinte": "Mineradora antigravitacional",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX05.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX05",
+    "etapas": 1,
+    "expoente": 84,
+    "id": "LojaIntermediariaX05",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Injetor de cromo frio",
+    "preco": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Mineradora antigravitacional",
+    "ancoraSeguinte": "Gaveta de antimônio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM02.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM02",
+    "expoente": 88,
+    "id": "LojaIntermediariaM02",
+    "nome": "Escavadora de cromo",
+    "preco": "80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Fornalha planalto",
+    "ancoraSeguinte": "Difusor de hélio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF02.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF02",
+    "expoente": 96,
+    "id": "LojaIntermediariaF02",
+    "nome": "Fornalha de cromo tubular",
+    "preco": "2530000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Difusor de hélio",
+    "ancoraSeguinte": "Limiar de irídio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX06.rbxm",
+    "blocos": [
+      4,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX06",
+    "etapas": 2,
+    "expoente": 101,
+    "id": "LojaIntermediariaX06",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Prensa de cromo azul",
+    "preco": "126800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Difusor de hélio",
+    "ancoraSeguinte": "Limiar de irídio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX07.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX07",
+    "etapas": 2,
+    "expoente": 103,
+    "id": "LojaIntermediariaX07",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Válvula de néon líquido",
+    "preco": "20100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Difusor de hélio",
+    "ancoraSeguinte": "Limiar de irídio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM03.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM03",
+    "expoente": 105,
+    "id": "LojaIntermediariaM03",
+    "nome": "Mineradora de níquel líquido",
+    "preco": "3185000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Difusor de hélio",
+    "ancoraSeguinte": "Limiar de irídio",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX08.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX08",
+    "etapas": 2,
+    "expoente": 107,
+    "id": "LojaIntermediariaX08",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Colar de níquel capilar",
+    "preco": "504800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Mineradora periastro",
+    "ancoraSeguinte": "Fornalha de nácar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF03.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF03",
+    "expoente": 114,
+    "id": "LojaIntermediariaF03",
+    "nome": "Fornalha de grãos de níquel",
+    "preco": "3713000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Mineradora periastro",
+    "ancoraSeguinte": "Fornalha de nácar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX09.rbxm",
+    "blocos": [
+      3,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX09",
+    "etapas": 2,
+    "expoente": 117,
+    "id": "LojaIntermediariaX09",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Peneira de metal poroso",
+    "preco": "1724000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "Forquilha de césio",
+    "ancoraSeguinte": "RS02 Fornalha de refluxo polar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX10.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX10",
+    "etapas": 2,
+    "expoente": 124,
+    "id": "LojaIntermediariaX10",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Canal de pressão capilar",
+    "preco": "28280000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "ancoraAnterior": "RS02 Fornalha de refluxo polar",
+    "ancoraSeguinte": "Cicatriz de plasma",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF04.rbxm",
+    "blocos": [
+      3,
+      3,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF04",
+    "expoente": 129,
+    "id": "LojaIntermediariaF04",
+    "nome": "Fornalha de têmpera rubra",
+    "preco": "2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "RS02 Fornalha de refluxo polar",
+    "ancoraSeguinte": "Cicatriz de plasma",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX11.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX11",
+    "etapas": 2,
+    "expoente": 131,
+    "id": "LojaIntermediariaX11",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pino de cisalhamento",
+    "preco": "400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM04.rbxm",
+    "blocos": [
+      4,
+      4,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM04",
+    "expoente": 135,
+    "id": "LojaIntermediariaM04",
+    "nome": "Mineradora de minério sinterizado",
+    "preco": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX12.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX12",
+    "etapas": 2,
+    "expoente": 137,
+    "id": "LojaIntermediariaX12",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Desbastador de silicato",
+    "preco": "800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX13.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX13",
+    "etapas": 3,
+    "expoente": 139,
+    "id": "LojaIntermediariaX13",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Grade de escória rubra",
+    "preco": "80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF05.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF05",
+    "expoente": 141,
+    "id": "LojaIntermediariaF05",
+    "nome": "Fornalha a vácuo de fenda",
+    "preco": "8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX14.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX14",
+    "etapas": 2,
+    "expoente": 143,
+    "id": "LojaIntermediariaX14",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Fenda de silicato espelhado",
+    "preco": "800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Cicatriz de plasma",
+    "ancoraSeguinte": "Estação de penumbra",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM05.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM05",
+    "expoente": 145,
+    "id": "LojaIntermediariaM05",
+    "nome": "Escavadora de hematita polida",
+    "preco": "80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Mineradora paralaxe",
+    "ancoraSeguinte": "Fornalha limite polar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX15.rbxm",
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX15",
+    "etapas": 3,
+    "expoente": 153,
+    "id": "LojaIntermediariaX15",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Coroa de gotas metálicas",
+    "preco": "1268000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Mineradora paralaxe",
+    "ancoraSeguinte": "Fornalha limite polar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF06.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF06",
+    "expoente": 155,
+    "id": "LojaIntermediariaF06",
+    "nome": "Fornalha de placas rubras",
+    "preco": "201000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Mineradora paralaxe",
+    "ancoraSeguinte": "Fornalha limite polar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX16.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX16",
+    "etapas": 3,
+    "expoente": 157,
+    "id": "LojaIntermediariaX16",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Palheta de fosfato vítreo",
+    "preco": "31850000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Mineradora paralaxe",
+    "ancoraSeguinte": "Fornalha limite polar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX17.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX17",
+    "etapas": 3,
+    "expoente": 159,
+    "id": "LojaIntermediariaX17",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prensa de escama vítrea",
+    "preco": "5048000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX18.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX18",
+    "etapas": 2,
+    "expoente": 166,
+    "id": "LojaIntermediariaX18",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Relé de ferrita roxa",
+    "preco": "37690000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM06.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM06",
+    "expoente": 169,
+    "id": "LojaIntermediariaM06",
+    "nome": "Mineradora de ferrita orientada",
+    "preco": "17760000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX19.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX19",
+    "etapas": 3,
+    "expoente": 171,
+    "id": "LojaIntermediariaX19",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Indutor de ferrita orientada",
+    "preco": "8365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF07.rbxm",
+    "blocos": [
+      4,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF07",
+    "expoente": 174,
+    "id": "LojaIntermediariaF07",
+    "nome": "Fornalha de arco de ferrita",
+    "preco": "3941000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX20.rbxm",
+    "blocos": [
+      4,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX20",
+    "etapas": 3,
+    "expoente": 177,
+    "id": "LojaIntermediariaX20",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Trilho de histerese",
+    "preco": "1857000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM07.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM07",
+    "expoente": 179,
+    "id": "LojaIntermediariaM07",
+    "nome": "Escavadora de minério coercivo",
+    "preco": "874700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX21.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX21",
+    "etapas": 3,
+    "expoente": 182,
+    "id": "LojaIntermediariaX21",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Porta de inversão magnética",
+    "preco": "412100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF08.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF08",
+    "expoente": 185,
+    "id": "LojaIntermediariaF08",
+    "nome": "Fornalha de banho ferromagnético",
+    "preco": "194100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX22.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX22",
+    "etapas": 3,
+    "expoente": 187,
+    "id": "LojaIntermediariaX22",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Colimador de pó ferrimagnético",
+    "preco": "91460000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX23.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX23",
+    "etapas": 3,
+    "expoente": 190,
+    "id": "LojaIntermediariaX23",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Arranjo de dipolos",
+    "preco": "43090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM08.rbxm",
+    "blocos": [
+      6,
+      4,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM08",
+    "expoente": 193,
+    "id": "LojaIntermediariaM08",
+    "nome": "Mineradora de agulhas magnéticas",
+    "preco": "20300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF09.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF09",
+    "expoente": 195,
+    "id": "LojaIntermediariaF09",
+    "nome": "Fornalha de retorno magnético",
+    "preco": "9564000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX24.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX24",
+    "etapas": 3,
+    "expoente": 198,
+    "id": "LojaIntermediariaX24",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Bobina de polaridade reversa",
+    "preco": "4506000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "Divisor de marfim",
+    "ancoraSeguinte": "RS04 Câmara de forja invertida",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX25.rbxm",
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX25",
+    "etapas": 4,
+    "expoente": 201,
+    "id": "LojaIntermediariaX25",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Pórtico de domínios magnéticos",
+    "preco": "2123000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM09.rbxm",
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM09",
+    "expoente": 206,
+    "id": "LojaIntermediariaM09",
+    "nome": "Escavadora de cristal bifásico",
+    "preco": "501200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX26.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX26",
+    "etapas": 3,
+    "expoente": 209,
+    "id": "LojaIntermediariaX26",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Lente de cristal bifásico",
+    "preco": "251200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX27.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX27",
+    "etapas": 3,
+    "expoente": 212,
+    "id": "LojaIntermediariaX27",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Separador de facetas gêmeas",
+    "preco": "125900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF10.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF10",
+    "expoente": 214,
+    "id": "LojaIntermediariaF10",
+    "nome": "Fornalha de corpos gêmeos",
+    "preco": "63100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX28.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX28",
+    "etapas": 3,
+    "expoente": 217,
+    "id": "LojaIntermediariaX28",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Malha de venas prismáticas",
+    "preco": "31620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX29.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX29",
+    "etapas": 3,
+    "expoente": 220,
+    "id": "LojaIntermediariaX29",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Bomba de vidro polar",
+    "preco": "15850000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM10.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM10",
+    "expoente": 222,
+    "id": "LojaIntermediariaM10",
+    "nome": "Mineradora de veios lamelares",
+    "preco": "7943000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX30.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX30",
+    "etapas": 4,
+    "expoente": 225,
+    "id": "LojaIntermediariaX30",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Viga de tração de vidro",
+    "preco": "3981000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF11.rbxm",
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF11",
+    "expoente": 228,
+    "id": "LojaIntermediariaF11",
+    "nome": "Fornalha de fibras prismáticas",
+    "preco": "1995000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX31.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX31",
+    "etapas": 3,
+    "expoente": 231,
+    "id": "LojaIntermediariaX31",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Reator de clivagem térmica",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX32.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX32",
+    "etapas": 4,
+    "expoente": 233,
+    "id": "LojaIntermediariaX32",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Ressonador de camada dupla",
+    "preco": "501200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM11.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM11",
+    "expoente": 236,
+    "id": "LojaIntermediariaM11",
+    "nome": "Escavadora de rocha metaestável",
+    "preco": "251200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX33.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX33",
+    "etapas": 4,
+    "expoente": 239,
+    "id": "LojaIntermediariaX33",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Trefila de fase vítrea",
+    "preco": "125900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF12.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF12",
+    "expoente": 241,
+    "id": "LojaIntermediariaF12",
+    "nome": "Fornalha de face estável",
+    "preco": "63100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX34.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX34",
+    "etapas": 4,
+    "expoente": 244,
+    "id": "LojaIntermediariaX34",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Anel de fase trincada",
+    "preco": "31620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX35.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX35",
+    "etapas": 4,
+    "expoente": 247,
+    "id": "LojaIntermediariaX35",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Coletor de poeira bifásica",
+    "preco": "15850000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM12.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM12",
+    "expoente": 249,
+    "id": "LojaIntermediariaM12",
+    "nome": "Mineradora de basalto refratado",
+    "preco": "7943000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX36.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX36",
+    "etapas": 4,
+    "expoente": 252,
+    "id": "LojaIntermediariaX36",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Compensador de tensão prismática",
+    "preco": "3981000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS04 Câmara de forja invertida",
+    "ancoraSeguinte": "RS05 Portal do último limiar",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX37.rbxm",
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX37",
+    "etapas": 4,
+    "expoente": 255,
+    "id": "LojaIntermediariaX37",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Pórtico de fase estável",
+    "preco": "1995000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF13.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF13",
+    "expoente": 260,
+    "id": "LojaIntermediariaF13",
+    "nome": "Fornalha de sal dourado",
+    "preco": "281800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX38.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX38",
+    "etapas": 3,
+    "expoente": 262,
+    "id": "LojaIntermediariaX38",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Prensa de fronteira térmica",
+    "preco": "79430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM13.rbxm",
+    "blocos": [
+      7,
+      5,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM13",
+    "expoente": 265,
+    "id": "LojaIntermediariaM13",
+    "nome": "Mineradora de veios dourados",
+    "preco": "22390000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX39.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX39",
+    "etapas": 4,
+    "expoente": 267,
+    "id": "LojaIntermediariaX39",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Escudo de sopro quente",
+    "preco": "6310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX40.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX40",
+    "etapas": 4,
+    "expoente": 270,
+    "id": "LojaIntermediariaX40",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Lente de fusão espelhada",
+    "preco": "1778000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF14.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF14",
+    "expoente": 272,
+    "id": "LojaIntermediariaF14",
+    "nome": "Fornalha de fusão espelhada",
+    "preco": "501200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX41.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX41",
+    "etapas": 4,
+    "expoente": 275,
+    "id": "LojaIntermediariaX41",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Válvula de metal incandescente",
+    "preco": "141300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM14.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM14",
+    "expoente": 277,
+    "id": "LojaIntermediariaM14",
+    "nome": "Escavadora de estratos radiantes",
+    "preco": "39810000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX42.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX42",
+    "etapas": 4,
+    "expoente": 280,
+    "id": "LojaIntermediariaX42",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Colar de refluxo luminoso",
+    "preco": "11220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX43.rbxm",
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX43",
+    "etapas": 4,
+    "expoente": 282,
+    "id": "LojaIntermediariaX43",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Colisor de fluxo térmico",
+    "preco": "3162000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF15.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF15",
+    "expoente": 284,
+    "id": "LojaIntermediariaF15",
+    "nome": "Fornalha de descarga radial",
+    "preco": "891300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX44.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX44",
+    "etapas": 4,
+    "expoente": 287,
+    "id": "LojaIntermediariaX44",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Grade de retorno incandescente",
+    "preco": "251200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM15.rbxm",
+    "blocos": [
+      8,
+      6,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM15",
+    "expoente": 289,
+    "id": "LojaIntermediariaM15",
+    "nome": "Mineradora de escória branca",
+    "preco": "70790000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX45.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX45",
+    "etapas": 5,
+    "expoente": 292,
+    "id": "LojaIntermediariaX45",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Concentrador de chama branca",
+    "preco": "19950000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX46.rbxm",
+    "blocos": [
+      7,
+      7,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX46",
+    "etapas": 5,
+    "expoente": 294,
+    "id": "LojaIntermediariaX46",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Canal de arco contínuo",
+    "preco": "5623000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaF16.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LIF16",
+    "expoente": 297,
+    "id": "LojaIntermediariaF16",
+    "nome": "Fornalha de reação contínua",
+    "preco": "1585000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaM16.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LIM16",
+    "expoente": 299,
+    "id": "LojaIntermediariaM16",
+    "nome": "Escavadora do primeiro limiar",
+    "preco": "446700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX47.rbxm",
+    "blocos": [
+      8,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX47",
+    "etapas": 5,
+    "expoente": 302,
+    "id": "LojaIntermediariaX47",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Ressonador de fusão controlada",
+    "preco": "125900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "ancoraAnterior": "RS05 Portal do último limiar",
+    "ancoraSeguinte": "Portal de Van Allen",
+    "arquivo": "modelos/loja-intermediaria/assets/LojaIntermediariaX48.rbxm",
+    "blocos": [
+      8,
+      8,
+      7
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LIX48",
+    "etapas": 5,
+    "expoente": 304,
+    "id": "LojaIntermediariaX48",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Pórtico do primeiro limiar",
+    "preco": "35480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  }
+]

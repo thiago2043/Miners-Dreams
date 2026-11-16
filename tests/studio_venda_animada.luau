@@ -17,7 +17,7 @@ task.spawn(function()
 	local hud, vendedor
 	local ok, erro = xpcall(function()
 		local ficha = novo(C.FichaMaquina).Descrever(require(game.ReplicatedStorage.Shared.CatalogoMaquinas).PrensaMinerio)
-		assert(ficha:find("Modificação: ×2", 1, true) and ficha:find("Limite: $100", 1, true))
+		assert(ficha:find("Modificação: ×1,4", 1, true) and ficha:find("Limite: 4", 1, true))
 		assert(not ficha:find("passagem") and not ficha:find("valor"))
 		local jogador = {SetAttribute = function(self, k, v) self[k] = v end}
 		local perfil = {Data = {Dinheiro = "0"}, IsActive = function() return true end}

@@ -1,0 +1,2322 @@
+[
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MineradoraDoZenite.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM01",
+    "id": "MineradoraDoZenite",
+    "nome": "Mineradora do zênite",
+    "origem": "Ascensao",
+    "transicao": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EscavadoraCoroaDeFerro.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM02",
+    "id": "EscavadoraCoroaDeFerro",
+    "nome": "Escavadora coroa de ferro",
+    "origem": "Ascensao",
+    "transicao": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MineradoraAbobadaAzul.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM03",
+    "id": "MineradoraAbobadaAzul",
+    "nome": "Mineradora abóbada azul",
+    "origem": "Ascensao",
+    "transicao": 11
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EscavadoraDaFalhaNegra.rbxm",
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM04",
+    "id": "EscavadoraDaFalhaNegra",
+    "nome": "Escavadora da falha negra",
+    "origem": "Ascensao",
+    "transicao": 16
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MineradoraArcoDeLuz.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM05",
+    "id": "MineradoraArcoDeLuz",
+    "nome": "Mineradora arco de luz",
+    "origem": "Ascensao",
+    "transicao": 21
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EscavadoraDoPoloCeleste.rbxm",
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM06",
+    "id": "EscavadoraDoPoloCeleste",
+    "nome": "Escavadora do polo celeste",
+    "origem": "Ascensao",
+    "transicao": 26
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MineradoraDaCoroaRubra.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM07",
+    "id": "MineradoraDaCoroaRubra",
+    "nome": "Mineradora da coroa rubra",
+    "origem": "Ascensao",
+    "transicao": 31
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EscavadoraDeHorizonteDuplo.rbxm",
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM08",
+    "id": "EscavadoraDeHorizonteDuplo",
+    "nome": "Escavadora de horizonte duplo",
+    "origem": "Ascensao",
+    "transicao": 36
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MineradoraDaOrbitaClara.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM09",
+    "id": "MineradoraDaOrbitaClara",
+    "nome": "Mineradora da órbita clara",
+    "origem": "Ascensao",
+    "transicao": 41
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EscavadoraDoVazioDourado.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "AM10",
+    "id": "EscavadoraDoVazioDourado",
+    "nome": "Escavadora do vazio dourado",
+    "origem": "Ascensao",
+    "transicao": 46
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDoAlvorecer.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF01",
+    "id": "FornalhaDoAlvorecer",
+    "nome": "Fornalha do alvorecer",
+    "origem": "Ascensao",
+    "transicao": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDaVigilia.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF02",
+    "id": "FornalhaDaVigilia",
+    "nome": "Fornalha da vigília",
+    "origem": "Ascensao",
+    "transicao": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDoVentoPolar.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF03",
+    "id": "FornalhaDoVentoPolar",
+    "nome": "Fornalha do vento polar",
+    "origem": "Ascensao",
+    "transicao": 13
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDeChamaRosa.rbxm",
+    "blocos": [
+      4,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF04",
+    "id": "FornalhaDeChamaRosa",
+    "nome": "Fornalha de chama rosa",
+    "origem": "Ascensao",
+    "transicao": 18
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDaDobraClara.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF05",
+    "id": "FornalhaDaDobraClara",
+    "nome": "Fornalha da dobra clara",
+    "origem": "Ascensao",
+    "transicao": 23
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDoCraterio.rbxm",
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF06",
+    "id": "FornalhaDoCraterio",
+    "nome": "Fornalha do craterio",
+    "origem": "Ascensao",
+    "transicao": 28
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDaAuroraEscura.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF07",
+    "id": "FornalhaDaAuroraEscura",
+    "nome": "Fornalha da aurora escura",
+    "origem": "Ascensao",
+    "transicao": 33
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDaBordaBranca.rbxm",
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF08",
+    "id": "FornalhaDaBordaBranca",
+    "nome": "Fornalha da borda branca",
+    "origem": "Ascensao",
+    "transicao": 38
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDaEstrelaOca.rbxm",
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF09",
+    "id": "FornalhaDaEstrelaOca",
+    "nome": "Fornalha da estrela oca",
+    "origem": "Ascensao",
+    "transicao": 43
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FornalhaDoSolImovel.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "AF10",
+    "id": "FornalhaDoSolImovel",
+    "nome": "Fornalha do sol imóvel",
+    "origem": "Ascensao",
+    "transicao": 48
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FiltroDaAuroraVerde.rbxm",
+    "blocos": [
+      2,
+      2,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX01",
+    "etapas": 1,
+    "id": "FiltroDaAuroraVerde",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Filtro da aurora verde",
+    "origem": "Ascensao",
+    "transicao": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/GarraDeLuzFria.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX02",
+    "etapas": 1,
+    "id": "GarraDeLuzFria",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Garra de luz fria",
+    "origem": "Ascensao",
+    "transicao": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CamaraDaAgulhaSolar.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX03",
+    "etapas": 1,
+    "id": "CamaraDaAgulhaSolar",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Câmara da agulha solar",
+    "origem": "Ascensao",
+    "transicao": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/VetorDaNebulosa.rbxm",
+    "blocos": [
+      4,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX04",
+    "etapas": 2,
+    "id": "VetorDaNebulosa",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Vetor da nebulosa",
+    "origem": "Ascensao",
+    "transicao": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/PolarizadorDoZefiro.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX05",
+    "etapas": 2,
+    "id": "PolarizadorDoZefiro",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Polarizador do zéfiro",
+    "origem": "Ascensao",
+    "transicao": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/PrismaDeBrasaAzul.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX06",
+    "etapas": 1,
+    "id": "PrismaDeBrasaAzul",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Prisma de brasa azul",
+    "origem": "Ascensao",
+    "transicao": 10
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CondutorDaOrla.rbxm",
+    "blocos": [
+      3,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX07",
+    "etapas": 2,
+    "id": "CondutorDaOrla",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Condutor da orla",
+    "origem": "Ascensao",
+    "transicao": 12
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MalhaDoAltoVacuo.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX08",
+    "etapas": 2,
+    "id": "MalhaDoAltoVacuo",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Malha do alto vácuo",
+    "origem": "Ascensao",
+    "transicao": 14
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/MembranaLuminosa.rbxm",
+    "blocos": [
+      4,
+      3,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX09",
+    "etapas": 2,
+    "id": "MembranaLuminosa",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Membrana luminosa",
+    "origem": "Ascensao",
+    "transicao": 15
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FoleDaBordaSolar.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX10",
+    "etapas": 2,
+    "id": "FoleDaBordaSolar",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Fole da borda solar",
+    "origem": "Ascensao",
+    "transicao": 17
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/TrefilaDoEclipse.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX11",
+    "etapas": 2,
+    "id": "TrefilaDoEclipse",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Trefila do eclipse",
+    "origem": "Ascensao",
+    "transicao": 19
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/PonteDeLuzPolar.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX12",
+    "etapas": 2,
+    "id": "PonteDeLuzPolar",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Ponte de luz polar",
+    "origem": "Ascensao",
+    "transicao": 20
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/PeneiraDaMagnetosfera.rbxm",
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX13",
+    "etapas": 1,
+    "id": "PeneiraDaMagnetosfera",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Peneira da magnetosfera",
+    "origem": "Ascensao",
+    "transicao": 22
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CampoDeVitrificacao.rbxm",
+    "blocos": [
+      4,
+      5,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX14",
+    "etapas": 3,
+    "id": "CampoDeVitrificacao",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Campo de vitrificação",
+    "origem": "Ascensao",
+    "transicao": 24
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/ValvulaDePlasmaClaro.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX15",
+    "etapas": 2,
+    "id": "ValvulaDePlasmaClaro",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Válvula de plasma claro",
+    "origem": "Ascensao",
+    "transicao": 25
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FendaDoSolsticio.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX16",
+    "etapas": 3,
+    "id": "FendaDoSolsticio",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Fenda do solstício",
+    "origem": "Ascensao",
+    "transicao": 27
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/AnelDaMareIonizada.rbxm",
+    "blocos": [
+      4,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX17",
+    "etapas": 2,
+    "id": "AnelDaMareIonizada",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Anel da maré ionizada",
+    "origem": "Ascensao",
+    "transicao": 29
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/FreioDeParticulas.rbxm",
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX18",
+    "etapas": 2,
+    "id": "FreioDeParticulas",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Freio de partículas",
+    "origem": "Ascensao",
+    "transicao": 30
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CrivoDeCristalAzul.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX19",
+    "etapas": 3,
+    "id": "CrivoDeCristalAzul",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Crivo de cristal azul",
+    "origem": "Ascensao",
+    "transicao": 32
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CascataDaPenumbra.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX20",
+    "etapas": 3,
+    "id": "CascataDaPenumbra",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Cascata da penumbra",
+    "origem": "Ascensao",
+    "transicao": 34
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/EstacaoDaCoroaVioleta.rbxm",
+    "blocos": [
+      5,
+      6,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX21",
+    "etapas": 3,
+    "id": "EstacaoDaCoroaVioleta",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Estação da coroa violeta",
+    "origem": "Ascensao",
+    "transicao": 35
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/BolhaDeHeliopausa.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX22",
+    "etapas": 3,
+    "id": "BolhaDeHeliopausa",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Bolha de heliopausa",
+    "origem": "Ascensao",
+    "transicao": 37
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/RetificadorDaLuzNegra.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX23",
+    "etapas": 3,
+    "id": "RetificadorDaLuzNegra",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Retificador da luz negra",
+    "origem": "Ascensao",
+    "transicao": 39
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/ReatorDoNorteMagnetico.rbxm",
+    "blocos": [
+      6,
+      6,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX24",
+    "etapas": 3,
+    "id": "ReatorDoNorteMagnetico",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Reator do norte magnético",
+    "origem": "Ascensao",
+    "transicao": 40
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/DobradicaDaOrbita.rbxm",
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX25",
+    "etapas": 3,
+    "id": "DobradicaDaOrbita",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Dobradiça da órbita",
+    "origem": "Ascensao",
+    "transicao": 42
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/ObeliscoDeChamaFria.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX26",
+    "etapas": 3,
+    "id": "ObeliscoDeChamaFria",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Obelisco de chama fria",
+    "origem": "Ascensao",
+    "transicao": 44
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/ColisorDaCoroaBranca.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX27",
+    "etapas": 3,
+    "id": "ColisorDaCoroaBranca",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Colisor da coroa branca",
+    "origem": "Ascensao",
+    "transicao": 45
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/CamaraDeAurorasGemeas.rbxm",
+    "blocos": [
+      6,
+      7,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX28",
+    "etapas": 4,
+    "id": "CamaraDeAurorasGemeas",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Câmara de auroras gêmeas",
+    "origem": "Ascensao",
+    "transicao": 47
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/TorreDaMagnetocauda.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX29",
+    "etapas": 4,
+    "id": "TorreDaMagnetocauda",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Torre da magnetocauda",
+    "origem": "Ascensao",
+    "transicao": 49
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Ascensao/NucleoDaOrbitaDourada.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "AX30",
+    "etapas": 4,
+    "id": "NucleoDaOrbitaDourada",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Núcleo da órbita dourada",
+    "origem": "Ascensao",
+    "transicao": 50
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/EscavadoraDeArcoForjado.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM01",
+    "id": "EscavadoraDeArcoForjado",
+    "nome": "Escavadora de arco forjado",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraDasDuasMares.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM02",
+    "id": "MineradoraDasDuasMares",
+    "nome": "Mineradora das duas marés",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/EscavadoraDeCobaltoBranco.rbxm",
+    "blocos": [
+      6,
+      4,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM03",
+    "id": "EscavadoraDeCobaltoBranco",
+    "nome": "Escavadora de cobalto branco",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraDeLigaEclipse.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM04",
+    "id": "MineradoraDeLigaEclipse",
+    "nome": "Mineradora de liga eclipse",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/EscavadoraDeReleTriplo.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM05",
+    "id": "EscavadoraDeReleTriplo",
+    "nome": "Escavadora de relé triplo",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraDaTramaPolar.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM06",
+    "id": "MineradoraDaTramaPolar",
+    "nome": "Mineradora da trama polar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/EscavadoraDeContrafase.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM07",
+    "id": "EscavadoraDeContrafase",
+    "nome": "Escavadora de contrafase",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraDeNexoInterno.rbxm",
+    "blocos": [
+      7,
+      7,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM08",
+    "id": "MineradoraDeNexoInterno",
+    "nome": "Mineradora de nexo interno",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraDeNexoExterno.rbxm",
+    "blocos": [
+      8,
+      6,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM09",
+    "id": "MineradoraDeNexoExterno",
+    "nome": "Mineradora de nexo externo",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MineradoraSinteseDaAscensao.rbxm",
+    "blocos": [
+      9,
+      8,
+      8
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CAM10",
+    "id": "MineradoraSinteseDaAscensao",
+    "nome": "Mineradora síntese da ascensão",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeArcoForjado.rbxm",
+    "blocos": [
+      4,
+      4,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF01",
+    "id": "FornalhaDeArcoForjado",
+    "nome": "Fornalha de arco forjado",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeNacarIonico.rbxm",
+    "blocos": [
+      4,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF02",
+    "id": "FornalhaDeNacarIonico",
+    "nome": "Fornalha de nácar iônico",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDaTramaCarmim.rbxm",
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF03",
+    "id": "FornalhaDaTramaCarmim",
+    "nome": "Fornalha da trama carmim",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeLigaCeleste.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF04",
+    "id": "FornalhaDeLigaCeleste",
+    "nome": "Fornalha de liga celeste",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDaCaldeiraPolar.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF05",
+    "id": "FornalhaDaCaldeiraPolar",
+    "nome": "Fornalha da caldeira polar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeCanaisTriplos.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF06",
+    "id": "FornalhaDeCanaisTriplos",
+    "nome": "Fornalha de canais triplos",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDaForjaBranca.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF07",
+    "id": "FornalhaDaForjaBranca",
+    "nome": "Fornalha da forja branca",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeNexoTermico.rbxm",
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF08",
+    "id": "FornalhaDeNexoTermico",
+    "nome": "Fornalha de nexo térmico",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaDeNexoIonico.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF09",
+    "id": "FornalhaDeNexoIonico",
+    "nome": "Fornalha de nexo iônico",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FornalhaSinteseDaAscensao.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CAF10",
+    "id": "FornalhaSinteseDaAscensao",
+    "nome": "Fornalha síntese da ascensão",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/LacreDePrataForjada.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX01",
+    "etapas": 1,
+    "id": "LacreDePrataForjada",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Lacre de prata forjada",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/GrampoDeLigaPolar.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX02",
+    "etapas": 2,
+    "id": "GrampoDeLigaPolar",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Grampo de liga polar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/ReleDeBrasaBranca.rbxm",
+    "blocos": [
+      4,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX03",
+    "etapas": 1,
+    "id": "ReleDeBrasaBranca",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Relé de brasa branca",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/PenteDeLuzForjada.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX04",
+    "etapas": 2,
+    "id": "PenteDeLuzForjada",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pente de luz forjada",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/CruzetaDeNacar.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX05",
+    "etapas": 2,
+    "id": "CruzetaDeNacar",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Cruzeta de nácar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/PrismaDeLigaSolar.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX06",
+    "etapas": 2,
+    "id": "PrismaDeLigaSolar",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Prisma de liga solar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FatiaDeCobaltoBranco.rbxm",
+    "blocos": [
+      4,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX07",
+    "etapas": 2,
+    "id": "FatiaDeCobaltoBranco",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Fatia de cobalto branco",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/GeradorDeMareForjada.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX08",
+    "etapas": 2,
+    "id": "GeradorDeMareForjada",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Gerador de maré forjada",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/LaminaDoEclipseForjado.rbxm",
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX09",
+    "etapas": 2,
+    "id": "LaminaDoEclipseForjado",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Lâmina do eclipse forjado",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/GaiolaDeArgonioClaro.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX10",
+    "etapas": 2,
+    "id": "GaiolaDeArgonioClaro",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Gaiola de argônio claro",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/FendaDoReleTriplo.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX11",
+    "etapas": 3,
+    "id": "FendaDoReleTriplo",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Fenda do relé triplo",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/CelulaDeLigaClara.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX12",
+    "etapas": 3,
+    "id": "CelulaDeLigaClara",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Célula de liga clara",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/ArcoDeVaporForjado.rbxm",
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX13",
+    "etapas": 3,
+    "id": "ArcoDeVaporForjado",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Arco de vapor forjado",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/CrivoDaTramaVioleta.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX14",
+    "etapas": 3,
+    "id": "CrivoDaTramaVioleta",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Crivo da trama violeta",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/MatrizDeHelioBranco.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX15",
+    "etapas": 3,
+    "id": "MatrizDeHelioBranco",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Matriz de hélio branco",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/PorticoDeLigaIonica.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX16",
+    "etapas": 3,
+    "id": "PorticoDeLigaIonica",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Pórtico de liga iônica",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/BobinaDaForjaRubra.rbxm",
+    "blocos": [
+      5,
+      6,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX17",
+    "etapas": 3,
+    "id": "BobinaDaForjaRubra",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Bobina da forja rubra",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/PolarizadorDeNexoClaro.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX18",
+    "etapas": 3,
+    "id": "PolarizadorDeNexoClaro",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Polarizador de nexo claro",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/TrefilaDeNexoRubra.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX19",
+    "etapas": 3,
+    "id": "TrefilaDeNexoRubra",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Trefila de nexo rubra",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/TurbinaDeNexoPolar.rbxm",
+    "blocos": [
+      6,
+      6,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX20",
+    "etapas": 3,
+    "id": "TurbinaDeNexoPolar",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Turbina de nexo polar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDeCondutores.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX21",
+    "etapas": 3,
+    "id": "RelicarioDeCondutores",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Relicário de condutores",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDeProcessadores.rbxm",
+    "blocos": [
+      6,
+      7,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX22",
+    "etapas": 4,
+    "id": "RelicarioDeProcessadores",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Relicário de processadores",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDeEmissores.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX23",
+    "etapas": 4,
+    "id": "RelicarioDeEmissores",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Relicário de emissores",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDeRessonadores.rbxm",
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX24",
+    "etapas": 4,
+    "id": "RelicarioDeRessonadores",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Relicário de ressonadores",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDeCompressores.rbxm",
+    "blocos": [
+      6,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX25",
+    "etapas": 4,
+    "id": "RelicarioDeCompressores",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Relicário de compressores",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/RelicarioDePortais.rbxm",
+    "blocos": [
+      7,
+      7,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX26",
+    "etapas": 4,
+    "id": "RelicarioDePortais",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Relicário de portais",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/NexoDaForjaSolar.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX27",
+    "etapas": 4,
+    "id": "NexoDaForjaSolar",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Nexo da forja solar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/NexoDaForjaPolar.rbxm",
+    "blocos": [
+      8,
+      6,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX28",
+    "etapas": 4,
+    "id": "NexoDaForjaPolar",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Nexo da forja polar",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/NexoDaForjaAstral.rbxm",
+    "blocos": [
+      8,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX29",
+    "etapas": 4,
+    "id": "NexoDaForjaAstral",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Nexo da forja astral",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Craft/ModificadorSinteseDaAscensao.rbxm",
+    "blocos": [
+      9,
+      8,
+      7
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CAX30",
+    "etapas": 5,
+    "id": "ModificadorSinteseDaAscensao",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Modificador síntese da ascensão",
+    "origem": "Craft"
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM01.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM01",
+    "id": "CraftLojaAscM01",
+    "nome": "Escavadora de zircônia laminada",
+    "origem": "Intermediarios",
+    "serieLoja": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM02.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM02",
+    "id": "CraftLojaAscM02",
+    "nome": "Escavadora de banho sinterizado",
+    "origem": "Intermediarios",
+    "serieLoja": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM03.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM03",
+    "id": "CraftLojaAscM03",
+    "nome": "Escavadora de liga solar",
+    "origem": "Intermediarios",
+    "serieLoja": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM04.rbxm",
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM04",
+    "id": "CraftLojaAscM04",
+    "nome": "Escavadora de quartzo temperado",
+    "origem": "Intermediarios",
+    "serieLoja": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM05.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM05",
+    "id": "CraftLojaAscM05",
+    "nome": "Escavadora de lastro refratário",
+    "origem": "Intermediarios",
+    "serieLoja": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM06.rbxm",
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM06",
+    "id": "CraftLojaAscM06",
+    "nome": "Escavadora de cavidades gêmeas",
+    "origem": "Intermediarios",
+    "serieLoja": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM07.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM07",
+    "id": "CraftLojaAscM07",
+    "nome": "Escavadora de partículas rarefeitas",
+    "origem": "Intermediarios",
+    "serieLoja": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM08.rbxm",
+    "blocos": [
+      6,
+      7,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM08",
+    "id": "CraftLojaAscM08",
+    "nome": "Escavadora de espelhos convergentes",
+    "origem": "Intermediarios",
+    "serieLoja": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM09.rbxm",
+    "blocos": [
+      8,
+      6,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM09",
+    "id": "CraftLojaAscM09",
+    "nome": "Escavadora do horizonte reverso",
+    "origem": "Intermediarios",
+    "serieLoja": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscM10.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "CIM10",
+    "id": "CraftLojaAscM10",
+    "nome": "Escavadora de passado imóvel",
+    "origem": "Intermediarios",
+    "serieLoja": 10
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF01.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF01",
+    "id": "CraftLojaAscF01",
+    "nome": "Fornalha de sinterização dupla",
+    "origem": "Intermediarios",
+    "serieLoja": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF02.rbxm",
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF02",
+    "id": "CraftLojaAscF02",
+    "nome": "Fornalha de contrafluxo criogênico",
+    "origem": "Intermediarios",
+    "serieLoja": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF03.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF03",
+    "id": "CraftLojaAscF03",
+    "nome": "Fornalha de tungstênio radiante",
+    "origem": "Intermediarios",
+    "serieLoja": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF04.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF04",
+    "id": "CraftLojaAscF04",
+    "nome": "Fornalha de faces birrefringentes",
+    "origem": "Intermediarios",
+    "serieLoja": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF05.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF05",
+    "id": "CraftLojaAscF05",
+    "nome": "Fornalha de poço refratário",
+    "origem": "Intermediarios",
+    "serieLoja": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF06.rbxm",
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF06",
+    "id": "CraftLojaAscF06",
+    "nome": "Fornalha de expansão pulsada",
+    "origem": "Intermediarios",
+    "serieLoja": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF07.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF07",
+    "id": "CraftLojaAscF07",
+    "nome": "Fornalha de aniquilação pulsada",
+    "origem": "Intermediarios",
+    "serieLoja": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF08.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF08",
+    "id": "CraftLojaAscF08",
+    "nome": "Fornalha de foco duplo",
+    "origem": "Intermediarios",
+    "serieLoja": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF09.rbxm",
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF09",
+    "id": "CraftLojaAscF09",
+    "nome": "Fornalha de gradiente focal",
+    "origem": "Intermediarios",
+    "serieLoja": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscF10.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "CIF10",
+    "id": "CraftLojaAscF10",
+    "nome": "Fornalha de ignição imutável",
+    "origem": "Intermediarios",
+    "serieLoja": 10
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX01.rbxm",
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX01",
+    "etapas": 2,
+    "id": "CraftLojaAscX01",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Laminador de caulim",
+    "origem": "Intermediarios",
+    "serieLoja": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX02.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX02",
+    "etapas": 2,
+    "id": "CraftLojaAscX02",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pórtico de têmpera cerâmica",
+    "origem": "Intermediarios",
+    "serieLoja": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX03.rbxm",
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX03",
+    "etapas": 2,
+    "id": "CraftLojaAscX03",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Crivo de magnesita fundida",
+    "origem": "Intermediarios",
+    "serieLoja": 1
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX04.rbxm",
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX04",
+    "etapas": 2,
+    "id": "CraftLojaAscX04",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Injetor de hélio vitrificado",
+    "origem": "Intermediarios",
+    "serieLoja": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX05.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX05",
+    "etapas": 2,
+    "id": "CraftLojaAscX05",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prensa de zircônia superfluida",
+    "origem": "Intermediarios",
+    "serieLoja": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX06.rbxm",
+    "blocos": [
+      3,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX06",
+    "etapas": 2,
+    "id": "CraftLojaAscX06",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Anel de magnesita criogênica",
+    "origem": "Intermediarios",
+    "serieLoja": 2
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX07.rbxm",
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX07",
+    "etapas": 2,
+    "id": "CraftLojaAscX07",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Trefila de tungstênio fundido",
+    "origem": "Intermediarios",
+    "serieLoja": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX08.rbxm",
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX08",
+    "etapas": 3,
+    "id": "CraftLojaAscX08",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Bobina de sopro solar",
+    "origem": "Intermediarios",
+    "serieLoja": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX09.rbxm",
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX09",
+    "etapas": 2,
+    "id": "CraftLojaAscX09",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Selo de fundente dourado",
+    "origem": "Intermediarios",
+    "serieLoja": 3
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX10.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX10",
+    "etapas": 3,
+    "id": "CraftLojaAscX10",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prisma de tungstênio birrefringente",
+    "origem": "Intermediarios",
+    "serieLoja": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX11.rbxm",
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX11",
+    "etapas": 3,
+    "id": "CraftLojaAscX11",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Colimador de cobre facetado",
+    "origem": "Intermediarios",
+    "serieLoja": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX12.rbxm",
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX12",
+    "etapas": 3,
+    "id": "CraftLojaAscX12",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Cascata de quartzo solar",
+    "origem": "Intermediarios",
+    "serieLoja": 4
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX13.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX13",
+    "etapas": 3,
+    "id": "CraftLojaAscX13",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Balança de massa facetada",
+    "origem": "Intermediarios",
+    "serieLoja": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX14.rbxm",
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX14",
+    "etapas": 3,
+    "id": "CraftLojaAscX14",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Pêndulo de liga lapidada",
+    "origem": "Intermediarios",
+    "serieLoja": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX15.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX15",
+    "etapas": 3,
+    "id": "CraftLojaAscX15",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Colisor de espelhos criogênicos",
+    "origem": "Intermediarios",
+    "serieLoja": 5
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX16.rbxm",
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX16",
+    "etapas": 3,
+    "id": "CraftLojaAscX16",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Válvula de néon rarefeito",
+    "origem": "Intermediarios",
+    "serieLoja": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX17.rbxm",
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX17",
+    "etapas": 3,
+    "id": "CraftLojaAscX17",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Ejetor de feixe rarefeito",
+    "origem": "Intermediarios",
+    "serieLoja": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX18.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX18",
+    "etapas": 3,
+    "id": "CraftLojaAscX18",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Reator de pulso adiabático",
+    "origem": "Intermediarios",
+    "serieLoja": 6
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX19.rbxm",
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX19",
+    "etapas": 3,
+    "id": "CraftLojaAscX19",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Sonda de cavidade neutra",
+    "origem": "Intermediarios",
+    "serieLoja": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX20.rbxm",
+    "blocos": [
+      6,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX20",
+    "etapas": 3,
+    "id": "CraftLojaAscX20",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Janela de captura reversa",
+    "origem": "Intermediarios",
+    "serieLoja": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX21.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX21",
+    "etapas": 4,
+    "id": "CraftLojaAscX21",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Retificador de antineutrinos",
+    "origem": "Intermediarios",
+    "serieLoja": 7
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX22.rbxm",
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX22",
+    "etapas": 3,
+    "id": "CraftLojaAscX22",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Colimador de vidro esférico",
+    "origem": "Intermediarios",
+    "serieLoja": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX23.rbxm",
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX23",
+    "etapas": 4,
+    "id": "CraftLojaAscX23",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Estação de foco coaxial",
+    "origem": "Intermediarios",
+    "serieLoja": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX24.rbxm",
+    "blocos": [
+      7,
+      4,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX24",
+    "etapas": 4,
+    "id": "CraftLojaAscX24",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Janela de refração concêntrica",
+    "origem": "Intermediarios",
+    "serieLoja": 8
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX25.rbxm",
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX25",
+    "etapas": 4,
+    "id": "CraftLojaAscX25",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Ordenador de reflexos térmicos",
+    "origem": "Intermediarios",
+    "serieLoja": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX26.rbxm",
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX26",
+    "etapas": 4,
+    "id": "CraftLojaAscX26",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Câmara de espelhos entrópicos",
+    "origem": "Intermediarios",
+    "serieLoja": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX27.rbxm",
+    "blocos": [
+      6,
+      7,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX27",
+    "etapas": 4,
+    "id": "CraftLojaAscX27",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Arco de decaimento refratado",
+    "origem": "Intermediarios",
+    "serieLoja": 9
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX28.rbxm",
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX28",
+    "etapas": 5,
+    "id": "CraftLojaAscX28",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Reator de óptica imutável",
+    "origem": "Intermediarios",
+    "serieLoja": 10
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX29.rbxm",
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX29",
+    "etapas": 5,
+    "id": "CraftLojaAscX29",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Pórtico de massa atemporal",
+    "origem": "Intermediarios",
+    "serieLoja": 10
+  },
+  {
+    "arquivo": "modelos/ascensao/assets/Intermediarios/CraftLojaAscX30.rbxm",
+    "blocos": [
+      8,
+      8,
+      7
+    ],
+    "categoria": "Modificadores",
+    "codigo": "CIX30",
+    "etapas": 5,
+    "id": "CraftLojaAscX30",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Crisol do tempo suspenso",
+    "origem": "Intermediarios",
+    "serieLoja": 10
+  }
+]

@@ -371,13 +371,15 @@ do
 	local maquina={ObterModelo=function() return m end,ObterTerreno=function() return plot end,
 		ObterSimulacao=function() return sim end,EstaNoTerreno=function() return true end,ObterNivelUpgrade=function() return 0 end}
 	local mod=carregar("src/server/Componentes/ModificadorMinerio").new(maquina,
-		{TipoModificador="V99",Sensor="SensorEntrada",Multiplicador="2",ValorMaximo="100"})
+		{TipoModificador="V99",Sensor="SensorEntrada",Multiplicador="2",LimiteUsos=1})
 	mod:Atualizar(0)
 	local rejeitado=criarMinerio(plot,CFrame.new(4,3,0),{Valor="100",Tamanho={.75,.75,.75}})
+	rejeitado:IncrementarUsosModificador("UsosModificador_V99")
 	sim:RegistrarMinerio(rejeitado,1,{})
 	sim:Avancar(Simulacao.Passo)
 	assert(m:GetAttribute("ModificadorAtivo")==true,"Estar perto da faixa não basta para desligar.")
 	local atravessa=criarMinerio(plot,CFrame.new(0,3,0),{Valor="100",Tamanho={.75,.75,.75}})
+	atravessa:IncrementarUsosModificador("UsosModificador_V99")
 	sim:RegistrarMinerio(atravessa,1,{}); sim:Avancar(Simulacao.Passo)
 	assert(m:GetAttribute("ModificadorAtivo")==false and atravessa:ObterValor()=="100")
 	local valido=criarMinerio(plot,CFrame.new(0,3,0))

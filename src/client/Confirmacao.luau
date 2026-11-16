@@ -21,13 +21,13 @@ function Confirmacao.new(pai,jogador,nav)
 end
 function Confirmacao:Pedir(tipo,quantidade,callback,mensagem)
 	local modo=Config.Obter(self._jogador,"ConfirmarVenda")
-	local pedir=if tipo=="Administracao" or tipo=="LimparPlot" or tipo=="Craft" then true elseif tipo=="Renascimento" then Config.Obter(self._jogador,"ConfirmarRenascimento") else modo=="Sempre" or (modo=="Várias peças" and quantidade>1)
+	local pedir=if tipo=="Administracao" or tipo=="LimparPlot" or tipo=="Craft" or tipo=="Ascensao" then true elseif tipo=="Renascimento" then Config.Obter(self._jogador,"ConfirmarRenascimento") else modo=="Sempre" or (modo=="Várias peças" and quantidade>1)
 	if not pedir then return callback() end
 	if self._callback then return false end
 self._callback=callback; self._fundo.Visible=true
-  self._caixa.Size=UDim2.new(1,-32,0,tipo=="Administracao" and 320 or 220)
+  self._caixa.Size=UDim2.new(1,-32,0,if tipo=="Administracao" then 320 elseif tipo=="Ascensao" then 246 else 220)
   self._texto.Size=UDim2.new(1,-36,1,-88)
-  self._texto.TextSize=tipo=="Administracao" and 16 or 19
+  self._texto.TextSize=if tipo=="Administracao" or tipo=="Ascensao" then 16 else 19
   self._texto.Text=mensagem or (if tipo=="Renascimento" then "Confirmar renascimento?\n\nDinheiro e upgrades do ciclo serão reiniciados. Recompensas e expansão permanecem." else "Vender "..quantidade.." peça(s)?\n\nAs peças selecionadas serão removidas da plot ou do inventário.")
 AnimacaoInterface.DefinirVisivel(self._caixa, true, "Centro")
   self._nav:Abrir("Confirmacao",function()

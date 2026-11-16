@@ -89,10 +89,17 @@ local saldo=perfil.Data.Dinheiro; forno._componentes[2]:Receber(emitido)
 assert(carregar("src/server/InteiroGrande").subtrair(perfil.Data.Dinheiro,saldo)=="20","Fundicao maxima deve dobrar o pagamento.")
 local mod,modelo=maquina("PrensaMinerio","modificadores")
 local componente=mod._componentes[2]; componente._sensores={modelo.SensorEntrada}
-local config=componente._configuracao; config.ValorMinimo="100"; config.ValorMaximo="200"
-local ore=Minerio.Criar({Valor="0",Tamanho={.75,.75,.75}},CF.identity,terreno)
-assert(componente:PrecisaReceber(ore,modelo.SensorEntrada))
-ore:DefinirValor("400"); assert(not componente:PrecisaReceber(ore,modelo.SensorEntrada))
+for _, caso in {{0,4,"1537"},{3,6,"3013"},{5,8,"5905"}} do
+	local nivel, limite, valor = table.unpack(caso)
+	perfil.Data.Upgrades.Calibracao=nivel
+	local ore=Minerio.Criar({Valor="400",Tamanho={.75,.75,.75}},CF.identity,terreno)
+	for _=1,limite do
+		assert(componente:PrecisaReceber(ore,modelo.SensorEntrada))
+		componente:Receber(ore,modelo.SensorEntrada)
+		table.clear(componente._passagens)
+	end
+	assert(ore:ObterValor()==valor and not componente:PrecisaReceber(ore,modelo.SensorEntrada))
+end
 local esteira=maquina("Esteira2x2","esteiras")
 esteira._componentes[1]:Atualizar(0); assert(math.abs(transportado.Magnitude-8.4)<.0001)
 assert(dados:DefinirVelocidadeMotores(5))

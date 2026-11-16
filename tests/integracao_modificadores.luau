@@ -68,6 +68,8 @@ end
 local porCodigo={}
 local posicaoEconomica={A0="N17",N17="A0",N02="N18",N18="N02",N04="N20",N20="N04",
 	H1="N21",N21="H1",N03="N23",N23="N03",N11="N24",N24="N11"}
+local usosV={4,4,2,4,3,4,3,3,4,3}
+local usosRevisados={CamaraFissao=2,RefinadorCobre=4,ProcessadorTermico=3,AceleradorModular=4,ProcessadorParticulas=4}
 local totalEtapas,comEsteira=0,0
 local quantidadeCatalogo = 0
 for _ in Catalogo do quantidadeCatalogo += 1 end
@@ -78,23 +80,16 @@ for _, m in manifesto do
 	local config=def.Componentes[#def.Componentes]
 	porCodigo[posicao]=m.id
 	assert(def.Nome==m.nome and def.Preco==dinheiro(regra[6]))
-	local multiplicador=regra[3]:match("^×(.+)$")
-	if multiplicador then multiplicador=multiplicador:gsub(",",".") end
-	assert(config.Multiplicador==(multiplicador or "1"))
-	local bonus=if m.id=="LaserQuantico" then "25" else (regra[3]:sub(1,1)=="+" and dinheiro(regra[3]:sub(2)) or "0")
-	assert(config.Bonus==bonus)
-	assert(config.LimiteUsos==tonumber(regra[4]))
-	if regra[5]~="Qualquer valor" then
-		local minimo,maximo=regra[5]:match("^(.-) ≤ v < (.-)$")
-		assert(config.ValorMinimo==dinheiro(minimo) and config.ValorMaximo==dinheiro(maximo))
-	else assert(config.ValorMinimo=="0" and config.ValorMaximo==nil) end
+	assert(Inteiro.eDecimalValido(config.Multiplicador) and tonumber(config.Multiplicador)>1)
+	local tipoV=tonumber(m.codigo:match("^V(%d+)$"))
+	local usos=if tipoV then usosV[tipoV] else usosRevisados[m.id] or tonumber(regra[4])
+	assert(config.LimiteUsos==usos and config.Bonus==nil and config.ValorMinimo==nil and config.ValorMaximo==nil)
 	assert(config.Tipo=="Modificador" and config.TipoModificador==m.codigo and config.Etapas==m.etapas)
 	assert(modelos[m.id]:GetAttribute("SomenteModelagem")==false and Template.Inventory[m.id]==0)
 	assert(modelos[m.id].HitboxConstrucao.Size==V.new(table.unpack(def.Blocos))*3)
 	local transportador=def.Componentes[1].Tipo=="Transportador"
 	assert(transportador==m.esteira)
 	if transportador then assert(def.Componentes[1].Velocidade==6); comEsteira+=1 end
-	if not transportador then assert(not config.ValorMaximo and config.ValorMinimo=="0") end
 	if not transportador or (transportador and modelos[m.id].Correia.Size.X==3) then
 		assert(Inteiro.subtrair(def.Preco,"5000000000000")~=nil, m.id..": modelo compacto cedo demais")
 	end
@@ -108,7 +103,37 @@ for _, m in manifesto do
 	assert(not descricao:find("passagem") and not descricao:find("valor"))
 end
 assert(totalEtapas==100 and comEsteira==49)
-print("PASS: 55 modelos mapeados, 49 transportadores e 100 etapas; precos, efeitos e limites conferidos com a proposta.")
+print("PASS: 55 modelos mapeados, 49 transportadores e 100 etapas; precos, fatores e limites conferidos.")
+
+local Efeitos = carregar("src/shared/EfeitosUpgrades")
+local comerciais = {}
+for id, def in Catalogo do
+	if def.Obtencao or def.Preco=="0" then continue end
+	for _, comp in def.Componentes do
+		if comp.Tipo=="Modificador" then
+			table.insert(comerciais,{Id=id,Preco=def.Preco,Fator=tonumber(Efeitos.MultiplicadorTotalModificador(comp))})
+		end
+	end
+end
+table.sort(comerciais,function(a,b)
+	if a.Preco==b.Preco then return a.Id < b.Id end
+	return Inteiro.menor(a.Preco,b.Preco)
+end)
+assert(#comerciais==85)
+local mediaAnterior=0
+for inicio=1,#comerciais,5 do
+	local soma, temQueda=0,false
+	for i=inicio,inicio+4 do
+		local fator=comerciais[i].Fator
+		if inicio==1 then assert(fator>1 and fator<2) end
+		if i>inicio and fator<comerciais[i-1].Fator then temQueda=true end
+		soma+=fator
+	end
+	local media=soma/5
+	assert(temQueda and media>mediaAnterior,comerciais[inicio].Id)
+	mediaAnterior=media
+end
+print("PASS: 85 modificadores da loja, variacao local e medias crescentes por grupos de cinco precos.")
 
 for _, caso in {{"5","1.75","9"},{"1","8.49","8"},{"1","8.50","9"},{"1","8.51","9"},{"1","0.49","0"},{"1","0.50","1"},{"0","1.75","0"}} do
 	assert(Inteiro.multiplicarArredondado(caso[1],caso[2])==caso[3])
@@ -149,39 +174,39 @@ assert(unidade:ObterValor()=="40" and unidade:ObterUsosModificador("UsosModifica
 tocar(b,unidade,1); tocar(b,unidade,2)
 assert(unidade:ObterValor()=="40")
 local _,outro=criar("N02"); tocar(outro,unidade)
-assert(unidade:ObterValor()=="80" and unidade:ObterUsosModificador("UsosModificador_N18")==1)
+assert(unidade:ObterValor()=="74" and unidade:ObterUsosModificador("UsosModificador_N18")==1)
 local _,tripla=criar("N01"); local fracionado=ore("5")
-for etapa,esperado in {"9","16","28"} do tocar(tripla,fracionado,etapa); assert(fracionado:ObterValor()==esperado) end
+for etapa,esperado in {"6","7","8"} do tocar(tripla,fracionado,etapa); assert(fracionado:ObterValor()==esperado) end
 assert(fracionado:ObterUsosModificador("UsosModificador_N01")==1)
 print("PASS: todas as etapas consomem um uso; copias compartilham o limite e tipos diferentes permanecem independentes.")
 
 local _,magnetica=criar("V3")
-for _, valor in {"24999","100000"} do local m=ore(valor); tocar(magnetica,m); assert(m:ObterValor()==valor) end
+for _, casos in {{"24999","37499"},{"100000","150000"}} do local m=ore(casos[1]); tocar(magnetica,m); assert(m:ObterValor()==casos[2]) end
 local faixa=ore("25000"); tocar(magnetica,faixa); assert(faixa:ObterValor()=="37500")
-local cruza=ore("75000"); tocar(magnetica,cruza,1); tocar(magnetica,cruza,2); assert(cruza:ObterValor()=="112500")
-local _,laser=criar("H1"); local limiteValor=ore("99"); tocar(laser,limiteValor); assert(limiteValor:ObterValor()=="124")
-local _,laser2=criar("H1"); tocar(laser2,limiteValor); assert(limiteValor:ObterValor()=="124")
-local inicialLaser=ore("5"); tocar(laser,inicialLaser); assert(inicialLaser:ObterValor()=="30")
-assert(Ficha.Descrever(Catalogo.LaserQuantico):find("Modificação: +25",1,true))
-local limitado=ore("0")
+local cruza=ore("75000"); tocar(magnetica,cruza,1); tocar(magnetica,cruza,2); assert(cruza:ObterValor()=="168750")
+local _,laser=criar("H1"); local muitoAlto=ore("99"); tocar(laser,muitoAlto); assert(muitoAlto:ObterValor()=="153")
+local _,laser2=criar("H1"); tocar(laser2,muitoAlto); assert(muitoAlto:ObterValor()=="237")
+local inicialLaser=ore("5"); tocar(laser,inicialLaser); assert(inicialLaser:ObterValor()=="8")
+assert(Ficha.Descrever(Catalogo.LaserQuantico):find("Modificação: ×1,55",1,true))
+local limitado=ore("4")
 for _=1,4 do local _,c=criar("H1"); tocar(c,limitado) end
-assert(limitado:ObterValor()=="75" and limitado:ObterUsosModificador("UsosModificador_N21")==3)
+assert(limitado:ObterValor()=="14" and limitado:ObterUsosModificador("UsosModificador_N21")==3)
 local maq,prensa=criar("V1"); local repetido=ore("5")
-for _, valor in {"10","20","40","80","160","160"} do
+for _, valor in {"7","10","14","20","20"} do
 	repetido:ObterParte().CFrame=CF.new(1000,1000,1000); maq:Atualizar(1)
 	tocar(prensa,repetido); tocar(prensa,repetido); assert(repetido:ObterValor()==valor)
 end
-local maqJato,jato=criar("A0"); local aditivo=ore("5")
-for _, esperado in {"15","25","35"} do
-	aditivo:ObterParte().CFrame=CF.new(1000,1000,1000); maqJato:Atualizar(1)
-	tocar(jato,aditivo); tocar(jato,aditivo); assert(aditivo:ObterValor()==esperado)
+local maqFissao,fissao=criar("A0"); local amostra=ore("5")
+for _, esperado in {"6","7","7"} do
+	amostra:ObterParte().CFrame=CF.new(1000,1000,1000); maqFissao:Atualizar(1)
+	tocar(fissao,amostra); tocar(fissao,amostra); assert(amostra:ObterValor()==esperado)
 end
 local alheio=ore("10"); alheio:ObterParte():SetAttribute("DonoUserId",999); tocar(a,alheio); assert(alheio:ObterValor()=="10")
 local invalido=ore("10"); assert(not invalido:DefinirValor("invalido")); tocar(a,invalido); assert(invalido:ObterValor()=="20")
 for _, m in maquinas do m:Destruir() end
 assert(next(simulacao._sensores)==nil and next(simulacao._transportadores)==nil)
 terreno.Maquinas:ClearAllChildren(); terreno.Minerios:ClearAllChildren()
-print("PASS: limites inferior/inclusivo e superior/exclusivo, hibridos, recirculacao sem repeticao por quadro, dono e limpeza.")
+print("PASS: valores fora dos antigos limites, multiplicadores, recirculacao, dono e limpeza.")
 
 local servico=Construcao.new()
 for _, m in manifesto do

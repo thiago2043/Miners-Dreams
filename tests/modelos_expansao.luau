@@ -78,15 +78,10 @@ local function testarComponente(modelo, def, id)
 				for i, sensor in componente._sensores do
 					componente:Receber(minerio, sensor)
 					if uso <= config.LimiteUsos then
-						valor = Inteiro.somar(Inteiro.multiplicarArredondado(valor, fatores[i]), config.Bonus)
+						valor = Inteiro.multiplicarArredondado(valor, fatores[i])
 					end
 					assert(minerio:ObterValor() == valor, id)
 				end
-			end
-			if config.ValorMaximo then
-				assert(minerio:DefinirValor(config.ValorMaximo))
-				table.clear(componente._passagens)
-				assert(not componente:PrecisaReceber(minerio, componente._sensores[1]), id)
 			end
 		end
 	end

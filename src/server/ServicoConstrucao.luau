@@ -1645,6 +1645,7 @@ self._historicoCopias[jogador], self._historicoDesfazer[jogador], self._historic
 	end
 	maquinas:ClearAllChildren()
 	minerios:ClearAllChildren()
+	terreno:SetAttribute("PreviaConstrucao", nil)
 	self._carregados[terreno] = dados
 	require(script.Parent.ExpansaoPlot).Aplicar(terreno,dados:ObterUpgrade("Expansao"),true)
 	dados:Sincronizar()

@@ -15,6 +15,7 @@ local HttpService = game:GetService("HttpService")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
 local FichaMaquina = require(script.Parent.FichaMaquina)
+local Efeitos = require(ReplicatedStorage.Shared.EfeitosUpgrades)
 local GradePecas = require(script.Parent.GradePecas)
 local FichaPeca = require(script.Parent.FichaPeca)
 local AnimacaoInterface = require(script.Parent.AnimacaoInterface)
@@ -258,6 +259,7 @@ for _, a in { "Extracao", "Fundicao", "Motores", "Calibracao" } do
 chaveDescricao ..= tostring(self._jogador:GetAttribute("Upgrade_" .. a)) .. ":"
 end
 chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores"))
+local calibracao = Efeitos.Nivel(self._jogador, "Calibracao")
 
 for _, id in self._ids do
 local quantidade = self._jogador:GetAttribute("Inventario_" .. id)
@@ -265,7 +267,7 @@ local pronto = quantidadeValida(quantidade)
 local selecionada = visivelFicha and selecao ~= nil and selecao.MaquinaId == id
 if chaveDescricao ~= self._chaveDescricao then
 local ok, descricao = pcall(FichaMaquina.Descrever, Catalogo[id], self._jogador)
-self._grade:AtualizarDescricao(id, ok and descricao or "Descrição indisponível")
+self._grade:AtualizarDescricao(id, ok and descricao or "Descrição indisponível", calibracao)
 end
 self._grade:AtualizarItem(
 id, quantidade, pronto, selecionada, self._negociando,

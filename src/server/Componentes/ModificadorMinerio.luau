@@ -11,17 +11,11 @@ function ModificadorMinerio.new(maquina, configuracao)
   local codigo, limite = configuracao.TipoModificador, configuracao.LimiteUsos
   assert(type(codigo) == "string" and codigo:match("^[ANVH][0-9]+$"), "Tipo de modificador invalido.")
   assert(limite == nil or (type(limite) == "number" and limite >= 1 and limite < 2 ^ 53 and limite % 1 == 0), "Limite de usos invalido.")
-  assert(InteiroGrande.eValido(configuracao.ValorMinimo or "0"), "Valor minimo invalido.")
   if configuracao.MultiplicadoresFaixas then
     assert(#configuracao.MultiplicadoresFaixas == configuracao.Etapas, "Faixas de modificacao invalidas.")
     for _, fator in configuracao.MultiplicadoresFaixas do
       assert(InteiroGrande.eDecimalValido(fator), "Multiplicador de faixa invalido.")
     end
-  end
-  if configuracao.ValorMaximo then
-    assert(InteiroGrande.eValido(configuracao.ValorMaximo), "Valor maximo invalido.")
-    local intervalo = InteiroGrande.subtrair(configuracao.ValorMaximo, configuracao.ValorMinimo or "0")
-    assert(intervalo and intervalo ~= "0", "Faixa de valor invalida.")
   end
   local self = setmetatable(ContatoMinerio.new(maquina, configuracao), ModificadorMinerio)
   self._passagens = setmetatable({}, { __mode = "k" })
@@ -90,7 +84,7 @@ function ModificadorMinerio:AoTocar(minerio, sensor)
     if not minerio:AdicionarBonusCopias(depois - antes) then return end
   else
     local multiplicador = if config.MultiplicadoresFaixas then config.MultiplicadoresFaixas[etapa] else config.Multiplicador
-    local valor = minerio:CalcularValor(multiplicador, config.Bonus, true)
+    local valor = minerio:CalcularValor(multiplicador, nil, true)
     if not valor or not minerio:DefinirValor(valor) then return end
   end
   if valorAnterior and minerio:ObterValor() ~= valorAnterior then minerio.ModificadoNaLinha = true end
@@ -136,27 +130,15 @@ function ModificadorMinerio:PrecisaReceber(minerio, sensor)
   local etapa = if sensor then table.find(self._sensores or {}, sensor) else 1
   if not etapa or (passagem and passagem.Etapas[etapa]) then return false end
   if config.Renascimento and not (passagem and passagem.Iniciada)
-    and not minerio:PodeReceberRenascimento(self._unidade) then return false end
+    and minerio:JaRecebeuRenascimento(self._unidade) then return false end
   if config.LimiteUsos and not (passagem and passagem.Iniciada) then
+    local limite = Efeitos.UsosModificador(config.LimiteUsos, self._maquina:ObterNivelUpgrade("Calibracao"))
     local usos = if minerio.ObterUsosModificador
       then minerio:ObterUsosModificador(self._chaveUsos)
       else (parte:GetAttribute(self._chaveUsos) or 0)
-    if type(usos) ~= "number" or usos < 0 or usos % 1 ~= 0 or usos >= config.LimiteUsos then return false end
+    if type(usos) ~= "number" or usos < 0 or usos % 1 ~= 0 or usos >= limite then return false end
   end
-  local entrada = minerio:ObterValor()
-  if not InteiroGrande.eValido(entrada) then return false end
-  local nivel = self._maquina:ObterNivelUpgrade("Calibracao")
-  if self._nivelCalibracao ~= nivel then
-    self._nivelCalibracao = nivel
-    self._minimoCalibrado, self._maximoCalibrado = Efeitos.Limites(config, nivel)
-  end
-  if self._minimoCalibrado and self._minimoCalibrado ~= "0" and InteiroGrande.menor(entrada, self._minimoCalibrado) then
-    return false
-  end
-  if self._maximoCalibrado and not InteiroGrande.menor(entrada, self._maximoCalibrado) then
-    return false
-  end
-  return true
+  return InteiroGrande.eValido(minerio:ObterValor())
 end
 
 function ModificadorMinerio:Destruir()

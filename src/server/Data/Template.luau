@@ -19,6 +19,7 @@ return {
 	Tutorial = {Modo = "Convite", Etapa = 0},
 	-- Operacoes e vidas sao contadores diferentes: saltar vidas nao multiplica o custo dos proximos ciclos.
 	Reencarnacoes = 0, Vidas = 1,
+	Ascensoes = 0, Transicoes = 0, RecompensasAscensao = {},
 	Upgrades = {Extracao=0,Fundicao=0,Motores=0,Calibracao=0}, VelocidadeMotores=0, ExpansaoPlot=0, VersaoExpansaoPlot=2,
 	-- Quantidades de recompensas permanentes, devolvidas ao inventario a cada renascimento.
 	RecompensasReencarnacao = {},

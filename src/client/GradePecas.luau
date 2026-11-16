@@ -4,8 +4,7 @@ Responsabilidade:
 Gerencia a grade visual de peças do Inventário e da Loja, incluindo:
 - Sub-abas de modo no Inventário ("Inventário", "Na plot", "Não usadas");
 - Filtro por categoria de peça (Todas, Mineradoras, Modificadores, Fornalhas, Esteiras);
-- Filtros avançados por Multiplicador (faixa ou valor exato), Limite de Dinheiro
-  (Com limite, Sem limite e faixa em $) e Tamanho independente por eixo (X, Y, Z);
+- Filtros avançados por Multiplicador, Limite de usos e Tamanho por eixo (X, Y, Z);
 - Sistema de Prioridade reordenável (1º, 2º, 3º) por Multiplicador, Tamanho no eixo e Limite;
 - Cálculo responsivo de colunas compensando o UIScale (AbsoluteSize.X / escala).
 ]]
@@ -13,6 +12,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Configuracoes)
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local AbreviarInteiro = require(ReplicatedStorage.Shared.AbreviarInteiro)
+local Efeitos = require(ReplicatedStorage.Shared.EfeitosUpgrades)
+local FichaMaquina = require(script.Parent.FichaMaquina)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local Botao = require(script.Parent.Botao)
 local IconesAbas = require(script.Parent.IconesAbas)
@@ -67,16 +68,6 @@ return if #sa < #sb then -1 else 1
 end
 if sa == sb then return 0 end
 return if sa < sb then -1 else 1
-end
-
-local function formatarMoedaCurta(n)
-if type(n) ~= "number" or n <= 0 then return "0" end
-local textoInteiro = string.format("%.0f", n)
-if textoInteiro:match("^%d+$") then
-local ok, abrev = pcall(AbreviarInteiro, textoInteiro)
-if ok and type(abrev) == "string" then return abrev end
-end
-return tostring(n)
 end
 
 local function arredondar(objeto, raio, corBorda, espessura)
@@ -155,11 +146,11 @@ end
 return vMin, vMax, (vMin ~= nil or vMax ~= nil)
 end
 
-local function extrairMetadadosPeca(definicao, descricao)
+local function extrairMetadadosPeca(definicao, descricao, calibracao)
 local blocos = type(definicao.Blocos) == "table" and definicao.Blocos or { 1, 1, 1 }
 local tamX, tamY, tamZ = blocos[1] or 1, blocos[2] or 1, blocos[3] or 1
 local mults, vistosMult = {}, {}
-local limitesMax = {}
+local valorLimite = nil
 
 local function adicionarMult(v)
 local n = converterNumeroOuMoeda(v)
@@ -169,41 +160,43 @@ table.insert(mults, n)
 end
 end
 
-local function inspecionarTabela(t, ehModificador, ehVendedor)
+local function inspecionarVenda(t)
 if type(t) ~= "table" then return end
 for k, v in t do
 local chave = tostring(k):lower()
-if (ehModificador or ehVendedor) and (chave == "multiplicador" or chave == "fator") then
+if chave == "multiplicador" or chave == "fator" then
 adicionarMult(v)
-elseif ehModificador and (chave:find("max") or chave:find("limite") or chave:find("teto") or chave:find("ate")) and not chave:find("uso") then
-local lim = converterNumeroOuMoeda(v)
-if lim and lim > 0 then table.insert(limitesMax, lim) end
 end
 if type(v) == "table" then
-inspecionarTabela(v, ehModificador, ehVendedor)
+inspecionarVenda(v)
 end
 end
 end
 
-local temModOuVend = false
+local usarMultDescricao = false
 for _, comp in definicao.Componentes or {} do
 local ehMod = comp.Tipo == "Modificador"
 local ehVend = comp.Tipo == "Vendedor"
-if ehMod or ehVend then
-temModOuVend = true
-inspecionarTabela(comp, ehMod, ehVend)
+if ehMod and comp.LimiteUsos then
+local limite = Efeitos.UsosModificador(comp.LimiteUsos, calibracao or 0)
+valorLimite = math.max(valorLimite or 0, limite)
+end
+if ehMod then
+adicionarMult(Efeitos.MultiplicadorTotalModificador(comp))
+elseif ehVend then
+usarMultDescricao = true
+inspecionarVenda(comp)
 end
 end
 if definicao.Multiplicador then
-temModOuVend = true
+usarMultDescricao = true
 adicionarMult(definicao.Multiplicador)
 end
 
-if type(descricao) == "string" and descricao ~= "" then
+if usarMultDescricao and type(descricao) == "string" and descricao ~= "" then
 local semDimensoes = descricao
 :gsub("%d+%s*×%s*%d+%s*×%s*%d+", "")
 :gsub("%d+%s*[xX]%s*%d+%s*[xX]%s*%d+", "")
-if temModOuVend then
 local multsDescricao = {}
 for numeroTexto in semDimensoes:gmatch("×%s*([%d%.%,]+[A-Za-z]*)") do
 local n = converterNumeroOuMoeda(numeroTexto)
@@ -211,20 +204,10 @@ if n and n > 0 then
 adicionarMult(n)
 table.insert(multsDescricao, n)
 end
-end
 if #multsDescricao > 1 then
 local produto = 1
 for _, n in multsDescricao do produto *= n end
 adicionarMult(produto)
-end
-end
-for linha in semDimensoes:gmatch("[^\r\n]+") do
-local l = normalizar(linha)
-if l:find("limite") or l:find("entrada") or l:find("max") or l:find("ate") or l:find("faixa") then
-for valorMoeda in linha:gmatch("%$([%d%.%,]+[A-Za-z]*)") do
-local lim = converterNumeroOuMoeda(valorMoeda)
-if lim and lim > 0 then table.insert(limitesMax, lim) end
-end
 end
 end
 end
@@ -233,11 +216,6 @@ local multPrincipal = nil
 for _, m in mults do
 if not multPrincipal or m > multPrincipal then multPrincipal = m end
 end
-local valorLimite = nil
-for _, lim in limitesMax do
-if not valorLimite or lim > valorLimite then valorLimite = lim end
-end
-
 return {
 TamX = tamX,
 TamY = tamY,
@@ -594,10 +572,10 @@ local bModoLim = self._botaoModoLimite:ObterInstancia()
 bModoLim.Position, bModoLim.Size, bModoLim.TextSize = UDim2.fromOffset(6, 31), UDim2.fromOffset(82, 26), 12
 arredondar(bModoLim, 5)
 
-self._campoLimMin = self:_CampoFiltro(contF, "LimMin", "Lim. mín $", UDim2.fromOffset(92, 31), UDim2.new(0.5, -51, 0, 26), function(t)
+self._campoLimMin = self:_CampoFiltro(contF, "LimMin", "Usos mín.", UDim2.fromOffset(92, 31), UDim2.new(0.5, -51, 0, 26), function(t)
 self._filtroLimMin = t
 end)
-self._campoLimMax = self:_CampoFiltro(contF, "LimMax", "Lim. máx $", UDim2.new(0.5, 43, 0, 31), UDim2.new(0.5, -49, 0, 26), function(t)
+self._campoLimMax = self:_CampoFiltro(contF, "LimMax", "Usos máx.", UDim2.new(0.5, 43, 0, 31), UDim2.new(0.5, -49, 0, 26), function(t)
 self._filtroLimMax = t
 end)
 
@@ -710,7 +688,7 @@ local bPrioLim = self._botaoPrioLim:ObterInstancia()
 bPrioLim.Position, bPrioLim.Size, bPrioLim.TextSize = UDim2.fromOffset(38, 0), UDim2.fromOffset(78, 26), 12
 arredondar(bPrioLim, 5)
 
-self._campoPrioLim = self:_CampoFiltro(linhaLim, "PrioLimAlvo", "Limite prioritário (ex: 10K)", UDim2.fromOffset(120, 0), UDim2.new(1, -126, 0, 26), function(t)
+self._campoPrioLim = self:_CampoFiltro(linhaLim, "PrioLimAlvo", "Usos prioritários (ex: 4)", UDim2.fromOffset(120, 0), UDim2.new(1, -126, 0, 26), function(t)
 self._prioLimAlvo = t
 end)
 
@@ -801,9 +779,9 @@ self._campoMultMin.Size = if self._filtroMultExato then UDim2.new(1, -98, 0, 26)
 self._campoMultMax.Visible = not self._filtroMultExato
 
 local bModoLim = self._botaoModoLimite:ObterInstancia()
-bModoLim.Text = if self._filtroModoLimite == "ComLimite" then "Com lim. $"
-elseif self._filtroModoLimite == "SemLimite" then "Sem lim. $"
-else "Lim: Todos"
+bModoLim.Text = if self._filtroModoLimite == "ComLimite" then "Limitados"
+elseif self._filtroModoLimite == "SemLimite" then "Sem limite"
+else "Usos: Todos"
 bModoLim.BackgroundColor3 = if self._filtroModoLimite ~= "Todos"
 then self._cor:Lerp(Color3.fromRGB(22, 23, 29), 0.68)
 else Color3.fromRGB(37, 39, 47)
@@ -967,7 +945,7 @@ local achouMult = false
 for _, v in mults do
 local okMin = (mMin == nil) or (v >= mMin - 1e-4)
 local okMax = (mMax == nil) or (v <= mMax + 1e-4)
-if okMin and okMax then
+if (okMin and okMax) or (mMin and mMin == mMax and converterNumeroOuMoeda(FichaMaquina.FormatarMultiplicador(v)) == mMin) then
 achouMult = true
 break
 end
@@ -1137,11 +1115,11 @@ end
 self._area.CanvasSize = UDim2.fromOffset(0, math.ceil(self._layout.AbsoluteContentSize.Y / escala) + 12)
 end
 
-function GradePecas:AtualizarDescricao(id, descricao)
+function GradePecas:AtualizarDescricao(id, descricao, calibracao)
 local item = self._itens[id]
 if item then
 item.Descricao = descricao
-item.Metadados = extrairMetadadosPeca(Catalogo[id], descricao)
+item.Metadados = extrairMetadadosPeca(Catalogo[id], descricao, calibracao)
 end
 end
 
@@ -1303,10 +1281,10 @@ if id then
 local meta = self._itens[id].Metadados
 local infoExtra = string.format(" (%d×%d×%d bl", meta.TamX, meta.TamY, meta.TamZ)
 if meta.MultPrincipal then
-infoExtra ..= string.format(" • ×%g", meta.MultPrincipal)
+infoExtra ..= " • ×" .. FichaMaquina.FormatarMultiplicador(meta.MultPrincipal)
 end
 if meta.TemLimite and meta.ValorLimite then
-infoExtra ..= " • Lim: $" .. formatarMoedaCurta(meta.ValorLimite)
+infoExtra ..= " • Usos: " .. AbreviarInteiro(string.format("%.0f", meta.ValorLimite))
 end
 infoExtra ..= ")"
 self._dica.Text = Catalogo[id].Nome .. infoExtra

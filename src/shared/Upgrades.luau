@@ -12,7 +12,7 @@ U.Itens={
 	{Id="Extracao",Nome="Qualidade da extração",Descricao="Aumenta o valor inicial do minério.",Renascimentos=1,Precos=precos(12)},
 	{Id="Fundicao",Nome="Eficiência de fundição",Descricao="Aumenta o pagamento das fornalhas.",Renascimentos=1,Precos=precos(12)},
 	{Id="Motores",Nome="Motores das esteiras",Descricao="Desbloqueia velocidades maiores de transporte.",Renascimentos=1,Precos=precos(12)},
-	{Id="Calibracao",Nome="Calibração dos modificadores",Descricao="Reduz o mínimo e amplia o máximo de entrada.",Renascimentos=5,Precos=precos(18)},
+	{Id="Calibracao",Nome="Calibração dos modificadores",Descricao="Aumenta o limite de usos por tipo em cada minério, arredondado ao inteiro mais próximo.",Renascimentos=5,Precos=precos(18)},
 	{Id="Expansao",Nome="Expansão da plot",Descricao="Amplia largura, comprimento e altura. Permanente.",Renascimentos=5,Precos=precos(18)},
 }
 function U.Item(id) for _,item in U.Itens do if item.Id==id then return item end end end

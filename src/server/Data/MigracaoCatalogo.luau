@@ -1,6 +1,7 @@
 local Catalogo = require(game:GetService("ReplicatedStorage").Shared.CatalogoMaquinas)
 local Template = require(script.Parent.Template)
 local Premios = require(script.Parent.PremiosRenascimento)
+local PremiosAscensao = require(script.Parent.PremiosAscensao)
 local Migracao = {}
 
 local function copiar(valor)
@@ -52,6 +53,7 @@ function Migracao.Preparar(dados)
 	end
 	limpar(novo)
 	Premios.Migrar(novo)
+	PremiosAscensao.Entregar(novo)
 	if novo.BackupGrade4 ~= nil then
 		assert(type(novo.BackupGrade4) == "table", "Backup de grade invalido.")
 		limpar(novo.BackupGrade4)

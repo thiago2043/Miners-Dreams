@@ -1,0 +1,1782 @@
+[
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM01.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM01",
+    "expoente": 155,
+    "id": "LojaPosAscM01",
+    "nome": "Mineradora de cerâmica orbital",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF01.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      3,
+      1
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF01",
+    "expoente": 156,
+    "id": "LojaPosAscF01",
+    "nome": "Fornalha de zircônia",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX01.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      2,
+      1,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX01",
+    "etapas": 1,
+    "expoente": 157,
+    "id": "LojaPosAscX01",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Raspador de caulim",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX02.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX02",
+    "etapas": 1,
+    "expoente": 158,
+    "id": "LojaPosAscX02",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pinça de zircônia",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX03.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      2,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX03",
+    "etapas": 2,
+    "expoente": 159,
+    "id": "LojaPosAscX03",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Peneira de magnesita",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM02.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM02",
+    "expoente": 160,
+    "id": "LojaPosAscM02",
+    "nome": "Escavadora de caulim polar",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF02.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF02",
+    "expoente": 161,
+    "id": "LojaPosAscF02",
+    "nome": "Fornalha de casca sinterizada",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX04.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX04",
+    "etapas": 2,
+    "expoente": 162,
+    "id": "LojaPosAscX04",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Revestidor de porcelana",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX05.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX05",
+    "etapas": 2,
+    "expoente": 163,
+    "id": "LojaPosAscX05",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Arco cerâmico de têmpera",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX06.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX06",
+    "etapas": 2,
+    "expoente": 164,
+    "id": "LojaPosAscX06",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Crivo de alumina azul",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 1
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM03.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM03",
+    "expoente": 168,
+    "id": "LojaPosAscM03",
+    "nome": "Mineradora de hélio superfluido",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF03.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF03",
+    "expoente": 169,
+    "id": "LojaPosAscF03",
+    "nome": "Fornalha de circulação criogênica",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX07.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      2,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX07",
+    "etapas": 1,
+    "expoente": 170,
+    "id": "LojaPosAscX07",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Dosador de hélio líquido",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX08.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX08",
+    "etapas": 2,
+    "expoente": 171,
+    "id": "LojaPosAscX08",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Chave de fluxo frio",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX09.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      2,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX09",
+    "etapas": 2,
+    "expoente": 172,
+    "id": "LojaPosAscX09",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Trilho de gás rarefeito",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM04.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      5,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM04",
+    "expoente": 173,
+    "id": "LojaPosAscM04",
+    "nome": "Escavadora de banho criogênico",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF04.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF04",
+    "expoente": 174,
+    "id": "LojaPosAscF04",
+    "nome": "Fornalha de hélio comprimido",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX10.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX10",
+    "etapas": 2,
+    "expoente": 175,
+    "id": "LojaPosAscX10",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Condensador de hélio verde",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX11.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX11",
+    "etapas": 2,
+    "expoente": 176,
+    "id": "LojaPosAscX11",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prensa superfluida",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX12.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX12",
+    "etapas": 2,
+    "expoente": 177,
+    "id": "LojaPosAscX12",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Anel de choque criogênico",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 2
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM05.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM05",
+    "expoente": 183,
+    "id": "LojaPosAscM05",
+    "nome": "Mineradora de escória solar",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF05.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      2
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF05",
+    "expoente": 184,
+    "id": "LojaPosAscF05",
+    "nome": "Fornalha de têmpera solar",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX13.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      2,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX13",
+    "etapas": 1,
+    "expoente": 185,
+    "id": "LojaPosAscX13",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Garra de tungstênio solar",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX14.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX14",
+    "etapas": 2,
+    "expoente": 186,
+    "id": "LojaPosAscX14",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Bobina de cobre solar",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX15.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      1
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX15",
+    "etapas": 2,
+    "expoente": 187,
+    "id": "LojaPosAscX15",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Lacre de escória radiante",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM06.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM06",
+    "expoente": 188,
+    "id": "LojaPosAscM06",
+    "nome": "Escavadora de tungstênio solar",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF06.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF06",
+    "expoente": 189,
+    "id": "LojaPosAscF06",
+    "nome": "Fornalha de arco de tungstênio",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX16.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX16",
+    "etapas": 2,
+    "expoente": 190,
+    "id": "LojaPosAscX16",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Fole de carbeto dourado",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX17.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX17",
+    "etapas": 2,
+    "expoente": 191,
+    "id": "LojaPosAscX17",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Trefila de arco de tungstênio",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX18.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX18",
+    "etapas": 3,
+    "expoente": 192,
+    "id": "LojaPosAscX18",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Portal de fundente solar",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 3
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM07.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      6,
+      3
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM07",
+    "expoente": 200,
+    "id": "LojaPosAscM07",
+    "nome": "Mineradora de espinélio de fase",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF07.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF07",
+    "expoente": 201,
+    "id": "LojaPosAscF07",
+    "nome": "Fornalha de gema birrefringente",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX19.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX19",
+    "etapas": 2,
+    "expoente": 202,
+    "id": "LojaPosAscX19",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Prisma de espinélio",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX20.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX20",
+    "etapas": 2,
+    "expoente": 203,
+    "id": "LojaPosAscX20",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Colimador de granada rosa",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX21.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      3,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX21",
+    "etapas": 2,
+    "expoente": 204,
+    "id": "LojaPosAscX21",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Ressonador de quartzo rosa",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM08.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM08",
+    "expoente": 205,
+    "id": "LojaPosAscM08",
+    "nome": "Escavadora de quartzo de fase",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF08.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF08",
+    "expoente": 206,
+    "id": "LojaPosAscF08",
+    "nome": "Fornalha de espelhos de fase",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX22.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX22",
+    "etapas": 3,
+    "expoente": 207,
+    "id": "LojaPosAscX22",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Separador birrefringente",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX23.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX23",
+    "etapas": 3,
+    "expoente": 208,
+    "id": "LojaPosAscX23",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Matriz de espelhos de fase",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX24.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX24",
+    "etapas": 3,
+    "expoente": 209,
+    "id": "LojaPosAscX24",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Cascata de espinélio rosa",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 4
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM09.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM09",
+    "expoente": 219,
+    "id": "LojaPosAscM09",
+    "nome": "Mineradora de gravidade inversa",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF09.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF09",
+    "expoente": 220,
+    "id": "LojaPosAscF09",
+    "nome": "Fornalha de lastro invertido",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX25.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      2
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX25",
+    "etapas": 2,
+    "expoente": 221,
+    "id": "LojaPosAscX25",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Lastro de gravidade inversa",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX26.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX26",
+    "etapas": 2,
+    "expoente": 222,
+    "id": "LojaPosAscX26",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Pêndulo gravítico",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX27.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX27",
+    "etapas": 2,
+    "expoente": 223,
+    "id": "LojaPosAscX27",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prisma de lente gravitacional",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM10.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM10",
+    "expoente": 224,
+    "id": "LojaPosAscM10",
+    "nome": "Escavadora de lentes gravíticas",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF10.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF10",
+    "expoente": 225,
+    "id": "LojaPosAscF10",
+    "nome": "Fornalha de poço gravítico",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX28.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX28",
+    "etapas": 3,
+    "expoente": 226,
+    "id": "LojaPosAscX28",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Válvula de poço gravítico",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX29.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX29",
+    "etapas": 3,
+    "expoente": 227,
+    "id": "LojaPosAscX29",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Malha de massa aparente",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX30.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX30",
+    "etapas": 3,
+    "expoente": 228,
+    "id": "LojaPosAscX30",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Colisor de marés gravíticas",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 5
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM11.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      4,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM11",
+    "expoente": 242,
+    "id": "LojaPosAscM11",
+    "nome": "Mineradora de vácuo pressurizado",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF11.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF11",
+    "expoente": 243,
+    "id": "LojaPosAscF11",
+    "nome": "Fornalha de expansão adiabática",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX31.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX31",
+    "etapas": 2,
+    "expoente": 244,
+    "id": "LojaPosAscX31",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Vácuostato de néon",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX32.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX32",
+    "etapas": 2,
+    "expoente": 245,
+    "id": "LojaPosAscX32",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Ejetor de pulso ultravácuo",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX33.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX33",
+    "etapas": 3,
+    "expoente": 246,
+    "id": "LojaPosAscX33",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Grade de expansão adiabática",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM12.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM12",
+    "expoente": 247,
+    "id": "LojaPosAscM12",
+    "nome": "Escavadora de cavidade evacuada",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF12.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF12",
+    "expoente": 248,
+    "id": "LojaPosAscF12",
+    "nome": "Fornalha de pulso ultravácuo",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX34.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX34",
+    "etapas": 3,
+    "expoente": 249,
+    "id": "LojaPosAscX34",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Válvula de cavidade evacuada",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX35.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX35",
+    "etapas": 3,
+    "expoente": 250,
+    "id": "LojaPosAscX35",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Câmara de emissão de vácuo",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX36.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX36",
+    "etapas": 3,
+    "expoente": 251,
+    "id": "LojaPosAscX36",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Reator de pressão negativa",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 6
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM13.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM13",
+    "expoente": 270,
+    "id": "LojaPosAscM13",
+    "nome": "Mineradora de neutrinos lentos",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF13.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      6,
+      4
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF13",
+    "expoente": 271,
+    "id": "LojaPosAscF13",
+    "nome": "Fornalha de feixe de neutrinos",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX37.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      4,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX37",
+    "etapas": 2,
+    "expoente": 272,
+    "id": "LojaPosAscX37",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Sonda de neutrinos lentos",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX38.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX38",
+    "etapas": 2,
+    "expoente": 273,
+    "id": "LojaPosAscX38",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Janela de antineutrinos",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX39.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX39",
+    "etapas": 3,
+    "expoente": 274,
+    "id": "LojaPosAscX39",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Retificador de pulsos neutros",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM14.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      6,
+      5
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM14",
+    "expoente": 275,
+    "id": "LojaPosAscM14",
+    "nome": "Escavadora de antineutrinos",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF14.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF14",
+    "expoente": 276,
+    "id": "LojaPosAscF14",
+    "nome": "Fornalha de captura de antineutrinos",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX40.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX40",
+    "etapas": 3,
+    "expoente": 277,
+    "id": "LojaPosAscX40",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Lente de captura rubra",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX41.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX41",
+    "etapas": 3,
+    "expoente": 278,
+    "id": "LojaPosAscX41",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Ciclotron de neutrinos",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX42.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX42",
+    "etapas": 4,
+    "expoente": 279,
+    "id": "LojaPosAscX42",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Ressonador de antineutrinos",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 7
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM15.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM15",
+    "expoente": 303,
+    "id": "LojaPosAscM15",
+    "nome": "Mineradora de horizonte refratado",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF15.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF15",
+    "expoente": 304,
+    "id": "LojaPosAscF15",
+    "nome": "Fornalha de horizonte focal",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX43.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      3,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX43",
+    "etapas": 2,
+    "expoente": 305,
+    "id": "LojaPosAscX43",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Limiar de refração",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX44.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX44",
+    "etapas": 3,
+    "expoente": 306,
+    "id": "LojaPosAscX44",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prisma do horizonte focal",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX45.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX45",
+    "etapas": 3,
+    "expoente": 307,
+    "id": "LojaPosAscX45",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Fenda de espelho esférico",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM16.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM16",
+    "expoente": 308,
+    "id": "LojaPosAscM16",
+    "nome": "Escavadora de horizonte de vidro",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF16.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF16",
+    "expoente": 309,
+    "id": "LojaPosAscF16",
+    "nome": "Fornalha de horizonte de vidro",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX46.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX46",
+    "etapas": 3,
+    "expoente": 310,
+    "id": "LojaPosAscX46",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Canal de vidro focal",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX47.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX47",
+    "etapas": 4,
+    "expoente": 311,
+    "id": "LojaPosAscX47",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Estação de lentes duplas",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX48.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX48",
+    "etapas": 4,
+    "expoente": 312,
+    "id": "LojaPosAscX48",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Janela de horizonte de vidro",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 8
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM17.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM17",
+    "expoente": 341,
+    "id": "LojaPosAscM17",
+    "nome": "Mineradora de entropia dirigida",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF17.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF17",
+    "expoente": 342,
+    "id": "LojaPosAscF17",
+    "nome": "Fornalha de gradiente entrópico",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX49.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      4,
+      5,
+      3
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX49",
+    "etapas": 3,
+    "expoente": 343,
+    "id": "LojaPosAscX49",
+    "largura": 2,
+    "nivel": 0,
+    "nome": "Pente de entropia dirigida",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX50.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      5,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX50",
+    "etapas": 3,
+    "expoente": 344,
+    "id": "LojaPosAscX50",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Seletor de gradiente entrópico",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX51.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX51",
+    "etapas": 3,
+    "expoente": 345,
+    "id": "LojaPosAscX51",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Reator de decaimento curto",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM18.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      8,
+      6,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM18",
+    "expoente": 346,
+    "id": "LojaPosAscM18",
+    "nome": "Escavadora de decaimento reverso",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF18.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF18",
+    "expoente": 347,
+    "id": "LojaPosAscF18",
+    "nome": "Fornalha de decaimento reverso",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX52.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX52",
+    "etapas": 4,
+    "expoente": 348,
+    "id": "LojaPosAscX52",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Cascata de ordenação térmica",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX53.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX53",
+    "etapas": 4,
+    "expoente": 349,
+    "id": "LojaPosAscX53",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Câmara de entropia dirigida",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX54.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX54",
+    "etapas": 4,
+    "expoente": 350,
+    "id": "LojaPosAscX54",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Arco de decaimento reverso",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 9
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM19.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM19",
+    "expoente": 390,
+    "id": "LojaPosAscM19",
+    "nome": "Mineradora do núcleo sem tempo",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF19.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      6,
+      6
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF19",
+    "expoente": 391,
+    "id": "LojaPosAscF19",
+    "nome": "Fornalha de ignição atemporal",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX55.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      5,
+      4,
+      4
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX55",
+    "etapas": 3,
+    "expoente": 392,
+    "id": "LojaPosAscX55",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Lente de fase atemporal",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX56.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      5,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX56",
+    "etapas": 3,
+    "expoente": 393,
+    "id": "LojaPosAscX56",
+    "largura": 2,
+    "nivel": 1,
+    "nome": "Prensa do núcleo sem tempo",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX57.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      6,
+      6,
+      5
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX57",
+    "etapas": 4,
+    "expoente": 394,
+    "id": "LojaPosAscX57",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Crisol de ignição atemporal",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscM20.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Mineradoras",
+    "codigo": "LAM20",
+    "expoente": 395,
+    "id": "LojaPosAscM20",
+    "nome": "Escavadora da eternidade",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscF20.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      8,
+      7,
+      7
+    ],
+    "categoria": "Fornalhas",
+    "codigo": "LAF20",
+    "expoente": 396,
+    "id": "LojaPosAscF20",
+    "nome": "Fornalha da eternidade",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX58.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      5,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX58",
+    "etapas": 4,
+    "expoente": 397,
+    "id": "LojaPosAscX58",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Reator de fase imutável",
+    "preco": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX59.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      7,
+      7,
+      6
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX59",
+    "etapas": 4,
+    "expoente": 398,
+    "id": "LojaPosAscX59",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Pórtico do último horizonte",
+    "preco": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  },
+  {
+    "arquivo": "modelos/loja-pos-ascensao/assets/LojaPosAscX60.rbxm",
+    "ascensoesMinimas": 1,
+    "blocos": [
+      8,
+      8,
+      7
+    ],
+    "categoria": "Modificadores",
+    "codigo": "LAX60",
+    "etapas": 5,
+    "expoente": 399,
+    "id": "LojaPosAscX60",
+    "largura": 2,
+    "nivel": 2,
+    "nome": "Modificador da eternidade",
+    "preco": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "serie": 10
+  }
+]

@@ -34,20 +34,18 @@ do
 			local maquina=Maquina.new(modelo,terreno,def,simulacao)
 			table.insert(maquinas,maquina); maquina:Atualizar(0)
 			local modificador=maquina._componentes[#maquina._componentes]
-			local valor=if c.ValorMinimo=="0" then "5" else c.ValorMinimo
+			local valor="5"
 			local minerio=Minerio.Criar({Valor=valor,Tamanho={.75,.75,.75}},CFrame.identity,terreno)
 			for etapa=1,c.Etapas do
 				local sensor=assert(modificador._sensores[etapa])
 				assert(simulacao._sensores[sensor] and not sensor.CanCollide and sensor.CanQuery)
-				if not c.ValorMaximo or Inteiro.subtrair(valor,c.ValorMaximo)==nil then
-					valor=Inteiro.somar(Inteiro.multiplicarArredondado(valor,c.Multiplicador),c.Bonus)
-				end
+				valor=Inteiro.multiplicarArredondado(valor,c.Multiplicador)
 				minerio:ObterParte().CFrame=sensor.CFrame
 				modificador:Receber(minerio,sensor); modificador:Receber(minerio,sensor)
 				assert(minerio:ObterValor()==valor,id..": efeito ou repeticao incorreta")
 				etapas+=1
 			end
-			if c.LimiteUsos then assert(minerio:ObterParte():GetAttribute("UsosModificador_"..c.TipoModificador)==1) end
+			if c.LimiteUsos then assert(minerio:ObterUsosModificador("UsosModificador_"..c.TipoModificador)==1) end
 			maquina:Destruir(); minerio:Consumir(); modelo:Destroy()
 		end
 		assert(total==55 and etapas==100 and semEsteira==6)
