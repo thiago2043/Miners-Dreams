@@ -2,6 +2,11 @@ local carregar = require("./suporte/carregador")({}, {})
 local Ficha = carregar("src/client/FichaMaquina")
 local Catalogo = carregar("src/shared/CatalogoMaquinas")
 local Personalizacao = carregar("src/shared/PersonalizacaoMaquina")
+assert(Ficha.RotuloCatalogo(Catalogo.MineradoraBasica)=="$100")
+assert(Ficha.RotuloCatalogo(Catalogo.SeloAurora)=="RN")
+assert(Ficha.RotuloCatalogo(Catalogo.ComutadorFerroPrisma)=="Craft")
+assert(Ficha.RotuloCatalogo({Preco="0",Obtencao="Ascensão"})=="AS")
+assert(Ficha.RotuloCatalogo({Obtencao="Evento"})=="Evento")
 
 local mineradora = Ficha.Descrever(Catalogo.MineradoraBasica)
 for _, trecho in { "Minério: $5", "Intervalo de geração: 2 s", "0,75 × 0,75 × 0,75 studs" } do

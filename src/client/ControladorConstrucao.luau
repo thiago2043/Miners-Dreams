@@ -202,7 +202,7 @@ function ControladorConstrucao:_LimparPreviaRemota()
 end
 
 function ControladorConstrucao:_PublicarPreviaRemota()
-  if self._destruido or not self._previa or self:FaseElevador() == "Entrada"
+  if self._destruido or not self._previa or self._abaColocacao == "CatalogoADM" or self:FaseElevador() == "Entrada"
     or self._previa:ObterModelo().Parent ~= workspace or not self._alvoColocacao then
     self:_LimparPreviaRemota()
     return
@@ -325,6 +325,13 @@ function ControladorConstrucao:EncerrarColocacao(preservarSelecao)
   self:_LimparPreviaRemota()
   self:_EncerrarArrasteColocacao()
   self:_EncerrarRotacao()
+	if self._donoTerrenoADM then
+		local travamento=self._travamentoAltura
+		self._travamentoAltura=nil
+		self:_AtualizarTransparenciaAltura()
+		self._travamentoAltura=travamento
+		self._donoTerrenoADM=nil
+	end
 	if not preservarSelecao then
 		self._rotacao = self._rotacaoPreservada or CFrame.identity
 		self._copia = nil
@@ -349,15 +356,16 @@ end
 -- Procura a plot cujo DonoUserId corresponde ao jogador e guarda suas pastas e piso. Devolve true quando esse
 -- contexto existe; false interrompe a acao sem criar ou atribuir outra plot.
 function ControladorConstrucao:_EncontrarTerreno(silencioso)
-	self._terreno = nil
-
 	for _, candidato in self._pastaTerrenos:GetChildren() do
 		if candidato:GetAttribute("DonoUserId") == self._jogador.UserId then
-			self._terreno = candidato
-			break
+			return self:_UsarTerreno(candidato,silencioso)
 		end
 	end
+	return self:_UsarTerreno(nil,silencioso)
+end
 
+function ControladorConstrucao:_UsarTerreno(terreno,silencioso)
+	self._terreno = terreno
 	self._piso = self._terreno and self._terreno:FindFirstChild("Piso")
 	self._maquinas = self._terreno and self._terreno:FindFirstChild("Maquinas")
 
@@ -379,10 +387,37 @@ function ControladorConstrucao:_EncontrarTerreno(silencioso)
 	return true
 end
 
+local function donoDoTerreno(terreno)
+	local dono=terreno:GetAttribute("DonoUserId")
+	return type(dono)=="number" and dono~=0 and dono or nil
+end
+
+function ControladorConstrucao:_TerrenoSobCursorADM()
+	local camera=workspace.CurrentCamera
+	if not camera then return nil end
+	local filtros={}
+	for _, terreno in self._pastaTerrenos:GetChildren() do
+		if not donoDoTerreno(terreno) then continue end
+		local piso,maquinas=terreno:FindFirstChild("Piso"),terreno:FindFirstChild("Maquinas")
+		if piso and maquinas then table.insert(filtros,piso); table.insert(filtros,maquinas) end
+	end
+	if not self._consultaADM then
+		self._consultaADM=RaycastParams.new()
+		self._consultaADM.FilterType=Enum.RaycastFilterType.Include
+	end
+	self._consultaADM.FilterDescendantsInstances=filtros
+	local mouse=self:ObterPonteiro()
+	local raio=camera:ViewportPointToRay(mouse.X,mouse.Y)
+	local hit=workspace:Raycast(raio.Origin,raio.Direction*alcance,self._consultaADM)
+	local terreno=hit and hit.Instance
+	while terreno and terreno.Parent~=self._pastaTerrenos do terreno=terreno.Parent end
+	return terreno
+end
+
 -- Monta um objeto de personalizacao para a previa atual. A loja usa o padrao; uma copia usa seu estado
 -- capturado; a selecao comum usa o atributo de configuracao do inventario.
 function ControladorConstrucao:ObterPersonalizacaoSelecionada()
-	if self._abaColocacao == "Loja" then return PersonalizacaoMaquina.new() end
+	if self._abaColocacao == "Loja" or self._abaColocacao == "CatalogoADM" then return PersonalizacaoMaquina.new() end
 	return self._copia and PersonalizacaoMaquina.new(self._copia.Modificacoes)
 		or PersonalizacaoMaquina.Decodificar(self._jogador:GetAttribute("ConfiguracaoInventario_" .. self._maquinaIdSelecionada))
 end
@@ -402,7 +437,7 @@ function ControladorConstrucao:ObterDefinicaoSelecionada(aba)
 	local selecao = self:ObterSelecao(aba)
 	if not selecao then return nil, false end
 	local item = CatalogoMaquinas[selecao.MaquinaId]
-	if aba == "Loja" then return PersonalizacaoMaquina.new():ObterDefinicao(item), false end
+	if aba == "Loja" or aba == "CatalogoADM" then return PersonalizacaoMaquina.new():ObterDefinicao(item), false end
 	local personalizacao = selecao.Copia and PersonalizacaoMaquina.new(selecao.Copia.Modificacoes)
 		or PersonalizacaoMaquina.Decodificar(self._jogador:GetAttribute("ConfiguracaoInventario_" .. selecao.MaquinaId))
 	return personalizacao:ObterDefinicao(item), selecao.Copia ~= nil
@@ -411,12 +446,25 @@ end
 -- Recria o objeto PreviaConstrucao para a peca ativa e a configura sem colisoes reais. Registra sua
 -- configuracao para perceber trocas de variante no estoque e limita o raio do cursor ao piso e as caixas de
 -- ocupacao.
-function ControladorConstrucao:IniciarColocacao()
+function ControladorConstrucao:IniciarColocacao(terrenoADM)
 	if self._destruido or self._colocando then return end
 	self.Navegacao:Fechar("Rotacao")
 	self:EncerrarSelecaoTerreno()
 	self:EncerrarColocacao(true)
-	if not self:_EncontrarTerreno() then self:EncerrarColocacao(); return end
+	if self._abaColocacao=="CatalogoADM" then
+		if not terrenoADM then
+			terrenoADM=self:_TerrenoSobCursorADM()
+			if not terrenoADM then
+				for _, terreno in self._pastaTerrenos:GetChildren() do
+					if donoDoTerreno(terreno) then terrenoADM=terreno; break end
+				end
+			end
+		end
+		if not terrenoADM or not self:_UsarTerreno(terrenoADM,true) then return end
+		self._donoTerrenoADM=donoDoTerreno(terrenoADM)
+	else
+		if not self:_EncontrarTerreno() then self:EncerrarColocacao(); return end
+	end
 
 	-- A configuracao efetiva combina o catalogo com as diferencas da variante. A previa recebe uma copia visual
 	-- e o raio passa a enxergar o piso e os volumes reservados das vizinhas.
@@ -515,6 +563,10 @@ end
 -- So envia o pedido quando ha uma previa visivel e um alvo livre. O servidor recebe tipo, canto na grade,
 -- orientacao e a origem da configuracao; a resposta informa sucesso ou a razao da recusa.
 function ControladorConstrucao:ConfirmarColocacao()
+	local administrativo=self._abaColocacao=="CatalogoADM"
+	if administrativo and self._previa and not self._colocando and not self._etapaElevador then
+		self:Atualizar(0)
+	end
 	if self._etapaElevador and not self._colocando then
 		self:_AtualizarSaidaElevador(Geometria.Origem(self._piso), 0)
 	end
@@ -525,6 +577,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 	end
 
 	local alvo, previa, movimento = self._alvoColocacao, self._previa, self._movimento
+	if administrativo and (not self._donoTerrenoADM or self._jogador:GetAttribute("Administrador")~=true) then return end
 	local arraste = self._arrasteColocacao
 	local alvosGrupo = movimento and movimento.Grupo and self._alvosGrupo
 	local livre = alvo.livre
@@ -537,7 +590,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	if not livre then
 		warn("Nao ha espaco livre nessa altura do terreno.")
-		if self.AoColocarTutorial then self.AoColocarTutorial(nil, "Esse espaço está ocupado. Encaixe a prévia em uma área livre.") end
+		if not administrativo and self.AoColocarTutorial then self.AoColocarTutorial(nil, "Esse espaço está ocupado. Encaixe a prévia em uma área livre.") end
 		return
 	end
 	if self:FaseElevador() == "Entrada" then
@@ -551,7 +604,10 @@ function ControladorConstrucao:ConfirmarColocacao()
 	-- fetch espera uma resposta de rede. pcall distingue falha de comunicacao de uma recusa normal do servidor;
 	-- _colocando impede enviar outro pedido durante a espera.
 	local comunicou, sucesso, mensagem = pcall(function()
-		if arraste and #arraste.Alvos > 1 then
+		if administrativo then
+			return self.RedeAdministracao:fetch("ColocarPeca",self._terreno,self._donoTerrenoADM,
+				alvo.maquinaId,alvo.minimo,alvo.rotacao,alvo.elevador)
+		elseif arraste and #arraste.Alvos > 1 then
 			local pedidos = {}
 			for _, item in arraste.Alvos do table.insert(pedidos, {Minimo=item.minimo, Rotacao=item.rotacao}) end
 			return self._redeConstrucao:fetch("ColocarMultiplos", alvo.maquinaId, pedidos,
@@ -590,11 +646,11 @@ function ControladorConstrucao:ConfirmarColocacao()
 
 	if not comunicou then
 		warn("Nao foi possivel confirmar a colocacao.")
-		if self.AoColocarTutorial then self.AoColocarTutorial(nil, "Não foi possível confirmar. Tente colocar de novo.") end
+		if not administrativo and self.AoColocarTutorial then self.AoColocarTutorial(nil, "Não foi possível confirmar. Tente colocar de novo.") end
 	elseif type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
 		warn("Resposta invalida do servidor.")
 	elseif sucesso then
-		if self.AoColocarTutorial then self.AoColocarTutorial(alvo.maquinaId) end
+		if not administrativo and self.AoColocarTutorial then self.AoColocarTutorial(alvo.maquinaId) end
 		if movimento and movimento.Copia then
 			self._alvoColocacao = nil
 			for _, peca in movimento.Pecas do peca.Previa:ForcarAtualizacao() end
@@ -616,7 +672,7 @@ function ControladorConstrucao:ConfirmarColocacao()
 		print(mensagem)
 	else
 		warn(mensagem)
-		if self.AoColocarTutorial then self.AoColocarTutorial(nil, mensagem) end
+		if not administrativo and self.AoColocarTutorial then self.AoColocarTutorial(nil, mensagem) end
 	end
 end
 
@@ -1820,7 +1876,8 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 		or entrada.UserInputType == Enum.UserInputType.MouseButton1) then return end
 	local estado = self.Navegacao:Atual()
 	if estado and estado ~= "Inventario" and estado ~= "Loja" and estado ~= "FichaInventario"
-		and estado ~= "FichaLoja" and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
+		and estado ~= "FichaLoja" and estado ~= "CatalogoADM" and estado ~= "FichaCatalogoADM"
+		and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
 		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia" and estado ~= "Craft"
 		and estado ~= "Colocacao"
 		and estado ~= "Rotacao" and estado ~= "Recolhimento"
@@ -1836,7 +1893,9 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 		if acao then self:ExecutarAcaoPeca(acao); return end
 	end
 	-- Nas abas centrais simples, apenas os atalhos de paineis continuam ativos; cliques nao operam sobre a plot.
-	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao" or estado == "Administracao" or estado == "Tutorial" or estado == "HistoricoCopia" or estado == "Craft") and tecla ~= Enum.KeyCode.U
+	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao"
+		or estado == "Administracao" or estado == "CatalogoADM" or estado == "FichaCatalogoADM"
+		or estado == "Tutorial" or estado == "HistoricoCopia" or estado == "Craft") and tecla ~= Enum.KeyCode.U
 		and tecla ~= Enum.KeyCode.P and tecla ~= Enum.KeyCode.B
 		and tecla ~= Enum.KeyCode.E and tecla ~= Enum.KeyCode.F then return end
 
@@ -1896,7 +1955,7 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 					or UserInputService:IsKeyDown(Enum.KeyCode.RightShift),
 			}
 			self:_CapturarRodaSelecao()
-		elseif self._previa and not self:FaseElevador()
+		elseif self._previa and self._abaColocacao ~= "CatalogoADM" and not self:FaseElevador()
 			and (not self._movimento or (self._movimento.Copia and #self._movimento.Pecas == 1)) then
 			self:_IniciarArrasteColocacao()
 		else
@@ -1961,6 +2020,22 @@ end
 -- camera, da superficie apontada, da grade e das bordas; em seguida solicita a animacao da previa.
 function ControladorConstrucao:Atualizar(deltaTime)
 	if self._destruido then return end
+	local administrativo=self._abaColocacao=="CatalogoADM"
+	if administrativo and self._previa and not self._colocando then
+		if self._jogador:GetAttribute("Administrador")~=true then self.Navegacao:Fechar("Colocacao"); return end
+		if not self._etapaElevador and not self._rPressionado then
+			local terreno=self:_TerrenoSobCursorADM()
+			if not terreno then
+				self:_OcultarPrevia()
+				if self._gradeTerreno then self._gradeTerreno:DefinirVisivel(false) end
+				if self._setasTerreno then self._setasTerreno:DefinirVisivel(false) end
+				return
+			end
+			if terreno~=self._terreno or donoDoTerreno(terreno)~=self._donoTerrenoADM then
+				self:IniciarColocacao(terreno)
+			end
+		end
+	end
 	if self._setasTerreno then self._setasTerreno:DefinirVisivel(self._previa ~= nil) end
 	if self.Navegacao:Contem("Confirmacao") then return end
 	self:_AtualizarDestaqueHover()
@@ -2007,7 +2082,7 @@ self:_AtualizarTransparenciaAltura()
 	end
 
 	if self._terreno.Parent ~= self._pastaTerrenos
-		or self._terreno:GetAttribute("DonoUserId") ~= self._jogador.UserId
+		or self._terreno:GetAttribute("DonoUserId") ~= (if administrativo then self._donoTerrenoADM else self._jogador.UserId)
 		or self._piso.Parent ~= self._terreno
 		or self._maquinas.Parent ~= self._terreno
 	then
@@ -2210,7 +2285,8 @@ end
 -- Abre ou foca Inventario/Loja sem fechar o outro painel. Recoloca a ficha e a acao de construcao no topo da
 -- pilha, mantendo Q como cancelamento da acao mais recente.
 function ControladorConstrucao:AbrirAba(aba)
-	if self._destruido or self._colocando or (aba ~= "Inventario" and aba ~= "Loja") then return end
+	if self._destruido or self._colocando then return end
+	if aba~="Inventario" and aba~="Loja" and (aba~="CatalogoADM" or self._jogador:GetAttribute("Administrador")~=true) then return end
 	self.Navegacao:Fechar("MenuPeca")
 	self._abaSelecionada = aba
 	if not self.Navegacao:Focar(aba) then
@@ -2424,7 +2500,7 @@ function ControladorConstrucao:SelecionarMaquina(maquinaId, aba, copia)
 	if self._destruido or self._colocando or not CatalogoMaquinas[maquinaId] then return false end
 	aba = aba or (self.Navegacao:Contem(self._abaSelecionada) and self._abaSelecionada
 		or (self.Navegacao:Contem("Loja") and "Loja" or "Inventario"))
-	if aba ~= "Inventario" and aba ~= "Loja" then return false end
+	if aba~="Inventario" and aba~="Loja" and (aba~="CatalogoADM" or self._jogador:GetAttribute("Administrador")~=true or copia) then return false end
 	if not self:_EncerrarAcao() then return false end
 	self:AbrirAba(aba)
 	-- Reutiliza o Id e a rotacao somente se a mesma escolha comum continua selecionada. Trocar de tipo ou
@@ -2463,15 +2539,19 @@ function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	local selecao = self._selecoes:Obter(aba)
 	if self._destruido or self._colocando or not selecao or not self.Navegacao:Contem("Ficha" .. aba) then return false end
 	local quantidade = self._jogador:GetAttribute("Inventario_" .. selecao.MaquinaId)
-	if type(quantidade) ~= "number" or quantidade < 0 or quantidade % 1 ~= 0 or quantidade >= 2 ^ 53
+	local administrativo=aba=="CatalogoADM"
+	if administrativo then
+		if self._jogador:GetAttribute("Administrador")~=true then return false end
+	elseif type(quantidade) ~= "number" or quantidade < 0 or quantidade % 1 ~= 0 or quantidade >= 2 ^ 53
 		or (aba == "Inventario" and quantidade == 0 and not selecao.Copia) then return false end
 	if self._abaColocacao == aba and self._previa then return true end
-	if fecharAbas and not self:_EncontrarTerreno() then return false end
+	if fecharAbas and not administrativo and not self:_EncontrarTerreno() then return false end
 	if not self:_EncerrarAcao() then return false end
 	-- A selecao local foi capturada antes de fechar as fichas, preservando a configuracao do clique duplo.
 	if fecharAbas then
 		self.Navegacao:Fechar("Inventario")
 		self.Navegacao:Fechar("Loja")
+		self.Navegacao:Fechar("CatalogoADM")
 	end
 	self._abaSelecionada, self._abaColocacao = aba, aba
 	self._abaDaPeca = aba
@@ -2737,7 +2817,8 @@ end
 -- andamento, copias e colocacao pela loja, pois esses modos usam outras fontes de configuracao.
 function ControladorConstrucao:_AtualizarConfiguracaoInventario()
 	if self._destruido or self._colocando or self._arrasteColocacao or self._etapaElevador
-		or self._movimento or self._copia or not self._previa or self._abaColocacao == "Loja" then return end
+		or self._movimento or self._copia or not self._previa
+		or self._abaColocacao == "Loja" or self._abaColocacao == "CatalogoADM" then return end
 	local texto = self._jogador:GetAttribute("ConfiguracaoInventario_" .. self._maquinaIdSelecionada)
 	if texto and texto ~= self._configuracaoInventario then
 		self:IniciarColocacao()

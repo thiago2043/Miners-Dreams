@@ -5,6 +5,7 @@ local processo = require("@lune/process")
 local montagem = require("../renascimento/novas/montagem")
 local formas = require("./formas")
 local definicoes = require("./definicoes")
+local ajustarHitboxes = require("../ajustar_hitboxes")
 local destino = "modelos/expansao"
 local categorias = {"Mineradoras","Fornalhas","Modificadores"}
 local siglas = {Mineradoras="M",Fornalhas="F",Modificadores="X"}
@@ -31,12 +32,13 @@ for _, origem in {"Loja","Craft"} do
 			modelo:SetAttribute("SomenteModelagem",false)
 			modelo:SetAttribute("OrigemProposta",origem)
 			modelo:SetAttribute("CodigoVisual",codigo)
+			ajustarHitboxes.Aplicar(modelo)
 			local arquivo = destino.."/assets/"..origem.."/"..def[1]..".rbxm"
 			fs.writeFile(arquivo,r.serializeModel({modelo}))
 			if exportar then
 				table.insert(geometria,{
 					id=def[1],nome=def[2],categoria=categoria,origem=origem,codigo=codigo,
-					blocos={def[3],def[4],def[5]},etapas=modelo:GetAttribute("Etapas"),
+					blocos={def[3],def[4],modelo.HitboxConstrucao.Size.Y/modelo:GetAttribute("GradeStuds")},etapas=modelo:GetAttribute("Etapas"),
 					largura=modelo:GetAttribute("LarguraCorreiaBlocos"),nivel=if categoria=="Modificadores" then def[9] else 0,
 					partes=montagem.Geometria(modelo),
 				})

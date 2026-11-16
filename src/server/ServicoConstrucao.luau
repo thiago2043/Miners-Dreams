@@ -1684,9 +1684,15 @@ function ServicoConstrucao:Administrar(jogador,pedido)
 	end
 	local id=anterior and anterior.MaquinaId or pedido.MaquinaId
 	local g=pedido.Giro
-	local rotacao=RotacaoConstrucao.ValidarNaGrade(CFrame.Angles(math.rad(g[1]),math.rad(g[2]),math.rad(g[3])),CatalogoMaquinas[id])
+	local orientacao=if pedido.Rotacao then CFrame.new(0,0,0,table.unpack(pedido.Rotacao))
+		else CFrame.Angles(math.rad(g[1]),math.rad(g[2]),math.rad(g[3]))
+	local rotacao=RotacaoConstrucao.ValidarNaGrade(orientacao,CatalogoMaquinas[id])
 	if not rotacao then return false,"Rotação não permitida para essa peça." end
-	local ok,preparado=pcall(self._PrepararModelo,self,id,anterior and anterior.Modificacoes,rotacao)
+	local modificacoes=anterior and anterior.Modificacoes
+	if pedido.Elevador then
+		modificacoes={Elevador=ElevadorVertical.Validar(table.unpack(pedido.Elevador))}
+	end
+	local ok,preparado=pcall(self._PrepararModelo,self,id,modificacoes,rotacao)
 	if not ok then return false,"Modelo inválido." end
 	local p=pedido.Posicao
 	local minimo=Vector3.new(p[1],p[2],p[3])*Geometria.Passo
@@ -1695,7 +1701,7 @@ function ServicoConstrucao:Administrar(jogador,pedido)
 	local componentes={rotacao:GetComponents()}
 	local novo={Id=anterior and anterior.Id,MaquinaId=id,Posicao={minimo.X,minimo.Y,minimo.Z},
 		Rotacao={table.unpack(componentes,4,12)},InclinacaoGrade=preparado.Modelo:GetAttribute("InclinacaoEsteira") and true or nil,
-		Modificacoes=anterior and anterior.Modificacoes}
+		Modificacoes=modificacoes}
 	local criou,modelo=pcall(self._CriarMaquina,self,jogador,terreno,maquinas,destino,novo,preparado,nil,nil,
 		modeloAnterior and modeloAnterior:GetAttribute("TotalRecebido"))
 	liberarModelo(preparado)
@@ -1704,6 +1710,7 @@ function ServicoConstrucao:Administrar(jogador,pedido)
 		registros[indice]=novo; self._registrosPorMaquina[modeloAnterior]=nil; modeloAnterior:Destroy()
 	else table.insert(registros,novo) end
 	self._copias[jogador],self._copiasGrupo[jogador]=nil,nil
+	dados:Sincronizar()
 	return true,"Peça "..(anterior and "reposicionada." or "adicionada sem custo."),anterior,novo
 end
 

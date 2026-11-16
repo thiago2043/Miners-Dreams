@@ -7,6 +7,12 @@ local Inteiro=require(game:GetService("ReplicatedStorage").Shared.InteiroGrande)
 local bloco=require(game:GetService("ReplicatedStorage").Shared.Medidas).Bloco
 local FichaMaquina = {}
 
+local origens={Renascimento="RN",["Ascensão"]="AS",Ascensao="AS"}
+function FichaMaquina.RotuloCatalogo(item)
+	if item.Preco and (item.Preco~="0" or not item.Obtencao) then return "$"..AbreviarInteiro(item.Preco) end
+	return origens[item.Obtencao] or item.Obtencao or "Sem preço"
+end
+
 -- Abrevia inteiros e usa virgula em decimais; o resultado nao volta para os calculos.
 local function numero(valor)
 	if type(valor) == "number" and valor >= 0 and valor < 2 ^ 53 and valor % 1 == 0 then return AbreviarInteiro(valor) end

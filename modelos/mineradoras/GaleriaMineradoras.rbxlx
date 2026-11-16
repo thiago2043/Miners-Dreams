@@ -26717,7 +26717,7 @@
       <Item class="Model" referent="820">
         <Properties>
           <string name="Name">MineradoraPlasma</string>
-          <BinaryString name="AttributesSerialize">CwAAABEAAABBdmFuY29TYWlkYUJsb2NvcwYAAAAAAAD4PxEAAABCbG9jb3NIb3Jpem9udGFpcxEAAKBAAAAAAAAAgEAPAAAAQ2VudHJvSW5kaWNhZG9yEQAAAACAk9hAAAAoQQwAAABEaXJlY2FvU2FpZGERAAAAAAAAgL8AAAAACgAAAEdyYWRlU3R1ZHMFAABAQBUAAABMYXJndXJhQ2FiZWNvdGVCbG9jb3MGAAAAAAAABEALAAAATml2ZWxWaXN1YWwFAAAAQQwAAABOb21lRXhpYmljYW8CBgAAAFBsYXNtYQsAAABPcmlnZW1HcmFkZREAAI3CAAAAAAAAQEAQAAAAU3Vwb3J0ZUluZGljYWRvcgIRAAAATnVjbGVvQ2FiZWNvdGVfNDQMAAAAVmVyc2FvSGl0Ym94BQAAAEA=</BinaryString>
+          <BinaryString name="AttributesSerialize">CwAAABEAAABBdmFuY29TYWlkYUJsb2NvcwYAAAAAAAD4PxEAAABCbG9jb3NIb3Jpem9udGFpcxEAAKBAAAAAAAAAgEAPAAAAQ2VudHJvSW5kaWNhZG9yEQAAAACAk9hAAAAoQQwAAABEaXJlY2FvU2FpZGERAAAAAAAAgL8AAAAACgAAAEdyYWRlU3R1ZHMFAABAQBUAAABMYXJndXJhQ2FiZWNvdGVCbG9jb3MGAAAAAAAABEALAAAATml2ZWxWaXN1YWwFAAAAQQwAAABOb21lRXhpYmljYW8CBgAAAFBsYXNtYQsAAABPcmlnZW1HcmFkZREAAI3CAAAAAAAAQEAQAAAAU3Vwb3J0ZUluZGljYWRvcgIRAAAATnVjbGVvQ2FiZWNvdGVfNDQMAAAAVmVyc2FvSGl0Ym94BQAAQEA=</BinaryString>
           <Ref name="PrimaryPart">821</Ref>
         </Properties>
         <Item class="Part" referent="821">
@@ -30763,7 +30763,7 @@
             <token name="BottomSurface">0</token>
             <CoordinateFrame name="CFrame">
               <X>-70.5</X>
-              <Y>6</Y>
+              <Y>4.5</Y>
               <Z>3</Z>
               <R00>1</R00>
               <R01>0</R01>
@@ -30784,7 +30784,7 @@
             <token name="shape">1</token>
             <Vector3 name="size">
               <X>15</X>
-              <Y>12</Y>
+              <Y>9</Y>
               <Z>12</Z>
             </Vector3>
             <token name="TopSurface">0</token>
@@ -30795,7 +30795,7 @@
       <Item class="Model" referent="945">
         <Properties>
           <string name="Name">MineradoraAtomica</string>
-          <BinaryString name="AttributesSerialize">CgAAABEAAABBdmFuY29TYWlkYUJsb2NvcwYAAAAAAAD4PxEAAABCbG9jb3NIb3Jpem9udGFpcxEAAKBAAAAAAAAAgEAPAAAAQ2VudHJvSW5kaWNhZG9yEQAAAABwPRBBAAAoQQwAAABEaXJlY2FvU2FpZGERAAAAAAAAgL8AAAAACgAAAEdyYWRlU3R1ZHMFAABAQBUAAABMYXJndXJhQ2FiZWNvdGVCbG9jb3MGAAAAAAAABEALAAAATml2ZWxWaXN1YWwFAAAQQQwAAABOb21lRXhpYmljYW8CCAAAAEF0w7RtaWNhCwAAAE9yaWdlbUdyYWRlEQAARsIAAAAAAABAQBAAAABTdXBvcnRlSW5kaWNhZG9yAhEAAABOdWNsZW9DYWJlY290ZV80NA==</BinaryString>
+          <BinaryString name="AttributesSerialize">CwAAABEAAABBdmFuY29TYWlkYUJsb2NvcwYAAAAAAAD4PxEAAABCbG9jb3NIb3Jpem9udGFpcxEAAKBAAAAAAAAAgEAPAAAAQ2VudHJvSW5kaWNhZG9yEQAAAABwPRBBAAAoQQwAAABEaXJlY2FvU2FpZGERAAAAAAAAgL8AAAAACgAAAEdyYWRlU3R1ZHMFAABAQBUAAABMYXJndXJhQ2FiZWNvdGVCbG9jb3MGAAAAAAAABEALAAAATml2ZWxWaXN1YWwFAAAQQQwAAABOb21lRXhpYmljYW8CCAAAAEF0w7RtaWNhCwAAAE9yaWdlbUdyYWRlEQAARsIAAAAAAABAQBAAAABTdXBvcnRlSW5kaWNhZG9yAhEAAABOdWNsZW9DYWJlY290ZV80NAwAAABWZXJzYW9IaXRib3gFAABAQA==</BinaryString>
           <Ref name="PrimaryPart">946</Ref>
         </Properties>
         <Item class="Part" referent="946">
@@ -35008,7 +35008,7 @@
             <token name="BottomSurface">0</token>
             <CoordinateFrame name="CFrame">
               <X>-49.5</X>
-              <Y>7.5</Y>
+              <Y>6</Y>
               <Z>3</Z>
               <R00>1</R00>
               <R01>0</R01>
@@ -35029,7 +35029,7 @@
             <token name="shape">1</token>
             <Vector3 name="size">
               <X>15</X>
-              <Y>15</Y>
+              <Y>12</Y>
               <Z>12</Z>
             </Vector3>
             <token name="TopSurface">0</token>

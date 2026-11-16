@@ -2,9 +2,20 @@ local r=require("@lune/roblox")
 local ui=require("./suporte/interface")
 local tarefa=require("@lune/task")
 local heartbeat=ui.Sinal()
-local carregar=require("./suporte/carregador")({Instance={new=ui.NovaInstancia},Enum=r.Enum,
+local function instancia(classe)
+	local o=ui.NovaInstancia(classe)
+	local attrs={}
+	o.GetAttribute=function(_,chave) return attrs[chave] end
+	o.SetAttribute=function(_,chave,valor) attrs[chave]=valor end
+	return o
+end
+local carregar=require("./suporte/carregador")({Instance={new=instancia},Enum=r.Enum,
+	typeof=function(v) return type(v)=="table" and v.ClassName and "Instance" or r.typeof(v) end,
 	Color3=r.Color3,Vector2=r.Vector2,Vector3=r.Vector3,CFrame=r.CFrame,UDim=r.UDim,UDim2=r.UDim2,task=tarefa,
-},{RunService={Heartbeat=heartbeat}})
+},{RunService={Heartbeat=heartbeat,RenderStepped=ui.Sinal(),IsServer=function() return false end}},{
+	["src/client/AnimacaoInterface"]={DefinirVisivel=function(g,v) g.Visible=v end,TransicaoSubAba=function() end},
+	["src/client/GerenciadorJanelas"]={Registrar=function() end},
+})
 local jogador={GetAttribute=function(_,n) return n=="Administrador" and true or nil end}
 local nav=carregar("src/client/NavegacaoEstados").new()
 local resumo={Dinheiro="100",GanhosPorSegundo="5",Vidas=1,Reencarnacoes=0,Plot=1,Inventario=12,Tempo=60,Instante=123,
@@ -27,7 +38,10 @@ local confirmacao={Pedir=function(_,tipo,_,callback,texto)
 	assert(tipo=="Administracao" and texto:find("Jogador",1,true))
 	confirmou=callback
 end}
-local painel=carregar("src/client/PainelAdministracao").new(ui.NovaInstancia("ScreenGui"),jogador,nav,rede,confirmacao)
+local abriuCatalogo=false
+local painel=carregar("src/client/PainelAdministracao").new(instancia("ScreenGui"),jogador,nav,rede,confirmacao,function()
+	abriuCatalogo=true
+end)
 local function botao(nome)
 	for _,b in painel._botoes do if b:ObterInstancia().Name==nome then return b:ObterInstancia() end end
 	error("Botao ausente: "..nome)
@@ -39,6 +53,8 @@ local function campo(nome)
 end
 nav:Abrir("Administracao"); painel:Atualizar(); tarefa.wait()
 assert(painel._grupo.Visible and botao("Player_123") and botao("Salvo_456"))
+botao("CatalogoPecas").Activated:Fire()
+assert(abriuCatalogo and not consultas,"O catálogo abre sem selecionar o dono da plot.")
 botao("Player_123").Activated:Fire()
 assert(consultas==1 and painel._dados.UserId==123)
 botao("Editar").Activated:Fire()

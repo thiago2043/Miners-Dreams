@@ -64,7 +64,7 @@ self._grupo.Parent = pai
 
 self._ids = {}
 for id, item in Catalogo do
-if inventario or not item.Obtencao then
+if inventario or aba == "CatalogoADM" or not item.Obtencao then
 table.insert(self._ids, id)
 end
 end
@@ -211,7 +211,9 @@ end
 function PainelPecas:Atualizar()
 if self._destruido then return end
 local nav = self._construcao.Navegacao
-local visivelLista = nav:Contem(self.Aba)
+local administrativo = self.Aba == "CatalogoADM"
+local jogadorFicha = if administrativo then nil else self._jogador
+local visivelLista = nav:Contem(self.Aba) and (not administrativo or self._jogador:GetAttribute("Administrador")==true)
 local visivelFicha = visivelLista and nav:Contem("Ficha" .. self.Aba)
 local inventario = self.Aba == "Inventario"
 local direcaoAnim = if inventario then "Esquerda" else "Direita"
@@ -230,6 +232,7 @@ GerenciadorJanelas.TrazerParaFrente("Ficha_" .. self.Aba)
 end
 AnimacaoInterface.DefinirVisivel(self._painelLista, visivelLista, direcaoAnim)
 AnimacaoInterface.DefinirVisivel(self._painelFicha, visivelFicha, direcaoAnim)
+if administrativo and not visivelLista then return end
 
 local selecao = self._construcao:ObterSelecao(self.Aba)
 local mudouSelecao = (self._selecao and self._selecao.Id) ~= (selecao and selecao.Id)
@@ -259,14 +262,14 @@ for _, a in { "Extracao", "Fundicao", "Motores", "Calibracao" } do
 chaveDescricao ..= tostring(self._jogador:GetAttribute("Upgrade_" .. a)) .. ":"
 end
 chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores"))
-local calibracao = Efeitos.Nivel(self._jogador, "Calibracao")
+local calibracao = Efeitos.Nivel(jogadorFicha, "Calibracao")
 
 for _, id in self._ids do
-local quantidade = self._jogador:GetAttribute("Inventario_" .. id)
-local pronto = quantidadeValida(quantidade)
+local quantidade = if administrativo then nil else self._jogador:GetAttribute("Inventario_" .. id)
+local pronto = administrativo or quantidadeValida(quantidade)
 local selecionada = visivelFicha and selecao ~= nil and selecao.MaquinaId == id
 if chaveDescricao ~= self._chaveDescricao then
-local ok, descricao = pcall(FichaMaquina.Descrever, Catalogo[id], self._jogador)
+local ok, descricao = pcall(FichaMaquina.Descrever, Catalogo[id], jogadorFicha)
 self._grade:AtualizarDescricao(id, ok and descricao or "Descrição indisponível", calibracao)
 end
 self._grade:AtualizarItem(
@@ -280,13 +283,16 @@ self._grade:ConcluirAtualizacao()
 
 self._fichaValida = false
 local id = selecao and selecao.MaquinaId
-local item, quantidade = id and Catalogo[id], id and self._jogador:GetAttribute("Inventario_" .. id)
-local pronto, copia = quantidadeValida(quantidade), selecao and selecao.Copia ~= nil
+local item = id and Catalogo[id]
+local quantidade = if administrativo then nil else id and self._jogador:GetAttribute("Inventario_" .. id)
+local pronto, copia = administrativo or quantidadeValida(quantidade), selecao and selecao.Copia ~= nil
 self._configuracaoExibida = id and self._jogador:GetAttribute("ConfiguracaoInventario_" .. id)
 local definicao
 self._textoQuantidade.Text = quantidade == nil and "Inventário: carregando..."
 or (pronto and ("No inventário: " .. AbreviarInteiro(quantidade)) or "Inventário indisponível")
-if id and self._contagensPlot then
+if administrativo then
+self._textoQuantidade.Text = "Colocação sem custo. Aponte para a plot de destino."
+elseif id and self._contagensPlot then
 self._textoQuantidade.Text ..= "\nNa plot: " .. AbreviarInteiro(self._contagensPlot[id] or 0)
 end
 
@@ -297,7 +303,7 @@ self._textoFicha.Text = quantidade == nil and "Carregando informações..." or "
 else
 local sucesso, descricao = pcall(function()
 definicao = self._construcao:ObterDefinicaoSelecionada(self.Aba)
-return FichaMaquina.Descrever(definicao, self._jogador)
+return FichaMaquina.Descrever(definicao, jogadorFicha)
 end)
 self._fichaValida = sucesso
 self._textoFicha.Text = sucesso and descricao or "Não foi possível ler a configuração desta peça."
@@ -314,7 +320,7 @@ self._fichaValida = self._fichaValida and retratoValido
 
 for acao, botao in self._acoes do
 local disponivel = visivelFicha and item ~= nil and pronto and self._fichaValida and not self._negociando
-if acao == "Colocar" then disponivel = disponivel and (quantidade > 0 or copia) end
+if acao == "Colocar" then disponivel = disponivel and (administrativo or quantidade > 0 or copia) end
 if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Obtencao end
 if acao == "Comprar" then disponivel = disponivel and not item.Obtencao end
 botao:DefinirDisponivel(disponivel)

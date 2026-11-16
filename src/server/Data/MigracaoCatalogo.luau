@@ -47,7 +47,7 @@ function Migracao.Preparar(dados)
 	assert(type(dados) == "table", "Perfil invalido.")
 	local novo = {}
 	for chave, valor in dados do
-		if Template[chave] ~= nil or chave == "BackupGrade4" or chave == "BackupHitboxes" or chave == "BackupHitboxesV2" then
+		if Template[chave] ~= nil or chave == "BackupGrade4" or chave == "BackupHitboxes" or chave == "BackupHitboxesV2" or chave == "BackupHitboxesV3" then
 			novo[chave] = copiar(valor)
 		end
 	end

@@ -3957,7 +3957,7 @@
     "passagem": 6
   },
   {
-    "altura": 2,
+    "altura": 1,
     "alturaCorreia": 0.9375,
     "alturaPassagem": 0.9375,
     "blocos": [
@@ -3976,7 +3976,7 @@
       {
         "cf": [
           0,
-          3,
+          1.5,
           0,
           1,
           0,
@@ -4001,7 +4001,7 @@
         "shape": "Block",
         "size": [
           12,
-          6,
+          3,
           9
         ],
         "transparency": 1
@@ -23832,7 +23832,7 @@
     "passagem": 6
   },
   {
-    "altura": 4,
+    "altura": 3,
     "alturaCorreia": 3.9375,
     "alturaPassagem": 3.9375,
     "blocos": [
@@ -23851,7 +23851,7 @@
       {
         "cf": [
           0,
-          6,
+          4.5,
           0,
           1,
           0,
@@ -23876,7 +23876,7 @@
         "shape": "Block",
         "size": [
           15,
-          12,
+          9,
           12
         ],
         "transparency": 1
@@ -48050,7 +48050,7 @@
     "passagem": 6
   },
   {
-    "altura": 2,
+    "altura": 1,
     "alturaCorreia": 0.9375,
     "alturaPassagem": 0.9375,
     "blocos": [
@@ -48069,7 +48069,7 @@
       {
         "cf": [
           1.5,
-          3,
+          1.5,
           0,
           1,
           0,
@@ -48094,7 +48094,7 @@
         "shape": "Block",
         "size": [
           12,
-          6,
+          3,
           6
         ],
         "transparency": 1
@@ -78176,7 +78176,7 @@
     "passagem": 6
   },
   {
-    "altura": 1,
+    "altura": 2,
     "alturaCorreia": 0.9375,
     "alturaPassagem": 0.9375,
     "blocos": [
@@ -78195,7 +78195,7 @@
       {
         "cf": [
           0,
-          1.5,
+          3,
           0,
           1,
           0,
@@ -78220,7 +78220,7 @@
         "shape": "Block",
         "size": [
           12,
-          3,
+          6,
           12
         ],
         "transparency": 1

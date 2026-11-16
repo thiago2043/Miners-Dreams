@@ -3,6 +3,7 @@ local serde=require("@lune/serde")
 local r=require("@lune/roblox")
 local ajustes=require("../src/shared/AjustesHitbox")
 local reducoes=require("../src/shared/ReducoesAlturaHitbox")
+local variacoes=require("../src/shared/AjustesAlturaV3")
 local M={}
 function M.Aplicar(modelo)
 	local a=ajustes[modelo.Name]; local h=modelo:FindFirstChild("HitboxConstrucao")
@@ -23,6 +24,14 @@ function M.Aplicar(modelo)
 		h.Size-=r.Vector3.new(0,reducao*bloco,0)
 		versao=2; mudou=true
 	end
+	local variacao=variacoes[modelo.Name]
+	if variacao and versao<3 then
+		local delta=variacao*bloco
+		assert(h.Size.Y+delta>=bloco,"Altura inválida: "..modelo.Name)
+		h.CFrame+=h.CFrame:VectorToWorldSpace(r.Vector3.new(0,delta/2,0))
+		h.Size+=r.Vector3.new(0,delta,0)
+		versao=3; mudou=true
+	end
 	if mudou then modelo:SetAttribute("VersaoHitbox",versao) end
 	return mudou
 end
@@ -36,7 +45,7 @@ function M.Executar()
 	local projeto=serde.decode("json",fs.readFile("default.project.json"))
 	local total=0
 	for id,entrada in projeto.tree.ReplicatedStorage.ModelosMaquinas do
-		if not ajustes[id] and not reducoes[id] then continue end
+		if not ajustes[id] and not reducoes[id] and not variacoes[id] then continue end
 		local modelo=r.deserializeModel(fs.readFile(entrada["$path"]))[1]
 		if M.Aplicar(modelo) then fs.writeFile(entrada["$path"],r.serializeModel({modelo})); total+=1 end
 	end
@@ -46,7 +55,7 @@ function M.Executar()
 		local defs=serde.decode("json",fs.readFile(caminho))
 		for _,d in defs do
 			local a,reducao=ajustes[d.id],reducoes[d.id]
-			if not a and not reducao then continue end
+			if not a and not reducao and not variacoes[d.id] then continue end
 			local path=projeto.tree.ReplicatedStorage.ModelosMaquinas[d.id]["$path"]
 			local h=r.deserializeModel(fs.readFile(path))[1].HitboxConstrucao
 			local novo={h.Size.X/3,h.Size.Y/3,h.Size.Z/3}
@@ -65,6 +74,11 @@ function M.Executar()
 			local galeria=r.deserializeModel(fs.readFile(path))[1]
 			if arvore(galeria) then fs.writeFile(path,r.serializeModel({galeria})) end
 		end
+	end
+	for _,origem in {"Loja","Craft"} do
+		local path="modelos/expansao/Galeria50"..origem..".rbxm"
+		local galeria=r.deserializeModel(fs.readFile(path))[1]
+		if arvore(galeria) then fs.writeFile(path,r.serializeModel({galeria})) end
 	end
 	print("HITBOXES_AJUSTADAS",total)
 end

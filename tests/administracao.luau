@@ -178,4 +178,48 @@ assert(not alterar({Tipo="Vidas",Esperado=1,Valor=100,Motivo="Pedido anterior",G
 assert(perfil.Data.Vidas==1,"Uma edicao anterior ao reset nao pode modificar o novo progresso.")
 perfil.Data.Dinheiro=gigante
 assert(dados:Reencarnar(0) and perfil.Data.GeracaoProgresso==1,"Renascimento nao pode devolver a versao de progresso anterior ao reset.")
+
+local plotOutro=terreno:Clone()
+plotOutro:SetAttribute("DonoUserId",outro.UserId)
+plotOutro:SetAttribute("TerrenoId",2)
+plotOutro.Piso.CFrame+=V.new(96,0,0)
+plotOutro.Parent=terrenos
+outro:SetAttribute("TerrenoId",2)
+function players:GetPlayerByUserId(id)
+	return if id==p.UserId then p elseif id==outro.UserId then outro else nil
+end
+local outroPerfil={Data=serde.decode("json",serde.encode("json",Template)),salvamentos=0,
+	IsActive=perfil.IsActive,Save=perfil.Save}
+local outrosDados=Manager.RegistrarPerfil(outro,outroPerfil)
+local function colocar(alvo,dono,id,posicao,rotacao,elevador)
+	tempo+=1
+	return Admin:ColocarPeca(p,alvo,dono,id,posicao,rotacao or CF.identity,elevador)
+end
+assert(not Admin:ColocarPeca(outro,terreno,p.UserId,"Parede1x1",V.zero,CF.identity))
+assert(not colocar(plotOutro,p.UserId,"Parede1x1",V.zero))
+assert(not colocar(plotOutro,outro.UserId,"PeçaInexistente",V.zero))
+assert(not colocar(plotOutro,outro.UserId,"Parede1x1",V.new(1,0,0)))
+assert(not colocar(plotOutro,outro.UserId,"Parede1x1",V.new(36,0,0)))
+assert(not colocar(plotOutro,outro.UserId,"Parede1x1",V.zero,CF.Angles(.2,0,0)))
+assert(outrosDados:ObterQuantidade("ComutadorFerroPrisma")==0)
+assert(colocar(plotOutro,outro.UserId,"ComutadorFerroPrisma",V.zero))
+local craft=plotOutro.Maquinas.ComutadorFerroPrisma
+assert(craft:GetAttribute("DonoUserId")==outro.UserId and craft:GetAttribute("TerrenoId")==2)
+assert(not colocar(plotOutro,outro.UserId,"ComutadorFerroPrisma",V.zero))
+assert(colocar(plotOutro,outro.UserId,"SeloAurora",V.new(12,0,0)))
+assert(colocar(plotOutro,outro.UserId,"ElevadorVertical",V.new(30,0,0),nil,{4,"+X","+Z","subir"}))
+assert(outroPerfil.Data.MaquinasColocadas[3].Modificacoes.Elevador.Altura==4)
+assert(plotOutro.Maquinas.ElevadorVertical:GetAttribute("AlturaBlocos")==4)
+assert(#outroPerfil.Data.MaquinasColocadas==3 and #plotOutro.Maquinas:GetChildren()==3)
+assert(outroPerfil.Data.Dinheiro=="0" and outrosDados:ObterQuantidade("ComutadorFerroPrisma")==0 and outrosDados:ObterQuantidade("SeloAurora")==0)
+local registro=H.Obter(outroPerfil.Data).Alteracoes
+assert(registro[#registro].Autor==p.UserId and registro[#registro].Depois.MaquinaId=="ElevadorVertical" and outroPerfil.salvamentos>0)
+local inclinada=CF.Angles(0,math.pi/2,0)*CF.Angles(math.pi/4,0,0)
+assert(colocar(plotOutro,outro.UserId,"Esteira2x2",V.new(0,0,24),inclinada))
+assert(plotOutro.Maquinas.Esteira2x2:GetAttribute("InclinacaoEsteira")~=nil)
+assert(outrosDados:ObterQuantidade("Esteira2x2")==10)
+assert(#perfil.Data.MaquinasColocadas==0)
+assert(colocar(terreno,p.UserId,"Parede1x1",V.zero))
+assert(#perfil.Data.MaquinasColocadas==1 and dados:ObterQuantidade("Parede1x1")==0)
+print("COLOCACAO_ADM_OK: plots propria e alheia, inventarios vazios, auditoria, validacao e elevador.")
 print("ADMINISTRACAO_OK: acesso exclusivo, inteiros ate 1e308, conflitos, auditoria, fila e repeticao, historico preservado, plot real, rotacao, limites e devolucao.")

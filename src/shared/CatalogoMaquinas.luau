@@ -233,4 +233,10 @@ for _, peca in expansao do
 	end
 	catalogo[peca.Id] = item
 end
+for id, variacao in require(script.Parent.AjustesAlturaV3) do
+	local blocos = table.clone(catalogo[id].Blocos)
+	blocos[2] += variacao
+	assert(blocos[2] >= 1, "Altura inválida para " .. id)
+	catalogo[id].Blocos = blocos
+end
 return catalogo

@@ -7,14 +7,16 @@ local replicado = {ModelosMaquinas = modelos, WaitForChild = function(self, nome
 local Players = {GetPlayerByUserId = function(self, id) return self[id] end}
 local jogador = {Name = "Elevador", UserId = 123, Parent = Players, atributos = {TerrenoId = 1}}
 Players[123] = jogador
+local Sinal=require("./suporte/interface").Sinal
 function jogador:GetAttribute(k) return self.atributos[k] end
 function jogador:SetAttribute(k,v) self.atributos[k] = v end
+jogador.GetAttributeChangedSignal=function() return Sinal() end
 
 local carregar, no = require("./suporte/carregador")({
 	workspace=mundo, Instance=I, Vector3=V, CFrame=CF, Color3=r.Color3, Enum=r.Enum, typeof=r.typeof,
 	Vector2=r.Vector2, ColorSequence=r.ColorSequence, ColorSequenceKeypoint=r.ColorSequenceKeypoint,
-	OverlapParams={new=function() return {} end},
-}, {Players=Players, ReplicatedStorage=replicado, ContextActionService={},
+	OverlapParams={new=function() return {} end}, RaycastParams={new=function() return {} end},
+}, {Players=Players, ReplicatedStorage=replicado, ContextActionService={UnbindAction=function() end},
 	UserInputService={GetFocusedTextBox=function() return nil end, IsKeyDown=function() return false end},
 }, {["Packages/Networker"]={}})
 replicado.Shared = no("src/shared")
@@ -217,3 +219,51 @@ assert(colocado.Modificacoes.Elevador.Altura == 4 and colocado.Modificacoes.Elev
 previa:Destruir()
 print("ELEVADOR_OK", "compra, rotação, colisão, perfil, blueprint, inventário, subida e descida com espera superior a 5 s")
 print("ELEVADOR_COLOCACAO_OK", "dois cliques, faces independentes, descida, setas e variante de origem preservada")
+
+local alvoADM=terreno:Clone()
+alvoADM.Maquinas:ClearAllChildren()
+alvoADM.Piso.CFrame+=V.xAxis*120
+alvoADM:SetAttribute("DonoUserId",456)
+alvoADM:SetAttribute("TerrenoId",2)
+alvoADM.Parent=terrenos
+r.implementMethod("Camera","ViewportPointToRay",function(_,x,z)
+	return {Origin=V.new(x,30,z),Direction=-V.yAxis}
+end)
+r.implementMethod("Workspace","Raycast",function(_,origem,_,consulta)
+	for _, objeto in consulta.FilterDescendantsInstances do
+		if not objeto:IsA("BasePart") then continue end
+		local p=objeto.CFrame:PointToObjectSpace(origem)
+		if math.abs(p.X)<=objeto.Size.X/2 and math.abs(p.Z)<=objeto.Size.Z/2 then
+			return {Instance=objeto,Position=V.new(origem.X,0,origem.Z),Normal=V.yAxis,Distance=origem.Y}
+		end
+	end
+end)
+local envios=0
+jogador:SetAttribute("Administrador",true)
+local ctrlAdm=setmetatable({
+	_jogador=jogador,_pastaTerrenos=terrenos,_modelosOriginais={Parede1x1=modelos.Parede1x1},
+	_abaColocacao="CatalogoADM",_maquinaIdSelecionada="Parede1x1",_rotacao=CF.identity,
+	_pecasSelecionadas={},_destaquesPecas={},_destaqueHover={},_consulta={},
+	_ponteiro=function() return ponteiro end,
+	Navegacao={Atual=function() return "Colocacao" end,Fechar=function() end,Contem=function() return false end},
+	RedeAdministracao={fetch=function(_,acao,plot,dono,idPeca,pos)
+		assert(acao=="ColocarPeca" and plot==alvoADM and dono==456 and idPeca=="Parede1x1" and pos==V.new(9,0,9))
+		envios+=1
+		return true,"Adicionada."
+	end},
+},Controller)
+ponteiro=r.Vector2.new(10,10)
+ctrlAdm:IniciarColocacao()
+assert(ctrlAdm._terreno==terreno and ctrlAdm._previa)
+ponteiro=r.Vector2.new(130,10)
+ctrlAdm:Atualizar(0)
+assert(ctrlAdm._terreno==alvoADM and ctrlAdm._alvoColocacao.livre)
+ctrlAdm:ProcessarEntrada(clique,false)
+assert(envios==1)
+ponteiro=r.Vector2.new(110,10)
+ctrlAdm:Atualizar(0)
+assert(not ctrlAdm._alvoColocacao and not ctrlAdm._previa:ObterModelo().Parent)
+ctrlAdm:EncerrarColocacao()
+ctrlAdm._gradeTerreno:Destruir()
+ctrlAdm._setasTerreno:Destruir()
+print("PREVIA_ADM_OK", "troca da plot pelo cursor, chamada autorizada e cancelamento fora das plots")

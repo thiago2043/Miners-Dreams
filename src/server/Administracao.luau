@@ -1,4 +1,7 @@
-local MonitorRecursos = require(game:GetService("ReplicatedStorage").Shared.MonitorRecursos)
+local Shared=game:GetService("ReplicatedStorage").Shared
+local MonitorRecursos = require(Shared.MonitorRecursos)
+local passoGrade=require(Shared.Medidas).Bloco
+local Rotacao=require(Shared.RotacaoConstrucao)
 local Players=game:GetService("Players")
 local Http=game:GetService("HttpService")
 local Run=game:GetService("RunService")
@@ -189,6 +192,30 @@ function Admin:Alterar(jogador,id,pedido)
 	if not leu or not p then return false,"Perfil não encontrado ou indisponível; nenhum pedido enviado." end
 	local ok,enviou=pcall(function() return Store:MessageAsync("Player_"..id,mensagem) end)
 	return ok and enviou==true,ok and enviou and "Pedido enviado. Será validado no servidor do jogador ou na próxima entrada; confira o registro de alterações." or "Falha ao enviar a alteração.",mensagem.Id
+end
+
+function Admin:ColocarPeca(jogador,terreno,dono,maquinaId,minimo,rotacao,elevador)
+	if not self:_PermitirPedido(jogador,.2,"Colocacao") then return false,"Sem acesso ou aguarde um instante." end
+	local pasta=workspace:FindFirstChild("Terrenos")
+	if not pasta or typeof(terreno)~="Instance" or terreno.Parent~=pasta or not terreno:IsA("Model")
+		or type(dono)~="number" or dono==0 or terreno:GetAttribute("DonoUserId")~=dono then
+		return false,"A plot precisa ter um jogador ativo. Aponte novamente para a plot."
+	end
+	local alvo=Players:GetPlayerByUserId(dono)
+	local perfil=alvo and Dados.Profiles[alvo]
+	if not perfil or not perfil:IsActive() or alvo:GetAttribute("TerrenoId")~=terreno:GetAttribute("TerrenoId") then
+		return false,"A plot ou o perfil do jogador está indisponível."
+	end
+	if typeof(minimo)~="Vector3" or not Rotacao.Validar(rotacao) then return false,"Posição ou rotação inválida." end
+	if elevador~=nil and type(elevador)~="table" then return false,"Configuração de elevador inválida." end
+	local c={rotacao:GetComponents()}
+	local pedido={Tipo="Adicionar",Motivo="Colocação pelo catálogo ADM",MaquinaId=maquinaId,
+		Posicao={minimo.X/passoGrade,minimo.Y/passoGrade,minimo.Z/passoGrade},
+		Rotacao={table.unpack(c,4,12)},Geracao=perfil.Data.GeracaoProgresso,
+		Elevador=elevador and {elevador[1],elevador[2],elevador[3],elevador[4]}}
+	local valido,erro=Edicao.Validar(pedido)
+	if not valido then return false,erro end
+	return self:_Aplicar(alvo,perfil,{Id=Http:GenerateGUID(false),Autor=jogador.UserId,Instante=os.time(),Pedido=pedido})
 end
 function Admin:Recursos(jogador)
 if not self:Permissao(jogador) then return false, "Sem permissão." end

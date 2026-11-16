@@ -3,8 +3,9 @@ local Catalogo=require(R.Shared.CatalogoMaquinas)
 local Upgrades=require(R.Shared.Upgrades)
 local Inteiro=require(R.Shared.InteiroGrande)
 local bloco=require(R.Shared.Medidas).Bloco
+local Elevador=require(R.Shared.ElevadorVertical)
 local E={}
-local campos={Tipo=true,Motivo=true,Valor=true,Esperado=true,Chave=true,MaquinaId=true,PecaId=true,PosicaoAnterior=true,Posicao=true,Giro=true,Geracao=true,Confirmacao=true}
+local campos={Tipo=true,Motivo=true,Valor=true,Esperado=true,Chave=true,MaquinaId=true,PecaId=true,PosicaoAnterior=true,Posicao=true,Giro=true,Geracao=true,Confirmacao=true,Rotacao=true,Elevador=true}
 local function inteiro(n,minimo,maximo)
 	return type(n)=="number" and n%1==0 and n>=minimo and n<=maximo
 end
@@ -28,6 +29,20 @@ function E.Validar(p)
 	for _,k in {"Posicao","PosicaoAnterior","Giro"} do
 		if p[k]~=nil and not tripla(p[k],-10000,10000,1) then return false,"Coordenadas inválidas." end
 	end
+	if p.Rotacao~=nil then
+		if p.Tipo~="Adicionar" or p.Giro~=nil or type(p.Rotacao)~="table" or #p.Rotacao~=9 then return false,"Rotação inválida." end
+		for k in p.Rotacao do if not inteiro(k,1,9) then return false,"Rotação inválida." end end
+		for i=1,9 do
+			local v=p.Rotacao[i]
+			if type(v)~="number" or not (math.abs(v)<=1.0001) then return false,"Rotação inválida." end
+		end
+	end
+	if p.Elevador~=nil then
+		local c=p.Elevador
+		if p.Tipo~="Adicionar" or p.MaquinaId~="ElevadorVertical" or type(c)~="table" or #c~=4
+			or not Elevador.Validar(c[1],c[2],c[3],c[4]) then return false,"Configuração de elevador inválida." end
+		for k in c do if not inteiro(k,1,4) then return false,"Configuração de elevador inválida." end end
+	end
 	if p.Tipo=="Zerar" then
 		if not p.Confirmacao or not p.Confirmacao:match("^[1-9]%d*$") then return false,"Digite o UserId do jogador para confirmar a limpeza." end
 	elseif p.Tipo=="Dinheiro" then
@@ -43,7 +58,8 @@ function E.Validar(p)
 			if not Catalogo[p.MaquinaId] then return false,"Peça inválida." end
 		elseif type(p.PecaId)~="string" or #p.PecaId>64 or not tripla(p.PosicaoAnterior,0,32*bloco,bloco) then return false,"Peça da plot inválida. Atualize o painel." end
 		if p.Tipo=="Adicionar" or p.Tipo=="Reposicionar" then
-			if not tripla(p.Posicao,0,32,1) or not tripla(p.Giro,-360,360,45) or p.Giro[2]%90~=0 or p.Giro[3]%90~=0 then return false,"Posição em blocos e rotação inválidas." end
+			if not tripla(p.Posicao,0,32,1) or (not p.Rotacao and
+				(not tripla(p.Giro,-360,360,45) or p.Giro[2]%90~=0 or p.Giro[3]%90~=0)) then return false,"Posição em blocos e rotação inválidas." end
 		end
 	else return false,"Operação desconhecida." end
 	return true

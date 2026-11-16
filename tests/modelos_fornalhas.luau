@@ -3,6 +3,7 @@ local serde=require("@lune/serde")
 local r=require("@lune/roblox")
 local V=r.Vector3
 local reducoes=require("../src/shared/ReducoesAlturaHitbox")
+local variacoes=require("../src/shared/AjustesAlturaV3")
 local Corpo=require("@lune/luau").load(fs.readFile("src/shared/CorpoRigido.luau"),{environment={Vector3=V,CFrame=r.CFrame}})()
 local raiz="modelos/fornalhas"
 local manifesto=serde.decode("json",fs.readFile(raiz.."/geometria.json"))
@@ -29,6 +30,7 @@ for i,def in manifesto do
 	assert(sensor.Size.X==bandeja.Size.X and sensor.Size.Z==bandeja.Size.Z)
 	assert(math.abs(sensor.CFrame.Position.Y-sensor.Size.Y/2-.9375)<.001)
 	local quantidade=0
+	local alturaVisual=tamanho.Y+((reducoes[def.id] or 0)-(variacoes[def.id] or 0))*3
 	for _,p in modelo:GetDescendants() do
 		assert(not p:IsA("LuaSourceContainer"),"Asset nao deve conter scripts.")
 		if not p:IsA("BasePart") then continue end
@@ -38,7 +40,7 @@ for i,def in manifesto do
 		for _,x in {-1,1} do for _,y in {-1,1} do for _,z in {-1,1} do
 			local ponto=p.CFrame:PointToWorldSpace(p.Size*V.new(x,y,z)/2)
 			assert(math.abs(ponto.X)<=tamanho.X/2+.001 and math.abs(ponto.Z)<=tamanho.Z/2+.001
-				and ponto.Y>=-.001 and ponto.Y<=tamanho.Y+(reducoes[def.id] or 0)*3+.001,"Fora da reserva: "..def.codigo.." / "..p.Name.." / "..tostring(ponto))
+				and ponto.Y>=-.001 and ponto.Y<=alturaVisual+.001,"Fora da reserva: "..def.codigo.." / "..p.Name.." / "..tostring(ponto))
 		end end end
 		-- Um cubo de minerio deve alcancar a borda frontal sem encontrar uma parede na entrada.
 		if p.CanCollide and p~=bandeja then

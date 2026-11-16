@@ -2,6 +2,7 @@ local fs = require("@lune/fs")
 local r = require("./suporte/modelos")
 local serde = require("@lune/serde")
 local defs = require("../modelos/expansao/definicoes")
+local variacoes = require("../src/shared/AjustesAlturaV3")
 local grade = require("../src/shared/Medidas").Bloco
 local carregar = require("./suporte/carregador")({Instance=r.Instance, Vector3=r.Vector3, CFrame=r.CFrame,
 	Color3=r.Color3, Enum=r.Enum, typeof=r.typeof}, {})
@@ -95,7 +96,8 @@ for origem, grupos in defs do
 		local grupo = assert(galeria:FindFirstChild(categoria))
 		assert(#grupo:GetChildren()==#lista and #lista==quantidades[categoria],categoria)
 		for _, def in lista do
-			local id, w, d, h = def[1],def[3]*grade,def[4]*grade,def[5]*grade
+			local id, w, d, alturaVisual = def[1],def[3]*grade,def[4]*grade,def[5]*grade
+			local h = alturaVisual + (variacoes[id] or 0)*grade
 			local arquivo = pasta.."/assets/"..origem.."/"..id..".rbxm"
 			local item = assert(catalogo[id],id)
 			assert(not categorias[id] and projeto.tree.ReplicatedStorage.ModelosMaquinas[id]["$path"]==arquivo,id)
@@ -107,7 +109,9 @@ for origem, grupos in defs do
 			end
 			categorias[id] = categoria
 			local m = r.deserializeModel(fs.readFile(arquivo))[1]
-			assert(m.Name==id and grupo:FindFirstChild(id) and m.PrimaryPart,id)
+			assert(m.Name==id and m.PrimaryPart,id)
+			assert(grupo[id].HitboxConstrucao.Size==m.HitboxConstrucao.Size,id)
+			assert(r.Vector3.new(table.unpack(item.Blocos))*grade==m.HitboxConstrucao.Size,id)
 			assert(m:GetAttribute("SomenteModelagem")==false and m:GetAttribute("OrigemProposta")==origem,id)
 			assert(m:GetAttribute("GradeStuds")==grade and m.HitboxConstrucao.Size==r.Vector3.new(w,h,d),id)
 			assert(igual(m.HitboxConstrucao.CFrame.Position.Y,h/2) and not m.HitboxConstrucao.CanCollide,id)
@@ -119,7 +123,7 @@ for origem, grupos in defs do
 				topo = math.max(topo,y+meio)
 				table.insert(partes,p.ClassName.."/"..tostring(p.Size).."/"..tostring(p.CFrame))
 			end
-			assert(topo>=h-grade-.16 and topo<=h+.18,id.." altura "..topo.." / "..h)
+			assert(topo>=alturaVisual-grade-.16 and topo<=alturaVisual+.18,id.." altura "..topo.." / "..alturaVisual)
 			table.sort(partes)
 			local assinatura = table.concat(partes,"|")
 			assert(not assinaturas[assinatura],id.." repete "..(assinaturas[assinatura] or ""))

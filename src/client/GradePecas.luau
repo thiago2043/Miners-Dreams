@@ -229,8 +229,10 @@ ValorLimite = valorLimite,
 end
 
 function GradePecas.new(pai, ids, modelosOriginais, aoSelecionar, aoFechar, aba)
-local loja = aba == "Loja"
-local cor = if loja then Color3.fromRGB(40, 238, 146) else Color3.fromRGB(255, 51, 137)
+local administrativo = aba == "CatalogoADM"
+local loja = aba == "Loja" or administrativo
+local cor = if administrativo then Color3.fromRGB(112,198,255)
+	elseif loja then Color3.fromRGB(40, 238, 146) else Color3.fromRGB(255, 51, 137)
 local self = setmetatable({
 _loja = loja,
 _cor = cor,
@@ -277,9 +279,10 @@ local jogador = game:GetService("Players").LocalPlayer
 local teclaAba = loja and "F" or "E"
 self._titulo = criarTexto(self._grupo, "Titulo", "", UDim2.fromOffset(14, 10), UDim2.new(1, -60, 0, 28), 21, cor)
 local function atualizarTitulo()
-self._titulo.Text = (loja and "Loja [" or "Inventário [") .. Config.Tecla(jogador, teclaAba) .. "]"
+self._titulo.Text = if administrativo then "Catálogo ADM"
+	else (loja and "Loja [" or "Inventário [") .. Config.Tecla(jogador, teclaAba) .. "]"
 end
-if jogador then
+if jogador and not administrativo then
 table.insert(self._conexoes, jogador:GetAttributeChangedSignal("Atalho_" .. teclaAba):Connect(atualizarTitulo))
 end
 atualizarTitulo()
@@ -1131,7 +1134,7 @@ item.Botao:DefinirDisponivel(pronto and not negociando)
 item.Borda.Thickness = selecionada and 2 or 1
 local def = Catalogo[id]
 if self._loja then
-item.Quantidade.Text = "$" .. AbreviarInteiro(def.Preco)
+item.Quantidade.Text = FichaMaquina.RotuloCatalogo(def)
 else
 item.Quantidade.Text = pronto and ("×" .. AbreviarInteiro(quantidade)) or "..."
 end
@@ -1163,7 +1166,8 @@ end
 
 local ma, mb = ia.Metadados, ib.Metadados
 if self._ordem == "Preco" then
-if ca.Preco ~= cb.Preco then return compararInteiros(ca.Preco, cb.Preco) < 0 end
+local precoA,precoB=ca.Preco or "0",cb.Preco or "0"
+if precoA ~= precoB then return compararInteiros(precoA,precoB) < 0 end
 elseif self._ordem == "Quantidade" then
 local qa, qb = ia.QuantidadeValor or -1, ib.QuantidadeValor or -1
 if self._modo == "Plot" then qa, qb = ia.Colocadas or -1, ib.Colocadas or -1 end

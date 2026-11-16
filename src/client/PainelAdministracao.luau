@@ -21,10 +21,10 @@ local function tripla(texto)
 	return valores
 end
 
-function Painel.new(pai,jogador,nav,rede,confirmacao)
+function Painel.new(pai,jogador,nav,rede,confirmacao,abrirCatalogo)
 	local janela=Janela.new(pai,nav,"Administracao","Administração",nil,nil,620,jogador)
 	local self=setmetatable({_janela=janela,_grupo=janela._grupo,_jogador=jogador,_nav=nav,_rede=rede,
-		_confirmacao=confirmacao,_botoes={},_aba="Jogadores",_tipo="Dinheiro",_pagina=1,_online={},_perfis={},_tempo=10},Painel)
+		_confirmacao=confirmacao,_abrirCatalogo=abrirCatalogo,_botoes={},_aba="Jogadores",_tipo="Dinheiro",_pagina=1,_online={},_perfis={},_tempo=10},Painel)
 	self._conexao=Run.Heartbeat:Connect(function(dt)
 		if not self._grupo.Visible or not jogador:GetAttribute("Administrador") then return end
 if self._aba == "Recursos" and self._autoRecursos ~= false then
@@ -261,6 +261,10 @@ end, ((i - 1) % colunas) / colunas, 1 / colunas)
 if self._aba == nome then b:ObterInstancia().BackgroundColor3 = Color3.fromRGB(48, 93, 120) end
 end
 local y = 134 + math.ceil(#abasExibidas / colunas) * 52
+if self._abrirCatalogo then
+	self:_Botao("CatalogoPecas","Colocar peças",y,self._abrirCatalogo)
+	y+=52
+end
 if self._aba == "Jogadores" then
 		self:_Texto("Online","Online • até 100 recentes • atualização a cada 10 segundos",y,40,17); y+=46
 		local linhas={}
@@ -604,7 +608,7 @@ function Painel:_Desenhar(...)
 _desenharBaseAdm(self, ...)
 if self._aba == "Recursos" then
 local yCorte = 190
-local botaoRec = self._janela.Conteudo:FindFirstChild("Recursos")
+local botaoRec = self._janela.Conteudo:FindFirstChild("CatalogoPecas") or self._janela.Conteudo:FindFirstChild("Recursos")
 if botaoRec and botaoRec:IsA("GuiObject") then
 yCorte = botaoRec.Position.Y.Offset + botaoRec.Size.Y.Offset + 12
 end

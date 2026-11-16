@@ -4,6 +4,7 @@ local Botao = require(script.Parent.Botao)
 local MiniaturaPeca = require(script.Parent.MiniaturaPeca)
 local Personalizacao = require(ReplicatedStorage.Shared.PersonalizacaoMaquina)
 local Raridades = require(script.Parent.Raridades)
+local FichaMaquina = require(script.Parent.FichaMaquina)
 
 -- Loja e inventario possuem instancias independentes desta apresentacao. PainelPecas conserva
 -- selecao, validacoes e rede; a ficha possui apenas os elementos visuais e suas conexoes.
@@ -35,10 +36,12 @@ end
 -- Recebe o grupo, modelos e callbacks. aba escolhe o lado, a cor e as acoes pertinentes;
 -- cada objeto guarda seus botoes, eventos e retrato, sem alterar dinheiro ou inventario diretamente.
 function FichaPeca.new(pai, modelos, aoAtivar, fechar, aba)
-	local loja = aba == "Loja"
+	local administrativo = aba == "CatalogoADM"
+	local loja = aba == "Loja" or administrativo
 	local alturaRodape = 44
 	local self = setmetatable({ _modelos = modelos, _botoes = {}, _conexoes = {}, _loja = loja,
-		_cor = loja and Color3.fromRGB(45, 245, 163) or Color3.fromRGB(255, 78, 153),
+		_cor = if administrativo then Color3.fromRGB(112,198,255)
+			elseif loja then Color3.fromRGB(45,245,163) else Color3.fromRGB(255,78,153),
 	}, FichaPeca)
 	self._instancia = Instance.new("Frame")
 	-- A ficha fica no lado interno: a direita do inventario e a esquerda da loja.
@@ -123,7 +126,7 @@ function FichaPeca.new(pai, modelos, aoAtivar, fechar, aba)
 	rodape.Name, rodape.Position, rodape.Size = "Acoes", UDim2.new(0, 10, 1, -alturaRodape), UDim2.new(1, -20, 0, alturaRodape - 10)
 	rodape.BackgroundTransparency, rodape.Parent = 1, self._instancia
 	local acoes = {}
-	local nomesAcoes = loja and { "Comprar" } or { "Colocar", "Vender" }
+	local nomesAcoes = if administrativo then {"Colocar"} elseif loja then {"Comprar"} else {"Colocar","Vender"}
 	for indice, acao in nomesAcoes do
 		acoes[acao] = self:_Botao(rodape, acao, function() aoAtivar(acao) end)
 		local b = acoes[acao]:ObterInstancia()
@@ -179,7 +182,7 @@ function FichaPeca:Atualizar(id, nome, quantidade, copia, definicao, chave)
 	if self._loja then copia, chave = false, nil end
 	self._nome.Text = (nome or "Selecione uma peça") .. (copia and " (cópia)" or "")
 	-- O preco permanece em texto decimal, sem perder digitos em uma conversao para number.
-	self._quantidade.Text = self._loja and (definicao and ("$" .. AbreviarInteiro(definicao.Preco)) or "…")
+	self._quantidade.Text = self._loja and (definicao and FichaMaquina.RotuloCatalogo(definicao) or "…")
 		or (type(quantidade) == "number" and ("x" .. AbreviarInteiro(quantidade)) or "…")
 	-- No inventario normal, o retrato ja informa a quantidade. A linha extra fica reservada para
 	-- carregamento/erro ou explicacao da copia; na loja ela informa o estoque, pois o retrato mostra preco.

@@ -12,6 +12,7 @@ assert(#manifesto==13 and #ws.Mineradoras:GetChildren()==13)
 local nomes,total={},0
 local dimensoes={{2,2,2},{2,3,2},{3,3,2},{3,3,3},{3,3,3},{4,4,4},{4,5,3},{5,5,4},{5,5,4},{6,5,6},{7,6,7},{9,7,9},{10,8,10}}
 local reducoes=require("../src/shared/ReducoesAlturaHitbox")
+local variacoes=require("../src/shared/AjustesAlturaV3")
 local alcances={.5,.5,.5,.5,.5,1.5,1.5,1.5,1.5,2.5,3.5,3.5,4.5}
 local largurasCabecote={1,1,1.5,1.5,1.5,2,2,2.5,2.5}
 local partesCabecote={NucleoCabecote=true,GomoDoCabecote=true,JuntaDoCabecote=true,NervuraInferior=true,
@@ -49,7 +50,8 @@ local function conferir(model,def,origem)
  local saida=model:FindFirstChild("SaidaMinerio",true)
  local hitbox=assert(model:FindFirstChild("HitboxConstrucao"))
  assert(hitbox.Transparency==1 and not hitbox.CanCollide and not hitbox.CanQuery)
- local tamanhoEsperado=V.new(table.unpack(dimensoes[def.nivel]))*3-V.new(0,(reducoes[def.id] or 0)*3,0)
+ local variacao=(variacoes[def.id] or 0)-(reducoes[def.id] or 0)
+ local tamanhoEsperado=V.new(table.unpack(dimensoes[def.nivel]))*3+V.yAxis*variacao*3
  assert((hitbox.Size-tamanhoEsperado).Magnitude<.001,"Hitbox alterada fora das medidas pedidas")
  assert(hitbox.Size.X==def.blocos[1]*3 and hitbox.Size.Z==def.blocos[2]*3 and hitbox.Size.Y==def.altura*3)
  assert((hitbox.CFrame.Position-origem-V.new(0,hitbox.Size.Y/2,0)).Magnitude<.001)

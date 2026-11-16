@@ -40,7 +40,7 @@ end
 -- Cria uma identidade nova para a escolha recebida e copia/congela seus dados, inclusive a personalizacao da
 -- copia. Devolve a visao que ficou registrada, sem manter tabelas mutaveis do argumento original.
 function SelecaoPecas:Definir(aba: string, maquinaId: string, rotacao: CFrame, copia: Copia?): Selecao
-	assert(aba == "Inventario" or aba == "Loja", "Aba de selecao invalida.")
+	assert(aba == "Inventario" or aba == "Loja" or aba == "CatalogoADM", "Aba de selecao invalida.")
 	local estado = estados[self]
 	-- O Id identifica esta escolha, mesmo ao selecionar novamente o mesmo tipo. Respostas antigas da rede podem
 	-- comparar esse numero para nao agir sobre a ficha nova.

@@ -64,7 +64,17 @@ self._interface = Instance.new("ScreenGui")
 	self._paineisProgressao.Prestigio.Confirmacao=self._confirmacao
 	self._paineisProgressao.Configuracoes = PainelConfiguracoes.new(self._interface, jogador, construcao.Navegacao)
 	self._paineisProgressao.Classificacao = PainelClassificacao.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Classificacao", {}))
-	self._paineisProgressao.Administracao=PainelAdministracao.new(self._interface,jogador,construcao.Navegacao,Networker.client.new("Administracao",{}),self._confirmacao)
+	local redeAdm=Networker.client.new("Administracao",{})
+	construcao.RedeAdministracao=redeAdm
+	self._paineisProgressao.Administracao=PainelAdministracao.new(self._interface,jogador,construcao.Navegacao,redeAdm,self._confirmacao,function()
+		if jogador:GetAttribute("Administrador")~=true then return end
+		if not self._paineis.CatalogoADM then
+			self._paineis.CatalogoADM=PainelPecas.new(self._interface,"CatalogoADM",jogador,construcao,nil,larguraMenu+12)
+		end
+		construcao.Navegacao:Fechar("Administracao")
+		construcao.Navegacao:Fechar("Loja")
+		construcao:AbrirAba("CatalogoADM")
+	end)
 self._paineisProgressao.HistoricoCopia=PainelHistoricoCopia.new(self._interface,jogador,construcao)
 	self:_CriarMenuAbas()
 	self._guiaTutorial = GuiaPrimeiraFabrica.new(self, jogador, construcao)
@@ -542,6 +552,7 @@ function InterfaceJogo:Destruir()
 	self._guiaTutorial:Destruir()
 	self._construcao.AoColocarTutorial = nil
 	self._construcao.Confirmacao=nil
+	self._construcao.RedeAdministracao=nil
 	self._confirmacao:Destruir()
 	self._botaoLimparPlot:Destruir()
 	for _, painel in self._paineis do painel:Destruir() end

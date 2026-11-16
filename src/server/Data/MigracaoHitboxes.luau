@@ -1,6 +1,7 @@
 local Shared=game:GetService("ReplicatedStorage").Shared
 local ajustes=require(Shared.AjustesHitbox)
 local reducoes=require(Shared.ReducoesAlturaHitbox)
+local variacoes=require(Shared.AjustesAlturaV3)
 local catalogo=require(Shared.CatalogoMaquinas)
 local Volume=require(Shared.VolumeConstrucao)
 local bloco=require(Shared.Medidas).Bloco
@@ -12,8 +13,15 @@ end
 local novos={}
 for id,reducao in reducoes do
 	local depois=table.clone(catalogo[id].Blocos)
+	depois[2]-=variacoes[id] or 0
 	local antes=table.clone(depois); antes[2]+=reducao
 	novos[id]={antes,depois}
+end
+local alteracoesV3={}
+for id,variacao in variacoes do
+	local depois=catalogo[id].Blocos
+	local antes=table.clone(depois); antes[2]-=variacao
+	alteracoesV3[id]={antes,depois}
 end
 local function deslocamento(tabela,id,rotacao)
 	local a=tabela[id]; if not a then return Vector3.zero end
@@ -61,6 +69,7 @@ function M.Preparar(dados)
 	local atual=dados.VersaoHitboxes or 0
 	if atual<1 then dados=migrar(dados,ajustes,1,"BackupHitboxes") end
 	if atual<2 then dados=migrar(dados,novos,2,"BackupHitboxesV2") end
+	if atual<3 then dados=migrar(dados,alteracoesV3,3,"BackupHitboxesV3") end
 	return dados
 end
 return M

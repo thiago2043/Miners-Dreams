@@ -1,5 +1,6 @@
 local fs = require("@lune/fs")
 local reducoes = require("../src/shared/ReducoesAlturaHitbox")
+local variacoes = require("../src/shared/AjustesAlturaV3")
 local serde = require("@lune/serde")
 local r = require("@lune/roblox")
 local raiz = "modelos/modificadores"
@@ -41,6 +42,7 @@ for i, def in manifesto do
 	assert(modelo:GetAttribute("SomenteModelagem") == false and modelo.PrimaryPart.Name == "BaseModelo")
 	assert(galeria:FindFirstChild(def.id) and modelo:FindFirstChild("SensorEntrada"))
 	local hitbox, correia, sensor = modelo.HitboxConstrucao, modelo:FindFirstChild("Correia"), modelo.SensorEntrada
+	local alturaVisual=hitbox.Size.Y+((reducoes[def.id] or 0)-(variacoes[def.id] or 0))*3
 	assert(hitbox.Size == r.Vector3.new(def.blocos[1],def.altura,def.blocos[2])*3
 		and hitbox.Transparency == 1 and not hitbox.CanCollide and not hitbox.CanQuery)
 	assert(sensor.Transparency == 1 and not sensor.CanCollide and sensor.CanTouch)
@@ -135,7 +137,7 @@ for i, def in manifesto do
 		else
 			assert(min.X >= hitbox.CFrame.Position.X-hitbox.Size.X/2-.02 and max.X <= hitbox.CFrame.Position.X+hitbox.Size.X/2+.02
 				and min.Z >= -hitbox.Size.Z/2-.02 and max.Z <= hitbox.Size.Z/2+.02
-				and min.Y>=-.02 and max.Y<=hitbox.Size.Y+(reducoes[def.id] or 0)*3+.02, "Corpo fora da reserva: " .. def.id .. "/" .. p.Name)
+				and min.Y>=-.02 and max.Y<=alturaVisual+.02, "Corpo fora da reserva: " .. def.id .. "/" .. p.Name)
 		end
 		if p.Material ~= r.Enum.Material.Neon and p.Transparency == 0 then
 			local caixa = {min=min,max=max,nome=p.Name}

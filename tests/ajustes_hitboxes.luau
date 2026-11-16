@@ -3,6 +3,7 @@ local fs=require("@lune/fs"); local serde=require("@lune/serde")
 local carregar=require("./suporte/carregador")({Vector3=r.Vector3,CFrame=r.CFrame,typeof=r.typeof},{})
 local ajustes=carregar("src/shared/AjustesHitbox")
 local reducoes=carregar("src/shared/ReducoesAlturaHitbox")
+local variacoes=carregar("src/shared/AjustesAlturaV3")
 local M=carregar("src/server/Data/MigracaoHitboxes")
 local projeto=serde.decode("json",fs.readFile("default.project.json"))
 local catalogo=carregar("src/shared/CatalogoMaquinas")
@@ -11,7 +12,7 @@ local total=0
 for id,a in ajustes do
 	local modelo=r.deserializeModel(fs.readFile(projeto.tree.ReplicatedStorage.ModelosMaquinas[id]["$path"]))[1]
 	local nova=r.Vector3.new(table.unpack(catalogo[id].Blocos))*3
-	assert(modelo.HitboxConstrucao.Size==nova and modelo:GetAttribute("VersaoHitbox")==if reducoes[id] then 2 else 1)
+	assert(modelo.HitboxConstrucao.Size==nova and modelo:GetAttribute("VersaoHitbox")==if variacoes[id] then 3 elseif reducoes[id] then 2 else 1)
 	assert(r.Vector3.new(table.unpack(catalogo[id].Blocos))*3==nova)
 	for _,x in {0,math.pi/2,math.pi,math.pi*1.5} do for _,y in {0,math.pi/2,math.pi,math.pi*1.5} do
 		local rot=r.CFrame.Angles(x,y,0)
