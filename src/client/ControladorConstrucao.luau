@@ -2557,14 +2557,14 @@ function ControladorConstrucao:ColocarSelecionada(aba, fecharAbas)
 	local fixadas = self._abasFixadas or {}
 	if fecharAbas then
 		for _, lista in {"Inventario","Loja","CatalogoADM"} do
-			if not fixadas[lista] then self.Navegacao:Fechar(lista) end
+			if fixadas[lista] then self.Navegacao:Fechar("Ficha" .. lista) else self.Navegacao:Fechar(lista) end
 		end
 	end
 	self._abaSelecionada, self._abaColocacao = aba, aba
 	self._abaDaPeca = aba
 	self._maquinaIdSelecionada, self._copia, self._rotacao = selecao.MaquinaId, selecao.Copia, selecao.Rotacao
 	self._jogador:SetAttribute("MaquinaSelecionada", selecao.MaquinaId)
-	self.Navegacao:Focar("Ficha" .. aba)
+	if not fecharAbas then self.Navegacao:Focar("Ficha" .. aba) end
 	self:IniciarColocacao()
 	if not self._previa then self._abaColocacao = nil; return false end
 	-- Este callback roda ao sair da colocacao, inclusive por Q. So devolve a rotacao a uma ficha que ainda
