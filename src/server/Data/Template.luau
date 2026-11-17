@@ -10,7 +10,7 @@ inventario.FornalhaBasica = 1
 
 return {
 	TamanhoBloco = require(ReplicatedStorage.Shared.Medidas).Bloco,
-	VersaoHitboxes = 3,
+	VersaoHitboxes = 4,
 	Dinheiro = "0",
 	GeracaoProgresso = 0,
 	NomeJogador = "",

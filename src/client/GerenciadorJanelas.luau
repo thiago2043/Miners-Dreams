@@ -139,10 +139,9 @@ local novaPos = UDim2.fromOffset(math.round(cx), math.round(cy))
 local novoTam = UDim2.fromOffset(largInterna, altInterna)
 
 quadro.AnchorPoint = Vector2.new(0.5, 0.5)
+AnimacaoInterface.AtualizarPosicaoBase(quadro, novaPos)
 if not quadro:GetAttribute("AnimandoUI") then
 quadro.Position = novaPos
-else
-AnimacaoInterface.AtualizarPosicaoBase(quadro, novaPos)
 end
 quadro.Size = novoTam
 

@@ -40,10 +40,16 @@ return quadro.Visible and not quadro:GetAttribute("FechandoUI")
 end
 
 function AnimacaoInterface.AtualizarPosicaoBase(quadro, novaPosicao)
+if not quadro or not novaPosicao then return end
 local estado = estados[quadro]
-if estado and estado.PosicaoBase then
-estado.PosicaoBase = novaPosicao
+if not estado then
+estado = {
+Aberto = quadro.Visible and not quadro:GetAttribute("FechandoUI"),
+Token = 0,
+}
+estados[quadro] = estado
 end
+estado.PosicaoBase = novaPosicao
 end
 
 function AnimacaoInterface.ConcluirImediatamente(quadro)
@@ -55,7 +61,6 @@ local escala = obterEscala(quadro)
 escala.Scale = 1
 if estado.PosicaoBase then
 quadro.Position = estado.PosicaoBase
-estado.PosicaoBase = nil
 end
 quadro:SetAttribute("AnimandoUI", nil)
 quadro:SetAttribute("FechandoUI", nil)
@@ -90,22 +95,22 @@ local flutuante = direcao == "Flutuante"
 local dx = if direcao == "Esquerda" then -14 elseif direcao == "Direita" then 14 else 0
 local dy = if not flutuante and dx == 0 then 8 else 0
 
-if visivel then
-if not flutuante and estado.PosicaoBase then
-quadro.Position = estado.PosicaoBase
-end
-local posFinal = quadro.Position
 if not flutuante then
-estado.PosicaoBase = posFinal
+if estado.PosicaoBase then
+quadro.Position = estado.PosicaoBase
+else
+estado.PosicaoBase = quadro.Position
 end
+end
+
+if visivel then
+local posFinal = if not flutuante then estado.PosicaoBase else quadro.Position
 
 quadro:SetAttribute("FechandoUI", nil)
-quadro:SetAttribute("AnimandoUI", nil)
-escala.Scale = 1
-quadro.Visible = true
-
 quadro:SetAttribute("AnimandoUI", true)
 escala.Scale = 0.02
+quadro.Visible = true
+
 local info = TweenInfo.new(0.17, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 local tEscala = TweenService:Create(escala, info, { Scale = 1 })
 local tPos
@@ -119,11 +124,10 @@ end
 estado.TweenEscala, estado.TweenPosicao = tEscala, tPos
 tEscala.Completed:Once(function()
 if estado.Token ~= tokenAtual then return end
-estado.TweenEscala, estado.TweenPosicao = nil, nil
+cancelarTweens(estado)
 escala.Scale = 1
 if not flutuante and estado.PosicaoBase then
 quadro.Position = estado.PosicaoBase
-estado.PosicaoBase = nil
 end
 quadro:SetAttribute("AnimandoUI", nil)
 end)
@@ -132,16 +136,16 @@ if tPos then tPos:Play() end
 else
 if not quadro.Visible then
 escala.Scale = 1
+if not flutuante and estado.PosicaoBase then
+quadro.Position = estado.PosicaoBase
+end
 quadro:SetAttribute("AnimandoUI", nil)
 quadro:SetAttribute("FechandoUI", nil)
 if aoConcluirFechamento then aoConcluirFechamento() end
 return
 end
 
-local posBase = estado.PosicaoBase or quadro.Position
-if not flutuante then
-estado.PosicaoBase = posBase
-end
+local posBase = if not flutuante then estado.PosicaoBase else quadro.Position
 quadro:SetAttribute("AnimandoUI", true)
 quadro:SetAttribute("FechandoUI", true)
 
@@ -158,12 +162,11 @@ end
 estado.TweenEscala, estado.TweenPosicao = tEscala, tPos
 tEscala.Completed:Once(function()
 if estado.Token ~= tokenAtual then return end
-estado.TweenEscala, estado.TweenPosicao = nil, nil
+cancelarTweens(estado)
 quadro.Visible = false
 escala.Scale = 1
 if not flutuante and estado.PosicaoBase then
 quadro.Position = estado.PosicaoBase
-estado.PosicaoBase = nil
 end
 quadro:SetAttribute("AnimandoUI", nil)
 quadro:SetAttribute("FechandoUI", nil)
