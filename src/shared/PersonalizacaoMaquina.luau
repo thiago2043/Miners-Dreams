@@ -198,12 +198,15 @@ end
 function PersonalizacaoMaquina:Capturar(modelo, original)
 	if original:GetAttribute("AlturaBlocos") then return PersonalizacaoMaquina.new(self._dados) end
 	local EsteiraInclinada = require(script.Parent.EsteiraInclinada)
+	local Catalogo = require(script.Parent.CatalogoMaquinas)
+	local Rotacao = require(script.Parent.RotacaoConstrucao)
+	local ehEsteiraInclinavel = Rotacao.PermiteInclinar(Catalogo[modelo.Name])
 	local dados = self:ObterDados()
 	local partes = {}
 	local pivo, pivoOriginal = modelo:GetPivot(), original:GetPivot()
 	for _, parte in modelo:GetDescendants() do
 		if not parte:IsA("BasePart") then continue end
-		if parte:GetAttribute("GeometriaEsteiraGerada") then continue end
+		if parte:GetAttribute("GeometriaEsteiraGerada") or parte.Name == "HitboxConstrucao" then continue end
 		local caminho = caminhoDaParte(parte, modelo)
 		local base = assert(encontrar(original, caminho), "Parte nao pertence ao modelo original.")
 		local alteracao = { Caminho = caminho }
@@ -211,15 +214,15 @@ function PersonalizacaoMaquina:Capturar(modelo, original)
 		if parte.Color ~= base.Color then
 			alteracao.Cor = { parte.Color.R, parte.Color.G, parte.Color.B }; mudou = true
 		end
-		local cfPlano,tamanhoPlano = EsteiraInclinada.GeometriaPlana(parte,pivo)
-		if (tamanhoPlano - base.Size).Magnitude > 0.0001 then
-			alteracao.Tamanho = { tamanhoPlano.X, tamanhoPlano.Y, tamanhoPlano.Z }; mudou = true
-		end
-		-- Compara as duas partes no referencial de seus proprios modelos. Assim mover ou girar a maquina inteira
-		-- nao e confundido com deslocar uma parte dentro dela.
-		local cf = { cfPlano:GetComponents() }
-		local cfBase = { pivoOriginal:ToObjectSpace(base.CFrame):GetComponents() }
-		if diferentes(cf, cfBase) then alteracao.CFrame = cf; mudou = true end
+		if not ehEsteiraInclinavel then
+local cfPlano,tamanhoPlano = EsteiraInclinada.GeometriaPlana(parte,pivo)
+if (tamanhoPlano - base.Size).Magnitude > 0.0001 then
+alteracao.Tamanho = { tamanhoPlano.X, tamanhoPlano.Y, tamanhoPlano.Z }; mudou = true
+end
+local cf = { cfPlano:GetComponents() }
+local cfBase = { pivoOriginal:ToObjectSpace(base.CFrame):GetComponents() }
+if diferentes(cf, cfBase) then alteracao.CFrame = cf; mudou = true end
+end
 		if parte.Material ~= base.Material then alteracao.Material = parte.Material.Name; mudou = true end
 		for _, propriedade in { "Transparency", "Reflectance" } do
 			if math.abs(parte[propriedade] - base[propriedade]) > 0.0001 then

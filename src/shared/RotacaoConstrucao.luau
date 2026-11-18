@@ -18,7 +18,7 @@ local function orientacoes(definicao)
 	if cacheOrientacoes[chave] then return cacheOrientacoes[chave] end
 	local resultado = {}
 	for _, direita in eixosGrade do for _, cima in eixosGrade do
-		if vertical and cima ~= Vector3.yAxis then continue end
+		if (vertical or inclinavel) and cima ~= Vector3.yAxis then continue end
 		if direita:Dot(cima) ~= 0 then continue end
 		local base = CFrame.fromMatrix(Vector3.zero, direita, cima, direita:Cross(cima))
 		table.insert(resultado, { Base = base, Angulo = 0, Rotacao = base })

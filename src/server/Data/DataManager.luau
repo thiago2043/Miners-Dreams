@@ -54,20 +54,52 @@ function DataManager.AddDinheiro(jogador: Player, valor: string): boolean
 	return dados ~= nil and dados:AdicionarDinheiro(valor)
 end
 
--- Obtem os dados ativos e encaminha a compra por identificador. Mantem a resposta sucesso/mensagem usada pelo
--- servico da loja e pela compra automatica da colocacao.
-function DataManager.ComprarMaquina(jogador: Player, maquinaId: string)
-	local dados = DataManager.ObterDados(jogador)
-	if not dados then return false, "Dados ainda nao estao disponiveis." end
-	return dados:ComprarMaquina(maquinaId)
+local servicoCoopCache = nil
+local function obterServicoCoop()
+if servicoCoopCache ~= nil then return servicoCoopCache end
+local mod = script.Parent.Parent:FindFirstChild("ServicoCoop")
+if mod then
+local ok, s = pcall(require, mod)
+if ok and s then servicoCoopCache = s; return s end
+end
+return nil
 end
 
--- Encaminha a venda e sua configuracao esperada ao objeto do jogador. Retorna uma recusa quando os dados ainda
--- nao estao disponiveis.
+function DataManager.ObterDonoAtivo(jogador)
+local s = obterServicoCoop()
+if s and s.ObterDonoAtivo then
+return s.ObterDonoAtivo(jogador)
+end
+return jogador
+end
+
+function DataManager.PodeExecutarCoop(jogador, acao)
+local s = obterServicoCoop()
+if s and s.PodeExecutar then
+return s.PodeExecutar(jogador, acao)
+end
+return true
+end
+
+function DataManager.ObterDadosAtivos(jogador)
+local dono = DataManager.ObterDonoAtivo(jogador)
+return DataManager.ObterDados(dono), dono
+end
+
+function DataManager.ComprarMaquina(jogador: Player, maquinaId: string)
+local permitido, msgPerm = DataManager.PodeExecutarCoop(jogador, "Comprar")
+if not permitido then return false, msgPerm end
+local dados = DataManager.ObterDadosAtivos(jogador)
+if not dados then return false, "Dados ainda nao estao disponiveis." end
+return dados:ComprarMaquina(maquinaId)
+end
+
 function DataManager.VenderMaquina(jogador: Player, maquinaId: string, configuracaoEsperada: string)
-  local dados = DataManager.ObterDados(jogador)
-  if not dados then return false, "Dados ainda nao estao disponiveis." end
-  return dados:VenderMaquina(maquinaId, configuracaoEsperada)
+local permitido, msgPerm = DataManager.PodeExecutarCoop(jogador, "Vender")
+if not permitido then return false, msgPerm end
+local dados = DataManager.ObterDadosAtivos(jogador)
+if not dados then return false, "Dados ainda nao estao disponiveis." end
+return dados:VenderMaquina(maquinaId, configuracaoEsperada)
 end
 
 function DataManager.DefinirConfiguracao(jogador: Player, id: string, valor: any)

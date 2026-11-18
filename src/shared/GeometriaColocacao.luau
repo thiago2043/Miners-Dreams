@@ -23,20 +23,27 @@ end
 -- A reserva mede o corpo; cabecotes e brocas podem avancar sobre a linha de transporte.
 function Geometria.CaixaDeConstrucao(modelo)
 local hitbox = modelo:FindFirstChild("HitboxConstrucao")
+local cf, tam
 if hitbox then
 assert(hitbox:IsA("BasePart"), "HitboxConstrucao deve ser uma BasePart.")
-local definicao = Catalogo[modelo.Name]
-if definicao and not definicao.Vertical and type(definicao.Blocos) == "table" then
+cf, tam = hitbox.CFrame, hitbox.Size
+else
+cf, tam = modelo:GetBoundingBox()
+end
+local nomeLimpo = modelo.Name:gsub("^PreviaRemota_", ""):gsub("^Previa", "")
+local definicao = Catalogo[nomeLimpo]
+if definicao and not definicao.Vertical and type(definicao.Blocos) == "table"
+and not modelo:GetAttribute("InclinacaoEsteira")
+and not (hitbox and hitbox:GetAttribute("GeometriaEsteiraGerada"))
+then
 local alturaMax = definicao.Blocos[2] * Geometria.Passo
-local excessoY = hitbox.Size.Y - alturaMax
+local excessoY = tam.Y - alturaMax
 if excessoY > Geometria.Tolerancia then
-hitbox.Size = Vector3.new(hitbox.Size.X, alturaMax, hitbox.Size.Z)
-hitbox.CFrame = hitbox.CFrame * CFrame.new(0, -excessoY * 0.5, 0)
+tam = Vector3.new(tam.X, alturaMax, tam.Z)
+cf = cf * CFrame.new(0, -excessoY * 0.5, 0)
 end
 end
-return hitbox.CFrame, hitbox.Size
-end
-return modelo:GetBoundingBox()
+return cf, tam
 end
 
 -- O canto superior do piso vira (0,0,0), permitindo validar a grade no referencial local do terreno.

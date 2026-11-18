@@ -121,30 +121,35 @@ end
 
 -- Confere sessao ativa, presenca do jogador no servidor e propriedade da plot. Devolve dados, terreno, piso e
 -- pasta de maquinas quando esse conjunto existe; caso contrario encerra sem resultado.
+local function donoEfetivo(jogador)
+return DataManager.ObterDonoAtivo and DataManager.ObterDonoAtivo(jogador) or jogador
+end
+
 local function contexto(jogador)
-	local dados = DataManager.ObterDados(jogador)
+local dono = donoEfetivo(jogador)
+local dados = DataManager.ObterDados(dono)
 
-	if jogador.Parent ~= Players or not dados then
-		return nil
-	end
+if not dono or dono.Parent ~= Players or jogador.Parent ~= Players or not dados then
+return nil
+end
 
-	local pasta = workspace:FindFirstChild("Terrenos")
-	if not pasta then return nil end
+local pasta = workspace:FindFirstChild("Terrenos")
+if not pasta then return nil end
 
-	for _, terreno in pasta:GetChildren() do
-		if terreno:GetAttribute("DonoUserId") ~= jogador.UserId
-			or terreno:GetAttribute("TerrenoId") ~= jogador:GetAttribute("TerrenoId")
-		then
-			continue
-		end
+for _, terreno in pasta:GetChildren() do
+if terreno:GetAttribute("DonoUserId") ~= dono.UserId
+or terreno:GetAttribute("TerrenoId") ~= dono:GetAttribute("TerrenoId")
+then
+continue
+end
 
-		local piso = terreno:FindFirstChild("Piso")
-		local maquinas = terreno:FindFirstChild("Maquinas")
+local piso = terreno:FindFirstChild("Piso")
+local maquinas = terreno:FindFirstChild("Maquinas")
 
-		if piso and piso:IsA("BasePart") and maquinas then
-			return dados, terreno, piso, maquinas
-		end
-	end
+if piso and piso:IsA("BasePart") and maquinas then
+return dados, terreno, piso, maquinas, dono
+end
+end
 end
 
 -- Toda posicao recebida e validada novamente: a previa do cliente nao e uma autorizacao de construcao.
@@ -244,7 +249,7 @@ function ServicoConstrucao:_CriarMaquina(jogador, terreno, maquinas, destino, re
 	local maquina = dadosModelo.Modelo:Clone()
 	registro.Id=registro.Id or game:GetService("HttpService"):GenerateGUID(false)
 
-	maquina:SetAttribute("DonoUserId", jogador.UserId)
+	local donoPlot = donoEfetivo(jogador); maquina:SetAttribute("DonoUserId", donoPlot.UserId)
 	maquina:SetAttribute("TerrenoId", terreno:GetAttribute("TerrenoId"))
 	maquina:SetAttribute("PodeRecolher", true)
 	maquina:SetAttribute("IdUnidade", registro.Id)
@@ -261,7 +266,7 @@ function ServicoConstrucao:_CriarMaquina(jogador, terreno, maquinas, destino, re
 	-- mesma unidade, sem procurar somente pelo nome do modelo.
 	self._registrosPorMaquina[maquina] = {
 		registro = registro,
-		jogador = jogador,
+		jogador = donoPlot,
 	}
 
 	for _, parte in maquina:GetDescendants() do
@@ -326,7 +331,21 @@ function ServicoConstrucao:Restaurar(jogador)
 				)
 
 				if rotacao then
-					local preparou, preparado = pcall(self._PrepararModelo, self, registro.MaquinaId, registro.Modificacoes, rotacao,registro.InclinacaoGrade==true)
+local defCat = CatalogoMaquinas[registro.MaquinaId]
+if RotacaoConstrucao.PermiteInclinar(defCat) then
+if type(registro.Modificacoes) == "table" then
+registro.Modificacoes.Partes = nil
+if next(registro.Modificacoes) == nil then
+registro.Modificacoes = nil
+end
+end
+if not RotacaoConstrucao.ValidarNaGrade(rotacao, defCat) then
+rotacao = RotacaoConstrucao.EncaixarNaGrade(rotacao, defCat)
+local comp = { rotacao:GetComponents() }
+registro.Rotacao = { table.unpack(comp, 4, 12) }
+end
+end
+local preparou, preparado = pcall(self._PrepararModelo, self, registro.MaquinaId, registro.Modificacoes, rotacao,registro.InclinacaoGrade==true)
 					if preparou then
 						dadosModelo = preparado
 						destino = destinoLivre(piso, maquinas, minimo, rotacao, dadosModelo)
@@ -353,6 +372,13 @@ end
 -- Valida o pedido e escolhe a configuracao a partir do token de copia, do padrao da loja ou do estoque do
 -- servidor. Se o destino for livre, registra o consumo/compra e cria o modelo; devolve sucesso e mensagem.
 function ServicoConstrucao:Colocar(jogador, maquinaId, minimo, rotacao, tokenCopia, usarPadrao, elevador)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okPerm then return false, msgPerm end
+	local dadosAtivos = DataManager.ObterDadosAtivos(jogador)
+	if dadosAtivos and (usarPadrao or (dadosAtivos:ObterQuantidade(maquinaId) or 0) == 0) then
+		local okCompra, msgCompra = DataManager.PodeExecutarCoop(jogador, "Comprar")
+		if not okCompra then return false, msgCompra end
+	end
 	if not self:_PermitirPedido(jogador) then
 		return false, "Muitos pedidos de construcao. Aguarde um instante."
 	end
@@ -456,7 +482,7 @@ function ServicoConstrucao:_ObterMaquina(jogador, maquina)
 	if typeof(maquina) ~= "Instance" or not maquina:IsA("Model") then return nil end
 	local dados, terreno, piso, maquinas = contexto(jogador)
 	if not dados or maquina.Parent ~= maquinas
-		or maquina:GetAttribute("DonoUserId") ~= jogador.UserId
+		or maquina:GetAttribute("DonoUserId") ~= donoEfetivo(jogador).UserId
 		or maquina:GetAttribute("TerrenoId") ~= terreno:GetAttribute("TerrenoId")
 		or not self._modelos[maquina.Name]
 	then return nil end
@@ -532,7 +558,7 @@ function ServicoConstrucao:CopiarGrupo(jogador, maquinasSelecionadas)
 		local dados, terreno, piso, maquinas = self:_ObterMaquina(jogador, maquina)
 		local vinculo = self._registrosPorMaquina[maquina]
 		local registro = vinculo and vinculo.registro
-		if not dados or not registro or vinculo.jogador ~= jogador or registro.MaquinaId ~= maquina.Name
+		if not dados or not registro or vinculo.jogador ~= donoEfetivo(jogador) or registro.MaquinaId ~= maquina.Name
 			or not table.find(dados:ObterConstrucoes(), registro)
 		then return false, "Uma das pecas nao esta disponivel para copiar." end
 		if dadosGrupo and (dados ~= dadosGrupo or terreno ~= terrenoGrupo or piso ~= pisoGrupo or maquinas ~= maquinasGrupo) then
@@ -677,7 +703,7 @@ end
 --- Método público LPOO (ServicoConstrucao:ListarBlueprints).
 function ServicoConstrucao:ListarBlueprints(jogador)
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante antes de atualizar os blueprints." end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   local blueprints = dados and dados:ObterBlueprints()
   if not blueprints then return false, "Seus dados ainda nao estao disponiveis." end
   local resposta = {}
@@ -691,7 +717,9 @@ end
 
 --- Método público LPOO (ServicoConstrucao:CriarBlueprint).
 function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
-  local dados = DataManager.ObterDados(jogador)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "CriarBlueprint")
+	if not okPerm then return false, msgPerm end
+  local dados = DataManager.ObterDadosAtivos(jogador)
   local existentes = dados and dados:ObterBlueprints()
   if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
   local usados = {}
@@ -714,8 +742,10 @@ end
 
 --- Método público LPOO (ServicoConstrucao:SubstituirBlueprint).
 function ServicoConstrucao:SubstituirBlueprint(jogador, identificador, nome, maquinasSelecionadas)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "SubstituirBlueprint")
+	if not okPerm then return false, msgPerm end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   local existentes = dados and dados:ObterBlueprints()
   if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
   local atual
@@ -738,11 +768,13 @@ end
 
 --- Método público LPOO (ServicoConstrucao:RenomearBlueprint).
 function ServicoConstrucao:RenomearBlueprint(jogador, identificador, novoNome)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "RenomearBlueprint")
+	if not okPerm then return false, msgPerm end
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
   local nomeValido, erroNome = self:_ValidarNomeBlueprint(novoNome, identificador)
   if not nomeValido then return false, erroNome end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   if not dados then return false, "Seus dados ainda nao estao disponiveis." end
   local ok, msg, atualizado = dados:AtualizarBlueprint(identificador, nomeValido, nil)
   if not ok then return false, msg end
@@ -751,9 +783,11 @@ end
 
 --- Método público LPOO (ServicoConstrucao:EditarBlueprint).
 function ServicoConstrucao:EditarBlueprint(jogador, identificador, novoNome, indicesMantidos)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "EditarBlueprint")
+	if not okPerm then return false, msgPerm end
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   local existentes = dados and dados:ObterBlueprints()
   if not existentes then return false, "Seus dados ainda nao estao disponiveis." end
   local atual
@@ -801,26 +835,34 @@ end
 
 --- Método público LPOO (ServicoConstrucao:DeletarBlueprint).
 function ServicoConstrucao:DeletarBlueprint(jogador, identificador)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "DeletarBlueprint")
+	if not okPerm then return false, msgPerm end
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   if not dados then return false, "Seus dados ainda nao estao disponiveis." end
   return dados:RemoverBlueprint(identificador)
 end
 
 --- Método público LPOO (ServicoConstrucao:MoverBlueprint).
 function ServicoConstrucao:MoverBlueprint(jogador, identificador, deslocamento)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "ReordenarBlueprint")
+	if not okPerm then return false, msgPerm end
   if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
   if type(identificador) ~= "string" then return false, "Blueprint invalido." end
-  local dados = DataManager.ObterDados(jogador)
+  local dados = DataManager.ObterDadosAtivos(jogador)
   if not dados then return false, "Seus dados ainda nao estao disponiveis." end
   return dados:MoverBlueprint(identificador, deslocamento)
 end
 
 -- Recria um token de grupo a partir do blueprint persistido; a confirmacao usa a colocacao parcial das copias.
 function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "ColocarBlueprint")
+	if not okPerm then return false, msgPerm end
+	local okCol, msgCol = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okCol then return false, msgCol end
 	if type(identificador) ~= "string" then return false, "Blueprint invalido." end
-	local dados = DataManager.ObterDados(jogador)
+	local dados = DataManager.ObterDadosAtivos(jogador)
 	local blueprints = dados and dados:ObterBlueprints()
 	if not blueprints then return false, "Seus dados ainda nao estao disponiveis." end
 	local blueprint
@@ -865,6 +907,8 @@ end
 
 -- Confirma as copias disponiveis; obstaculos e saldo insuficiente nao bloqueiam as demais.
 function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okPerm then return false, msgPerm end
   local copia = type(token) == "number" and self:_ObterCopiaGrupoPorToken(jogador, token)
   if not copia then
     return false, "A copia selecionada nao esta mais disponivel."
@@ -874,6 +918,8 @@ end
 
 -- A linha repete uma configuracao escolhida pelo servidor, sem substituir tokens de grupos ou aceitar melhorias do cliente.
 function ServicoConstrucao:ColocarMultiplos(jogador, maquinaId, pedidos, tokenCopia, usarPadrao)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okPerm then return false, msgPerm end
 	if type(maquinaId) ~= "string" or not self._modelos[maquinaId] then return false, "Maquina invalida." end
 	if type(pedidos) ~= "table" then return false, "Destinos invalidos." end
 	local quantidade = 0
@@ -1041,7 +1087,7 @@ end
 function ServicoConstrucao:Personalizar(jogador, maquina, modificacoes)
 	local dados, terreno, piso, maquinas = self:_ObterMaquina(jogador, maquina)
 	local vinculo = self._registrosPorMaquina[maquina]
-	if not dados or not vinculo or vinculo.jogador ~= jogador then
+	if not dados or not vinculo or vinculo.jogador ~= donoEfetivo(jogador) then
 		return false, "Peca indisponivel para personalizacao."
 	end
 	local registro = vinculo.registro
@@ -1064,6 +1110,8 @@ function ServicoConstrucao:Personalizar(jogador, maquina, modificacoes)
 end
 
 function ServicoConstrucao:ConfigurarElevador(jogador, maquina, altura, entrada, saida, sentido)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okPerm then return false, msgPerm end
 	if not self:_PermitirPedido(jogador) then return false, "Muitos pedidos de construção." end
 	if type(maquina) == "string" then maquina = self:_LocalizarPorId(jogador, maquina) end
 	if not self:_ObterMaquina(jogador, maquina) or maquina.Name ~= "ElevadorVertical" then
@@ -1083,6 +1131,8 @@ end
 -- Valida e captura o grupo antes de destruir suas instancias. O perfil conserva os registros na origem ate a
 -- confirmacao, assim uma sessao interrompida ainda pode restaurar as pecas no ponto anterior.
 function ServicoConstrucao:IniciarMovimento(jogador, maquinasSelecionadas)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+	if not okPerm then return false, msgPerm end
 	if type(maquinasSelecionadas) ~= "table" then
 		return false, "Selecao de movimento invalida."
 	end
@@ -1113,7 +1163,7 @@ function ServicoConstrucao:IniciarMovimento(jogador, maquinasSelecionadas)
 		local dados, terreno, piso, maquinas = self:_ObterMaquina(jogador, maquina)
 		local vinculo = self._registrosPorMaquina[maquina]
 		local registro = vinculo and vinculo.registro
-		if not dados or not registro or vinculo.jogador ~= jogador or registro.MaquinaId ~= maquina.Name
+		if not dados or not registro or vinculo.jogador ~= donoEfetivo(jogador) or registro.MaquinaId ~= maquina.Name
 			or not table.find(dados:ObterConstrucoes(), registro)
 		then return false, "Uma das pecas nao esta disponivel para mover." end
 		if dadosGrupo and (dados ~= dadosGrupo or terreno ~= terrenoGrupo or piso ~= pisoGrupo or maquinas ~= maquinasGrupo) then
@@ -1325,8 +1375,8 @@ end
 -- captura invalida gera aviso e nao substitui as diferencas por dados vazios.
 function ServicoConstrucao:Sincronizar(jogador)
 	for maquina, vinculo in self._registrosPorMaquina do
-		if vinculo.jogador ~= jogador or not maquina.Parent
-			or maquina:GetAttribute("DonoUserId") ~= jogador.UserId
+		if vinculo.jogador ~= donoEfetivo(jogador) or not maquina.Parent
+			or maquina:GetAttribute("DonoUserId") ~= donoEfetivo(jogador).UserId
 		then continue end
 		local sucesso, personalizacao = pcall(function()
 			return PersonalizacaoMaquina.DoModelo(maquina):Capturar(maquina, self._modelos[vinculo.registro.MaquinaId].Modelo)
@@ -1344,6 +1394,8 @@ end
 -- Confere limite de pedidos, dono e vinculo com um registro salvo. Captura a personalizacao e tenta devolve-la
 -- ao inventario; so depois do sucesso remove o vinculo e destroi o modelo do terreno.
 function ServicoConstrucao:Recolher(jogador, maquina)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Retirar")
+	if not okPerm then return false, msgPerm end
 	if type(maquina) == "table" then return self:RecolherGrupo(jogador, maquina) end
 	if not self:_PermitirPedido(jogador) then
 		return false, "Muitos pedidos de construcao. Aguarde um instante."
@@ -1361,7 +1413,7 @@ function ServicoConstrucao:Recolher(jogador, maquina)
 	if not dados then return false, "Terreno indisponivel." end
 
 	if maquina.Parent ~= maquinas
-		or maquina:GetAttribute("DonoUserId") ~= jogador.UserId
+		or maquina:GetAttribute("DonoUserId") ~= donoEfetivo(jogador).UserId
 		or maquina:GetAttribute("TerrenoId") ~= terreno:GetAttribute("TerrenoId")
 	then
 		return false, "Essa maquina nao pertence ao seu terreno."
@@ -1370,7 +1422,7 @@ function ServicoConstrucao:Recolher(jogador, maquina)
 	local vinculo = self._registrosPorMaquina[maquina]
 	local registro = vinculo and vinculo.registro
 
-	if not registro or vinculo.jogador ~= jogador
+	if not registro or vinculo.jogador ~= donoEfetivo(jogador)
 		or not self._modelos[registro.MaquinaId]
 	then
 		return false, "Essa maquina nao pode ser recolhida."
@@ -1433,7 +1485,7 @@ function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas, plotInte
 		end
 		vistos[maquina] = true
 		if maquina.Parent ~= pastaMaquinas
-			or maquina:GetAttribute("DonoUserId") ~= jogador.UserId
+			or maquina:GetAttribute("DonoUserId") ~= donoEfetivo(jogador).UserId
 			or maquina:GetAttribute("TerrenoId") ~= terreno:GetAttribute("TerrenoId")
 		then
 			return false, "Uma das maquinas nao pertence ao seu terreno."
@@ -1441,7 +1493,7 @@ function ServicoConstrucao:RecolherGrupo(jogador, maquinasSelecionadas, plotInte
 
 		local vinculo = self._registrosPorMaquina[maquina]
 		local registro = vinculo and vinculo.registro
-		if not registro or vinculo.jogador ~= jogador or not self._modelos[registro.MaquinaId] then
+		if not registro or vinculo.jogador ~= donoEfetivo(jogador) or not self._modelos[registro.MaquinaId] then
 			return false, "Uma das maquinas nao pode ser recolhida."
 		end
 
@@ -1477,6 +1529,8 @@ end
 
 --- Método público LPOO (ServicoConstrucao:RecolherTudo).
 function ServicoConstrucao:RecolherTudo(jogador)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "RetirarTudo")
+	if not okPerm then return false, msgPerm end
 	if self._movimentosPendentes[jogador] then return false,"Conclua ou cancele a movimentação antes de limpar a plot." end
 	if not self:Restaurar(jogador) then return false,"Sua plot ainda não está disponível." end
 	local dados,_,_,pasta=contexto(jogador)
@@ -1494,6 +1548,8 @@ end
 -- Vende uma ou varias pecas da plot como lote. O servidor resolve cada registro e o preco no catalogo; so apaga
 -- os modelos depois de o perfil remover todos os registros e creditar o total com sucesso.
 function ServicoConstrucao:VenderMaquinasColocadas(jogador, maquinasSelecionadas)
+	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Vender")
+	if not okPerm then return false, msgPerm end
 	if type(maquinasSelecionadas) ~= "table" then return false, "Selecao de venda invalida." end
 	local quantidade = 0
 	for indice in maquinasSelecionadas do
@@ -1522,7 +1578,7 @@ function ServicoConstrucao:VenderMaquinasColocadas(jogador, maquinasSelecionadas
 		end
 		vistos[maquina] = true
 		if maquina.Parent ~= pastaMaquinas
-			or maquina:GetAttribute("DonoUserId") ~= jogador.UserId
+			or maquina:GetAttribute("DonoUserId") ~= donoEfetivo(jogador).UserId
 			or maquina:GetAttribute("TerrenoId") ~= terreno:GetAttribute("TerrenoId")
 		then
 			return false, "Uma das maquinas nao pertence ao seu terreno."
@@ -1530,7 +1586,7 @@ function ServicoConstrucao:VenderMaquinasColocadas(jogador, maquinasSelecionadas
 
 		local vinculo = self._registrosPorMaquina[maquina]
 		local registro = vinculo and vinculo.registro
-		if not registro or vinculo.jogador ~= jogador or not self._modelos[registro.MaquinaId]
+		if not registro or vinculo.jogador ~= donoEfetivo(jogador) or not self._modelos[registro.MaquinaId]
 			or not table.find(dados:ObterConstrucoes(), registro)
 		then
 			return false, "Uma das maquinas nao pode ser vendida."
@@ -1569,7 +1625,7 @@ function ServicoConstrucao:AtualizarPrevia(jogador, previa)
   local _, terreno = contexto(jogador)
   if not terreno then return false end
   if previa == nil then
-    terreno:SetAttribute("PreviaConstrucao", nil)
+    terreno:SetAttribute("PreviaConstrucao", nil); terreno:SetAttribute("PreviaAutorId", nil)
     return true
   end
   local agora = os.clock()
@@ -1593,7 +1649,7 @@ function ServicoConstrucao:AtualizarPrevia(jogador, previa)
       limpo[i][15] = {v[1], v[2], v[3], v[4]}
     end
   end
-  terreno:SetAttribute("PreviaConstrucao", game:GetService("HttpService"):JSONEncode(limpo))
+  terreno:SetAttribute("PreviaAutorId", jogador.UserId); terreno:SetAttribute("PreviaConstrucao", game:GetService("HttpService"):JSONEncode(limpo))
   return true
 end
 
@@ -1612,12 +1668,12 @@ function ServicoConstrucao:LimparJogador(jogador)
   if pasta then
     for _, terreno in pasta:GetChildren() do
       if terreno:GetAttribute("DonoUserId") == jogador.UserId then
-        terreno:SetAttribute("PreviaConstrucao", nil)
+        terreno:SetAttribute("PreviaConstrucao", nil); terreno:SetAttribute("PreviaAutorId", nil)
       end
     end
   end
 	for maquina, vinculo in self._registrosPorMaquina do
-		if vinculo.jogador == jogador then
+		if vinculo.jogador == donoEfetivo(jogador) then
 			self._registrosPorMaquina[maquina] = nil
 		end
 	end
@@ -1641,11 +1697,11 @@ function ServicoConstrucao:ReiniciarProgresso(jogador, alterarDados)
 	self._copias[jogador], self._copiasGrupo[jogador], self._movimentosPendentes[jogador] = nil, nil, nil
 self._historicoCopias[jogador], self._historicoDesfazer[jogador], self._historicoRefazer[jogador] = nil, nil, nil
 	for maquina, vinculo in self._registrosPorMaquina do
-		if vinculo.jogador == jogador then self._registrosPorMaquina[maquina] = nil end
+		if vinculo.jogador == donoEfetivo(jogador) then self._registrosPorMaquina[maquina] = nil end
 	end
 	maquinas:ClearAllChildren()
 	minerios:ClearAllChildren()
-	terreno:SetAttribute("PreviaConstrucao", nil)
+	terreno:SetAttribute("PreviaConstrucao", nil); terreno:SetAttribute("PreviaAutorId", nil)
 	self._carregados[terreno] = dados
 	require(script.Parent.ExpansaoPlot).Aplicar(terreno,dados:ObterUpgrade("Expansao"),true)
 	dados:Sincronizar()
@@ -1789,7 +1845,7 @@ end
 --- Método auxiliar privado (ServicoConstrucao:_LocalizarPorId) encapsulado na classe.
 function ServicoConstrucao:_LocalizarPorId(jogador, id)
 for modelo, vinculo in self._registrosPorMaquina do
-if vinculo.jogador == jogador and vinculo.registro.Id == id and modelo.Parent then
+if vinculo.jogador == donoEfetivo(jogador) and vinculo.registro.Id == id and modelo.Parent then
 return modelo, vinculo.registro
 end
 end
@@ -2037,6 +2093,29 @@ return true, msg
 end
 end
 return false, "Tipo de acao desconhecido."
+end
+
+function ServicoConstrucao:LimparVisitanteCoop(jogador)
+local pendente = self._movimentosPendentes[jogador]
+if pendente then
+pcall(self.CancelarMovimento, self, jogador, pendente.Token)
+self._movimentosPendentes[jogador] = nil
+end
+self._copias[jogador] = nil
+self._copiasGrupo[jogador] = nil
+self._historicoCopias[jogador] = nil
+self._historicoDesfazer[jogador] = nil
+self._historicoRefazer[jogador] = nil
+self._temposPrevia[jogador] = nil
+local pasta = workspace:FindFirstChild("Terrenos")
+if pasta then
+for _, terreno in pasta:GetChildren() do
+if terreno:GetAttribute("PreviaAutorId") == jogador.UserId then
+terreno:SetAttribute("PreviaConstrucao", nil)
+terreno:SetAttribute("PreviaAutorId", nil)
+end
+end
+end
 end
 
 return ServicoConstrucao

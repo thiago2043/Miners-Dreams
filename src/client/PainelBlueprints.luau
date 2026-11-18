@@ -1,3 +1,4 @@
+local RegrasCoop = require(game:GetService("ReplicatedStorage").Shared.RegrasCoop)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalogo = require(ReplicatedStorage.Shared.CatalogoMaquinas)
 local Formatar = require(script.Parent.FormatarNumero)
@@ -315,7 +316,9 @@ self._conexoesBp = {
  area:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 if self._grupo.Visible and not self._grupo:GetAttribute("AnimandoUI") then self:_Desenhar() end
 end),
-jogador:GetAttributeChangedSignal("EscalaInterface"):Connect(function()
+jogador:GetAttributeChangedSignal("CoopDonoUserId"):Connect(function() if self._grupo.Visible then self:_CarregarLista() end end),
+	jogador:GetAttributeChangedSignal("PermissoesCoop"):Connect(function() if self._grupo.Visible then self:_Desenhar() end end),
+	jogador:GetAttributeChangedSignal("EscalaInterface"):Connect(function()
 if self._grupo.Visible then self:_Desenhar() end
 end),
 }
@@ -549,7 +552,7 @@ function PainelBlueprints:_Desenhar()
   end
   if mudouSubAba then AnimacaoInterface.TransicaoSubAba(self._lista) end
 
-self._cabecalho.Visible = true
+self._cabecalho.Visible = true; self._botaoCriar:DefinirDisponivel(RegrasCoop.JogadorPode(self._jogador, "CriarBlueprint"))
 self._lista.Position = UDim2.fromOffset(0, 140)
 local blueprints = self._blueprints or {}
 self._quantidade.Text = #blueprints .. " salvo(s)"
@@ -610,7 +613,7 @@ local ok, msg = self._construcao:MoverBlueprint(id, -1)
 self:_MostrarMensagem(msg)
 if ok then self:_CarregarLista() end
 end)
-bSubir:DefinirDisponivel(indice > 1)
+bSubir:DefinirDisponivel(indice > 1 and RegrasCoop.JogadorPode(self._jogador, "ReordenarBlueprint"))
 if indice <= 1 then bSubir:ObterInstancia().TextColor3 = Color3.fromRGB(100, 108, 122) end
 
 local bDescer = self:_BotaoTemp(cartao, "Descer_" .. id, UDim2.new(1, -110, 0, 6), UDim2.fromOffset(26, 24), "↓", Color3.fromRGB(40, 46, 58), nil, function()
@@ -618,7 +621,7 @@ local ok, msg = self._construcao:MoverBlueprint(id, 1)
 self:_MostrarMensagem(msg)
 if ok then self:_CarregarLista() end
 end)
-bDescer:DefinirDisponivel(indice < #blueprints)
+bDescer:DefinirDisponivel(indice < #blueprints and RegrasCoop.JogadorPode(self._jogador, "ReordenarBlueprint"))
 if indice >= #blueprints then bDescer:ObterInstancia().TextColor3 = Color3.fromRGB(100, 108, 122) end
 
 self:_BotaoTemp(cartao, "Colocar_" .. id, UDim2.new(1, -80, 0, 6), UDim2.fromOffset(72, 24), "Colocar →", self._janela.Cor, Color3.fromRGB(17, 29, 35), function()
@@ -680,7 +683,7 @@ local sucesso, mensagem, blueprints = self._construcao:ListarBlueprints()
 if self._destruido then return end
 if not sucesso then
 self:_LimparLista()
-self._cabecalho.Visible = true
+self._cabecalho.Visible = true; self._botaoCriar:DefinirDisponivel(RegrasCoop.JogadorPode(self._jogador, "CriarBlueprint"))
 self._lista.Position = UDim2.fromOffset(0, 140)
 self._vazio.Visible, self._vazio.Text = true, mensagem
 self._quantidade.Text = "Indisponível"

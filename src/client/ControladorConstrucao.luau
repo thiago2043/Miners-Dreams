@@ -110,7 +110,7 @@ _pecasSelecionadas = {}, _destaquesPecas = {}, _arrasteSelecao = nil,
 	self._consultaSelecao.FilterType = Enum.RaycastFilterType.Include
 	self._consultaSelecao.RespectCanCollide = false
 	jogador:SetAttribute("MaquinaSelecionada", self._maquinaIdSelecionada)
-	return self
+return self
 end
 
 -- Conecta teclado, mouse, atualizacao por quadro e mudancas de configuracao do estoque. As conexoes ficam na
@@ -118,6 +118,12 @@ end
 function ControladorConstrucao:Iniciar()
 	assert(not self._destruido, "Controlador ja destruido.")
 	if #self._conexoes > 0 then return end
+table.insert(self._conexoes, self._jogador:GetAttributeChangedSignal("CoopDonoUserId"):Connect(function()
+self:_EncerrarAcao()
+self:_LimparSelecaoPecas()
+self:LimparHistoricoCopia()
+self:_EncontrarTerreno(true)
+end))
 	-- Connect registra uma funcao para uma entrada futura; nao executa o comando agora. Guardar a conexao
 	-- permite parar o ouvinte junto com o controlador.
 	table.insert(self._conexoes, UserInputService.InputBegan:Connect(function(entrada, processada)
@@ -355,13 +361,19 @@ end
 
 -- Procura a plot cujo DonoUserId corresponde ao jogador e guarda suas pastas e piso. Devolve true quando esse
 -- contexto existe; false interrompe a acao sem criar ou atribuir outra plot.
+function ControladorConstrucao:_DonoAlvoId()
+local coopDono = self._jogador:GetAttribute("CoopDonoUserId")
+return (type(coopDono) == "number" and coopDono ~= 0) and coopDono or self._jogador.UserId
+end
+
 function ControladorConstrucao:_EncontrarTerreno(silencioso)
-	for _, candidato in self._pastaTerrenos:GetChildren() do
-		if candidato:GetAttribute("DonoUserId") == self._jogador.UserId then
-			return self:_UsarTerreno(candidato,silencioso)
-		end
-	end
-	return self:_UsarTerreno(nil,silencioso)
+local donoAlvo = self:_DonoAlvoId()
+for _, candidato in self._pastaTerrenos:GetChildren() do
+if candidato:GetAttribute("DonoUserId") == donoAlvo then
+return self:_UsarTerreno(candidato,silencioso)
+end
+end
+return self:_UsarTerreno(nil,silencioso)
 end
 
 function ControladorConstrucao:_UsarTerreno(terreno,silencioso)
@@ -1283,7 +1295,7 @@ end
 -- deixou de existir, encerra a navegacao em vez de agir sobre uma plot reutilizada.
 function ControladorConstrucao:_AtualizarSelecaoTerreno()
 	if self._terreno.Parent ~= self._pastaTerrenos
-		or self._terreno:GetAttribute("DonoUserId") ~= self._jogador.UserId
+		or self._terreno:GetAttribute("DonoUserId") ~= self:_DonoAlvoId()
 		or self._piso.Parent ~= self._terreno
 		or self._maquinas.Parent ~= self._terreno
 	then
@@ -1313,7 +1325,7 @@ function ControladorConstrucao:_AtualizarDestaqueHover()
   if self._proximoHover and agora < self._proximoHover then return end
   self._proximoHover = agora + 0.05
 	if not self._terreno or self._terreno.Parent ~= self._pastaTerrenos
-		or self._terreno:GetAttribute("DonoUserId") ~= self._jogador.UserId
+		or self._terreno:GetAttribute("DonoUserId") ~= self:_DonoAlvoId()
 		or not self._maquinas or self._maquinas.Parent ~= self._terreno
 	then
 		if not self:_EncontrarTerreno(true) then
@@ -1878,7 +1890,7 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 	if estado and estado ~= "Inventario" and estado ~= "Loja" and estado ~= "FichaInventario"
 		and estado ~= "FichaLoja" and estado ~= "CatalogoADM" and estado ~= "FichaCatalogoADM"
 		and estado ~= "Blueprints" and estado ~= "CriacaoBlueprint"
-		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia" and estado ~= "Craft"
+		and estado ~= "Upgrades" and estado ~= "Prestigio" and estado ~= "Configuracoes" and estado ~= "Classificacao" and estado ~= "Administracao" and estado ~= "Tutorial" and estado ~= "HistoricoCopia" and estado ~= "Craft" and estado ~= "Coop"
 		and estado ~= "Colocacao"
 		and estado ~= "Rotacao" and estado ~= "Recolhimento"
 		and estado ~= "Selecao"
@@ -1895,7 +1907,7 @@ if entrada.UserInputType == Enum.UserInputType.Keyboard and not self._colocando 
 	-- Nas abas centrais simples, apenas os atalhos de paineis continuam ativos; cliques nao operam sobre a plot.
 	if (estado == "Upgrades" or estado == "Prestigio" or estado == "Configuracoes" or estado == "Classificacao"
 		or estado == "Administracao" or estado == "CatalogoADM" or estado == "FichaCatalogoADM"
-		or estado == "Tutorial" or estado == "HistoricoCopia" or estado == "Craft") and tecla ~= Enum.KeyCode.U
+		or estado == "Tutorial" or estado == "HistoricoCopia" or estado == "Craft" or estado == "Coop") and tecla ~= Enum.KeyCode.U
 		and tecla ~= Enum.KeyCode.P and tecla ~= Enum.KeyCode.B
 		and tecla ~= Enum.KeyCode.E and tecla ~= Enum.KeyCode.F then return end
 
@@ -2082,7 +2094,7 @@ self:_AtualizarTransparenciaAltura()
 	end
 
 	if self._terreno.Parent ~= self._pastaTerrenos
-		or self._terreno:GetAttribute("DonoUserId") ~= (if administrativo then self._donoTerrenoADM else self._jogador.UserId)
+		or self._terreno:GetAttribute("DonoUserId") ~= (if administrativo then self._donoTerrenoADM else self:_DonoAlvoId())
 		or self._piso.Parent ~= self._terreno
 		or self._maquinas.Parent ~= self._terreno
 	then
@@ -2346,7 +2358,7 @@ end
 
 -- As abas usam a mesma regiao central; trocar de aba preserva inventario e loja nas laterais.
 function ControladorConstrucao:AlternarPainelCentral(aba)
-  if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" and aba ~= "Craft" then return false end
+  if aba ~= "Blueprints" and aba ~= "Upgrades" and aba ~= "Prestigio" and aba ~= "Configuracoes" and aba ~= "Classificacao" and aba ~= "Administracao" and aba ~= "Tutorial" and aba ~= "HistoricoCopia" and aba ~= "Craft" and aba ~= "Coop" then return false end
   if self._destruido or self._colocando then return false end
   if (self._previa or self._movimento or self._modoSelecao) and not self:_EncerrarAcao() then return false end
   if self.Navegacao:Contem(aba) then
@@ -2846,7 +2858,7 @@ function ControladorConstrucao:_MaquinaSobMouse()
   local resultado = workspace:Raycast(raio.Origin, raio.Direction * alcance, self._consultaMaquinas)
 	local objeto = resultado and resultado.Instance
 	while objeto and objeto.Parent ~= self._maquinas do objeto = objeto.Parent end
-	if objeto and objeto:IsA("Model") and objeto:GetAttribute("DonoUserId") == self._jogador.UserId
+	if objeto and objeto:IsA("Model") and objeto:GetAttribute("DonoUserId") == self:_DonoAlvoId()
 		and objeto:GetAttribute("TerrenoId") == self._terreno:GetAttribute("TerrenoId")
 	then return objeto end
 	return nil
@@ -2970,18 +2982,26 @@ function ControladorConstrucao:Girar(eixo)
 	local angulo = math.pi / 2
 	local definicao,permitirInclinar,somenteY=self:_DefinicaoRotacao()
 	if somenteY and eixo ~= "Y" then return end
-	if eixo == "X" and permitirInclinar and RotacaoConstrucao.PermiteInclinar(definicao) then
-		self._rotacao = self._rotacao*CFrame.Angles(math.pi/4,0,0)
-	elseif eixo == "X" then
-		self._rotacao = CFrame.Angles(angulo, 0, 0) * self._rotacao
-	elseif eixo == "Y" then
-		self._rotacao = CFrame.Angles(0, angulo, 0) * self._rotacao
-	elseif eixo == "Z" then
-		self._rotacao = CFrame.Angles(0, 0, angulo) * self._rotacao
-	end
-	-- Multiplicar o giro pela esquerda aplica o eixo no referencial da construcao. A validacao final remove
-	-- residuos e confirma que a matriz continua nas orientacoes permitidas para a peca.
-	self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(self._rotacao,definicao))
+if RotacaoConstrucao.PermiteInclinar(definicao) then
+local base, anguloAtual = RotacaoConstrucao.DecomporEsteira(self._rotacao, definicao)
+if eixo == "Y" then
+base = CFrame.Angles(0, angulo, 0) * base
+self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(base * CFrame.Angles(anguloAtual, 0, 0), definicao))
+elseif eixo == "X" and permitirInclinar then
+local indice = math.round(anguloAtual / (math.pi / 4))
+local proximo = if indice == 0 then 1 elseif indice == 1 then -1 else 0
+self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(base * CFrame.Angles(proximo * (math.pi / 4), 0, 0), definicao))
+end
+return
+end
+if eixo == "X" then
+self._rotacao = CFrame.Angles(angulo, 0, 0) * self._rotacao
+elseif eixo == "Y" then
+self._rotacao = CFrame.Angles(0, angulo, 0) * self._rotacao
+elseif eixo == "Z" then
+self._rotacao = CFrame.Angles(0, 0, angulo) * self._rotacao
+end
+self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(self._rotacao,definicao))
 end
 
 local _atualizarBaseCtrl = ControladorConstrucao.Atualizar

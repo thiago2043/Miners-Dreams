@@ -1,3 +1,4 @@
+local RegrasCoop = require(game:GetService("ReplicatedStorage").Shared.RegrasCoop)
 --[[
 Módulo: PainelPecas (LPOO - Controlador Composto)
 Responsabilidade:
@@ -321,9 +322,9 @@ self._fichaValida = self._fichaValida and retratoValido
 
 for acao, botao in self._acoes do
 local disponivel = visivelFicha and item ~= nil and pronto and self._fichaValida and not self._negociando
-if acao == "Colocar" then disponivel = disponivel and (administrativo or quantidade > 0 or copia) end
-if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Obtencao end
-if acao == "Comprar" then disponivel = disponivel and not item.Obtencao end
+if acao == "Colocar" then disponivel = disponivel and (administrativo or ((quantidade > 0 or copia) and RegrasCoop.JogadorPode(self._jogador, "Colocar"))) end
+if acao == "Vender" then disponivel = disponivel and quantidade > 0 and not copia and not item.Obtencao and RegrasCoop.JogadorPode(self._jogador, "Vender") end
+if acao == "Comprar" then disponivel = disponivel and not item.Obtencao and RegrasCoop.JogadorPode(self._jogador, "Comprar") end
 botao:DefinirDisponivel(disponivel)
 botao:ObterInstancia().Text = self._negociando == acao and (acao == "Comprar" and "Comprando..." or "Vendendo...")
 or (item and acao ~= "Colocar" and item.Obtencao)

@@ -277,7 +277,7 @@ end
 function Visuais:_AtualizarPreviaTerreno(terreno, forcarRecriacao)
 local dono = terreno:GetAttribute("DonoUserId")
 local texto = terreno:GetAttribute("PreviaConstrucao")
-if not dono or dono == 0 or dono == self._jogador.UserId or type(texto) ~= "string" or texto == "" then
+local autorPrevia = terreno:GetAttribute("PreviaAutorId"); if not dono or dono == 0 or (autorPrevia and autorPrevia == self._jogador.UserId) or (not autorPrevia and dono == self._jogador.UserId) or type(texto) ~= "string" or texto == "" then
 self:_LimparPreviaTerreno(terreno)
 return
 end

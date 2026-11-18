@@ -34,4 +34,5 @@ return {
 Configuracoes = {},
   Atalhos = {},
   Janelas = {},
+  Coop = { Limite = 4, Banidos = {} },
 }

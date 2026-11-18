@@ -71,9 +71,9 @@ end
 if not hitbox then
 hitbox=Instance.new("Part")
 hitbox.Name="HitboxConstrucao"
-hitbox:SetAttribute("GeometriaEsteiraGerada",true)
 hitbox.Parent=modelo
 end
+hitbox:SetAttribute("GeometriaEsteiraGerada",true)
 hitbox.Size,hitbox.CFrame=Vector3.new(largura,altura,comprimento),CFrame.new(0,altura/2,0)
 hitbox.Transparency,hitbox.Anchored,hitbox.CanCollide,hitbox.CanTouch,hitbox.CanQuery=1,true,false,false,false
 for i,p in superficies do

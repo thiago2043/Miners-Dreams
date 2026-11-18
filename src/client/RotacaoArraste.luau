@@ -100,13 +100,27 @@ function RotacaoArraste:Atualizar(mouse)
 	-- Aplica os quartos de volta completos em uma matriz, preservando os pixels restantes. A validacao mantem a
 	-- orientacao exatamente nos giros permitidos para a peca.
 	if passos > 0 then
-		local passo = if self._permitirInclinar and RotacaoConstrucao.PermiteInclinar(self._definicao)
-			and math.abs(self._eixo:Dot(self._rotacao.RightVector))>.999 then math.pi/4 else RotacaoConstrucao.Passo
-		self._rotacao = assert(RotacaoConstrucao.ValidarNaGrade(
-			CFrame.fromAxisAngle(self._eixo, passos * passo) * self._rotacao, self._definicao
-		))
-	end
-	return self._rotacao
+if RotacaoConstrucao.PermiteInclinar(self._definicao) then
+local base, anguloAtual = RotacaoConstrucao.DecomporEsteira(self._rotacao, self._definicao)
+if math.abs(self._eixo.Y) > 0.999 then
+local novaBase = CFrame.fromAxisAngle(self._eixo, passos * RotacaoConstrucao.Passo) * base
+local validada = RotacaoConstrucao.ValidarNaGrade(novaBase * CFrame.Angles(anguloAtual, 0, 0), self._definicao)
+if validada then self._rotacao = validada end
+elseif self._permitirInclinar and math.abs(self._eixo:Dot(base.RightVector)) > 0.999 then
+local sentido = if self._eixo:Dot(base.RightVector) > 0 then 1 else -1
+local indice = math.round(anguloAtual / (math.pi / 4))
+local novoIndice = math.clamp(indice + sentido * passos, -1, 1)
+local validada = RotacaoConstrucao.ValidarNaGrade(base * CFrame.Angles(novoIndice * (math.pi / 4), 0, 0), self._definicao)
+if validada then self._rotacao = validada end
+end
+else
+local candidata = RotacaoConstrucao.ValidarNaGrade(
+CFrame.fromAxisAngle(self._eixo, passos * RotacaoConstrucao.Passo) * self._rotacao, self._definicao
+)
+if candidata then self._rotacao = candidata end
+end
+end
+return self._rotacao
 end
 
 return RotacaoArraste

@@ -9,6 +9,7 @@ local cores = {
 	Administracao = Color3.fromRGB(112,198,255),
 	Tutorial = Color3.fromRGB(101,228,196),
 	Craft = Color3.fromRGB(255,138,96),
+	Coop = Color3.fromRGB(82, 224, 255),
 }
 
 -- Coordenadas de desenho usam uma placa de 56 unidades; Scale acompanha o tamanho real do botao.
@@ -46,7 +47,13 @@ function IconesAbas.DesenharSeta(pai, cor)
 end
 
 local desenhos = {
-	Craft = function(pai, cor)
+Coop = function(pai, cor)
+retangulo(pai, cor, 13, 13, 12, 12, 6)
+retangulo(pai, cor, 9, 27, 20, 14, 5)
+retangulo(pai, cor, 31, 15, 11, 11, 6)
+retangulo(pai, cor, 28, 28, 19, 13, 5)
+end,
+Craft = function(pai, cor)
 		linha(pai, cor, 15, 43, 36, 17, 6)
 		retangulo(pai, cor, 20, 12, 26, 11, 2, 39)
 		retangulo(pai, cor, 12, 42, 32, 4, 1)

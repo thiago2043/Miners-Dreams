@@ -1,3 +1,5 @@
+local RegrasCoop = require(game:GetService("ReplicatedStorage").Shared.RegrasCoop)
+local PainelCoop = require(script.Parent.PainelCoop)
 -- Cria o HUD, as abas de inventario/loja, blueprints/progressao e o menu contextual; os paineis atualizam a
 -- apresentacao a partir dos atributos replicados e da pilha de navegacao.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -64,6 +66,7 @@ self._interface = Instance.new("ScreenGui")
 	self._paineisProgressao.Prestigio.Confirmacao=self._confirmacao
 	self._paineisProgressao.Configuracoes = PainelConfiguracoes.new(self._interface, jogador, construcao.Navegacao)
 	self._paineisProgressao.Classificacao = PainelClassificacao.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Classificacao", {}))
+	self._paineisProgressao.Coop = PainelCoop.new(self._interface, jogador, construcao.Navegacao, Networker.client.new("Coop", {}), self._confirmacao)
 	local redeAdm=Networker.client.new("Administracao",{})
 	construcao.RedeAdministracao=redeAdm
 	self._paineisProgressao.Administracao=PainelAdministracao.new(self._interface,jogador,construcao.Navegacao,redeAdm,self._confirmacao,function()
@@ -101,6 +104,12 @@ if self._limparStatus.Visible and os.clock()>=self._limparStatusAte then self._l
 MonitorRecursos.Finalizar("Interface e HUD (InterfaceJogo)", tHud, "Atualização de quadros da UI")
 end))
 	table.insert(self._conexoes,jogador:GetAttributeChangedSignal("PecasNaPlot"):Connect(function() self._resumoPlotAlterado=true end))
+for _, attrCoop in { "PermissoesCoop", "CoopDonoUserId" } do
+table.insert(self._conexoes, jogador:GetAttributeChangedSignal(attrCoop):Connect(function()
+self._resumoPlotAlterado = true
+self:AtualizarInventario()
+end))
+end
 	-- Os atributos chegam replicados do servidor. Os sinais atualizam o HUD quando os dados mudam, dispensando
 	-- uma consulta repetida a cada quadro.
 	table.insert(self._conexoes, jogador:GetAttributeChangedSignal("Dinheiro"):Connect(function() self:AtualizarDinheiro() end))
@@ -200,10 +209,10 @@ function InterfaceJogo:_CriarMenuAbas()
 	-- A ordem desta lista e a ordem visual. Cada objeto Botao conserva o callback da sua propria aba.
 	for ordem, item in {
 		{ "Inventario", "Inventário" }, { "Loja", "Loja" }, { "Upgrades", "Upgrades" },
-		{ "Prestigio", "Prestígio" }, { "Craft", "Craft" }, { "Tutorial", "Tutorial" }, { "Classificacao", "Classificação" }, { "Configuracoes", "Configurações" }, { "Blueprints", "Blueprints" }, {"Administracao","Administração"},
+		{ "Prestigio", "Prestígio" }, { "Craft", "Craft" }, { "Tutorial", "Tutorial" }, { "Classificacao", "Classificação" }, { "Configuracoes", "Configurações" }, { "Blueprints", "Blueprints" }, { "Coop", "Modo Coop" }, {"Administracao","Administração"},
 	} do
 		local aba = item[1]
-		local direita = aba == "Tutorial" or aba == "Classificacao" or aba == "Configuracoes" or aba == "Blueprints" or aba=="Administracao"
+		local direita = aba == "Tutorial" or aba == "Classificacao" or aba == "Configuracoes" or aba == "Blueprints" or aba == "Coop" or aba=="Administracao"
 		local botao = Botao.new(if direita then self._menuDireito else self._menuAbas, aba, function()
 			-- Reutiliza os mesmos metodos dos atalhos para clique e teclado respeitarem os mesmos estados e Q.
 			if aba == "Inventario" or aba == "Loja" then
@@ -224,7 +233,7 @@ function InterfaceJogo:_CriarMenuAbas()
 		local function mostrarDica()
 			self._dicaAba.Text, self._dicaAba.Visible = item[2], true
 			self._dicaAba.AnchorPoint = Vector2.new(if direita then 1 else 0, .5)
-			local quantidadeDireita = if self._jogador:GetAttribute("Administrador") == true then 5 else 4
+			local quantidadeDireita = if self._jogador:GetAttribute("Administrador") == true then 6 else 5
 			self._dicaAba.Position = if direita then UDim2.new(1, -larguraMenu - 20, .5, (ordem - 5 - (quantidadeDireita + 1) / 2) * (larguraMenu + 10))
 				else UDim2.new(0, larguraMenu + 20, .5, (ordem - 3) * (larguraMenu + 10))
 		end
@@ -273,7 +282,7 @@ end
 function InterfaceJogo:_AtualizarBotaoLimparPlot()
 	local contagens=self._paineis.Inventario._contagensPlot
 	local total=0; for _,n in contagens or {} do total+=n end
-	self._botaoLimparPlot:DefinirDisponivel(total>0 and not self._construcao._colocando)
+	self._botaoLimparPlot:DefinirDisponivel(total>0 and not self._construcao._colocando and RegrasCoop.JogadorPode(self._jogador, "RetirarTudo"))
 end
 
 -- Cria a ficha flutuante em uma camada separada para que sua coordenada acompanhe a projecao da maquina.

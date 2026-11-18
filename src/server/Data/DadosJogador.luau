@@ -28,8 +28,8 @@ local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local PremiosAscensao = require(script.Parent.PremiosAscensao)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial", "Ascensoes", "Transicoes", "RecompensasAscensao" })
-local reinicioAscensao = ReinicioProgresso.new(Template, { "NomeJogador", "RecompensasAscensao" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial", "Ascensoes", "Transicoes", "RecompensasAscensao", "Coop" })
+local reinicioAscensao = ReinicioProgresso.new(Template, { "NomeJogador", "RecompensasAscensao", "Coop" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
 
@@ -194,8 +194,8 @@ end
 function DadosJogador:_PublicarInventario(maquinaId)
 	local quantidade = self:ObterQuantidade(maquinaId)
 	local modificacoes = self:ObterModificacoesInventario(maquinaId)
-	self._jogador:SetAttribute("ConfiguracaoInventario_" .. maquinaId, PersonalizacaoMaquina.new(modificacoes):Codificar())
-	self._jogador:SetAttribute("Inventario_" .. maquinaId, quantidade)
+	self:_PublicarAtributoProgresso("ConfiguracaoInventario_" .. maquinaId, PersonalizacaoMaquina.new(modificacoes):Codificar())
+	self:_PublicarAtributoProgresso("Inventario_" .. maquinaId, quantidade)
 end
 
 -- Substitui a lista de personalizacoes de um tipo dentro do perfil, criando o dicionario quando ainda nao
@@ -209,13 +209,13 @@ end
 -- Resumo derivado dos registros, sem depender das instancias que podem estar ocultas durante um movimento.
 function DadosJogador:PublicarResumoPlot()
 	local registros=self._perfil.Data.MaquinasColocadas
-	if type(registros)~="table" then self._jogador:SetAttribute("PecasNaPlot",nil); return end
+	if type(registros)~="table" then self:_PublicarAtributoProgresso("PecasNaPlot",nil); return end
 	local contagens={}
 	for _,registro in registros do
 		local id=type(registro)=="table" and registro.MaquinaId
 		if id and CatalogoMaquinas[id] then contagens[id]=(contagens[id] or 0)+1 end
 	end
-	self._jogador:SetAttribute("PecasNaPlot",game:GetService("HttpService"):JSONEncode(contagens))
+	self:_PublicarAtributoProgresso("PecasNaPlot",game:GetService("HttpService"):JSONEncode(contagens))
 end
 
 -- Publica os dados replicados depois do carregamento ou de uma alteracao completa de progresso.
@@ -223,15 +223,15 @@ function DadosJogador:Sincronizar()
 	self:RegistrarRecorde("Vidas", string.format("%.0f", self._perfil.Data.Vidas or 1))
 	self:RegistrarRecorde("Dinheiro", self:ObterSaldo())
 	self._jogador:SetAttribute("MarcoDinheiroE308", (self._perfil.Data.Ascensoes or 0) > 0 or Beta.AtingiuE308((self._perfil.Data.Recordes or {}).Dinheiro))
-	for _,item in Upgrades.Itens do self._jogador:SetAttribute("Upgrade_"..item.Id,self:ObterUpgrade(item.Id)) end
-	self._jogador:SetAttribute("VelocidadeMotores",self:ObterVelocidadeMotores())
-	self._jogador:SetAttribute("Dinheiro", self:ObterSaldo())
+	for _,item in Upgrades.Itens do self:_PublicarAtributoProgresso("Upgrade_"..item.Id,self:ObterUpgrade(item.Id)) end
+	self:_PublicarAtributoProgresso("VelocidadeMotores",self:ObterVelocidadeMotores())
+	self:_PublicarAtributoProgresso("Dinheiro", self:ObterSaldo())
 	-- Perfis antigos recebem os campos por Reconcile; os valores iniciais tambem permitem consultar dados legados.
-	self._jogador:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
-	self._jogador:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
-	self._jogador:SetAttribute("Ascensoes", self._perfil.Data.Ascensoes or 0)
-	self._jogador:SetAttribute("Transicoes", self._perfil.Data.Transicoes or 0)
-	self._jogador:SetAttribute("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
+	self:_PublicarAtributoProgresso("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
+	self:_PublicarAtributoProgresso("Vidas", self._perfil.Data.Vidas or 1)
+	self:_PublicarAtributoProgresso("Ascensoes", self._perfil.Data.Ascensoes or 0)
+	self:_PublicarAtributoProgresso("Transicoes", self._perfil.Data.Transicoes or 0)
+	self:_PublicarAtributoProgresso("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
 	self:SincronizarTutorial()
 for maquinaId in CatalogoMaquinas do
     self:_PublicarInventario(maquinaId)
@@ -436,7 +436,7 @@ function DadosJogador:ZerarProgresso()
 	self._perfil.Data=novo
 	self._ganhos,self._ultimaTaxa="0","0"
 	table.clear(self._amostrasGanhos)
-	self._jogador:SetAttribute("GanhosPorSegundo","0")
+	self:_PublicarAtributoProgresso("GanhosPorSegundo","0")
 	return true,"Dados zerados. O jogador voltou ao início com o kit inicial."
 end
 
@@ -473,7 +473,7 @@ end
 function DadosJogador:DefinirVelocidadeMotores(nivel)
 	if not self:EstaAtivo() or not Upgrades.Valido(nivel) or nivel>self:ObterUpgrade("Motores") then return false,"Velocidade não desbloqueada." end
 	self._perfil.Data.VelocidadeMotores=nivel
-	self._jogador:SetAttribute("VelocidadeMotores",nivel)
+	self:_PublicarAtributoProgresso("VelocidadeMotores",nivel)
 	return true,"Velocidade alterada."
 end
 
@@ -505,7 +505,7 @@ function DadosJogador:Reencarnar(indiceEsperado)
 	self._perfil.Data = novo
 	self._ganhos,self._ultimaTaxa="0","0"
 	table.clear(self._amostrasGanhos)
-	self._jogador:SetAttribute("GanhosPorSegundo","0")
+	self:_PublicarAtributoProgresso("GanhosPorSegundo","0")
 	self:RegistrarRecorde("Vidas", string.format("%.0f", novo.Vidas))
 	return true, "Reencarnou: +" .. estado.VidasDisponiveis .. " vida(s).", estado
 end
@@ -533,7 +533,7 @@ function DadosJogador:Ascender(indiceEsperado, geracaoEsperada)
 	self._ganhos, self._ultimaTaxa, self._recebido = "0", "0", "0"
 	table.clear(self._amostrasGanhos)
 	self._proximaQuedaTutorial = nil
-	self._jogador:SetAttribute("GanhosPorSegundo", "0")
+	self:_PublicarAtributoProgresso("GanhosPorSegundo", "0")
 	self._jogador:SetAttribute("TutorialQueda", nil)
 	return true, "Ascensão concluída · +" .. estado.Disponiveis .. (if estado.Disponiveis == 1 then " transição." else " transições."), estado
 end
@@ -553,14 +553,14 @@ function DadosJogador:_DefinirSaldo(saldo)
 	if ganho and ganho~="0" then self._recebido=InteiroGrande.somar(self._recebido,ganho) end
 	self._perfil.Data.Dinheiro = saldo
 	self:RegistrarRecorde("Dinheiro", saldo)
-	self._jogador:SetAttribute("Dinheiro", saldo)
+	self:_PublicarAtributoProgresso("Dinheiro", saldo)
 end
 
 --- Método público LPOO (DadosJogador:PublicarRecebimentos).
 function DadosJogador:PublicarRecebimentos()
 	if self._recebido~=self._recebidoPublicado then
 		self._recebidoPublicado=self._recebido
-		self._jogador:SetAttribute("DinheiroRecebido",self._recebido)
+		self:_PublicarAtributoProgresso("DinheiroRecebido",self._recebido)
 	end
 end
 
@@ -594,7 +594,7 @@ function DadosJogador:PublicarGanhosPorSegundo(segundos)
 	self._ganhos = "0"
 	if taxa ~= self._ultimaTaxa then
 		self._ultimaTaxa = taxa
-		self._jogador:SetAttribute("GanhosPorSegundo", taxa)
+		self:_PublicarAtributoProgresso("GanhosPorSegundo", taxa)
 	end
 end
 
@@ -737,8 +737,8 @@ function DadosJogador:FabricarMaquina(maquinaId, ciclo, estoqueEsperado)
 		if mudanca.Premio then premios[id] = mudanca.Premio end
 	end
 	for id, mudanca in mudancas do
-		self._jogador:SetAttribute("ConfiguracaoInventario_" .. id, mudanca.Configuracao)
-		self._jogador:SetAttribute("Inventario_" .. id, mudanca.Quantidade)
+		self:_PublicarAtributoProgresso("ConfiguracaoInventario_" .. id, mudanca.Configuracao)
+		self:_PublicarAtributoProgresso("Inventario_" .. id, mudanca.Quantidade)
 	end
 	return true, item.Nome .. " fabricada e enviada ao inventário."
 end
@@ -974,6 +974,119 @@ end
 --- @return table?
 function DadosJogador:ObterDadosPerfil()
 return self._perfil and self._perfil.Data or nil
+end
+
+--- Publica um atributo de progresso/inventário/plot no dono e em todos os visitantes Coop ativos nesta plot.
+function DadosJogador:_PublicarAtributoProgresso(nome, valor)
+if not self._emCoopVisitante then
+self._jogador:SetAttribute(nome, valor)
+end
+if self._visitantesCoop then
+for visitante in self._visitantesCoop do
+if visitante and visitante.Parent and visitante:GetAttribute("CoopDonoUserId") == self._jogador.UserId then
+visitante:SetAttribute(nome, valor)
+end
+end
+end
+end
+
+--- Ativa ou desativa o modo visitante Coop neste perfil. Quando desativado, restaura todos os atributos próprios no HUD.
+function DadosJogador:DefinirModoVisitanteCoop(ativo)
+self._emCoopVisitante = ativo == true
+if not self._emCoopVisitante and self:EstaAtivo() then
+self._recebidoPublicado = nil
+self:Sincronizar()
+self:_PublicarAtributoProgresso("GanhosPorSegundo", self._ultimaTaxa or "0")
+end
+end
+
+--- Registra um visitante Coop ativo para receber em tempo real os atributos de progresso desta plot.
+function DadosJogador:AdicionarVisitanteCoop(visitante)
+self._visitantesCoop = self._visitantesCoop or {}
+self._visitantesCoop[visitante] = true
+self:SincronizarVisitanteCoop(visitante)
+end
+
+--- Remove um visitante Coop da lista de replicação desta plot.
+function DadosJogador:RemoverVisitanteCoop(visitante)
+if self._visitantesCoop then
+self._visitantesCoop[visitante] = nil
+end
+end
+
+--- Copia imediatamente todos os atributos de progresso, estoque e plot deste dono para o visitante Coop.
+function DadosJogador:SincronizarVisitanteCoop(visitante)
+if not visitante or not visitante.Parent or not self:EstaAtivo() then return end
+for _, item in Upgrades.Itens do
+visitante:SetAttribute("Upgrade_" .. item.Id, self:ObterUpgrade(item.Id))
+end
+visitante:SetAttribute("VelocidadeMotores", self:ObterVelocidadeMotores())
+visitante:SetAttribute("Dinheiro", self:ObterSaldo())
+visitante:SetAttribute("DinheiroRecebido", self._recebido or "0")
+visitante:SetAttribute("GanhosPorSegundo", self._ultimaTaxa or "0")
+visitante:SetAttribute("Reencarnacoes", self._perfil.Data.Reencarnacoes or 0)
+visitante:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
+visitante:SetAttribute("Ascensoes", self._perfil.Data.Ascensoes or 0)
+visitante:SetAttribute("Transicoes", self._perfil.Data.Transicoes or 0)
+visitante:SetAttribute("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
+for maquinaId in CatalogoMaquinas do
+local quantidade = self:ObterQuantidade(maquinaId)
+local modificacoes = self:ObterModificacoesInventario(maquinaId)
+visitante:SetAttribute("ConfiguracaoInventario_" .. maquinaId, PersonalizacaoMaquina.new(modificacoes):Codificar())
+visitante:SetAttribute("Inventario_" .. maquinaId, quantidade)
+end
+local registros = self._perfil.Data.MaquinasColocadas
+if type(registros) == "table" then
+local contagens = {}
+for _, registro in registros do
+local id = type(registro) == "table" and registro.MaquinaId
+if id and CatalogoMaquinas[id] then contagens[id] = (contagens[id] or 0) + 1 end
+end
+visitante:SetAttribute("PecasNaPlot", HttpService:JSONEncode(contagens))
+else
+visitante:SetAttribute("PecasNaPlot", nil)
+end
+end
+
+function DadosJogador:ObterConfigCoop()
+local d = self._perfil.Data
+if type(d.Coop) ~= "table" then
+d.Coop = { Limite = 4, Banidos = {} }
+end
+if type(d.Coop.Limite) ~= "number" then d.Coop.Limite = 4 end
+if type(d.Coop.Banidos) ~= "table" then d.Coop.Banidos = {} end
+return d.Coop
+end
+
+function DadosJogador:ObterLimiteCoop()
+return math.clamp(math.round(self:ObterConfigCoop().Limite), 0, 8)
+end
+
+function DadosJogador:DefinirLimiteCoop(limite)
+if not self:EstaAtivo() or type(limite) ~= "number" or limite ~= limite then return false end
+local limpo = math.clamp(math.round(limite), 0, 8)
+self:ObterConfigCoop().Limite = limpo
+self._jogador:SetAttribute("LimiteCoop", limpo)
+return true, limpo
+end
+
+function DadosJogador:EstaBanidoCoop(userId)
+local banidos = self:ObterConfigCoop().Banidos
+return banidos[tostring(userId)] ~= nil
+end
+
+function DadosJogador:BanirJogadorCoop(userId, nome)
+if not self:EstaAtivo() or type(userId) ~= "number" then return false end
+local banidos = self:ObterConfigCoop().Banidos
+banidos[tostring(userId)] = if type(nome) == "string" and nome ~= "" then nome else tostring(userId)
+return true
+end
+
+function DadosJogador:DesbanirJogadorCoop(userId)
+if not self:EstaAtivo() then return false end
+local banidos = self:ObterConfigCoop().Banidos
+banidos[tostring(userId)] = nil
+return true
 end
 
 return DadosJogador

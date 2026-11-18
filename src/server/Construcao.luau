@@ -110,6 +110,9 @@ function Construcao.Personalizar(jogador, maquina, modificacoes)
 end
 -- Pede a captura das diferencas atuais dos modelos nos registros do perfil. E chamada pelo fluxo de salvamento
 -- e nao retorna uma lista para o cliente.
+function Construcao.LimparVisitanteCoop(jogador)
+	servico:LimparVisitanteCoop(jogador)
+end
 function Construcao.Sincronizar(jogador)
 	servico:Sincronizar(jogador)
 end
