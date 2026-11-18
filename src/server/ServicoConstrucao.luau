@@ -670,7 +670,7 @@ function ServicoConstrucao:_ResumoBlueprint(blueprint)
   }
   return {
     Id = blueprint.Id, Nome = blueprint.Nome, Quantidade = #pecas,
-    Custo = custoTotal, Renascimento = renascimento, Craft = craft, Blocos = blocos, Pecas = pecas,
+    Custo = custoTotal, Renascimento = renascimento, Craft = craft, Blocos = blocos, Pecas = pecas, AutoRenascimento = blueprint.AutoRenascimento == true, AutoDinheiro = blueprint.AutoDinheiro, PosicaoSalva = type(blueprint.AncoraMinimo) == "table" and #blueprint.AncoraMinimo == 3,
   }
 end
 
@@ -686,6 +686,9 @@ function ServicoConstrucao:_CapturarPecasParaBlueprint(jogador, maquinasSelecion
   if not captura or #captura.Pecas ~= #maquinasSelecionadas then
     return nil, "Nao foi possivel capturar as pecas do blueprint."
   end
+  local ancoraMaq = maquinasSelecionadas[1]
+  local minAncora = ancoraMaq and ancoraMaq:GetAttribute("VolumeMinimo")
+  local ancoraSalva = if typeof(minAncora) == "Vector3" then { minAncora.X, minAncora.Y, minAncora.Z } else nil
   local pecas = {}
   for indice, peca in captura.Pecas do
     local deslocamento = peca.DeslocamentoInicial
@@ -697,7 +700,7 @@ function ServicoConstrucao:_CapturarPecasParaBlueprint(jogador, maquinasSelecion
       RotacaoInicial = { table.unpack(componentes, 4, 12) },
     }
   end
-  return pecas
+  return pecas, nil, ancoraSalva
 end
 
 --- Método público LPOO (ServicoConstrucao:ListarBlueprints).
@@ -732,9 +735,9 @@ function ServicoConstrucao:CriarBlueprint(jogador, nome, maquinasSelecionadas)
   local nomeValido, erroNome = self:_ValidarNomeBlueprint(nome, identificador)
   if not nomeValido then return false, erroNome end
 
-  local pecas, erroCaptura = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
+  local pecas, erroCaptura, ancoraSalva = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
   if not pecas then return false, erroCaptura end
-  local blueprint = { Id = identificador, Nome = nomeValido, Pecas = pecas }
+  local blueprint = { Id = identificador, Nome = nomeValido, Pecas = pecas, AncoraMinimo = ancoraSalva }
   local adicionado, resultado = dados:AdicionarBlueprint(blueprint)
   if not adicionado then return false, resultado end
   return true, "Blueprint salvo.", self:_ResumoBlueprint(blueprint)
@@ -759,9 +762,10 @@ function ServicoConstrucao:SubstituirBlueprint(jogador, identificador, nome, maq
     if not validado then return false, erroNome end
     nomeFinal = validado
   end
-  local pecas, erroCaptura = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
+  local pecas, erroCaptura, ancoraSalva = self:_CapturarPecasParaBlueprint(jogador, maquinasSelecionadas)
   if not pecas then return false, erroCaptura end
   local ok, msg, atualizado = dados:AtualizarBlueprint(identificador, nomeFinal, pecas)
+  if ok and atualizado and ancoraSalva then atualizado.AncoraMinimo = ancoraSalva end
   if not ok then return false, msg end
   return true, "Blueprint substituido com sucesso.", self:_ResumoBlueprint(atualizado)
 end
@@ -902,18 +906,26 @@ function ServicoConstrucao:PrepararBlueprint(jogador, identificador)
 	end
 	local resposta = self:_RegistrarCopiaGrupo(jogador, pecas)
 	resposta.BlueprintNome = blueprint.Nome
+	if self._copiasGrupo[jogador] then self._copiasGrupo[jogador].BlueprintId = blueprint.Id end
 	return true, "Blueprint pronto para colocar.", resposta
 end
 
 -- Confirma as copias disponiveis; obstaculos e saldo insuficiente nao bloqueiam as demais.
 function ServicoConstrucao:ColocarGrupoCopia(jogador, token, pedidos)
-	local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
-	if not okPerm then return false, msgPerm end
-  local copia = type(token) == "number" and self:_ObterCopiaGrupoPorToken(jogador, token)
-  if not copia then
-    return false, "A copia selecionada nao esta mais disponivel."
-  end
-  return self:_ColocarCaptura(jogador, copia, pedidos)
+local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "Colocar")
+if not okPerm then return false, msgPerm end
+local copia = self._copiasGrupo[jogador]
+if not copia or copia.Token ~= token then
+return false, "Copia de grupo nao esta mais disponivel."
+end
+local ok, msg, colocadas = self:_ColocarCaptura(jogador, copia, pedidos)
+if ok and copia.BlueprintId and type(pedidos) == "table" and pedidos[1] and typeof(pedidos[1].Minimo) == "Vector3" then
+local dadosAtivos = DataManager.ObterDadosAtivos(jogador)
+if dadosAtivos and dadosAtivos.DefinirAncoraBlueprint then
+dadosAtivos:DefinirAncoraBlueprint(copia.BlueprintId, pedidos[1].Minimo)
+end
+end
+return ok, msg, colocadas
 end
 
 -- A linha repete uma configuracao escolhida pelo servidor, sem substituir tokens de grupos ou aceitar melhorias do cliente.
@@ -2116,6 +2128,310 @@ terreno:SetAttribute("PreviaAutorId", nil)
 end
 end
 end
+end
+
+function ServicoConstrucao:ConfigurarAutoBlueprint(jogador, identificador, opcoes)
+local okPerm, msgPerm = DataManager.PodeExecutarCoop(jogador, "EditarBlueprint")
+if not okPerm then return false, msgPerm end
+if not self:_PermitirPedido(jogador) then return false, "Aguarde um instante." end
+if type(identificador) ~= "string" or type(opcoes) ~= "table" then
+return false, "Parâmetros de automação inválidos."
+end
+local dados = DataManager.ObterDadosAtivos(jogador)
+if not dados then return false, "Seus dados ainda não estão disponíveis." end
+
+local limpas = {}
+if opcoes.AutoRenascimento ~= nil then
+if type(opcoes.AutoRenascimento) ~= "boolean" then return false, "Opção de renascimento inválida." end
+limpas.AutoRenascimento = opcoes.AutoRenascimento
+end
+if opcoes.TextoDinheiro ~= nil then
+local InterpretarInteiro = require(ReplicatedStorage.Shared.InterpretarInteiro)
+local valor, erro = InterpretarInteiro(opcoes.TextoDinheiro)
+if erro then return false, erro end
+if valor == nil then
+limpas.LimparAutoDinheiro = true
+else
+limpas.AutoDinheiro = valor
+end
+elseif opcoes.LimparAutoDinheiro == true then
+limpas.LimparAutoDinheiro = true
+end
+
+local ok, msg, atualizado = dados:ConfigurarAutoBlueprint(identificador, limpas)
+if not ok then return false, msg end
+return true, msg, self:_ResumoBlueprint(atualizado)
+end
+
+function ServicoConstrucao:TemMovimentoNaPlot(dono)
+if self._movimentosPendentes[dono] then return true end
+local okCoop, ServicoCoop = pcall(require, script.Parent.ServicoCoop)
+if okCoop and ServicoCoop and ServicoCoop.ObterVisitantes then
+for visitante in ServicoCoop.ObterVisitantes(dono) do
+if self._movimentosPendentes[visitante] then
+return true
+end
+end
+end
+return false
+end
+
+function ServicoConstrucao:AplicarBlueprintAutomatico(dono, identificador, recolherPlotAntes)
+if not dono or dono.Parent ~= Players or type(identificador) ~= "string" then
+return false, "Jogador ou blueprint inválido."
+end
+if self:TemMovimentoNaPlot(dono) then
+return false, "Movimentação em andamento na plot."
+end
+if not self:Restaurar(dono) then
+return false, "Plot indisponível."
+end
+local dados = DataManager.ObterDados(dono)
+local _, terreno, piso, maquinas = contexto(dono)
+if not dados or not terreno or not piso or not maquinas then
+return false, "Dados ou terreno indisponíveis."
+end
+
+local blueprints = dados:ObterBlueprints()
+local blueprint
+for _, item in blueprints or {} do
+if type(item) == "table" and item.Id == identificador then
+blueprint = item
+break
+end
+end
+if not blueprint or type(blueprint.Pecas) ~= "table" or #blueprint.Pecas < 1 or #blueprint.Pecas > Limites.PecasPorGrupo then
+return false, "Blueprint indisponível."
+end
+
+-- 1. Validar e calcular ocupações de todas as peças antes de alterar a plot
+local pecasPrep = {}
+for indice, item in blueprint.Pecas do
+if type(item) ~= "table" then return false, "Peça de blueprint inválida." end
+local defCat = CatalogoMaquinas[item.MaquinaId]
+local defMod = self._modelos[item.MaquinaId]
+local desloc, matriz = item.DeslocamentoInicial, item.RotacaoInicial
+if not defCat or not defMod or type(item.Modificacoes) ~= "table"
+or type(desloc) ~= "table" or #desloc ~= 3
+or type(matriz) ~= "table" or #matriz ~= 9
+then
+return false, "Dados de peça inválidos."
+end
+local rotacao = RotacaoConstrucao.ValidarNaGrade(CFrame.new(0, 0, 0, table.unpack(matriz)), defCat)
+if not rotacao then return false, "Rotação de peça inválida." end
+local okMod, mods = pcall(function()
+return PersonalizacaoMaquina.new(item.Modificacoes):ObterDados()
+end)
+if not okMod then return false, "Personalização inválida." end
+local okPrep, preparado = pcall(self._PrepararModelo, self, item.MaquinaId, mods, rotacao)
+if not okPrep then return false, "Falha ao preparar modelo do blueprint." end
+local _, ocupado = preparado.Volume:Calcular(rotacao)
+liberarModelo(preparado)
+pecasPrep[indice] = {
+MaquinaId = item.MaquinaId,
+Modificacoes = mods,
+Deslocamento = Vector3.new(desloc[1], desloc[2], desloc[3]),
+Rotacao = rotacao,
+Ocupado = ocupado,
+}
+end
+
+local passo = Geometria.Passo
+local ocupAncora = pecasPrep[1].Ocupado
+
+local function gerarPedidosParaAncora(minAncora)
+local centroAncora = minAncora + ocupAncora * 0.5
+local pedidos = {}
+local cabeTudo = true
+for i, p in pecasPrep do
+local centro = centroAncora + p.Deslocamento
+local minPeca = Vector3.new(
+math.round((centro.X - p.Ocupado.X * 0.5) / passo) * passo,
+math.round((centro.Y - p.Ocupado.Y * 0.5) / passo) * passo,
+math.round((centro.Z - p.Ocupado.Z * 0.5) / passo) * passo
+)
+if not Geometria.DentroDoTerreno(minPeca, p.Ocupado, piso.Size) then
+cabeTudo = false
+end
+pedidos[i] = { Minimo = minPeca, Rotacao = p.Rotacao }
+end
+return cabeTudo, pedidos
+end
+
+local pedidosFinais = nil
+if type(blueprint.AncoraMinimo) == "table" and #blueprint.AncoraMinimo == 3 then
+local ancSalva = Vector3.new(
+math.round(blueprint.AncoraMinimo[1] / passo) * passo,
+math.round(blueprint.AncoraMinimo[2] / passo) * passo,
+math.round(blueprint.AncoraMinimo[3] / passo) * passo
+)
+local coube, pedidosSalvos = gerarPedidosParaAncora(ancSalva)
+if coube then
+pedidosFinais = pedidosSalvos
+end
+end
+
+if not pedidosFinais then
+local _, pedidosZero = gerarPedidosParaAncora(Vector3.zero)
+local minX, minY, minZ = math.huge, math.huge, math.huge
+local maxX, maxZ = -math.huge, -math.huge
+for i, ped in pedidosZero do
+local m = ped.Minimo
+local oc = pecasPrep[i].Ocupado
+minX, minY, minZ = math.min(minX, m.X), math.min(minY, m.Y), math.min(minZ, m.Z)
+maxX, maxZ = math.max(maxX, m.X + oc.X), math.max(maxZ, m.Z + oc.Z)
+end
+local largTotal = maxX - minX
+local compTotal = maxZ - minZ
+local alvoMinX = math.max(0, math.floor(((piso.Size.X - largTotal) * 0.5) / passo) * passo)
+local alvoMinZ = math.max(0, math.floor(((piso.Size.Z - compTotal) * 0.5) / passo) * passo)
+local ancCentral = Vector3.new(alvoMinX - minX, 0 - minY, alvoMinZ - minZ)
+local _, pedidosCentrais = gerarPedidosParaAncora(ancCentral)
+pedidosFinais = pedidosCentrais
+end
+
+-- 2. Se solicitado (gatilho de dinheiro), recolher todas as máquinas atuais da plot para o estoque
+if recolherPlotAntes then
+self:Sincronizar(dono)
+local existentes = {}
+for _, modelo in maquinas:GetChildren() do
+local vinculo = self._registrosPorMaquina[modelo]
+if vinculo and vinculo.jogador == dono then
+table.insert(existentes, modelo)
+end
+end
+if #existentes == 1 then
+local m = existentes[1]
+local reg = self._registrosPorMaquina[m].registro
+local okCap, pers = pcall(function()
+return PersonalizacaoMaquina.DoModelo(m):Capturar(m, self._modelos[reg.MaquinaId].Modelo)
+end)
+if okCap then
+local mods = pers:ObterDados()
+reg.Modificacoes = next(mods) and mods or nil
+end
+local okRec, msgRec = dados:RegistrarRecolhimento(reg)
+if not okRec then return false, msgRec end
+self._registrosPorMaquina[m] = nil
+m:Destroy()
+elseif #existentes >= 2 then
+local devolucoes = {}
+for _, m in existentes do
+local reg = self._registrosPorMaquina[m].registro
+local okCap, mods = pcall(function()
+return PersonalizacaoMaquina.DoModelo(m):Capturar(m, self._modelos[reg.MaquinaId].Modelo):ObterDados()
+end)
+if not okCap then mods = reg.Modificacoes or {} end
+table.insert(devolucoes, { Registro = reg, Modificacoes = mods })
+end
+local okRec, msgRec = dados:RegistrarRecolhimentos(devolucoes, true)
+if not okRec then return false, msgRec end
+for _, m in existentes do
+self._registrosPorMaquina[m] = nil
+m:Destroy()
+end
+end
+local pastaMinerios = terreno:FindFirstChild("Minerios")
+if pastaMinerios then pastaMinerios:ClearAllChildren() end
+end
+
+-- 3. Construir as peças do blueprint na plot usando estoque + saldo do dono
+local alvos = {}
+for indice, pedido in pedidosFinais do
+local p = pecasPrep[indice]
+local okPrep, dadosModelo = pcall(self._PrepararModelo, self, p.MaquinaId, p.Modificacoes, pedido.Rotacao)
+if not okPrep then continue end
+local destino = destinoLivre(piso, maquinas, pedido.Minimo, pedido.Rotacao, dadosModelo)
+if not destino then
+liberarModelo(dadosModelo)
+continue
+end
+local sobrepoe = false
+local maximo = pedido.Minimo + p.Ocupado
+local erro = Geometria.Tolerancia
+for _, ant in alvos do
+local a, b = ant.Minimo, ant.Minimo + ant.Ocupado
+if pedido.Minimo.X < b.X - erro and maximo.X > a.X + erro
+and pedido.Minimo.Y < b.Y - erro and maximo.Y > a.Y + erro
+and pedido.Minimo.Z < b.Z - erro and maximo.Z > a.Z + erro
+then
+sobrepoe = true
+break
+end
+end
+if sobrepoe then
+liberarModelo(dadosModelo)
+continue
+end
+local comp = { pedido.Rotacao:GetComponents() }
+local registro = {
+MaquinaId = p.MaquinaId,
+Posicao = { pedido.Minimo.X, pedido.Minimo.Y, pedido.Minimo.Z },
+Rotacao = { table.unpack(comp, 4, 12) },
+InclinacaoGrade = if dadosModelo.Modelo:GetAttribute("InclinacaoEsteira") then true else nil,
+Modificacoes = if next(p.Modificacoes) then PersonalizacaoMaquina.new(p.Modificacoes):ObterDados() else nil,
+}
+table.insert(alvos, {
+Minimo = pedido.Minimo,
+Rotacao = pedido.Rotacao,
+Ocupado = p.Ocupado,
+Destino = destino,
+DadosModelo = dadosModelo,
+Registro = registro,
+})
+end
+
+if #alvos == 0 then
+return false, "Nenhuma peça do blueprint pôde ser encaixada na plot."
+end
+
+local criadas = {}
+local okCriacao = pcall(function()
+for _, alvo in alvos do
+table.insert(criadas, self:_CriarMaquina(dono, terreno, maquinas, alvo.Destino, alvo.Registro, alvo.DadosModelo, alvo.Minimo, alvo.Rotacao))
+end
+end)
+if not okCriacao then
+for _, m in criadas do self._registrosPorMaquina[m] = nil; m:Destroy() end
+for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+return false, "Falha ao instanciar peças do blueprint automático."
+end
+
+local registros = {}
+for _, alvo in alvos do table.insert(registros, alvo.Registro) end
+local okReg, msgReg, aceitosLista = dados:RegistrarColocacoes(registros)
+if not okReg then
+for _, m in criadas do self._registrosPorMaquina[m] = nil; m:Destroy() end
+for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+return false, msgReg
+end
+
+local aceitosMapa, colocadas = {}, 0
+for _, r in aceitosLista do aceitosMapa[r] = true end
+for i, m in criadas do
+if aceitosMapa[alvos[i].Registro] then
+colocadas += 1
+else
+self._registrosPorMaquina[m] = nil
+m:Destroy()
+end
+end
+for _, alvo in alvos do liberarModelo(alvo.DadosModelo) end
+
+return true, string.format("Blueprint \"%s\" iniciada (%d/%d peças).", blueprint.Nome, colocadas, #pecasPrep), colocadas
+end
+
+function ServicoConstrucao:IniciarBlueprintRenascimento(dono)
+local dados = dono and DataManager.ObterDados(dono)
+if not dados or (dados.AutoBlueprintAtiva and not dados:AutoBlueprintAtiva()) then return false end
+local blueprints = dados:ObterBlueprints()
+if not blueprints then return false end
+for _, bp in blueprints do
+if type(bp) == "table" and bp.AutoRenascimento == true then
+return self:AplicarBlueprintAutomatico(dono, bp.Id, false)
+end
+end
+return false
 end
 
 return ServicoConstrucao

@@ -33,72 +33,113 @@ _membroEditandoId = nil,
 _statusTexto = "",
 }, PainelCoop)
 
--- Indicador compacto no canto superior direito (IgnoreGuiInset igual ao PainelMoedas)
+-- Cartão no centro superior logo abaixo de PainelMoedas (mesmo tamanho 220x38 e UIScale 0.9)
+local corCoop = Color3.fromRGB(82, 224, 255)
+local corFundoEscuro = Color3.fromRGB(17, 22, 28)
 local playerGui = jogador:WaitForChild("PlayerGui")
+
 self._guiBanner = Instance.new("ScreenGui")
 self._guiBanner.Name = "IndicadorCoop"
 self._guiBanner.ResetOnSpawn = false
 self._guiBanner.IgnoreGuiInset = true
-self._guiBanner.DisplayOrder = 3
+self._guiBanner.DisplayOrder = 1
 self._guiBanner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 self._guiBanner.Parent = playerGui
 
+local escInicial = Config.Obter(jogador, "EscalaInterface") or 1
+self._raizBanner = Instance.new("Frame")
+self._raizBanner.Name = "EscalaConteudo"
+self._raizBanner.BackgroundTransparency = 1
+self._raizBanner.Size = UDim2.fromScale(1 / escInicial, 1 / escInicial)
+self._raizBanner.Parent = self._guiBanner
+
+self._escalaRaiz = Instance.new("UIScale")
+self._escalaRaiz.Scale = escInicial
+self._escalaRaiz.Parent = self._raizBanner
+
 self._banner = Instance.new("Frame")
 self._banner.Name = "BannerCoop"
-self._banner.AnchorPoint = Vector2.new(1, 0)
-self._banner.Position = UDim2.new(1, -12, 0, 8)
-self._banner.Size = UDim2.fromOffset(0, 26)
-self._banner.AutomaticSize = Enum.AutomaticSize.X
-self._banner.BackgroundColor3 = Color3.fromRGB(17, 24, 32)
+self._banner.AnchorPoint = Vector2.new(0.5, 0)
+self._banner.Position = UDim2.new(0.5, 0, 0, 46)
+self._banner.Size = UDim2.new(1, -32, 0, 38)
+self._banner.BackgroundColor3 = Color3.new(1, 1, 1)
 self._banner.BorderSizePixel = 0
 self._banner.Visible = false
-self._banner.Parent = self._guiBanner
-arredondar(self._banner, 10)
+self._banner.Parent = self._raizBanner
+arredondar(self._banner, 14)
 
-self._escalaBanner = Instance.new("UIScale")
-self._escalaBanner.Scale = 0.88 * (Config.Obter(jogador, "EscalaInterface") or 1)
-self._escalaBanner.Parent = self._banner
+local escalaCartao = Instance.new("UIScale")
+escalaCartao.Scale = 0.9
+escalaCartao.Parent = self._banner
+
+local limiteCartao = Instance.new("UISizeConstraint")
+limiteCartao.MaxSize = Vector2.new(220, 38)
+limiteCartao.Parent = self._banner
 
 local bordaBanner = Instance.new("UIStroke")
-bordaBanner.Color = Color3.fromRGB(82, 224, 255)
-bordaBanner.Thickness = 1.2
-bordaBanner.Transparency = 0.2
+bordaBanner.Color = corCoop
+bordaBanner.Thickness = 1.5
+bordaBanner.Transparency = 0.15
 bordaBanner.Parent = self._banner
 
-local padBanner = Instance.new("UIPadding")
-padBanner.PaddingLeft = UDim.new(0, 9)
-padBanner.PaddingRight = UDim.new(0, 5)
-padBanner.PaddingTop = UDim.new(0, 3)
-padBanner.PaddingBottom = UDim.new(0, 3)
-padBanner.Parent = self._banner
+local gradienteBanner = Instance.new("UIGradient")
+gradienteBanner.Color = ColorSequence.new(corCoop:Lerp(corFundoEscuro, 0.78), corFundoEscuro)
+gradienteBanner.Parent = self._banner
 
-local layoutBanner = Instance.new("UIListLayout")
-layoutBanner.FillDirection = Enum.FillDirection.Horizontal
-layoutBanner.VerticalAlignment = Enum.VerticalAlignment.Center
-layoutBanner.SortOrder = Enum.SortOrder.LayoutOrder
-layoutBanner.Padding = UDim.new(0, 7)
-layoutBanner.Parent = self._banner
+-- Ícone lateral no mesmo padrão do ícone "$" do PainelMoedas
+local icone = Instance.new("Frame")
+icone.Name = "Icone"
+icone.Position = UDim2.fromOffset(8, 9)
+icone.Size = UDim2.fromOffset(24, 21)
+icone.BackgroundColor3 = corCoop
+icone.BorderSizePixel = 0
+icone.Parent = self._banner
+arredondar(icone, 4)
 
-local pontoStatus = Instance.new("Frame")
-pontoStatus.Name = "PontoStatus"
-pontoStatus.LayoutOrder = 1
-pontoStatus.Size = UDim2.fromOffset(6, 6)
-pontoStatus.BackgroundColor3 = Color3.fromRGB(82, 224, 255)
-pontoStatus.BorderSizePixel = 0
-pontoStatus.Parent = self._banner
-arredondar(pontoStatus, 3)
+for _, p in {
+{ 4, 3, 6, 6, 3 },
+{ 2, 10, 10, 8, 3 },
+{ 13, 4, 6, 6, 3 },
+{ 11, 11, 10, 7, 3 },
+} do
+local parteIcone = Instance.new("Frame")
+parteIcone.Position = UDim2.fromOffset(p[1], p[2])
+parteIcone.Size = UDim2.fromOffset(p[3], p[4])
+parteIcone.BackgroundColor3 = corFundoEscuro
+parteIcone.BorderSizePixel = 0
+parteIcone.Parent = icone
+arredondar(parteIcone, p[5])
+end
+
+self._rotuloBanner = Instance.new("TextLabel")
+self._rotuloBanner.Name = "Rotulo"
+self._rotuloBanner.Text = "Modo Coop"
+self._rotuloBanner.Position = UDim2.fromOffset(42, 2)
+self._rotuloBanner.Size = UDim2.new(1, -100, 0, 13)
+self._rotuloBanner.BackgroundTransparency = 1
+self._rotuloBanner.Font = Enum.Font.SourceSansBold
+self._rotuloBanner.TextSize = 12
+self._rotuloBanner.TextColor3 = corCoop
+self._rotuloBanner.TextXAlignment = Enum.TextXAlignment.Left
+self._rotuloBanner.Parent = self._banner
 
 self._textoBanner = Instance.new("TextLabel")
 self._textoBanner.Name = "TextoBanner"
-self._textoBanner.LayoutOrder = 2
-self._textoBanner.Size = UDim2.fromOffset(0, 20)
-self._textoBanner.AutomaticSize = Enum.AutomaticSize.X
+self._textoBanner.Position = UDim2.fromOffset(42, 13)
+self._textoBanner.Size = UDim2.new(1, -100, 0, 22)
 self._textoBanner.BackgroundTransparency = 1
 self._textoBanner.Font = Enum.Font.SourceSansBold
-self._textoBanner.TextSize = 13
-self._textoBanner.TextWrapped = false
-self._textoBanner.TextColor3 = Color3.fromRGB(225, 248, 255)
+self._textoBanner.TextSize = 18
+self._textoBanner.TextScaled = true
+self._textoBanner.TextWrapped = true
+self._textoBanner.TextColor3 = Color3.fromRGB(242, 247, 250)
+self._textoBanner.TextXAlignment = Enum.TextXAlignment.Left
 self._textoBanner.Parent = self._banner
+
+local limiteFonte = Instance.new("UITextSizeConstraint")
+limiteFonte.MinTextSize = 11
+limiteFonte.MaxTextSize = 18
+limiteFonte.Parent = self._textoBanner
 
 self._botaoBanner = Botao.new(self._banner, "AcaoBanner", function()
 if self._jogador:GetAttribute("CoopDonoUserId") then
@@ -112,19 +153,22 @@ self:CarregarEstado()
 end
 end)
 local instBtnBanner = self._botaoBanner:ObterInstancia()
-instBtnBanner.LayoutOrder = 3
-instBtnBanner.Size = UDim2.fromOffset(46, 20)
-instBtnBanner.BackgroundColor3 = Color3.fromRGB(148, 48, 56)
+instBtnBanner.AnchorPoint = Vector2.new(1, 0.5)
+instBtnBanner.Position = UDim2.new(1, -7, 0.5, 0)
+instBtnBanner.Size = UDim2.fromOffset(48, 24)
+instBtnBanner.BackgroundColor3 = Color3.fromRGB(156, 48, 58)
 instBtnBanner.TextColor3 = Color3.new(1, 1, 1)
 instBtnBanner.Font = Enum.Font.SourceSansBold
-instBtnBanner.TextSize = 12
+instBtnBanner.TextSize = 13
 instBtnBanner.BorderSizePixel = 0
-arredondar(instBtnBanner, 6)
+arredondar(instBtnBanner, 8)
 self._botaoBanner:DefinirDisponivel(true)
 
 table.insert(self._conexoes, jogador:GetAttributeChangedSignal("EscalaInterface"):Connect(function()
-if self._escalaBanner then
-self._escalaBanner.Scale = 0.88 * (Config.Obter(jogador, "EscalaInterface") or 1)
+local esc = Config.Obter(jogador, "EscalaInterface") or 1
+if self._escalaRaiz and self._raizBanner then
+self._escalaRaiz.Scale = esc
+self._raizBanner.Size = UDim2.fromScale(1 / esc, 1 / esc)
 end
 end))
 
@@ -154,12 +198,14 @@ local instBtn = self._botaoBanner:ObterInstancia()
 
 if type(donoId) == "number" and donoId ~= 0 then
 self._banner.Visible = true
-self._textoBanner.Text = "Coop: " .. tostring(donoNome or donoId)
+if self._rotuloBanner then self._rotuloBanner.Text = "Modo Coop" end
+self._textoBanner.Text = tostring(donoNome or donoId)
 instBtn.Text = "Sair"
-instBtn.BackgroundColor3 = Color3.fromRGB(148, 48, 56)
+instBtn.BackgroundColor3 = Color3.fromRGB(156, 48, 58)
 elseif pendentes > 0 then
 self._banner.Visible = true
-self._textoBanner.Text = if pendentes == 1 then "1 pedido Coop" else (pendentes .. " pedidos Coop")
+if self._rotuloBanner then self._rotuloBanner.Text = "Convite Coop" end
+self._textoBanner.Text = if pendentes == 1 then "1 pedido" else (pendentes .. " pedidos")
 instBtn.Text = "Ver"
 instBtn.BackgroundColor3 = Color3.fromRGB(36, 118, 148)
 else

@@ -384,6 +384,17 @@ function DadosJogador:DefinirConfiguracao(id, valor)
   self._perfil.Data.Configuracoes = opcoesSalvas
   opcoesSalvas[id] = if normalizado ~= opcao.Padrao then normalizado else nil
   self._jogador:SetAttribute(id, normalizado)
+  if id == "ExecutarAutoBlueprint" then
+    if normalizado == true then
+      local _, idsJaAtingidos, temFutura = self:ObterBlueprintAutoDinheiroPendente()
+      if idsJaAtingidos and #idsJaAtingidos > 0 then
+        self:MarcarBlueprintsAutoExecutados(idsJaAtingidos)
+      end
+      self._verificarAutoBlueprintDinheiro = temFutura == true
+    else
+      self._verificarAutoBlueprintDinheiro = false
+    end
+  end
   return true
 end
 
@@ -550,7 +561,7 @@ end
 function DadosJogador:_DefinirSaldo(saldo)
 	local anterior=self:ObterSaldo()
 	local ganho=InteiroGrande.eValido(anterior) and InteiroGrande.subtrair(saldo,anterior)
-	if ganho and ganho~="0" then self._recebido=InteiroGrande.somar(self._recebido,ganho) end
+	if ganho and ganho~="0" then self._recebido=InteiroGrande.somar(self._recebido,ganho); self._verificarAutoBlueprintDinheiro = true end
 	self._perfil.Data.Dinheiro = saldo
 	self:RegistrarRecorde("Dinheiro", saldo)
 	self:_PublicarAtributoProgresso("Dinheiro", saldo)
@@ -1087,6 +1098,134 @@ if not self:EstaAtivo() then return false end
 local banidos = self:ObterConfigCoop().Banidos
 banidos[tostring(userId)] = nil
 return true
+end
+
+function DadosJogador:DefinirAncoraBlueprint(id, minimo)
+if not self:EstaAtivo() or type(id) ~= "string" then return false end
+local blueprints = self._perfil.Data.Blueprints
+if type(blueprints) ~= "table" then return false end
+local x, y, z
+if typeof(minimo) == "Vector3" then
+x, y, z = minimo.X, minimo.Y, minimo.Z
+elseif type(minimo) == "table" and #minimo == 3 then
+x, y, z = minimo[1], minimo[2], minimo[3]
+else
+return false
+end
+if type(x) ~= "number" or type(y) ~= "number" or type(z) ~= "number" then return false end
+for _, bp in blueprints do
+if type(bp) == "table" and bp.Id == id then
+bp.AncoraMinimo = { x, y, z }
+return true
+end
+end
+return false
+end
+
+function DadosJogador:ConfigurarAutoBlueprint(id, opcoes)
+if not self:EstaAtivo() or type(id) ~= "string" or type(opcoes) ~= "table" then
+return false, "Dados ou parâmetros inválidos."
+end
+local dados = self._perfil.Data
+local blueprints = dados.Blueprints
+if type(blueprints) ~= "table" then return false, "Blueprints indisponíveis." end
+dados.BlueprintsExecutadosCiclo = type(dados.BlueprintsExecutadosCiclo) == "table" and dados.BlueprintsExecutadosCiclo or {}
+
+local alvo
+for _, bp in blueprints do
+if type(bp) == "table" and bp.Id == id then
+alvo = bp
+break
+end
+end
+if not alvo then return false, "Esse blueprint não existe." end
+
+local msgExtra = nil
+if opcoes.AutoRenascimento ~= nil then
+if opcoes.AutoRenascimento == true then
+for _, bp in blueprints do
+if type(bp) == "table" then
+bp.AutoRenascimento = if bp.Id == id then true else nil
+end
+end
+msgExtra = "Definido para iniciar automaticamente ao Renascer."
+else
+alvo.AutoRenascimento = nil
+msgExtra = "Início automático no Renascimento desativado."
+end
+end
+
+if opcoes.LimparAutoDinheiro == true then
+alvo.AutoDinheiro = nil
+dados.BlueprintsExecutadosCiclo[id] = nil
+msgExtra = "Meta de dinheiro automático removida."
+elseif opcoes.AutoDinheiro ~= nil then
+if not InteiroGrande.eValido(opcoes.AutoDinheiro) or opcoes.AutoDinheiro == "0" then
+return false, "Valor de dinheiro inválido."
+end
+alvo.AutoDinheiro = opcoes.AutoDinheiro
+local saldoAtual = self:ObterSaldo()
+if InteiroGrande.eValido(saldoAtual) and not InteiroGrande.menor(saldoAtual, opcoes.AutoDinheiro) then
+dados.BlueprintsExecutadosCiclo[id] = true
+msgExtra = "Meta salva! Como seu saldo atual já atingiu esse valor, ela disparará a partir do próximo ciclo."
+else
+dados.BlueprintsExecutadosCiclo[id] = nil
+msgExtra = "Meta salva! A blueprint iniciará automaticamente assim que atingir esse valor."
+end
+end
+
+return true, msgExtra or "Automação do blueprint atualizada.", alvo
+end
+
+function DadosJogador:AutoBlueprintAtiva()
+if not self:EstaAtivo() then return false end
+return Configuracoes.Obter(self._jogador, "ExecutarAutoBlueprint") ~= false
+end
+
+function DadosJogador:ObterBlueprintAutoDinheiroPendente()
+if not self:EstaAtivo() or not self:AutoBlueprintAtiva() then return nil, nil, false end
+local dados = self._perfil.Data
+local blueprints = dados.Blueprints
+if type(blueprints) ~= "table" or #blueprints == 0 then return nil, nil end
+local saldo = self:ObterSaldo()
+if not InteiroGrande.eValido(saldo) then return nil, nil end
+
+local executados = dados.BlueprintsExecutadosCiclo
+if type(executados) ~= "table" then
+executados = {}
+dados.BlueprintsExecutadosCiclo = executados
+end
+
+local escolhida = nil
+local idsAtingidos = {}
+local temAlgumaFutura = false
+
+for _, bp in blueprints do
+local meta = type(bp) == "table" and bp.AutoDinheiro
+if type(meta) == "string" and InteiroGrande.eValido(meta) and not executados[bp.Id] then
+if not InteiroGrande.menor(saldo, meta) then
+table.insert(idsAtingidos, bp.Id)
+if not escolhida or InteiroGrande.menor(escolhida.AutoDinheiro, meta) then
+escolhida = bp
+end
+else
+temAlgumaFutura = true
+end
+end
+end
+
+return escolhida, idsAtingidos, temAlgumaFutura
+end
+
+function DadosJogador:MarcarBlueprintsAutoExecutados(ids)
+if not self:EstaAtivo() or type(ids) ~= "table" then return end
+local dados = self._perfil.Data
+dados.BlueprintsExecutadosCiclo = type(dados.BlueprintsExecutadosCiclo) == "table" and dados.BlueprintsExecutadosCiclo or {}
+for _, id in ids do
+if type(id) == "string" then
+dados.BlueprintsExecutadosCiclo[id] = true
+end
+end
 end
 
 return DadosJogador

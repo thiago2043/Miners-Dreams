@@ -87,6 +87,18 @@ end
 function Construcao:MoverBlueprint(jogador, identificador, deslocamento)
   return servico:MoverBlueprint(jogador, identificador, deslocamento)
 end
+function Construcao:ConfigurarAutoBlueprint(jogador, identificador, opcoes)
+return servico:ConfigurarAutoBlueprint(jogador, identificador, opcoes)
+end
+function Construcao.TemMovimentoNaPlot(jogador)
+return servico:TemMovimentoNaPlot(jogador)
+end
+function Construcao.AplicarBlueprintAutomatico(jogador, identificador, recolherPlotAntes)
+return servico:AplicarBlueprintAutomatico(jogador, identificador, recolherPlotAntes)
+end
+function Construcao.IniciarBlueprintRenascimento(jogador)
+return servico:IniciarBlueprintRenascimento(jogador)
+end
 -- Valida, captura e apaga as instancias selecionadas antes de iniciar a previa; devolve um token temporario.
 function Construcao:IniciarMovimento(jogador, maquinas)
 	return servico:IniciarMovimento(jogador, maquinas)
@@ -134,7 +146,7 @@ Networker.server.new("Construcao", Construcao, {
 	Construcao.Colocar, Construcao.Recolher, Construcao.Copiar, Construcao.CopiarGrupo,
 Construcao.ColocarGrupoCopia, Construcao.CriarBlueprint, Construcao.ListarBlueprints,
   Construcao.PrepararBlueprint, Construcao.SubstituirBlueprint, Construcao.EditarBlueprint,
-  Construcao.RenomearBlueprint, Construcao.DeletarBlueprint, Construcao.MoverBlueprint,
+  Construcao.RenomearBlueprint, Construcao.DeletarBlueprint, Construcao.MoverBlueprint, Construcao.ConfigurarAutoBlueprint,
   Construcao.IniciarMovimento,
 	Construcao.Mover, Construcao.MoverGrupo, Construcao.CancelarMovimento, Construcao.VenderColocadas,
 Construcao.ColocarMultiplos,

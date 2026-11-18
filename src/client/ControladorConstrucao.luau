@@ -2438,6 +2438,19 @@ function ControladorConstrucao:DeletarBlueprint(identificador)
   return sucesso, mensagem
 end
 
+function ControladorConstrucao:ConfigurarAutoBlueprint(identificador, opcoes)
+if self._destruido or self._colocando then return false, "Aguarde a ação atual terminar." end
+self._colocando = true
+local comunicou, sucesso, mensagem, resumo = pcall(function()
+return self._redeConstrucao:fetch("ConfigurarAutoBlueprint", identificador, opcoes)
+end)
+self._colocando = false
+if not comunicou or type(sucesso) ~= "boolean" or type(mensagem) ~= "string" then
+return false, "Não foi possível salvar a automação do blueprint."
+end
+return sucesso, mensagem, resumo
+end
+
 function ControladorConstrucao:MoverBlueprint(identificador, deslocamento)
   if self._destruido or self._colocando then return false, "Aguarde a acao atual terminar." end
   self._colocando = true

@@ -4,11 +4,51 @@ local DadosJogador = require(script.Parent.DadosJogador)
 local DataManager = { Profiles = {} }
 local objetos = {}
 
+local construcaoAutoCache = nil
+local function obterConstrucaoAuto()
+if construcaoAutoCache ~= nil then return construcaoAutoCache end
+local mod = script.Parent.Parent:FindFirstChild("Construcao")
+if mod then
+local ok, c = pcall(require, mod)
+if ok and c then construcaoAutoCache = c; return c end
+end
+return nil
+end
+
+function DataManager.ProcessarAutoBlueprintDinheiro(jogador, dados)
+if dados.AutoBlueprintAtiva and not dados:AutoBlueprintAtiva() then
+dados._verificarAutoBlueprintDinheiro = false
+return
+end
+local escolhida, idsAtingidos, temFutura = dados:ObterBlueprintAutoDinheiroPendente()
+if not escolhida then
+if not temFutura then
+dados._verificarAutoBlueprintDinheiro = false
+end
+return
+end
+local Construcao = obterConstrucaoAuto()
+if not Construcao or not Construcao.AplicarBlueprintAutomatico then return end
+if Construcao.TemMovimentoNaPlot and Construcao.TemMovimentoNaPlot(jogador) then
+return -- Aguarda o próximo segundo até o jogador soltar a peça em movimento
+end
+dados:MarcarBlueprintsAutoExecutados(idsAtingidos)
+if not temFutura then
+dados._verificarAutoBlueprintDinheiro = false
+end
+Construcao.AplicarBlueprintAutomatico(jogador, escolhida.Id, true)
+end
+
 function DataManager.PublicarRecebimentos()
-	for jogador in DataManager.Profiles do
-		local dados=DataManager.ObterDados(jogador)
-		if dados then dados:PublicarRecebimentos() end
-	end
+for jogador in DataManager.Profiles do
+local dados = DataManager.ObterDados(jogador)
+if dados then
+dados:PublicarRecebimentos()
+if dados._verificarAutoBlueprintDinheiro then
+DataManager.ProcessarAutoBlueprintDinheiro(jogador, dados)
+end
+end
+end
 end
 
 function DataManager.PublicarGanhosPorSegundo(segundos)

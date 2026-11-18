@@ -14,9 +14,16 @@ if not permitido then return false, msgPerm end
 if type(indiceEsperado) ~= "number" or indiceEsperado < 0 or indiceEsperado >= 2 ^ 53 - 1
 or indiceEsperado % 1 ~= 0 then return false, "Reencarnacao invalida." end
 local dono = DataManager.ObterDonoAtivo(jogador)
-return self._construcao.ReiniciarProgresso(dono, function(dados)
+local sucesso, mensagem, estado = self._construcao.ReiniciarProgresso(dono, function(dados)
 return dados:Reencarnar(indiceEsperado)
 end)
+if sucesso and self._construcao.IniciarBlueprintRenascimento then
+local okBp, msgBp = self._construcao.IniciarBlueprintRenascimento(dono)
+if okBp and type(msgBp) == "string" and msgBp ~= "" then
+mensagem ..= " • " .. msgBp
+end
+end
+return sucesso, mensagem, estado
 end
 
 function ServicoPrestigio:Ascender(jogador, indiceEsperado, geracaoEsperada)
