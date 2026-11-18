@@ -160,7 +160,8 @@ end
 function PersonalizacaoMaquina:Aplicar(modelo)
 	local pivo = modelo:GetPivot()
 	for _, alteracao in self._dados.Partes or {} do
-		local parte = assert(encontrar(modelo, alteracao.Caminho), "Parte personalizada nao encontrada.")
+		local parte = encontrar(modelo, alteracao.Caminho)
+if not parte or parte.Name == "HitboxConstrucao" or parte:GetAttribute("GeometriaEsteiraGerada") then continue end
 		assert(parte:IsA("BasePart"), "Personalizacao exige uma BasePart.")
 		if alteracao.Cor then
 			local cor = vetor(alteracao.Cor)

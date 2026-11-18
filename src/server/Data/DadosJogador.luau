@@ -28,7 +28,7 @@ local PremiosRenascimento = require(script.Parent.PremiosRenascimento)
 local PremiosAscensao = require(script.Parent.PremiosAscensao)
 local Template = require(script.Parent.Template)
 local regraReencarnacao = RegraReencarnacao.new()
-local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial", "Ascensoes", "Transicoes", "RecompensasAscensao", "Coop" })
+local reinicioReencarnacao = ReinicioProgresso.new(Template, { "Blueprints", "AutoBlueprintAtivo", "RecompensasReencarnacao", "ExpansaoPlot", "Recordes", "Monitoramento", "NomeJogador", "GeracaoProgresso", "Configuracoes", "Atalhos", "Janelas", "Tutorial", "Ascensoes", "Transicoes", "RecompensasAscensao", "Coop" })
 local reinicioAscensao = ReinicioProgresso.new(Template, { "NomeJogador", "RecompensasAscensao", "Coop" })
 local reinicioTotal = ReinicioProgresso.new(Template,{})
 local Historico=require(script.Parent.Parent.HistoricoProgresso)
@@ -128,6 +128,11 @@ function DadosJogador:AtualizarBlueprint(id, nome, pecas)
       return false, "Pecas de blueprint invalidas."
     end
     alvo.Pecas = pecas
+    if alvo.ModoAutoDinheiro == "Custo" and self.CalcularCustoBlueprint then
+      local novoCusto = self:CalcularCustoBlueprint(alvo)
+      alvo.AutoDinheiro = if novoCusto ~= "0" then novoCusto else nil
+      if not alvo.AutoDinheiro then alvo.ModoAutoDinheiro = nil end
+    end
   end
   return true, "Blueprint atualizado.", alvo
 end
@@ -232,6 +237,7 @@ function DadosJogador:Sincronizar()
 	self:_PublicarAtributoProgresso("Ascensoes", self._perfil.Data.Ascensoes or 0)
 	self:_PublicarAtributoProgresso("Transicoes", self._perfil.Data.Transicoes or 0)
 	self:_PublicarAtributoProgresso("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
+	self:_PublicarAtributoProgresso("AutoBlueprintAtivo", self._perfil.Data.AutoBlueprintAtivo ~= false)
 	self:SincronizarTutorial()
 for maquinaId in CatalogoMaquinas do
     self:_PublicarInventario(maquinaId)
@@ -384,17 +390,6 @@ function DadosJogador:DefinirConfiguracao(id, valor)
   self._perfil.Data.Configuracoes = opcoesSalvas
   opcoesSalvas[id] = if normalizado ~= opcao.Padrao then normalizado else nil
   self._jogador:SetAttribute(id, normalizado)
-  if id == "ExecutarAutoBlueprint" then
-    if normalizado == true then
-      local _, idsJaAtingidos, temFutura = self:ObterBlueprintAutoDinheiroPendente()
-      if idsJaAtingidos and #idsJaAtingidos > 0 then
-        self:MarcarBlueprintsAutoExecutados(idsJaAtingidos)
-      end
-      self._verificarAutoBlueprintDinheiro = temFutura == true
-    else
-      self._verificarAutoBlueprintDinheiro = false
-    end
-  end
   return true
 end
 
@@ -1040,6 +1035,7 @@ visitante:SetAttribute("Vidas", self._perfil.Data.Vidas or 1)
 visitante:SetAttribute("Ascensoes", self._perfil.Data.Ascensoes or 0)
 visitante:SetAttribute("Transicoes", self._perfil.Data.Transicoes or 0)
 visitante:SetAttribute("GeracaoProgresso", self._perfil.Data.GeracaoProgresso or 0)
+	visitante:SetAttribute("AutoBlueprintAtivo", self._perfil.Data.AutoBlueprintAtivo ~= false)
 for maquinaId in CatalogoMaquinas do
 local quantidade = self:ObterQuantidade(maquinaId)
 local modificacoes = self:ObterModificacoesInventario(maquinaId)
@@ -1122,6 +1118,196 @@ end
 return false
 end
 
+function DadosJogador:AutoBlueprintAtiva()
+if not self:EstaAtivo() then return false end
+return self._perfil.Data.AutoBlueprintAtivo ~= false
+end
+
+function DadosJogador:DefinirAutoBlueprintGlobal(ativo)
+if not self:EstaAtivo() or type(ativo) ~= "boolean" then
+return false, "Dados indisponíveis."
+end
+local dados = self._perfil.Data
+dados.AutoBlueprintAtivo = ativo
+self:_PublicarAtributoProgresso("AutoBlueprintAtivo", ativo)
+
+if ativo then
+local _, idsJaAtingidos, temFutura = self:ObterBlueprintAutoDinheiroPendente()
+if idsJaAtingidos and #idsJaAtingidos > 0 then
+self:MarcarBlueprintsAutoExecutados(idsJaAtingidos)
+end
+self._verificarAutoBlueprintDinheiro = temFutura == true
+return true, "Automação de blueprints ativada."
+else
+self._verificarAutoBlueprintDinheiro = false
+return true, "Automação de blueprints pausada."
+end
+end
+
+function DadosJogador:CalcularCustoBlueprint(blueprint)
+if type(blueprint) ~= "table" or type(blueprint.Pecas) ~= "table" then return "0" end
+local total = "0"
+for _, item in blueprint.Pecas do
+local cat = type(item) == "table" and CatalogoMaquinas[item.MaquinaId]
+if cat and not cat.Renascimento and not cat.Receita and cat.Obtencao ~= "Ascensão" and InteiroGrande.eValido(cat.Preco) then
+total = InteiroGrande.somar(total, cat.Preco)
+end
+end
+return total
+end
+
+--- Calcula para uma lista de peças de blueprint:
+--- 1. Quantas peças da plot serão reaproveitadas;
+--- 2. Quais registros da plot não serão usados e podem ser vendidos (e quanto valem);
+--- 3. Quanto custa comprar na loja as peças que ainda faltam após usar estoque + plot.
+function DadosJogador:AvaliarLiquidezBlueprint(pecasBlueprint)
+if not self:EstaAtivo() or type(pecasBlueprint) ~= "table" then return nil end
+local necessarias = {}
+local custoBruto = "0"
+for _, item in pecasBlueprint do
+local id = type(item) == "table" and item.MaquinaId
+local cat = id and CatalogoMaquinas[id]
+if cat then
+necessarias[id] = (necessarias[id] or 0) + 1
+if not cat.Renascimento and not cat.Receita and cat.Obtencao ~= "Ascensão" and InteiroGrande.eValido(cat.Preco) then
+custoBruto = InteiroGrande.somar(custoBruto, cat.Preco)
+end
+end
+end
+
+local faltamDaPlot = {}
+for id, qtd in necessarias do
+local noEstoque = self:ObterQuantidade(id) or 0
+faltamDaPlot[id] = math.max(0, qtd - noEstoque)
+end
+
+local naPlotUsadas = {}
+local registrosParaRecolher = {}
+local registrosVendaveisNaoUsados = {}
+local valorVendaNaoUsadas = "0"
+
+for _, reg in self._perfil.Data.MaquinasColocadas or {} do
+local id = type(reg) == "table" and reg.MaquinaId
+local cat = id and CatalogoMaquinas[id]
+if cat then
+local precisa = faltamDaPlot[id] or 0
+local usadas = naPlotUsadas[id] or 0
+if usadas < precisa then
+naPlotUsadas[id] = usadas + 1
+registrosParaRecolher[reg] = true
+else
+local vendavel = not cat.Renascimento and not cat.Receita and cat.Obtencao ~= "Ascensão" and InteiroGrande.eValido(cat.Preco)
+if vendavel then
+table.insert(registrosVendaveisNaoUsados, reg)
+valorVendaNaoUsadas = InteiroGrande.somar(valorVendaNaoUsadas, cat.Preco)
+else
+registrosParaRecolher[reg] = true
+end
+end
+end
+end
+
+local custoFaltante = "0"
+for id, qtd in necessarias do
+local cat = CatalogoMaquinas[id]
+local noEstoque = self:ObterQuantidade(id) or 0
+local reaproveitadas = naPlotUsadas[id] or 0
+local comprar = math.max(0, qtd - noEstoque - reaproveitadas)
+if comprar > 0 and cat and not cat.Renascimento and not cat.Receita and cat.Obtencao ~= "Ascensão" and InteiroGrande.eValido(cat.Preco) then
+local subtotal = InteiroGrande.multiplicar(cat.Preco, tostring(comprar))
+custoFaltante = InteiroGrande.somar(custoFaltante, subtotal)
+end
+end
+
+local saldoAtual = self:ObterSaldo()
+local patrimonioDisponivel = if InteiroGrande.eValido(saldoAtual)
+then InteiroGrande.somar(saldoAtual, valorVendaNaoUsadas)
+else "0"
+
+return {
+CustoBruto = custoBruto,
+CustoFaltante = custoFaltante,
+ValorVendaNaoUsadas = valorVendaNaoUsadas,
+PatrimonioDisponivel = patrimonioDisponivel,
+PodePagarTudo = not InteiroGrande.menor(patrimonioDisponivel, custoFaltante),
+PrecisaVenderPlot = InteiroGrande.menor(saldoAtual, custoFaltante),
+RegistrosParaRecolher = registrosParaRecolher,
+RegistrosVendaveisNaoUsados = registrosVendaveisNaoUsados,
+}
+end
+
+--- Executa de forma transacional na plot inteira:
+--- recolhe as peças reaproveitadas/permanentes para o estoque e vende as peças não usadas para somar ao saldo.
+function DadosJogador:LiquidarPlotParaBlueprint(devolucoes, registrosParaVender)
+if not self:EstaAtivo() then return false, "Dados indisponíveis." end
+local dados = self._perfil.Data
+local colocadas = dados.MaquinasColocadas
+if type(colocadas) ~= "table" or not InteiroGrande.eValido(self:ObterSaldo()) then
+return false, "Construções ou saldo inválidos."
+end
+
+local porRegistro = {}
+for i, r in colocadas do porRegistro[r] = i end
+
+local indicesRemover, vistos, porTipo = {}, {}, {}
+
+for _, dev in devolucoes or {} do
+local reg = type(dev) == "table" and dev.Registro
+local idx = reg and porRegistro[reg]
+local qtd = reg and self:ObterQuantidade(reg.MaquinaId)
+if not idx or vistos[reg] or not qtd then
+return false, "Não foi possível recolher uma das peças da plot."
+end
+vistos[reg] = true
+local tipo = porTipo[reg.MaquinaId]
+if not tipo then
+tipo = {
+Quantidade = qtd,
+Variantes = table.clone(self:_ObterVariantes(reg.MaquinaId)),
+Devolvidas = 0,
+}
+porTipo[reg.MaquinaId] = tipo
+end
+tipo.Devolvidas += 1
+local okMod, mods = pcall(function()
+return PersonalizacaoMaquina.new(dev.Modificacoes or reg.Modificacoes):ObterDados()
+end)
+if not okMod then return false, "Personalização inválida ao recolher peça." end
+if next(mods) then table.insert(tipo.Variantes, mods) end
+table.insert(indicesRemover, idx)
+end
+
+local totalVenda = "0"
+for _, reg in registrosParaVender or {} do
+local idx = type(reg) == "table" and porRegistro[reg]
+local item = reg and CatalogoMaquinas[reg.MaquinaId]
+if not idx or vistos[reg] or not item or item.Renascimento or item.Receita or item.Obtencao == "Ascensão" or not InteiroGrande.eValido(item.Preco) then
+return false, "Uma das peças da plot não pode ser vendida."
+end
+vistos[reg] = true
+totalVenda = InteiroGrande.somar(totalVenda, item.Preco)
+table.insert(indicesRemover, idx)
+end
+
+table.sort(indicesRemover, function(a, b) return a > b end)
+for _, idx in indicesRemover do
+table.remove(colocadas, idx)
+end
+
+for maquinaId, tipo in porTipo do
+self:_GravarVariantes(maquinaId, tipo.Variantes)
+dados.Inventory[maquinaId] = tipo.Quantidade + tipo.Devolvidas
+self:_PublicarInventario(maquinaId)
+end
+
+if totalVenda ~= "0" then
+self:_DefinirSaldo(InteiroGrande.somar(self:ObterSaldo(), totalVenda))
+end
+
+self:PublicarResumoPlot()
+return true, totalVenda
+end
+
 function DadosJogador:ConfigurarAutoBlueprint(id, opcoes)
 if not self:EstaAtivo() or type(id) ~= "string" or type(opcoes) ~= "table" then
 return false, "Dados ou parâmetros inválidos."
@@ -1157,38 +1343,53 @@ end
 
 if opcoes.LimparAutoDinheiro == true then
 alvo.AutoDinheiro = nil
+alvo.ModoAutoDinheiro = nil
 dados.BlueprintsExecutadosCiclo[id] = nil
-msgExtra = "Meta de dinheiro automático removida."
+msgExtra = "Meta de dinheiro automático desativada."
+elseif opcoes.UsarCusto == true then
+local custo = self:CalcularCustoBlueprint(alvo)
+if not InteiroGrande.eValido(custo) or custo == "0" then
+return false, "Esta blueprint não possui custo em dinheiro na loja. Digite um valor manual."
+end
+alvo.AutoDinheiro = custo
+alvo.ModoAutoDinheiro = "Custo"
+local avaliacao = self:AvaliarLiquidezBlueprint(alvo.Pecas)
+if avaliacao and avaliacao.PodePagarTudo then
+dados.BlueprintsExecutadosCiclo[id] = true
+msgExtra = "Meta pelo custo salva! Como seu dinheiro + plot atual já cobrem o valor, ela disparará no próximo ciclo."
+else
+dados.BlueprintsExecutadosCiclo[id] = nil
+self._verificarAutoBlueprintDinheiro = true
+msgExtra = "Meta definida pelo custo da blueprint (considerando dinheiro + venda das peças não usadas da plot)!"
+end
 elseif opcoes.AutoDinheiro ~= nil then
 if not InteiroGrande.eValido(opcoes.AutoDinheiro) or opcoes.AutoDinheiro == "0" then
 return false, "Valor de dinheiro inválido."
 end
 alvo.AutoDinheiro = opcoes.AutoDinheiro
-local saldoAtual = self:ObterSaldo()
-if InteiroGrande.eValido(saldoAtual) and not InteiroGrande.menor(saldoAtual, opcoes.AutoDinheiro) then
+alvo.ModoAutoDinheiro = "Valor"
+local avaliacao = self:AvaliarLiquidezBlueprint(alvo.Pecas)
+local patrimonio = avaliacao and avaliacao.PatrimonioDisponivel or self:ObterSaldo()
+if InteiroGrande.eValido(patrimonio) and not InteiroGrande.menor(patrimonio, opcoes.AutoDinheiro) then
 dados.BlueprintsExecutadosCiclo[id] = true
-msgExtra = "Meta salva! Como seu saldo atual já atingiu esse valor, ela disparará a partir do próximo ciclo."
+msgExtra = "Meta salva! Como seu patrimônio atual já atingiu esse valor, ela disparará no próximo ciclo."
 else
 dados.BlueprintsExecutadosCiclo[id] = nil
-msgExtra = "Meta salva! A blueprint iniciará automaticamente assim que atingir esse valor."
+self._verificarAutoBlueprintDinheiro = true
+msgExtra = "Meta salva! A blueprint iniciará assim que seu dinheiro + peças não usadas da plot atingirem esse valor."
 end
 end
 
 return true, msgExtra or "Automação do blueprint atualizada.", alvo
 end
 
-function DadosJogador:AutoBlueprintAtiva()
-if not self:EstaAtivo() then return false end
-return Configuracoes.Obter(self._jogador, "ExecutarAutoBlueprint") ~= false
-end
-
 function DadosJogador:ObterBlueprintAutoDinheiroPendente()
 if not self:EstaAtivo() or not self:AutoBlueprintAtiva() then return nil, nil, false end
 local dados = self._perfil.Data
 local blueprints = dados.Blueprints
-if type(blueprints) ~= "table" or #blueprints == 0 then return nil, nil end
+if type(blueprints) ~= "table" or #blueprints == 0 then return nil, nil, false end
 local saldo = self:ObterSaldo()
-if not InteiroGrande.eValido(saldo) then return nil, nil end
+if not InteiroGrande.eValido(saldo) then return nil, nil, false end
 
 local executados = dados.BlueprintsExecutadosCiclo
 if type(executados) ~= "table" then
@@ -1197,19 +1398,32 @@ dados.BlueprintsExecutadosCiclo = executados
 end
 
 local escolhida = nil
+local metaEscolhida = nil
 local idsAtingidos = {}
 local temAlgumaFutura = false
 
 for _, bp in blueprints do
-local meta = type(bp) == "table" and bp.AutoDinheiro
-if type(meta) == "string" and InteiroGrande.eValido(meta) and not executados[bp.Id] then
-if not InteiroGrande.menor(saldo, meta) then
+if type(bp) == "table" and not executados[bp.Id] then
+local modo = bp.ModoAutoDinheiro
+local meta = if modo == "Custo" then self:CalcularCustoBlueprint(bp) else bp.AutoDinheiro
+if type(meta) == "string" and InteiroGrande.eValido(meta) and meta ~= "0" then
+local avaliacao = self:AvaliarLiquidezBlueprint(bp.Pecas)
+local atingiu = false
+if modo == "Custo" and avaliacao then
+atingiu = avaliacao.PodePagarTudo
+else
+local patrimonio = avaliacao and avaliacao.PatrimonioDisponivel or saldo
+atingiu = not InteiroGrande.menor(patrimonio, meta) and (not avaliacao or avaliacao.PodePagarTudo)
+end
+if atingiu then
 table.insert(idsAtingidos, bp.Id)
-if not escolhida or InteiroGrande.menor(escolhida.AutoDinheiro, meta) then
+if not escolhida or InteiroGrande.menor(metaEscolhida, meta) then
 escolhida = bp
+metaEscolhida = meta
 end
 else
 temAlgumaFutura = true
+end
 end
 end
 end

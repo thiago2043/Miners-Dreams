@@ -31,6 +31,7 @@ return {
 	MaquinasColocadas = {},
 -- Cada blueprint e um conjunto salvo de pecas com configuracoes e distancias relativas.
   Blueprints = {},
+  AutoBlueprintAtivo = true,
   BlueprintsExecutadosCiclo = {},
 Configuracoes = {},
   Atalhos = {},

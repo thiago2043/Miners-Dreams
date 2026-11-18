@@ -303,9 +303,17 @@ criar.Text, criar.TextSize = "Selecionar na plot", 15
 criar.BackgroundColor3, criar.TextColor3 = janela.Cor, Color3.fromRGB(17, 29, 35)
 
 self._status = janela:Texto(self._cabecalho, "Status", "Selecione a área na plot para criar ou gerenciar seus conjuntos.", UDim2.fromOffset(0, 68), UDim2.new(1, 0, 0, 34), 14)
-janela:Texto(self._cabecalho, "Salvos", "Conjuntos salvos", UDim2.fromOffset(0, 108), UDim2.new(0.65, 0, 0, 24), 18, true)
-self._quantidade = janela:Texto(self._cabecalho, "Quantidade", "", UDim2.new(0.65, 0, 0, 108), UDim2.new(0.35, 0, 0, 24), 14)
+janela:Texto(self._cabecalho, "Salvos", "Conjuntos salvos", UDim2.fromOffset(0, 108), UDim2.new(0.38, 0, 0, 24), 18, true)
+self._quantidade = janela:Texto(self._cabecalho, "Quantidade", "", UDim2.new(0.38, 0, 0, 108), UDim2.new(0.62, -184, 0, 24), 14)
 self._quantidade.TextXAlignment = Enum.TextXAlignment.Right
+
+self._botaoAutoGlobal = janela:Botao(self._cabecalho, "AutoGlobal", UDim2.new(1, -176, 0, 104), UDim2.fromOffset(176, 30), function()
+local ativoAtual = self._jogador:GetAttribute("AutoBlueprintAtivo") ~= false
+local ok, msg = self._construcao:ConfigurarAutoBlueprint("_GLOBAL_", { Ativo = not ativoAtual })
+self:_MostrarMensagem(msg)
+if ok then self:_Desenhar() end
+end)
+self._botaoAutoGlobal:ObterInstancia().TextSize = 14
 
 self._lista = Instance.new("Frame")
 self._lista.Name, self._lista.Position, self._lista.Size = "ListaBlueprints", UDim2.fromOffset(0, 140), UDim2.new(1, -8, 0, 92)
@@ -318,7 +326,7 @@ if self._grupo.Visible and not self._grupo:GetAttribute("AnimandoUI") then self:
 end),
 jogador:GetAttributeChangedSignal("CoopDonoUserId"):Connect(function() if self._grupo.Visible then self:_CarregarLista() end end),
 	jogador:GetAttributeChangedSignal("PermissoesCoop"):Connect(function() if self._grupo.Visible then self:_Desenhar() end end),
-	jogador:GetAttributeChangedSignal("ExecutarAutoBlueprint"):Connect(function() if self._grupo.Visible then self:_Desenhar() end end),
+	jogador:GetAttributeChangedSignal("AutoBlueprintAtivo"):Connect(function() if self._grupo.Visible then self:_Desenhar() end end),
 	jogador:GetAttributeChangedSignal("EscalaInterface"):Connect(function()
 if self._grupo.Visible then self:_Desenhar() end
 end),
@@ -556,9 +564,16 @@ function PainelBlueprints:_Desenhar()
 self._cabecalho.Visible = true; self._botaoCriar:DefinirDisponivel(RegrasCoop.JogadorPode(self._jogador, "CriarBlueprint"))
 self._lista.Position = UDim2.fromOffset(0, 140)
 local blueprints = self._blueprints or {}
-local autoGlobalAtivo = require(ReplicatedStorage.Shared.Configuracoes).Obter(self._jogador, "ExecutarAutoBlueprint") ~= false
-self._quantidade.Text = #blueprints .. " salvo(s)" .. (if autoGlobalAtivo then "" else " • Auto pausado")
-self._quantidade.TextColor3 = if autoGlobalAtivo then Color3.fromRGB(225, 229, 239) else Color3.fromRGB(255, 204, 102)
+local autoGlobalAtivo = self._jogador:GetAttribute("AutoBlueprintAtivo") ~= false
+self._quantidade.Text = #blueprints .. " salvo(s)"
+self._quantidade.TextColor3 = Color3.fromRGB(225, 229, 239)
+if self._botaoAutoGlobal then
+local instGlobal = self._botaoAutoGlobal:ObterInstancia()
+instGlobal.Text = if autoGlobalAtivo then "⚡ Auto-Blueprint: Ativo" else "⏸ Auto-Blueprint: Pausado"
+instGlobal.BackgroundColor3 = if autoGlobalAtivo then Color3.fromRGB(32, 98, 74) else Color3.fromRGB(108, 68, 32)
+instGlobal.TextColor3 = if autoGlobalAtivo then Color3.fromRGB(210, 255, 230) else Color3.fromRGB(255, 235, 190)
+self._botaoAutoGlobal:DefinirDisponivel(not RegrasCoop or RegrasCoop.JogadorPode(self._jogador, "EditarBlueprint"))
+end
 self._vazio.Visible = #blueprints == 0
 
 local esc = require(ReplicatedStorage.Shared.Configuracoes).Obter(self._jogador, "EscalaInterface") or 1
@@ -608,21 +623,36 @@ self._renomeandoId = nil
 self:_Desenhar()
 end)
 elseif self._configurandoAutoId == id then
-self._janela:Texto(cartao, "RotuloAutoDinheiro", "Iniciar automaticamente ao atingir $:", UDim2.fromOffset(recuo, 8), UDim2.new(1, -(recuo + 10), 0, 20), 15, true)
-self._janela:Texto(cartao, "DicaAutoDinheiro", "Exemplos: 50000, 25K, 1,5M, 10B, 1Qd ou 1e18", UDim2.fromOffset(recuo, 28), UDim2.new(1, -(recuo + 10), 0, 18), 13).TextColor3 = Color3.fromRGB(155, 175, 198)
+local custoBpTexto = "$" .. AbreviarInteiro(blueprint.Custo or "0")
+self._janela:Texto(cartao, "RotuloAutoDinheiro", "Iniciar automaticamente por dinheiro:", UDim2.fromOffset(recuo, 6), UDim2.new(1, -(recuo + 10), 0, 18), 15, true)
+self._janela:Texto(cartao, "DicaAutoDinheiro", "Escolha o Custo (" .. custoBpTexto .. ") ou digite um valor (ex: 25K, 1,5M, 1e18):", UDim2.fromOffset(recuo, 25), UDim2.new(1, -(recuo + 10), 0, 16), 12).TextColor3 = Color3.fromRGB(155, 175, 198)
 local caixaAuto = Instance.new("TextBox")
-caixaAuto.Name, caixaAuto.Position, caixaAuto.Size = "CampoAutoDinheiro", UDim2.fromOffset(recuo, 50), UDim2.new(1, -(recuo + 10), 0, 34)
+caixaAuto.Name, caixaAuto.Position, caixaAuto.Size = "CampoAutoDinheiro", UDim2.fromOffset(recuo, 45), UDim2.new(1, -(recuo + 10), 0, 32)
 caixaAuto.BackgroundColor3, caixaAuto.BorderSizePixel, caixaAuto.ClearTextOnFocus = Color3.fromRGB(20, 22, 28), 0, false
-caixaAuto.Font, caixaAuto.TextSize, caixaAuto.TextColor3 = Enum.Font.SourceSans, 16, Color3.new(1, 1, 1)
-caixaAuto.PlaceholderText = "Digite o valor (ex: 10M ou 1e15)"
+caixaAuto.Font, caixaAuto.TextSize, caixaAuto.TextColor3 = Enum.Font.SourceSans, 15, Color3.new(1, 1, 1)
+caixaAuto.PlaceholderText = "Vazio = usar custo (" .. custoBpTexto .. ") ou digite valor"
 caixaAuto.TextXAlignment = Enum.TextXAlignment.Left
-caixaAuto.Text = if blueprint.AutoDinheiro then AbreviarInteiro(blueprint.AutoDinheiro) else ""
+caixaAuto.Text = if blueprint.ModoAutoDinheiro == "Valor" and blueprint.AutoDinheiro then AbreviarInteiro(blueprint.AutoDinheiro) else ""
 caixaAuto.Parent = cartao
 arredondar(caixaAuto, 6)
 local padAuto = Instance.new("UIPadding")
 padAuto.PaddingLeft, padAuto.PaddingRight, padAuto.Parent = UDim.new(0, 8), UDim.new(0, 8), caixaAuto
 
-self:_BotaoTemp(cartao, "SalvarAuto_" .. id, UDim2.fromOffset(recuo, 94), UDim2.new(0.38, -(recuo * 0.38 + 4), 0, 32), "Salvar $", Color3.fromRGB(40, 138, 92), Color3.new(1, 1, 1), function()
+local linhaBtns1 = Instance.new("Frame")
+linhaBtns1.Position = UDim2.fromOffset(recuo, 83)
+linhaBtns1.Size = UDim2.new(1, -(recuo + 10), 0, 32)
+linhaBtns1.BackgroundTransparency = 1
+linhaBtns1.Parent = cartao
+
+self:_BotaoTemp(linhaBtns1, "UsarCusto_" .. id, UDim2.fromScale(0, 0), UDim2.new(0.38, -3, 1, 0), "Pelo Custo (" .. custoBpTexto .. ")", Color3.fromRGB(36, 118, 96), Color3.new(1, 1, 1), function()
+local ok, msg = self._construcao:ConfigurarAutoBlueprint(id, { UsarCusto = true })
+self:_MostrarMensagem(msg)
+if ok then
+self._configurandoAutoId = nil
+self:_CarregarLista()
+end
+end)
+self:_BotaoTemp(linhaBtns1, "SalvarAuto_" .. id, UDim2.new(0.38, 2, 0, 0), UDim2.new(0.24, -4, 1, 0), "Salvar $", Color3.fromRGB(42, 88, 124), Color3.new(1, 1, 1), function()
 local ok, msg = self._construcao:ConfigurarAutoBlueprint(id, { TextoDinheiro = caixaAuto.Text })
 self:_MostrarMensagem(msg)
 if ok then
@@ -630,7 +660,7 @@ self._configurandoAutoId = nil
 self:_CarregarLista()
 end
 end)
-self:_BotaoTemp(cartao, "LimparAuto_" .. id, UDim2.new(0.38, recuo * 0.62, 0, 94), UDim2.new(0.32, -(recuo * 0.32 + 4), 0, 32), "Desativar $", Color3.fromRGB(108, 46, 52), nil, function()
+self:_BotaoTemp(linhaBtns1, "LimparAuto_" .. id, UDim2.new(0.62, 2, 0, 0), UDim2.new(0.20, -4, 1, 0), "Off", Color3.fromRGB(108, 46, 52), nil, function()
 local ok, msg = self._construcao:ConfigurarAutoBlueprint(id, { LimparAutoDinheiro = true })
 self:_MostrarMensagem(msg)
 if ok then
@@ -638,7 +668,7 @@ self._configurandoAutoId = nil
 self:_CarregarLista()
 end
 end)
-self:_BotaoTemp(cartao, "CancelarAuto_" .. id, UDim2.new(0.70, recuo * 0.30, 0, 94), UDim2.new(0.30, -(recuo * 0.30 + 8), 0, 32), "Cancelar", Color3.fromRGB(45, 49, 60), nil, function()
+self:_BotaoTemp(linhaBtns1, "CancelarAuto_" .. id, UDim2.new(0.82, 2, 0, 0), UDim2.new(0.18, -2, 1, 0), "Voltar", Color3.fromRGB(45, 49, 60), nil, function()
 self._configurandoAutoId = nil
 self:_Desenhar()
 end)
@@ -688,26 +718,23 @@ barraAuto.Size = UDim2.new(1, -(recuo + 8), 0, 28)
 barraAuto.BackgroundTransparency = 1
 barraAuto.Parent = cartao
 
-local renascAtivo = blueprint.AutoRenascimento == true
-local bRenasc = self:_BotaoTemp(
-barraAuto, "AutoRenasc_" .. id,
-UDim2.fromScale(0, 0), UDim2.new(0.46, -3, 1, 0),
-if renascAtivo then (if autoGlobalAtivo then "★ Ao Renascer: Sim" else "★ Ao Renascer (Pausado)") else "Ao Renascer: Não",
-if renascAtivo then Color3.fromRGB(168, 108, 32) else Color3.fromRGB(38, 43, 54),
-if renascAtivo then Color3.fromRGB(255, 246, 220) else Color3.fromRGB(185, 194, 210),
-function()
-local ok, msg = self._construcao:ConfigurarAutoBlueprint(id, { AutoRenascimento = not renascAtivo })
-self:_MostrarMensagem(msg)
-if ok then self:_CarregarLista() end
-end
-)
-bRenasc:DefinirDisponivel(podeEditarAuto)
-
 local temAutoDinheiro = type(blueprint.AutoDinheiro) == "string" and blueprint.AutoDinheiro ~= ""
+local sufixoPausa = if autoGlobalAtivo then "" else " (Pausado)"
+local rotuloDinheiro
+if temAutoDinheiro then
+if blueprint.ModoAutoDinheiro == "Custo" then
+rotuloDinheiro = "⚡ Auto: Custo ($" .. AbreviarInteiro(blueprint.AutoDinheiro) .. ")" .. sufixoPausa
+else
+rotuloDinheiro = "⚡ Auto: $" .. AbreviarInteiro(blueprint.AutoDinheiro) .. sufixoPausa
+end
+else
+rotuloDinheiro = "⚡ Auto $ (Custo / Valor): Off"
+end
+
 local bDinheiro = self:_BotaoTemp(
 barraAuto, "AutoDinheiro_" .. id,
-UDim2.new(0.46, 3, 0, 0), UDim2.new(0.54, -3, 1, 0),
-if temAutoDinheiro then ("⚡ Auto: $" .. AbreviarInteiro(blueprint.AutoDinheiro) .. (if autoGlobalAtivo then "" else " (Pausado)")) else "⚡ Auto em $... (Off)",
+UDim2.fromScale(0, 0), UDim2.new(0.56, -3, 1, 0),
+rotuloDinheiro,
 if temAutoDinheiro then Color3.fromRGB(32, 104, 78) else Color3.fromRGB(38, 43, 54),
 if temAutoDinheiro then Color3.fromRGB(190, 255, 224) else Color3.fromRGB(185, 194, 210),
 function()
@@ -717,6 +744,21 @@ self:_Desenhar()
 end
 )
 bDinheiro:DefinirDisponivel(podeEditarAuto)
+
+local renascAtivo = blueprint.AutoRenascimento == true
+local bRenasc = self:_BotaoTemp(
+barraAuto, "AutoRenasc_" .. id,
+UDim2.new(0.56, 3, 0, 0), UDim2.new(0.44, -3, 1, 0),
+if renascAtivo then ("★ Ao Renascer: Sim" .. sufixoPausa) else "Ao Renascer: Não",
+if renascAtivo then Color3.fromRGB(168, 108, 32) else Color3.fromRGB(38, 43, 54),
+if renascAtivo then Color3.fromRGB(255, 246, 220) else Color3.fromRGB(185, 194, 210),
+function()
+local ok, msg = self._construcao:ConfigurarAutoBlueprint(id, { AutoRenascimento = not renascAtivo })
+self:_MostrarMensagem(msg)
+if ok then self:_CarregarLista() end
+end
+)
+bRenasc:DefinirDisponivel(podeEditarAuto)
 
 local barraAcoes = Instance.new("Frame")
 barraAcoes.Name = "AcoesBlueprint"

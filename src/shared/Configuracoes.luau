@@ -18,7 +18,6 @@ C.Opcoes={
 	{ Id = "LODPlots", Nome = "Otimização de plots distantes (LOD)", Valores = { "Médio", "Máximo", "Desativado", "Baixo" }, Padrao = "Médio" },
 {Id="ConfirmarVenda",Nome="Confirmar venda de peças",Valores={"Nunca","Várias peças","Sempre"},Padrao="Várias peças"},
 {Id="ConfirmarRenascimento",Nome="Confirmar renascimento",Valores={true,false},Padrao=true},
-{Id="ExecutarAutoBlueprint",Nome="Blueprints automáticas",Valores={true,false},Padrao=true},
 {Id="IntensidadeSetas",Nome="Setas de colocação",Valores={0,.5,1},Passo=.01,Padrao=1,Percentual=true,Deslizante=true},
 {Id="TemaBeta",Nome="Tema do teste beta",Valores={Beta.Padrao,Beta.Participacao,Beta.E308},Padrao=Beta.Padrao},
 }
