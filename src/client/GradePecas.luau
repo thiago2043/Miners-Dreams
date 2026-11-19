@@ -1,3 +1,4 @@
+local Traducao = require(game:GetService("ReplicatedStorage").Shared.Traducao)
 --[[
 Módulo: GradePecas (LPOO)
 Responsabilidade:
@@ -1244,7 +1245,7 @@ elseif self._modo == "Novas" then
 possui = item.Colocadas == 0 and disponivel
 end
 end
-local bateBusca = termo == "" or item.Busca:find(termo, 1, true) ~= nil
+local bateBusca = termo == "" or item.Busca:find(termo, 1, true) ~= nil or normalizar(Traducao.NomeMaquina(id, def.Nome)):find(termo, 1, true) ~= nil
 local visivel = possui and bateBusca and self:_PertenceCategoria(id) and self:_AtendeFiltrosAvancados(item)
 local guiado = id == self._pecaTutorial and (self._loja or (item.QuantidadeValor or 0) > 0)
 visivel = visivel or guiado

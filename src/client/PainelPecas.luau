@@ -263,7 +263,7 @@ local chaveDescricao = ""
 for _, a in { "Extracao", "Fundicao", "Motores", "Calibracao" } do
 chaveDescricao ..= tostring(self._jogador:GetAttribute("Upgrade_" .. a)) .. ":"
 end
-chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores")) .. ":" .. tostring(self._jogador:GetAttribute("NotacaoNumerica"))
+chaveDescricao ..= tostring(self._jogador:GetAttribute("VelocidadeMotores")) .. ":" .. tostring(self._jogador:GetAttribute("NotacaoNumerica")) .. ":" .. tostring(self._jogador.LocaleId)
 local calibracao = Efeitos.Nivel(jogadorFicha, "Calibracao")
 
 for _, id in self._ids do

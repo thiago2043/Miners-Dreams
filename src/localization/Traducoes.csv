@@ -1,0 +1,905 @@
+Key,Context,Example,Source,pt,en
+maquina.AceleradorModular,CatalogoMaquinas,,Acelerador modular,Acelerador modular,Modular Accelerator
+maquina.AmplificadorFase,CatalogoMaquinas,,Amplificador de fase,Amplificador de fase,Phase Amplifier
+maquina.AmplificadorVacuo,CatalogoMaquinas,,Amplificador de vácuo,Amplificador de vácuo,Vacuum Amplifier
+maquina.AmpolaDeEspectro,CatalogoMaquinas,,Ampola de espectro,Ampola de espectro,Spectrum Ampoule
+maquina.AnelGravitacional,CatalogoMaquinas,,Anel gravitacional,Anel gravitacional,Gravitational Ring
+maquina.AnelParticulas,CatalogoMaquinas,,Anel de partículas,Anel de partículas,Particle Ring
+maquina.ArcoDosHorizontes,CatalogoMaquinas,,Arco dos horizontes,Arco dos horizontes,Horizons Arc
+maquina.AroDeMercurio,CatalogoMaquinas,,Aro de mercúrio,Aro de mercúrio,Mercury Rim
+maquina.BalizaUltravioleta,CatalogoMaquinas,,Baliza ultravioleta,Baliza ultravioleta,Ultraviolet Beacon
+maquina.BaluarteMagnetico,CatalogoMaquinas,,Baluarte magnético,Baluarte magnético,Magnetic Bulwark
+maquina.BanhoCobre,CatalogoMaquinas,,Banho de cobre,Banho de cobre,Copper Bath
+maquina.BanhoRefratario,CatalogoMaquinas,,Banho refratário,Banho refratário,Refractory Bath
+maquina.BicoDeIrradiacao,CatalogoMaquinas,,Bico de irradiação,Bico de irradiação,Irradiation Nozzle
+maquina.BobinaCriomagnetica,CatalogoMaquinas,,Bobina criomagnética,Bobina criomagnética,Cryomagnetic Coil
+maquina.BobinaDeMare,CatalogoMaquinas,,Bobina de maré,Bobina de maré,Tidal Coil
+maquina.BobinaDeSamario,CatalogoMaquinas,,Bobina de samário,Bobina de samário,Samarium Coil
+maquina.BobinaDupla,CatalogoMaquinas,,Bobina dupla,Bobina dupla,Dual Coil
+maquina.BobinaEstelar,CatalogoMaquinas,,Bobina estelar,Bobina estelar,Stellar Coil
+maquina.BobinaInducao,CatalogoMaquinas,,Bobina de indução,Bobina de indução,Induction Coil
+maquina.CadenciaDoEclipse,CatalogoMaquinas,,Cadência do eclipse,Cadência do eclipse,Eclipse Cadence
+maquina.CadinhoCeramico,CatalogoMaquinas,,Cadinho cerâmico,Cadinho cerâmico,Ceramic Crucible
+maquina.CadinhoDeSol,CatalogoMaquinas,,Cadinho de sol,Cadinho de sol,Sun Crucible
+maquina.CamaraDeNeve,CatalogoMaquinas,,Câmara de neve,Câmara de neve,Snow Chamber
+maquina.CamaraDoPontoZero,CatalogoMaquinas,,Câmara do ponto zero,Câmara do ponto zero,Zero-Point Chamber
+maquina.CamaraEstelar,CatalogoMaquinas,,Câmara estelar,Câmara estelar,Stellar Chamber
+maquina.CamaraFissao,CatalogoMaquinas,,Câmara de fissão,Câmara de fissão,Fission Chamber
+maquina.CamaraMagnetica,CatalogoMaquinas,,Câmara magnética,Câmara magnética,Magnetic Chamber
+maquina.CamaraPlasma,CatalogoMaquinas,,Câmara de plasma,Câmara de plasma,Plasma Chamber
+maquina.CamaraQuantica,CatalogoMaquinas,,Câmara quântica,Câmara quântica,Quantum Chamber
+maquina.CamaraSingularidade,CatalogoMaquinas,,Câmara de singularidade,Câmara de singularidade,Singularity Chamber
+maquina.CanalDeMarfim,CatalogoMaquinas,,Canal de marfim,Canal de marfim,Ivory Channel
+maquina.CascataDeAmbar,CatalogoMaquinas,,Cascata de âmbar,Cascata de âmbar,Amber Cascade
+maquina.CascataDeInducao,CatalogoMaquinas,,Cascata de indução,Cascata de indução,Induction Cascade
+maquina.CatalisadorTermico,CatalogoMaquinas,,Catalisador térmico,Catalisador térmico,Thermal Catalyst
+maquina.CavidadeDeRubidio,CatalogoMaquinas,,Cavidade de rubídio,Cavidade de rubídio,Rubidium Cavity
+maquina.Centralizadora1x1,CatalogoMaquinas,,Centralizadora 1×1,Centralizadora 1×1,1×1 Centering Conveyor
+maquina.Centralizadora2x2,CatalogoMaquinas,,Centralizadora 2×2,Centralizadora 2×2,2×2 Centering Conveyor
+maquina.CicatrizDePlasma,CatalogoMaquinas,,Cicatriz de plasma,Cicatriz de plasma,Plasma Scar
+maquina.CircuitoDeAntimateria,CatalogoMaquinas,,Circuito de antimatéria,Circuito de antimatéria,Antimatter Circuit
+maquina.CisalhaHelio,CatalogoMaquinas,,Cisalha de hélio,Cisalha de hélio,Helium Shear
+maquina.ColetorDeDuasFases,CatalogoMaquinas,,Coletor de duas fases,Coletor de duas fases,Dual-Phase Collector
+maquina.ColetorDeMarfim,CatalogoMaquinas,,Coletor de marfim,Coletor de marfim,Ivory Collector
+maquina.ColimadorBoreal,CatalogoMaquinas,,Colimador boreal,Colimador boreal,Boreal Collimator
+maquina.CompressorAtomico,CatalogoMaquinas,,Compressor atômico,Compressor atômico,Atomic Compressor
+maquina.CompressorGalactico,CatalogoMaquinas,,Compressor galáctico,Compressor galáctico,Galactic Compressor
+maquina.ComutadorFerroPrisma,CatalogoMaquinas,,Comutador ferro-prisma,Comutador ferro-prisma,Iron-Prism Switch
+maquina.CondensadorNacar,CatalogoMaquinas,,Condensador de nácar,Condensador de nácar,Nacre Condenser
+maquina.CondutorDeEclipse,CatalogoMaquinas,,Condutor de eclipse,Condutor de eclipse,Eclipse Conductor
+maquina.CoroaDeAntiparticulas,CatalogoMaquinas,,Coroa de antipartículas,Coroa de antipartículas,Antiparticle Crown
+maquina.CoroaDeCisalha,CatalogoMaquinas,,Coroa de cisalha,Coroa de cisalha,Shear Crown
+maquina.CorredorSolsticio,CatalogoMaquinas,,Corredor do solstício,Corredor do solstício,Solstice Corridor
+maquina.CouracaSolar,CatalogoMaquinas,,Mineradora coroa solar,Mineradora coroa solar,Solar Crown Miner
+maquina.CrivoDoPerielio,CatalogoMaquinas,,Crivo do periélio,Crivo do periélio,Perihelion Sieve
+maquina.CupulaDeInercia,CatalogoMaquinas,,Cúpula de inércia,Cúpula de inércia,Inertia Dome
+maquina.DifusorDeHelio,CatalogoMaquinas,,Difusor de hélio,Difusor de hélio,Helium Diffuser
+maquina.DinamoDePlatina,CatalogoMaquinas,,Dínamo de platina,Dínamo de platina,Platinum Dynamo
+maquina.DivisorDeMarfim,CatalogoMaquinas,,Divisor de marfim,Divisor de marfim,Ivory Splitter
+maquina.DobraTermica,CatalogoMaquinas,,Dobra térmica,Dobra térmica,Thermal Fold
+maquina.DobradorDeLuz,CatalogoMaquinas,,Dobrador de luz,Dobrador de luz,Light Bender
+maquina.DutoDeHidrogenio,CatalogoMaquinas,,Duto de hidrogênio,Duto de hidrogênio,Hydrogen Duct
+maquina.ElevadorVertical,CatalogoMaquinas,,Elevador vertical,Elevador vertical,Vertical Elevator
+maquina.EscavadoraConvergencia,CatalogoMaquinas,,Escavadora convergência,Escavadora convergência,Convergence Excavator
+maquina.EscavadoraDeCaldeira,CatalogoMaquinas,,Escavadora de caldeira,Escavadora de caldeira,Caldera Excavator
+maquina.EscavadoraDoAfelio,CatalogoMaquinas,,Escavadora do afélio,Escavadora do afélio,Aphelion Excavator
+maquina.EscavadoraDoLimiar,CatalogoMaquinas,,Escavadora do limiar,Escavadora do limiar,Threshold Excavator
+maquina.EscavadoraEstratos,CatalogoMaquinas,,Escavadora de estratos,Escavadora de estratos,Strata Excavator
+maquina.EscavadoraMeridiano,CatalogoMaquinas,,Mineradora meridiano,Mineradora meridiano,Meridian Miner
+maquina.EstacaoDePenumbra,CatalogoMaquinas,,Estação de penumbra,Estação de penumbra,Penumbra Station
+maquina.Esteira1x1,CatalogoMaquinas,,Esteira 1×1,Esteira 1×1,1×1 Conveyor
+maquina.Esteira2x2,CatalogoMaquinas,,Esteira 2×2,Esteira 2×2,2×2 Conveyor
+maquina.EstranguladorDeCampo,CatalogoMaquinas,,Estrangulador de campo,Estrangulador de campo,Field Choke
+maquina.ExtratoraCordilheira,CatalogoMaquinas,,Extratora cordilheira,Extratora cordilheira,Ridge Extractor
+maquina.ExtratoraDaMagnetosfera,CatalogoMaquinas,,Extratora da magnetosfera,Extratora da magnetosfera,Magnetosphere Extractor
+maquina.ExtratoraNucleoDeEstrela,CatalogoMaquinas,,Extratora núcleo de estrela,Extratora núcleo de estrela,Star Core Extractor
+maquina.FatiaDeHorizonte,CatalogoMaquinas,,Fatia de horizonte,Fatia de horizonte,Horizon Slice
+maquina.FeixeFotons,CatalogoMaquinas,,Feixe de fótons,Feixe de fótons,Photon Beam
+maquina.FeixeMolecular,CatalogoMaquinas,,Feixe molecular,Feixe molecular,Molecular Beam
+maquina.FeixeSingularidade,CatalogoMaquinas,,Feixe de singularidade,Feixe de singularidade,Singularity Beam
+maquina.FendaDeQuartzo,CatalogoMaquinas,,Fenda de quartzo,Fenda de quartzo,Quartz Rift
+maquina.FiltroVermiculita,CatalogoMaquinas,,Filtro de vermiculita,Filtro de vermiculita,Vermiculite Filter
+maquina.FoleGravitacional,CatalogoMaquinas,,Fole gravitacional,Fole gravitacional,Gravitational Bellows
+maquina.FornalhaArQuente,CatalogoMaquinas,,Fornalha de ar quente,Fornalha de ar quente,Hot Air Furnace
+maquina.FornalhaArcoAbissal,CatalogoMaquinas,,Fornalha arco abissal,Fornalha arco abissal,Abyssal Arc Furnace
+maquina.FornalhaArcoSolar,CatalogoMaquinas,,Fornalha de arco solar,Fornalha de arco solar,Solar Arc Furnace
+maquina.FornalhaAurora,CatalogoMaquinas,,Fornalha aurora,Fornalha aurora,Aurora Furnace
+maquina.FornalhaAuroraTripla,CatalogoMaquinas,,Fornalha aurora tripla,Fornalha aurora tripla,Triple Aurora Furnace
+maquina.FornalhaBasica,CatalogoMaquinas,,Fornalha básica,Fornalha básica,Basic Furnace
+maquina.FornalhaBastiao,CatalogoMaquinas,,Fornalha bastião,Fornalha bastião,Bastion Furnace
+maquina.FornalhaBifurcacao,CatalogoMaquinas,,Fornalha bifurcação,Fornalha bifurcação,Bifurcation Furnace
+maquina.FornalhaCadinhoBasalto,CatalogoMaquinas,,Fornalha de basalto,Fornalha de basalto,Basalt Furnace
+maquina.FornalhaCamaraDeHelio,CatalogoMaquinas,,Fornalha câmara de hélio,Fornalha câmara de hélio,Helium Chamber Furnace
+maquina.FornalhaCatedral,CatalogoMaquinas,,Fornalha catedral,Fornalha catedral,Cathedral Furnace
+maquina.FornalhaCeramicaIonica,CatalogoMaquinas,,Fornalha cerâmica iônica,Fornalha cerâmica iônica,Ionic Ceramic Furnace
+maquina.FornalhaChamaFria,CatalogoMaquinas,,Fornalha chama fria,Fornalha chama fria,Cold Flame Furnace
+maquina.FornalhaCiclotron,CatalogoMaquinas,,Fornalha cíclotron,Fornalha cíclotron,Cyclotron Furnace
+maquina.FornalhaContrafluxo,CatalogoMaquinas,,Fornalha contrafluxo,Fornalha contrafluxo,Counterflow Furnace
+maquina.FornalhaConvergencia,CatalogoMaquinas,,Fornalha convergência,Fornalha convergência,Convergence Furnace
+maquina.FornalhaCoroaRefrataria,CatalogoMaquinas,,Fornalha coroa refratária,Fornalha coroa refratária,Refractory Crown Furnace
+maquina.FornalhaCrisolDuplo,CatalogoMaquinas,,Fornalha crisol duplo,Fornalha crisol duplo,Twin Crucible Furnace
+maquina.FornalhaEspelhoFundido,CatalogoMaquinas,,Fornalha espelho fundido,Fornalha espelho fundido,Molten Mirror Furnace
+maquina.FornalhaEspiralTermica,CatalogoMaquinas,,Fornalha espiral térmica,Fornalha espiral térmica,Thermal Spiral Furnace
+maquina.FornalhaEstelar,CatalogoMaquinas,,Fornalha estelar,Fornalha estelar,Stellar Furnace
+maquina.FornalhaEterna,CatalogoMaquinas,,Fornalha eterna,Fornalha eterna,Eternal Furnace
+maquina.FornalhaGalactica,CatalogoMaquinas,,Fornalha galáctica,Fornalha galáctica,Galactic Furnace
+maquina.FornalhaIndustrial,CatalogoMaquinas,,Fornalha industrial,Fornalha industrial,Industrial Furnace
+maquina.FornalhaLimitePolar,CatalogoMaquinas,,Fornalha limite polar,Fornalha limite polar,Polar Limit Furnace
+maquina.FornalhaMarDeVidro,CatalogoMaquinas,,Fornalha mar de vidro,Fornalha mar de vidro,Glass Sea Furnace
+maquina.FornalhaMolecular,CatalogoMaquinas,,Fornalha molecular,Fornalha molecular,Molecular Furnace
+maquina.FornalhaNacar,CatalogoMaquinas,,Fornalha de nácar,Fornalha de nácar,Nacre Furnace
+maquina.FornalhaPlanalto,CatalogoMaquinas,,Fornalha planalto,Fornalha planalto,Plateau Furnace
+maquina.FornalhaPlasma,CatalogoMaquinas,,Fornalha de plasma,Fornalha de plasma,Plasma Furnace
+maquina.FornalhaQuantica,CatalogoMaquinas,,Fornalha quântica,Fornalha quântica,Quantum Furnace
+maquina.FornalhaReforcada,CatalogoMaquinas,,Fornalha reforçada,Fornalha reforçada,Reinforced Furnace
+maquina.FornalhaReverbero,CatalogoMaquinas,,Fornalha de reverbero,Fornalha de reverbero,Reverberatory Furnace
+maquina.FornalhaSafira,CatalogoMaquinas,,Fornalha safira,Fornalha safira,Sapphire Furnace
+maquina.FornalhaSupernova,CatalogoMaquinas,,Fornalha supernova,Fornalha supernova,Supernova Furnace
+maquina.FornalhaTermica,CatalogoMaquinas,,Fornalha térmica,Fornalha térmica,Thermal Furnace
+maquina.ForquilhaDeCesio,CatalogoMaquinas,,Forquilha de césio,Forquilha de césio,Cesium Fork
+maquina.GarraDaMagnetopausa,CatalogoMaquinas,,Garra da magnetopausa,Garra da magnetopausa,Magnetopause Claw
+maquina.GarraDoEquinocio,CatalogoMaquinas,,Garra do equinócio,Garra do equinócio,Equinox Claw
+maquina.GavetaDeAntimonio,CatalogoMaquinas,,Gaveta de antimônio,Gaveta de antimônio,Antimony Drawer
+maquina.GrampoDeCobalto,CatalogoMaquinas,,Grampo de cobalto,Grampo de cobalto,Cobalt Clamp
+maquina.InjetorDeArgonio,CatalogoMaquinas,,Injetor de argônio,Injetor de argônio,Argon Injector
+maquina.InversorDeFluxo,CatalogoMaquinas,,Inversor de fluxo,Inversor de fluxo,Flux Inverter
+maquina.Ionizador,CatalogoMaquinas,,Ionizador,Ionizador,Ionizer
+maquina.JatoMineral,CatalogoMaquinas,,Jato mineral,Jato mineral,Mineral Jet
+maquina.LaminaFotovoltaica,CatalogoMaquinas,,Lâmina fotovoltaica,Lâmina fotovoltaica,Photovoltaic Blade
+maquina.LaserBasico,CatalogoMaquinas,,Laser básico,Laser básico,Basic Laser
+maquina.LaserDuplo,CatalogoMaquinas,,Laser duplo,Laser duplo,Dual Laser
+maquina.LaserGalactico,CatalogoMaquinas,,Laser galáctico,Laser galáctico,Galactic Laser
+maquina.LaserIndustrial,CatalogoMaquinas,,Laser industrial,Laser industrial,Industrial Laser
+maquina.LaserQuantico,CatalogoMaquinas,,Laser quântico,Laser quântico,Quantum Laser
+maquina.LeitorEspectral,CatalogoMaquinas,,Leitor espectral,Leitor espectral,Spectral Reader
+maquina.LimiarDeBasalto,CatalogoMaquinas,,Limiar de basalto,Limiar de basalto,Basalt Threshold
+maquina.LimiarDeIridio,CatalogoMaquinas,,Limiar de irídio,Limiar de irídio,Iridium Threshold
+maquina.LinhaDeRadiante,CatalogoMaquinas,,Linha radiante,Linha radiante,Radiant Line
+maquina.MalhaDeSilicio,CatalogoMaquinas,,Malha de silício,Malha de silício,Silicon Mesh
+maquina.MalhaDoZenite,CatalogoMaquinas,,Malha do zênite,Malha do zênite,Zenith Mesh
+maquina.MatrizDeAmplificacao,CatalogoMaquinas,,Matriz de amplificação,Matriz de amplificação,Amplification Matrix
+maquina.MatrizDeImpacto,CatalogoMaquinas,,Matriz de impacto,Matriz de impacto,Impact Matrix
+maquina.MicrossondaFria,CatalogoMaquinas,,Microssonda fria,Microssonda fria,Cold Microprobe
+maquina.MineradoraAntigravitacional,CatalogoMaquinas,,Mineradora antigravitacional,Mineradora antigravitacional,Antigravity Miner
+maquina.MineradoraAtomica,CatalogoMaquinas,,Mineradora atômica,Mineradora atômica,Atomic Miner
+maquina.MineradoraAurora,CatalogoMaquinas,,Mineradora aurora,Mineradora aurora,Aurora Miner
+maquina.MineradoraBasica,CatalogoMaquinas,,Mineradora básica,Mineradora básica,Basic Miner
+maquina.MineradoraCarbeto,CatalogoMaquinas,,Mineradora de carbeto,Mineradora de carbeto,Carbide Miner
+maquina.MineradoraCobre,CatalogoMaquinas,,Mineradora de cobre,Mineradora de cobre,Copper Miner
+maquina.MineradoraContrapeso,CatalogoMaquinas,,Mineradora contrapeso,Mineradora contrapeso,Counterweight Miner
+maquina.MineradoraCriogenica,CatalogoMaquinas,,Mineradora criogênica,Mineradora criogênica,Cryogenic Miner
+maquina.MineradoraCristalina,CatalogoMaquinas,,Mineradora cristalina,Mineradora cristalina,Crystal Miner
+maquina.MineradoraDeXisto,CatalogoMaquinas,,Mineradora de xisto,Mineradora de xisto,Shale Miner
+maquina.MineradoraEixoPolar,CatalogoMaquinas,,Mineradora eixo polar,Mineradora eixo polar,Polar Axis Miner
+maquina.MineradoraEstelar,CatalogoMaquinas,,Mineradora estelar,Mineradora estelar,Stellar Miner
+maquina.MineradoraEterna,CatalogoMaquinas,,Mineradora eterna,Mineradora eterna,Eternal Miner
+maquina.MineradoraFerro,CatalogoMaquinas,,Mineradora de ferro,Mineradora de ferro,Iron Miner
+maquina.MineradoraGalactica,CatalogoMaquinas,,Mineradora galáctica,Mineradora galáctica,Galactic Miner
+maquina.MineradoraGranito,CatalogoMaquinas,,Mineradora de granito,Mineradora de granito,Granite Miner
+maquina.MineradoraIndustrial,CatalogoMaquinas,,Mineradora industrial,Mineradora industrial,Industrial Miner
+maquina.MineradoraMagnetita,CatalogoMaquinas,,Mineradora de magnetita,Mineradora de magnetita,Magnetite Miner
+maquina.MineradoraParalaxe,CatalogoMaquinas,,Mineradora paralaxe,Mineradora paralaxe,Parallax Miner
+maquina.MineradoraPeriastro,CatalogoMaquinas,,Mineradora periastro,Mineradora periastro,Periapsis Miner
+maquina.MineradoraPiroclastica,CatalogoMaquinas,,Mineradora piroclástica,Mineradora piroclástica,Pyroclastic Miner
+maquina.MineradoraPlasma,CatalogoMaquinas,,Mineradora de plasma,Mineradora de plasma,Plasma Miner
+maquina.MineradoraPressurizada,CatalogoMaquinas,,Mineradora pressurizada,Mineradora pressurizada,Pressurized Miner
+maquina.MineradoraPulsar,CatalogoMaquinas,,Mineradora pulsar,Mineradora pulsar,Pulsar Miner
+maquina.MineradoraQuantica,CatalogoMaquinas,,Mineradora quântica,Mineradora quântica,Quantum Miner
+maquina.MineradoraRessonante,CatalogoMaquinas,,Mineradora ressonante,Mineradora ressonante,Resonant Miner
+maquina.MineradoraSingularidade,CatalogoMaquinas,,Mineradora singularidade,Mineradora singularidade,Singularity Miner
+maquina.MineradoraTectonica,CatalogoMaquinas,,Mineradora tectônica,Mineradora tectônica,Tectonic Miner
+maquina.ModificadorConvergencia,CatalogoMaquinas,,Modificador convergência,Modificador convergência,Convergence Upgrader
+maquina.MorsaDeCromo,CatalogoMaquinas,,Morsa de cromo,Morsa de cromo,Chrome Vise
+maquina.NaveDeIrradiacao,CatalogoMaquinas,,Nave de irradiação,Nave de irradiação,Irradiation Vessel
+maquina.NexusEterno,CatalogoMaquinas,,Nexus eterno,Nexus eterno,Eternal Nexus
+maquina.NucleoAntimateria,CatalogoMaquinas,,Núcleo de antimatéria,Núcleo de antimatéria,Antimatter Core
+maquina.NucleoDimensional,CatalogoMaquinas,,Núcleo dimensional,Núcleo dimensional,Dimensional Core
+maquina.NucleoHorizonte,CatalogoMaquinas,,Núcleo de horizonte,Núcleo de horizonte,Horizon Core
+maquina.NucleoQuasar,CatalogoMaquinas,,Núcleo de quasar,Núcleo de quasar,Quasar Core
+maquina.ObeliscoDeFase,CatalogoMaquinas,,Obelisco de fase,Obelisco de fase,Phase Obelisk
+maquina.OsciladorDeQuartzo,CatalogoMaquinas,,Oscilador de quartzo,Oscilador de quartzo,Quartz Oscillator
+maquina.Parede1x1,CatalogoMaquinas,,Parede 1×1×1,Parede 1×1×1,1×1×1 Wall
+maquina.PeneiraDeTurmalina,CatalogoMaquinas,,Peneira de turmalina,Peneira de turmalina,Tourmaline Sieve
+maquina.PeneiraLuminosa,CatalogoMaquinas,,Peneira luminosa,Peneira luminosa,Luminous Sieve
+maquina.PeneiraPressurizada,CatalogoMaquinas,,Peneira pressurizada,Peneira pressurizada,Pressurized Sieve
+maquina.PenteDeMagnetita,CatalogoMaquinas,,Pente de magnetita,Pente de magnetita,Magnetite Comb
+maquina.Polarizador,CatalogoMaquinas,,Polarizador,Polarizador,Polarizer
+maquina.PolarizadorCosmico,CatalogoMaquinas,,Polarizador cósmico,Polarizador cósmico,Cosmic Polarizer
+maquina.PolarizadorDeJade,CatalogoMaquinas,,Polarizador de jade,Polarizador de jade,Jade Polarizer
+maquina.PonteDeInducao,CatalogoMaquinas,,Ponte de indução,Ponte de indução,Induction Bridge
+maquina.PonteDosCristais,CatalogoMaquinas,,Ponte dos cristais,Ponte dos cristais,Crystal Bridge
+maquina.PortaDoMeridiano,CatalogoMaquinas,,Porta do meridiano,Porta do meridiano,Meridian Gate
+maquina.PortalDeVanAllen,CatalogoMaquinas,,Portal de Van Allen,Portal de Van Allen,Van Allen Portal
+maquina.PorticoDaForja,CatalogoMaquinas,,Pórtico da forja,Pórtico da forja,Forge Gantry
+maquina.PorticoDeSafira,CatalogoMaquinas,,Pórtico de safira,Pórtico de safira,Sapphire Gantry
+maquina.PorticoPiezoeletrico,CatalogoMaquinas,,Pórtico piezoelétrico,Pórtico piezoelétrico,Piezoelectric Gantry
+maquina.PrensaDeCalcita,CatalogoMaquinas,,Prensa de calcita,Prensa de calcita,Calcite Press
+maquina.PrensaMinerio,CatalogoMaquinas,,Prensa de minério,Prensa de minério,Ore Press
+maquina.PrensaTripla,CatalogoMaquinas,,Prensa tripla,Prensa tripla,Triple Press
+maquina.PrismaDeFluorita,CatalogoMaquinas,,Prisma de fluorita,Prisma de fluorita,Fluorite Prism
+maquina.PrismaPulsar,CatalogoMaquinas,,Prisma pulsar,Prisma pulsar,Pulsar Prism
+maquina.ProcessadorParticulas,CatalogoMaquinas,,Processador de partículas,Processador de partículas,Particle Processor
+maquina.ProcessadorTermico,CatalogoMaquinas,,Processador térmico,Processador térmico,Thermal Processor
+maquina.PulsadorDeNeodimio,CatalogoMaquinas,,Pulsador de neodímio,Pulsador de neodímio,Neodymium Pulser
+maquina.PulsoDeFerrofluido,CatalogoMaquinas,,Pulso de ferrofluido,Pulso de ferrofluido,Ferrofluid Pulse
+maquina.PulsoDimensional,CatalogoMaquinas,,Pulso dimensional,Pulso dimensional,Dimensional Pulse
+maquina.PulsoEstelar,CatalogoMaquinas,,Pulso estelar,Pulso estelar,Stellar Pulse
+maquina.RaioPlasma,CatalogoMaquinas,,Raio de plasma,Raio de plasma,Plasma Ray
+maquina.RasgoDeEspectro,CatalogoMaquinas,,Rasgo de espectro,Rasgo de espectro,Spectrum Rift
+maquina.ReatorDaCoroaSolar,CatalogoMaquinas,,Reator da coroa solar,Reator da coroa solar,Solar Crown Reactor
+maquina.ReatorDeZinco,CatalogoMaquinas,,Reator de zinco,Reator de zinco,Zinc Reactor
+maquina.RefinadorAtomico,CatalogoMaquinas,,Refinador atômico,Refinador atômico,Atomic Refiner
+maquina.RefinadorCobre,CatalogoMaquinas,,Refinador de cobre,Refinador de cobre,Copper Refiner
+maquina.RefinadorGalactico,CatalogoMaquinas,,Refinador galáctico,Refinador galáctico,Galactic Refiner
+maquina.RefinadorIndustrial,CatalogoMaquinas,,Refinador industrial,Refinador industrial,Industrial Refiner
+maquina.RefinadorMolecular,CatalogoMaquinas,,Refinador molecular,Refinador molecular,Molecular Refiner
+maquina.RefletorCobalto,CatalogoMaquinas,,Refletor de cobalto,Refletor de cobalto,Cobalt Reflector
+maquina.ReleDeRubi,CatalogoMaquinas,,Relé de rubi,Relé de rubi,Ruby Relay
+maquina.ReleDeVapor,CatalogoMaquinas,,Relé de vapor,Relé de vapor,Vapor Relay
+maquina.RessonadorAzimutal,CatalogoMaquinas,,Ressonador azimutal,Ressonador azimutal,Azimuthal Resonator
+maquina.RessonadorDeBasalto,CatalogoMaquinas,,Ressonador de basalto,Ressonador de basalto,Basalt Resonator
+maquina.RessonadorDeCobreBranco,CatalogoMaquinas,,Ressonador de cobre branco,Ressonador de cobre branco,White Copper Resonator
+maquina.RessonadorDimensional,CatalogoMaquinas,,Ressonador dimensional,Ressonador dimensional,Dimensional Resonator
+maquina.RessonadorEstelar,CatalogoMaquinas,,Ressonador estelar,Ressonador estelar,Stellar Resonator
+maquina.RessonadorPlasma,CatalogoMaquinas,,Ressonador de plasma,Ressonador de plasma,Plasma Resonator
+maquina.RessonadorQuantico,CatalogoMaquinas,,Ressonador quântico,Ressonador quântico,Quantum Resonator
+maquina.RessonadorVacuo,CatalogoMaquinas,,Ressonador de vácuo,Ressonador de vácuo,Vacuum Resonator
+maquina.RessonanciaAbissal,CatalogoMaquinas,,Mineradora abissal,Mineradora abissal,Abyssal Miner
+maquina.RetificadorDeIridio,CatalogoMaquinas,,Retificador de irídio,Retificador de irídio,Iridium Rectifier
+maquina.RetificadorDeMare,CatalogoMaquinas,,Retificador de maré,Retificador de maré,Tidal Rectifier
+maquina.SeloAurora,CatalogoMaquinas,,Selo da aurora,Selo da aurora,Aurora Seal
+maquina.SondaDeAmetista,CatalogoMaquinas,,Sonda de ametista,Sonda de ametista,Amethyst Probe
+maquina.SondaDoAntipolo,CatalogoMaquinas,,Sonda do antipolo,Sonda do antipolo,Antipole Probe
+maquina.SondaUmbra,CatalogoMaquinas,,Mineradora umbra,Mineradora umbra,Umbra Miner
+maquina.TamborDeSeparacao,CatalogoMaquinas,,Tambor de separação,Tambor de separação,Separation Drum
+maquina.TrefilaDeTitanio,CatalogoMaquinas,,Trefila de titânio,Trefila de titânio,Titanium Drawplate
+maquina.TriagemBoreal,CatalogoMaquinas,,Triagem boreal,Triagem boreal,Boreal Sorter
+maquina.TrilhoDeApolonio,CatalogoMaquinas,,Trilho de Apolônio,Trilho de Apolônio,Apollonius Rail
+maquina.TrilhoDeHafnio,CatalogoMaquinas,,Trilho de háfnio,Trilho de háfnio,Hafnium Rail
+maquina.TunelCompressao,CatalogoMaquinas,,Túnel de compressão,Túnel de compressão,Compression Tunnel
+maquina.TunelFase,CatalogoMaquinas,,Túnel de fase,Túnel de fase,Phase Tunnel
+maquina.TunelHorizonte,CatalogoMaquinas,,Túnel de horizonte,Túnel de horizonte,Horizon Tunnel
+maquina.TunelMolecular,CatalogoMaquinas,,Túnel molecular,Túnel molecular,Molecular Tunnel
+maquina.VenturiVioleta,CatalogoMaquinas,,Venturi violeta,Venturi violeta,Violet Venturi
+maquina.VigiliaIonica,CatalogoMaquinas,,Vigília iônica,Vigília iônica,Ionic Vigil
+raridade.Comum,Raridades,,Comum,Comum,Common
+raridade.Incomum,Raridades,,Incomum,Incomum,Uncommon
+raridade.Rara,Raridades,,Rara,Rara,Rare
+raridade.Epica,Raridades,,Épica,Épica,Epic
+raridade.Lendaria,Raridades,,Lendária,Lendária,Legendary
+raridade.Mitico,Raridades,,Mítico,Mítico,Mythic
+raridade.Renascimento,Raridades,,Renascimento,Renascimento,Rebirth
+raridade.Exotica,Raridades,,Exótica,Exótica,Exotic
+raridade.Anomala,Raridades,,Anômala,Anômala,Anomalous
+raridade.Singular,Raridades,,Singular,Singular,Singular
+raridade.Superior,Raridades,,Superior,Superior,Superior
+raridade.Elite,Raridades,,Elite,Elite,Elite
+raridade.Despertar,Raridades,,Despertar,Despertar,Awakening
+raridade.Avanco,Raridades,,Avanço,Avanço,Breakthrough
+raridade.Apogeu,Raridades,,Apogeu,Apogeu,Apogee
+raridade.Dominio,Raridades,,Domínio,Domínio,Dominion
+raridade.Meridiano,Raridades,,Meridiano,Meridiano,Meridian
+raridade.Forjada,Raridades,,Forjada,Forjada,Forged
+raridade.Composta,Raridades,,Composta,Composta,Composite
+raridade.Nucleo,Raridades,,Núcleo,Núcleo,Core
+raridade.Convergente,Raridades,,Convergente,Convergente,Convergent
+upgrade.Extracao.nome,Upgrades,,Qualidade da extração,Qualidade da extração,Extraction Quality
+upgrade.Extracao.desc,Upgrades,,Aumenta o valor inicial do minério.,Aumenta o valor inicial do minério.,Increases base ore value.
+upgrade.Fundicao.nome,Upgrades,,Eficiência de fundição,Eficiência de fundição,Smelting Efficiency
+upgrade.Fundicao.desc,Upgrades,,Aumenta o pagamento das fornalhas.,Aumenta o pagamento das fornalhas.,Increases furnace payout.
+upgrade.Motores.nome,Upgrades,,Motores das esteiras,Motores das esteiras,Conveyor Motors
+upgrade.Motores.desc,Upgrades,,Desbloqueia velocidades maiores de transporte.,Desbloqueia velocidades maiores de transporte.,Unlocks faster conveyor speeds.
+upgrade.Calibracao.nome,Upgrades,,Calibração dos modificadores,Calibração dos modificadores,Upgrader Calibration
+upgrade.Calibracao.desc,Upgrades,,"Aumenta o limite de usos por tipo em cada minério, arredondado ao inteiro mais próximo.","Aumenta o limite de usos por tipo em cada minério, arredondado ao inteiro mais próximo.","Increases usage limit per upgrader type on each ore, rounded to the nearest integer."
+upgrade.Expansao.nome,Upgrades,,Expansão da plot,Expansão da plot,Plot Expansion
+upgrade.Expansao.desc,Upgrades,,"Amplia largura, comprimento e altura. Permanente.","Amplia largura, comprimento e altura. Permanente.","Expands plot width, length, and height. Permanent."
+aba.Inventario,HUD,,Inventário,Inventário,Inventory
+aba.Loja,HUD,,Loja,Loja,Shop
+aba.Upgrades,HUD,,Upgrades,Upgrades,Upgrades
+aba.Prestigio,HUD,,Prestígio,Prestígio,Prestige
+aba.Craft,HUD,,Craft,Craft,Craft
+aba.Tutorial,HUD,,Tutorial,Tutorial,Tutorial
+aba.Classificacao,HUD,,Classificação,Classificação,Leaderboard
+aba.Configuracoes,HUD,,Configurações,Configurações,Settings
+aba.Blueprints,HUD,,Blueprints,Blueprints,Blueprints
+aba.Coop,HUD,,Modo Coop,Modo Coop,Co-op Mode
+aba.Administracao,HUD,,Administração,Administração,Admin
+hud.dinheiro,HUD,,Dinheiro,Dinheiro,Cash
+hud.carregando,HUD,,Carregando...,Carregando...,Loading...
+hud.indisponivel,HUD,,Indisponível,Indisponível,Unavailable
+hud.por_segundo,HUD,,{valor} por segundo,{valor} por segundo,{valor} per second
+hud.limpar_plot,HUD,,"Limpar
+plot","Limpar
+plot","Clear
+plot"
+hud.confirmar_limpar_plot,HUD,,"Recolher todas as peças da sua plot?
+
+Elas voltarão ao inventário com suas configurações.","Recolher todas as peças da sua plot?
+
+Elas voltarão ao inventário com suas configurações.","Withdraw all parts from your plot?
+
+They will return to your inventory with their settings."
+hud.lote,HUD,,LOTE {id},LOTE {id},PLOT {id}
+hud.disponivel,HUD,,Disponível,Disponível,Available
+comum.fechar,HUD,,Fechar,Fechar,Close
+comum.cancelar,HUD,,Cancelar,Cancelar,Cancel
+comum.confirmar,HUD,,Confirmar,Confirmar,Confirm
+comum.voltar,HUD,,Voltar,Voltar,Back
+comum.ativado,HUD,,Ativado,Ativado,Enabled
+comum.desativado,HUD,,Desativado,Desativado,Disabled
+comum.aguarde,HUD,,Aguarde...,Aguarde...,Please wait...
+comum.permanente,HUD,,Permanente,Permanente,Permanent
+comum.sem_preco,HUD,,Sem preço,Sem preço,No price
+ficha.titulo,PecasUI,,Detalhes da peça,Detalhes da peça,Part Details
+ficha.estatisticas,PecasUI,,Estatísticas,Estatísticas,Stats
+ficha.selecione_peca,PecasUI,,Selecione uma peça,Selecione uma peça,Select a part
+ficha.selecione_caracteristicas,PecasUI,,Selecione uma peça para ver suas características.,Selecione uma peça para ver suas características.,Select a part to view its stats.
+ficha.previa_indisponivel,PecasUI,,Prévia indisponível.,Prévia indisponível.,Preview unavailable.
+ficha.no_inventario,PecasUI,,No inventário: {qtd},No inventário: {qtd},In inventory: {qtd}
+ficha.na_plot,PecasUI,,Na plot: {qtd},Na plot: {qtd},On plot: {qtd}
+ficha.copia_aviso,PecasUI,,"Configuração copiada. Para vender, selecione uma unidade na lista.","Configuração copiada. Para vender, selecione uma unidade na lista.","Copied configuration. To sell, select a unit from the list."
+ficha.sem_custo_adm,PecasUI,,Colocação sem custo. Aponte para a plot de destino.,Colocação sem custo. Aponte para a plot de destino.,Free placement. Point at the target plot.
+ficha.erro_config,PecasUI,,Não foi possível ler a configuração desta peça.,Não foi possível ler a configuração desta peça.,Could not read this part's configuration.
+ficha.acao.colocar,PecasUI,,Colocar,Colocar,Place
+ficha.acao.comprar,PecasUI,,Comprar,Comprar,Buy
+ficha.acao.vender,PecasUI,,Vender,Vender,Sell
+ficha.acao.comprando,PecasUI,,Comprando...,Comprando...,Buying...
+ficha.acao.vendendo,PecasUI,,Vendendo...,Vendendo...,Selling...
+ficha.acao.comprar_preco,PecasUI,,Comprar: {preco},Comprar: {preco},Buy: {preco}
+ficha.acao.vender_preco,PecasUI,,Vender: {preco} (100%),Vender: {preco} (100%),Sell: {preco} (100%)
+grade.fixar,PecasUI,,Fixar,Fixar,Pin
+grade.fixa,PecasUI,,Fixa,Fixa,Pinned
+grade.buscar,PecasUI,,Buscar...,Buscar...,Search...
+grade.filtros,PecasUI,,Filtros,Filtros,Filters
+grade.ordenar,PecasUI,,Ordenar,Ordenar,Sort
+grade.cat.Todos,PecasUI,,Todos,Todos,All
+grade.cat.Soltador,PecasUI,,Mineradoras,Mineradoras,Miners
+grade.cat.Transportador,PecasUI,,Esteiras,Esteiras,Conveyors
+grade.cat.Modificador,PecasUI,,Modificadores,Modificadores,Upgraders
+grade.cat.Vendedor,PecasUI,,Fornalhas,Fornalhas,Furnaces
+grade.modo.Estoque,PecasUI,,Estoque,Estoque,Inventory
+grade.modo.Plot,PecasUI,,Na plot,Na plot,On plot
+grade.modo.Novas,PecasUI,,Não usadas,Não usadas,Unused
+menu_peca.recolher,PecasUI,,Recolher,Recolher,Withdraw
+menu_peca.mover,PecasUI,,Mover,Mover,Move
+menu_peca.copiar,PecasUI,,Copiar,Copiar,Copy
+menu_peca.vender,PecasUI,,Vender,Vender,Sell
+menu_peca.configurar_elevador,PecasUI,,Configurar elevador,Configurar elevador,Configure elevator
+menu_peca.selecionada_1,PecasUI,,1 selecionada,1 selecionada,1 selected
+menu_peca.selecionadas_n,PecasUI,,{qtd} selecionadas,{qtd} selecionadas,{qtd} selected
+menu_peca.selecao_pecas,PecasUI,,Seleção de peças,Seleção de peças,Part Selection
+menu_peca.grupo,PecasUI,,Grupo,Grupo,Group
+menu_peca.peca_referencia,PecasUI,,Peça de referência: {nome},Peça de referência: {nome},Reference part: {nome}
+tipo.Peca,PecasUI,,Peça,Peça,Part
+tipo.Fornalha,PecasUI,,Fornalha,Fornalha,Furnace
+tipo.Mineradora,PecasUI,,Mineradora,Mineradora,Miner
+tipo.Modificador,PecasUI,,Modificador,Modificador,Upgrader
+tipo.Esteira,PecasUI,,Esteira,Esteira,Conveyor
+tipo.Elevador,PecasUI,,Transporte vertical,Transporte vertical,Vertical Transport
+stats.tamanho,PecasUI,,Tamanho (L×C×A): {l} × {c} × {a} blocos,Tamanho (L×C×A): {l} × {c} × {a} blocos,Size (W×L×H): {l} × {c} × {a} blocks
+stats.obtencao_permanente,PecasUI,,{origem} • Permanente,{origem} • Permanente,{origem} • Permanent
+stats.minerio,PecasUI,,Minério: ${valor},Minério: ${valor},Ore: ${valor}
+stats.intervalo,PecasUI,,Intervalo de geração: {tempo} s,Intervalo de geração: {tempo} s,Drop interval: {tempo} s
+stats.tamanho_minerio,PecasUI,,Tamanho do minério: {tam} studs,Tamanho do minério: {tam} studs,Ore size: {tam} studs
+stats.transporte,PecasUI,,Transporte: {vel} blocos/s,Transporte: {vel} blocos/s,Speed: {vel} blocks/s
+stats.elevador,PecasUI,,Altura ajustável · entrada e saída nas quatro faces,Altura ajustável · entrada e saída nas quatro faces,Adjustable height · input and output on all four sides
+stats.modificacao,PecasUI,,Modificação: ×{mult},Modificação: ×{mult},Upgrade: ×{mult}
+stats.copias,PecasUI,,Cópias: +50% por unidade adicional,Cópias: +50% por unidade adicional,Copies: +50% per extra unit
+stats.limite,PecasUI,,Limite: {limite},Limite: {limite},Limit: {limite}
+stats.venda,PecasUI,,Venda: {valor},Venda: {valor},Sell: {valor}
+stats.calculo,PecasUI,,Cálculo: ({base}) → ×{fator},Cálculo: ({base}) → ×{fator},Calc: ({base}) → ×{fator}
+obtencao.Renascimento,PecasUI,,Renascimento,Renascimento,Rebirth
+obtencao.Craft,PecasUI,,Craft,Craft,Craft
+obtencao.Ascensao,PecasUI,,Ascensão,Ascensão,Ascension
+upgrades.estado_expansao,ProgressaoUI,,{lado} × {lado} × {lado} blocos • Permanente,{lado} × {lado} × {lado} blocos • Permanente,{lado} × {lado} × {lado} blocks • Permanent
+upgrades.estado_nivel,ProgressaoUI,,Nível {nivel}/{max} • +{bonus}%,Nível {nivel}/{max} • +{bonus}%,Level {nivel}/{max} • +{bonus}%
+upgrades.requer_renascimento,ProgressaoUI,,Requer {qtd} renascimento(s),Requer {qtd} renascimento(s),Requires {qtd} rebirth(s)
+upgrades.nivel_maximo,ProgressaoUI,,Nível máximo,Nível máximo,Max level
+upgrades.expandir,ProgressaoUI,,Expandir: {lado} × {lado} × {lado} • ${preco},Expandir: {lado} × {lado} × {lado} • ${preco},Expand: {lado} × {lado} × {lado} • ${preco}
+upgrades.comprar,ProgressaoUI,,Comprar • ${preco},Comprar • ${preco},Buy • ${preco}
+upgrades.velocidade_esteiras,ProgressaoUI,,Velocidade das esteiras: {pct}% • alternar,Velocidade das esteiras: {pct}% • alternar,Conveyor speed: {pct}% • toggle
+prestigio.aba.Renascimento,ProgressaoUI,,Renascimento,Renascimento,Rebirth
+prestigio.aba.Ascensao,ProgressaoUI,,Ascensão,Ascensão,Ascension
+prestigio.vida,ProgressaoUI,,Vida {vidas},Vida {vidas},Life {vidas}
+prestigio.reencarnacoes,ProgressaoUI,,Reencarnações: {qtd},Reencarnações: {qtd},Rebirths: {qtd}
+prestigio.requisito,ProgressaoUI,,Requisito: ${valor},Requisito: ${valor},Requirement: ${valor}
+prestigio.saldo,ProgressaoUI,,Saldo disponível: ${valor},Saldo disponível: ${valor},Available cash: ${valor}
+prestigio.saltos,ProgressaoUI,,+{ganhas} vida(s) · {puladas} pulada(s) · destino: vida {destino},+{ganhas} vida(s) · {puladas} pulada(s) · destino: vida {destino},+{ganhas} life(s) · {puladas} skipped · target: life {destino}
+prestigio.btn_reencarnar,ProgressaoUI,,Reencarnar,Reencarnar,Rebirth
+prestigio.btn_reencarnando,ProgressaoUI,,Reencarnando...,Reencarnando...,Rebirthing...
+prestigio.btn_reencarnar_detalhe,ProgressaoUI,,Reencarnar · {pecas} peça(s) · +{vidas} vida(s),Reencarnar · {pecas} peça(s) · +{vidas} vida(s),Rebirth · {pecas} part(s) · +{vidas} life(s)
+prestigio.transicoes,ProgressaoUI,,Transições: {qtd},Transições: {qtd},Transitions: {qtd}
+prestigio.ascensoes,ProgressaoUI,,Ascensões: {qtd},Ascensões: {qtd},Ascensions: {qtd}
+prestigio.btn_ascender,ProgressaoUI,,Ascender,Ascender,Ascend
+prestigio.btn_ascendendo,ProgressaoUI,,Ascendendo…,Ascendendo…,Ascending…
+prestigio.confirmar_ascensao,ProgressaoUI,,"Ascender agora?
+
+A plot, o inventário, os Blueprints e o restante do progresso voltam ao início. Transições e máquinas de Ascensão ficam com você.","Ascender agora?
+
+A plot, o inventário, os Blueprints e o restante do progresso voltam ao início. Transições e máquinas de Ascensão ficam com você.","Ascend now?
+
+Your plot, inventory, Blueprints, and other progress will reset. Transitions and Ascension machines stay with you."
+craft.ingredientes_titulo,ProgressaoUI,,Ingredientes no inventário,Ingredientes no inventário,Ingredients in inventory
+craft.voltar_receitas,ProgressaoUI,,‹ Receitas,‹ Receitas,‹ Recipes
+craft.voltar_anterior,ProgressaoUI,,‹ Receita anterior,‹ Receita anterior,‹ Previous recipe
+craft.fabricar,ProgressaoUI,,Fabricar,Fabricar,Craft
+craft.fabricando,ProgressaoUI,,Fabricando…,Fabricando…,Crafting…
+craft.faltam_ingredientes,ProgressaoUI,,Faltam ingredientes,Faltam ingredientes,Missing ingredients
+craft.no_estoque,ProgressaoUI,,{qtd} no estoque / 1 · {origem},{qtd} no estoque / 1 · {origem},{qtd} in stock / 1 · {origem}
+craft.confirmar,ProgressaoUI,,"Fabricar {nome}?
+
+As {qtd} peças da receita serão consumidas.","Fabricar {nome}?
+
+As {qtd} peças da receita serão consumidas.","Craft {nome}?
+
+All {qtd} recipe parts will be consumed."
+bp.novo,BlueprintsUI,,Novo blueprint,Novo blueprint,New blueprint
+bp.placeholder_nome,BlueprintsUI,,Nome do conjunto (opcional),Nome do conjunto (opcional),Blueprint name (optional)
+bp.selecionar_plot,BlueprintsUI,,Selecionar na plot,Selecionar na plot,Select on plot
+bp.status_padrao,BlueprintsUI,,Selecione a área na plot para criar ou gerenciar seus conjuntos.,Selecione a área na plot para criar ou gerenciar seus conjuntos.,Select an area on your plot to create or manage your blueprints.
+bp.salvos,BlueprintsUI,,Conjuntos salvos,Conjuntos salvos,Saved blueprints
+bp.qtd_salvos,BlueprintsUI,,{qtd} salvo(s),{qtd} salvo(s),{qtd} saved
+bp.vazio,BlueprintsUI,,"Nenhum blueprint salvo.
+Crie um conjunto com as peças da sua plot.","Nenhum blueprint salvo.
+Crie um conjunto com as peças da sua plot.","No saved blueprints.
+Create one by selecting parts on your plot."
+bp.auto_global_ativo,BlueprintsUI,,⚡ Auto-Blueprint: Ativo,⚡ Auto-Blueprint: Ativo,⚡ Auto-Blueprint: Active
+bp.auto_global_pausado,BlueprintsUI,,⏸ Auto-Blueprint: Pausado,⏸ Auto-Blueprint: Pausado,⏸ Auto-Blueprint: Paused
+bp.colocar,BlueprintsUI,,Colocar →,Colocar →,Place →
+bp.editar,BlueprintsUI,,Editar,Editar,Edit
+bp.substituir,BlueprintsUI,,Substituir,Substituir,Replace
+bp.renomear,BlueprintsUI,,Renomear,Renomear,Rename
+bp.deletar,BlueprintsUI,,Deletar,Deletar,Delete
+bp.custo_total,BlueprintsUI,,Custo total: ${valor},Custo total: ${valor},Total cost: ${valor}
+bp.auto_custo,BlueprintsUI,,⚡ Auto: Custo (${valor}),⚡ Auto: Custo (${valor}),⚡ Auto: Cost (${valor})
+bp.auto_valor,BlueprintsUI,,⚡ Auto: ${valor},⚡ Auto: ${valor},⚡ Auto: ${valor}
+bp.auto_off,BlueprintsUI,,⚡ Auto $ (Custo / Valor): Off,⚡ Auto $ (Custo / Valor): Off,⚡ Auto $ (Cost / Value): Off
+bp.renascer_sim,BlueprintsUI,,★ Ao Renascer: Sim,★ Ao Renascer: Sim,★ On Rebirth: Yes
+bp.renascer_nao,BlueprintsUI,,Ao Renascer: Não,Ao Renascer: Não,On Rebirth: No
+bp.pelo_custo,BlueprintsUI,,Pelo Custo ({valor}),Pelo Custo ({valor}),By Cost ({valor})
+bp.salvar_valor,BlueprintsUI,,Salvar $,Salvar $,Save $
+bp.salvar_alteracoes,BlueprintsUI,,Salvar alterações do blueprint,Salvar alterações do blueprint,Save blueprint changes
+bp.voltar_lista,BlueprintsUI,,← Voltar à lista,← Voltar à lista,← Back to list
+bp.confirmar_deletar,BlueprintsUI,,"Deletar o blueprint ""{nome}"" ({qtd} peça(s))?
+
+Esta ação removerá o conjunto salvo da sua lista.","Deletar o blueprint ""{nome}"" ({qtd} peça(s))?
+
+Esta ação removerá o conjunto salvo da sua lista.","Delete blueprint ""{nome}"" ({qtd} part(s))?
+
+This will permanently remove it from your list."
+coop.titulo,CoopUI,,Modo Coop,Modo Coop,Co-op Mode
+coop.aba.Jogadores,CoopUI,,Jogadores,Jogadores,Players
+coop.aba.Solicitacoes,CoopUI,,Solicitações,Solicitações,Requests
+coop.aba.Membros,CoopUI,,Membros,Membros,Members
+coop.aba.Banidos,CoopUI,,Banidos,Banidos,Banned
+coop.sair,CoopUI,,Sair,Sair,Leave
+coop.sair_coop,CoopUI,,Sair do Coop,Sair do Coop,Leave Co-op
+coop.ver,CoopUI,,Ver,Ver,View
+coop.convite,CoopUI,,Convite Coop,Convite Coop,Co-op Invite
+coop.solicitar,CoopUI,,Solicitar Coop,Solicitar Coop,Request Co-op
+coop.solicitado,CoopUI,,Solicitado,Solicitado,Requested
+coop.aceitar,CoopUI,,Aceitar,Aceitar,Accept
+coop.recusar,CoopUI,,Recusar,Recusar,Decline
+coop.permissoes,CoopUI,,Permissões,Permissões,Permissions
+coop.kick,CoopUI,,Kick,Kick,Kick
+coop.banir,CoopUI,,Banir,Banir,Ban
+coop.retirar_ban,CoopUI,,Retirar Ban,Retirar Ban,Unban
+coop.permitido,CoopUI,,Permitido ✓,Permitido ✓,Allowed ✓
+coop.bloqueado,CoopUI,,Bloqueado ✕,Bloqueado ✕,Blocked ✕
+coop.limite_desativado,CoopUI,,Limite da sua plot: 0 (Coop Desativado),Limite da sua plot: 0 (Coop Desativado),Your plot limit: 0 (Co-op Disabled)
+coop.limite_ativo,CoopUI,,Limite da sua plot: {limite} jogador(es) (Ocupado: {ocupados}/{limite}),Limite da sua plot: {limite} jogador(es) (Ocupado: {ocupados}/{limite}),Your plot limit: {limite} player(s) (Used: {ocupados}/{limite})
+coop.perm.Colocar,CoopUI,,Colocar e mover peças na plot,Colocar e mover peças na plot,Place and move parts on plot
+coop.perm.Retirar,CoopUI,,Retirar peças da plot,Retirar peças da plot,Withdraw parts from plot
+coop.perm.RetirarTudo,CoopUI,,└ Usar botão Limpar plot (retirar tudo),└ Usar botão Limpar plot (retirar tudo),└ Use Clear Plot button (withdraw all)
+coop.perm.Comprar,CoopUI,,Comprar peças na loja,Comprar peças na loja,Buy parts from shop
+coop.perm.Vender,CoopUI,,Vender peças (inventário e plot),Vender peças (inventário e plot),Sell parts (inventory and plot)
+coop.perm.Upgrades,CoopUI,,Comprar upgrades e ajustar motores,Comprar upgrades e ajustar motores,Buy upgrades and adjust motors
+coop.perm.Craftar,CoopUI,,Craftar máquinas,Craftar máquinas,Craft machines
+coop.perm.Prestigio,CoopUI,,Usar opções de Prestígio,Usar opções de Prestígio,Use Prestige options
+coop.perm.Reencarnar,CoopUI,,└ Fazer Renascimento (Reencarnar),└ Fazer Renascimento (Reencarnar),└ Perform Rebirth
+coop.perm.Ascender,CoopUI,,└ Fazer Ascensão (Ascender),└ Fazer Ascensão (Ascender),└ Perform Ascension
+coop.perm.Blueprint,CoopUI,,Usar Blueprints do dono da plot,Usar Blueprints do dono da plot,Use plot owner's Blueprints
+coop.perm.ColocarBlueprint,CoopUI,,└ Colocar blueprint na plot,└ Colocar blueprint na plot,└ Place blueprint on plot
+coop.perm.CriarBlueprint,CoopUI,,└ Criar novo blueprint,└ Criar novo blueprint,└ Create new blueprint
+coop.perm.EditarBlueprint,CoopUI,,└ Editar peças/âncora do blueprint,└ Editar peças/âncora do blueprint,└ Edit blueprint parts/anchor
+coop.perm.SubstituirBlueprint,CoopUI,,└ Substituir blueprint na plot,└ Substituir blueprint na plot,└ Replace blueprint on plot
+coop.perm.RenomearBlueprint,CoopUI,,└ Renomear blueprint,└ Renomear blueprint,└ Rename blueprint
+coop.perm.ReordenarBlueprint,CoopUI,,└ Reordenar blueprints (↑/↓),└ Reordenar blueprints (↑/↓),└ Reorder blueprints (↑/↓)
+coop.perm.DeletarBlueprint,CoopUI,,└ Deletar blueprint,└ Deletar blueprint,└ Delete blueprint
+config.LimiteMineriosVisiveis,Configuracoes,,Minérios visíveis por plot,Minérios visíveis por plot,Visible ores per plot
+config.MostrarValoresMinerios,Configuracoes,,Valores dos minérios,Valores dos minérios,Ore value labels
+config.DistanciaValores,Configuracoes,,Distância dos valores,Distância dos valores,Label visibility distance
+config.TamanhoValores,Configuracoes,,Texto dos valores,Texto dos valores,Value text size
+config.AnimarVendaMinerios,Configuracoes,,Animação de venda,Animação de venda,Sell animation
+config.EfeitosMaquinas,Configuracoes,,Efeitos das máquinas,Efeitos das máquinas,Machine effects
+config.MineriosOutrasPlots,Configuracoes,,Minérios de outras plots,Minérios de outras plots,Other plots' ores
+config.TransparenciaPrevia,Configuracoes,,Transparência da prévia,Transparência da prévia,Preview transparency
+config.TransparenciaForaAltura,Configuracoes,,Transparência fora da altura,Transparência fora da altura,Out-of-layer transparency
+config.IntensidadeGrade,Configuracoes,,Intensidade da grade,Intensidade da grade,Grid intensity
+config.EscalaInterface,Configuracoes,,Escala da interface,Escala da interface,UI scale
+config.NotacaoNumerica,Configuracoes,,Notação numérica,Notação numérica,Number notation
+config.LODPlots,Configuracoes,,Otimização de plots distantes (LOD),Otimização de plots distantes (LOD),Distant plot optimization (LOD)
+config.ConfirmarVenda,Configuracoes,,Confirmar venda de peças,Confirmar venda de peças,Confirm part selling
+config.ConfirmarRenascimento,Configuracoes,,Confirmar renascimento,Confirmar renascimento,Confirm rebirth
+config.IntensidadeSetas,Configuracoes,,Setas de colocação,Setas de colocação,Placement arrows
+config.TemaBeta,Configuracoes,,Tema do teste beta,Tema do teste beta,Beta test theme
+config.valor.Sempre,Configuracoes,,Sempre,Sempre,Always
+config.valor.Perto,Configuracoes,,Perto,Perto,Nearby
+config.valor.Oculto,Configuracoes,,Oculto,Oculto,Hidden
+config.valor.Completo,Configuracoes,,Completo,Completo,Full
+config.valor.Reduzido,Configuracoes,,Reduzido,Reduzido,Reduced
+config.valor.Nunca,Configuracoes,,Nunca,Nunca,Never
+config.valor.VariasPecas,Configuracoes,,Várias peças,Várias peças,Multiple parts
+config.valor.Abreviacao,Configuracoes,,Abreviação,Abreviação,Abbreviated
+config.valor.Cientifica,Configuracoes,,Científica,Científica,Scientific
+config.valor.Semicientifica,Configuracoes,,Semicientífica,Semicientífica,Engineering
+config.valor.Medio,Configuracoes,,Médio,Médio,Medium
+config.valor.Maximo,Configuracoes,,Máximo,Máximo,Maximum
+config.valor.Desativado,Configuracoes,,Desativado,Desativado,Disabled
+config.valor.Baixo,Configuracoes,,Baixo,Baixo,Low
+config.restaurar_janelas,Configuracoes,,Restaurar posição e tamanho padrão das janelas,Restaurar posição e tamanho padrão das janelas,Reset all windows to default position and size
+config.teclado_dica,Configuracoes,,Teclado • Esc cancela a captura,Teclado • Esc cancela a captura,Keyboard • Press Esc to cancel
+config.pressione,Configuracoes,,Pressione...,Pressione...,Press key...
+atalho.W,Configuracoes,,Andar para frente,Andar para frente,Move forward
+atalho.S,Configuracoes,,Andar para trás,Andar para trás,Move backward
+atalho.A,Configuracoes,,Andar para a esquerda,Andar para a esquerda,Move left
+atalho.D,Configuracoes,,Andar para a direita,Andar para a direita,Move right
+atalho.Q,Configuracoes,,Cancelar / voltar,Cancelar / voltar,Cancel / back
+atalho.E,Configuracoes,,Inventário,Inventário,Inventory
+atalho.F,Configuracoes,,Loja,Loja,Shop
+atalho.B,Configuracoes,,Blueprints,Blueprints,Blueprints
+atalho.U,Configuracoes,,Upgrades,Upgrades,Upgrades
+atalho.P,Configuracoes,,Prestígio,Prestígio,Prestige
+atalho.Z,Configuracoes,,Recolher,Recolher,Withdraw
+atalho.X,Configuracoes,,Mover / inclinar,Mover / inclinar,Move / tilt
+atalho.C,Configuracoes,,Copiar,Copiar,Copy
+atalho.V,Configuracoes,,Vender,Vender,Sell
+atalho.R,Configuracoes,,Girar,Girar,Rotate
+atalho.T,Configuracoes,,Altura,Altura,Lock height
+atalho.Desfazer,Configuracoes,,Desfazer na plot,Desfazer na plot,Undo on plot
+atalho.Refazer,Configuracoes,,Refazer na plot,Refazer na plot,Redo on plot
+atalho.CopiarPlot,Configuracoes,,Copiar seleção (plot),Copiar seleção (plot),Copy selection (plot)
+atalho.ColarPlot,Configuracoes,,Colar na plot,Colar na plot,Paste on plot
+atalho.HistoricoPlot,Configuracoes,,Histórico de cópia,Histórico de cópia,Copy history
+msg.dinheiro_insuficiente,MensagensServidor,,Dinheiro insuficiente.,Dinheiro insuficiente.,Not enough cash.
+msg.maquina_comprada,MensagensServidor,,Máquina comprada.,Máquina comprada.,Machine purchased.
+msg.maquina_colocada,MensagensServidor,,Máquina colocada.,Máquina colocada.,Machine placed.
+msg.maquina_comprada_colocada,MensagensServidor,,Máquina comprada e colocada.,Máquina comprada e colocada.,Machine purchased and placed.
+msg.maquina_devolvida,MensagensServidor,,Máquina devolvida ao inventário.,Máquina devolvida ao inventário.,Machine returned to inventory.
+msg.peca_vendida,MensagensServidor,,Peça vendida por {valor}.,Peça vendida por {valor}.,Part sold for {valor}.
+msg.pecas_vendidas,MensagensServidor,,Peças vendidas por {valor}.,Peças vendidas por {valor}.,Parts sold for {valor}.
+msg.posicao_ocupada,MensagensServidor,,Essa posição está ocupada ou fora da grade do seu terreno.,Essa posição está ocupada ou fora da grade do seu terreno.,That spot is occupied or outside your plot grid.
+msg.upgrade_adquirido,MensagensServidor,,Upgrade adquirido.,Upgrade adquirido.,Upgrade purchased.
+msg.velocidade_alterada,MensagensServidor,,Velocidade alterada.,Velocidade alterada.,Speed changed.
+msg.reencarnou,MensagensServidor,,Reencarnou: +{vidas} vida(s).,Reencarnou: +{vidas} vida(s).,Rebirthed: +{vidas} life(s).
+msg.blueprint_salvo,MensagensServidor,,Blueprint salvo.,Blueprint salvo.,Blueprint saved.
+msg.blueprint_deletado,MensagensServidor,,Blueprint deletado.,Blueprint deletado.,Blueprint deleted.
+msg.blueprint_atualizado,MensagensServidor,,Blueprint atualizado.,Blueprint atualizado.,Blueprint updated.
+msg.coop_sem_permissao,MensagensServidor,,Você não tem permissão do dono da plot para realizar esta ação.,Você não tem permissão do dono da plot para realizar esta ação.,You don't have permission from the plot owner to perform this action.
+msg.dados_indisponiveis,MensagensServidor,,Seus dados ainda não estão disponíveis.,Seus dados ainda não estão disponíveis.,Your data is not available yet.
+tutorial.nivel.Basico,Tutorial,,Básico,Básico,Basic
+tutorial.nivel.Intermediario,Tutorial,,Intermediário,Intermediário,Intermediate
+tutorial.nivel.Avancado,Tutorial,,Avançado,Avançado,Advanced
+tutorial.inicio.titulo,Tutorial,,Seu objetivo e o kit inicial,Seu objetivo e o kit inicial,Your Goal and Starter Kit
+tutorial.plot.titulo,Tutorial,,Sua plot e a grade de construção,Sua plot e a grade de construção,Your Plot and Building Grid
+tutorial.inventario-loja.titulo,Tutorial,,"Inventário, loja e fichas das peças","Inventário, loja e fichas das peças","Inventory, Shop, and Part Details"
+tutorial.primeira-fabrica.titulo,Tutorial,,Monte sua primeira linha de produção,Monte sua primeira linha de produção,Build Your First Production Line
+tutorial.colocacao.titulo,Tutorial,,"Colocação, prévia e cancelamento","Colocação, prévia e cancelamento","Placing, Preview, and Canceling"
+tutorial.mineradoras.titulo,Tutorial,,"Mineradoras: valor, ritmo e saída","Mineradoras: valor, ritmo e saída","Miners: Value, Rate, and Drop Point"
+tutorial.esteiras.titulo,Tutorial,,"Esteiras, centralizadoras e paredes","Esteiras, centralizadoras e paredes","Conveyors, Centering, and Walls"
+tutorial.fornalhas.titulo,Tutorial,,Fornalhas e pagamento,Fornalhas e pagamento,Furnaces and Payout
+tutorial.numeros.titulo,Tutorial,,"Dinheiro, dinheiro/s e números grandes","Dinheiro, dinheiro/s e números grandes","Cash, Cash/s, and Large Numbers"
+tutorial.recuperacao-minerio.titulo,Tutorial,,Minério no chão ou parado,Minério no chão ou parado,Dropped or Stuck Ore
+tutorial.pc.titulo,Tutorial,,Controles de PC e atalhos,Controles de PC e atalhos,PC Controls and Shortcuts
+tutorial.mobile-controle.titulo,Tutorial,,Celular e controle: como construir,Celular e controle: como construir,Mobile & Gamepad: How to Build
+tutorial.raridades.titulo,Tutorial,,Raridades e progressão das peças,Raridades e progressão das peças,Rarities and Part Progression
+tutorial.modificadores.titulo,Tutorial,,Modificadores: efeitos e ordem da linha,Modificadores: efeitos e ordem da linha,Upgraders: Effects and Line Order
+tutorial.faixas-limites.titulo,Tutorial,,Faixas e limites de usos,Faixas e limites de usos,Stages and Usage Limits
+tutorial.emissores.titulo,Tutorial,,Modificadores sem esteira e passagens estreitas,Modificadores sem esteira e passagens estreitas,Conveyorless Upgraders and Narrow Gaps
+tutorial.acoes.titulo,Tutorial,,"Mover, copiar, recolher e vender peças","Mover, copiar, recolher e vender peças","Moving, Copying, Withdrawing, and Selling"
+tutorial.selecao-grupos.titulo,Tutorial,,"Seleção de área, altura e grupos","Seleção de área, altura e grupos","Area Selection, Height, and Groups"
+tutorial.linhas.titulo,Tutorial,,Coloque várias peças em linha,Coloque várias peças em linha,Place Multiple Parts in a Line
+tutorial.construcao-3d.titulo,Tutorial,,"Altura, rotações e esteiras inclinadas","Altura, rotações e esteiras inclinadas","Height, Rotations, and Tilted Conveyors"
+tutorial.elevador.titulo,Tutorial,,Elevador de minérios,Elevador de minérios,Ore Elevator
+tutorial.blueprints.titulo,Tutorial,,Blueprints: salvar e repetir conjuntos,Blueprints: salvar e repetir conjuntos,Blueprints: Save and Reuse Layouts
+tutorial.craft.titulo,Tutorial,,Craft: fabricar máquinas,Craft: fabricar máquinas,Craft: Building Machines
+tutorial.upgrades.titulo,Tutorial,,"Upgrades: extração, fundição e motores","Upgrades: extração, fundição e motores","Upgrades: Extraction, Smelting, and Motors"
+tutorial.calibracao-expansao.titulo,Tutorial,,Calibração e expansão da plot,Calibração e expansão da plot,Calibration and Plot Expansion
+tutorial.renascimento.titulo,Tutorial,,Prestígio: renascimento e salto de vidas,Prestígio: renascimento e salto de vidas,Prestige: Rebirth and Life Skipping
+tutorial.recompensas.titulo,Tutorial,,Máquinas de renascimento,Máquinas de renascimento,Rebirth Machines
+tutorial.fabrica-avancada.titulo,Tutorial,,"Linhas compactas, junções e repetição de efeitos","Linhas compactas, junções e repetição de efeitos","Compact Lines, Junctions, and Re-applying Effects"
+tutorial.configuracoes.titulo,Tutorial,,"Configurações, desempenho e confirmações","Configurações, desempenho e confirmações","Settings, Performance, and Confirmations"
+tutorial.classificacao-mapa.titulo,Tutorial,,Visitar bases e disputar recordes,Visitar bases e disputar recordes,Visiting Plots and Leaderboards
+tutorial.diagnostico.titulo,Tutorial,,Diagnóstico e salvamento do progresso,Diagnóstico e salvamento do progresso,Troubleshooting and Auto-Save
+grade.titulo.CatalogoADM,GradePecas,,Catálogo ADM,Catálogo ADM,Admin Catalog
+grade.pesquisar_placeholder,GradePecas,,Pesquisar...,Pesquisar...,Search...
+grade.dica_padrao,GradePecas,,Clique: detalhes • Duplo clique: colocar,Clique: detalhes • Duplo clique: colocar,Click: details • Double-click: place
+grade.prioridade,GradePecas,,Prioridade,Prioridade,Priority
+grade.limpar,GradePecas,,Limpar,Limpar,Clear
+grade.mult_min,GradePecas,,Mult. mín,Mult. mín,Min mult.
+grade.mult_max,GradePecas,,Mult. máx,Mult. máx,Max mult.
+grade.usos_min,GradePecas,,Usos mín.,Usos mín.,Min uses
+grade.usos_max,GradePecas,,Usos máx.,Usos máx.,Max uses
+grade.eixos_bl,GradePecas,,Eixos (bl):,Eixos (bl):,Axes (bl):
+grade.eixo_x,GradePecas,,Eixo X,Eixo X,X Axis
+grade.eixo_y,GradePecas,,Eixo Y,Eixo Y,Y Axis
+grade.eixo_z,GradePecas,,Eixo Z,Eixo Z,Z Axis
+grade.prio_mult_ph,GradePecas,,Mult. prioritário (ex: 2),Mult. prioritário (ex: 2),Target mult. (e.g. 2)
+grade.prio_tam_ph,GradePecas,,Tam. prioritário,Tam. prioritário,Target size
+grade.prio_lim_ph,GradePecas,,Usos prioritários (ex: 4),Usos prioritários (ex: 4),Target uses (e.g. 4)
+grade.mult_exato,GradePecas,,Mult: Exato,Mult: Exato,Mult: Exact
+grade.mult_faixa,GradePecas,,Mult: Faixa,Mult: Faixa,Mult: Range
+grade.mult_igual,GradePecas,,= Multiplicador,= Multiplicador,= Multiplier
+grade.limitados,GradePecas,,Limitados,Limitados,Limited
+grade.sem_limite,GradePecas,,Sem limite,Sem limite,Unlimited
+grade.usos_todos,GradePecas,,Usos: Todos,Usos: Todos,Uses: All
+grade.mult_alvo,GradePecas,,Mult: Alvo,Mult: Alvo,Mult: Target
+grade.mult_maior,GradePecas,,Mult: Maior ↓,Mult: Maior ↓,Mult: Highest ↓
+grade.mult_menor,GradePecas,,Mult: Menor ↑,Mult: Menor ↑,Mult: Lowest ↑
+grade.mult_off,GradePecas,,Mult: Off,Mult: Off,Mult: Off
+grade.vol,GradePecas,,Vol.,Vol.,Vol.
+grade.menor_up,GradePecas,,Menor ↑,Menor ↑,Smallest ↑
+grade.maior_down,GradePecas,,Maior ↓,Maior ↓,Largest ↓
+grade.lim_alvo,GradePecas,,Lim: Alvo,Lim: Alvo,Lim: Target
+grade.lim_maior,GradePecas,,Lim: Maior ↓,Lim: Maior ↓,Lim: Highest ↓
+grade.lim_menor,GradePecas,,Lim: Menor ↑,Lim: Menor ↑,Lim: Lowest ↑
+grade.sem_lim_star,GradePecas,,Sem lim. ★,Sem lim. ★,Unlim. ★
+grade.lim_off,GradePecas,,Lim: Off,Lim: Off,Lim: Off
+grade.ord.nome,GradePecas,,Nome ↑,Nome ↑,Name ↑
+grade.ord.preco,GradePecas,,Preço ↑,Preço ↑,Price ↑
+grade.ord.plot,GradePecas,,Na plot ↓,Na plot ↓,On plot ↓
+grade.ord.qtd,GradePecas,,Qtd ↓,Qtd ↓,Qty ↓
+grade.ord.mult_desc,GradePecas,,Mult. ↓,Mult. ↓,Mult. ↓
+grade.ord.mult_asc,GradePecas,,Mult. ↑,Mult. ↑,Mult. ↑
+grade.ord.lim_desc,GradePecas,,Limite ↓,Limite ↓,Limit ↓
+grade.ord.tam_x,GradePecas,,Tam. X ↑,Tam. X ↑,Size X ↑
+grade.ord.tam_y,GradePecas,,Tam. Y ↑,Tam. Y ↑,Size Y ↑
+grade.ord.tam_z,GradePecas,,Tam. Z ↑,Tam. Z ↑,Size Z ↑
+grade.vazio.filtros,GradePecas,,Nenhuma peça encontrada com os filtros atuais.,Nenhuma peça encontrada com os filtros atuais.,No parts found with the current filters.
+grade.vazio.carregando_plot,GradePecas,,Carregando peças da plot...,Carregando peças da plot...,Loading plot parts...
+grade.vazio.sem_plot,GradePecas,,Você ainda não colocou peças na plot.,Você ainda não colocou peças na plot.,You haven't placed any parts on your plot yet.
+grade.vazio.sem_novas,GradePecas,,Nenhuma peça não usada disponível com seu estoque e saldo.,Nenhuma peça não usada disponível com seu estoque e saldo.,No unused parts available with your inventory and cash.
+grade.vazio.indisponivel,GradePecas,,Nenhuma peça disponível.,Nenhuma peça disponível.,No parts available.
+grade.vazio.estoque,GradePecas,,Seu inventário está vazio.,Seu inventário está vazio.,Your inventory is empty.
+grade.dica.carregando,GradePecas,,Carregando resumo...,Carregando resumo...,Loading summary...
+grade.dica.plot,GradePecas,,Peças atualmente colocadas na sua plot,Peças atualmente colocadas na sua plot,Parts currently placed on your plot
+grade.dica.novas,GradePecas,,Tipos ausentes na plot • sem estoque: clique para abrir na loja,Tipos ausentes na plot • sem estoque: clique para abrir na loja,Types not on plot • out of stock: click to open in shop
+grade.cat.todas_pecas,GradePecas,,Todas as peças,Todas as peças,All parts
+grade.cat.esteiras_outras,GradePecas,,Esteiras e outras peças,Esteiras e outras peças,Conveyors & other parts
+grade.prio.1,GradePecas,,1º Mult • 2º Tam • 3º Lim,1º Mult • 2º Tam • 3º Lim,1st Mult • 2nd Size • 3rd Lim
+grade.prio.2,GradePecas,,1º Mult • 2º Lim • 3º Tam,1º Mult • 2º Lim • 3º Tam,1st Mult • 2nd Lim • 3rd Size
+grade.prio.3,GradePecas,,1º Tam • 2º Mult • 3º Lim,1º Tam • 2º Mult • 3º Lim,1st Size • 2nd Mult • 3rd Lim
+grade.prio.4,GradePecas,,1º Tam • 2º Lim • 3º Mult,1º Tam • 2º Lim • 3º Mult,1st Size • 2nd Lim • 3rd Mult
+grade.prio.5,GradePecas,,1º Lim • 2º Mult • 3º Tam,1º Lim • 2º Mult • 3º Tam,1st Lim • 2nd Mult • 3rd Size
+grade.prio.6,GradePecas,,1º Lim • 2º Tam • 3º Mult,1º Lim • 2º Tam • 3º Mult,1st Lim • 2nd Size • 3rd Mult
+ficha.inventario_carregando,GradePecas,,Inventário: carregando...,Inventário: carregando...,Inventory: loading...
+ficha.inventario_indisponivel,GradePecas,,Inventário indisponível,Inventário indisponível,Inventory unavailable
+ficha.carregando_info,GradePecas,,Carregando informações...,Carregando informações...,Loading information...
+ficha.info_indisponiveis,GradePecas,,Informações indisponíveis.,Informações indisponíveis.,Information unavailable.
+classif.vidas,UI,,Vidas,Vidas,Lives
+classif.dinheiro_s,UI,,Dinheiro/s,Dinheiro/s,Cash/s
+classif.minerio,UI,,Minério,Minério,Ore
+classif.atualizar,UI,,Atualizar,Atualizar,Refresh
+classif.carregando,UI,,Carregando classificação...,Carregando classificação...,Loading leaderboard...
+classif.indisponivel,UI,,Classificação indisponível. Tente atualizar.,Classificação indisponível. Tente atualizar.,Leaderboard unavailable. Try refreshing.
+classif.vazio,UI,,Nenhum recorde nesta categoria.,Nenhum recorde nesta categoria.,No records in this category.
+elevador.titulo,UI,,Configurar elevador,Configurar elevador,Configure Elevator
+elevador.entrada,UI,,Entrada,Entrada,Input
+elevador.saida,UI,,Saída,Saída,Output
+elevador.frente,UI,,Frente,Frente,Front
+elevador.direita,UI,,Direita,Direita,Right
+elevador.tras,UI,,Trás,Trás,Back
+elevador.esquerda,UI,,Esquerda,Esquerda,Left
+elevador.subir,UI,,Sentido · Subir ↑,Sentido · Subir ↑,Direction · Up ↑
+elevador.descer,UI,,Sentido · Descer ↓,Sentido · Descer ↓,Direction · Down ↓
+elevador.indisponivel,UI,,Elevador indisponível.,Elevador indisponível.,Elevator unavailable.
+elevador.sem_espaco,UI,,Sem espaço na coluna.,Sem espaço na coluna.,No space in column.
+hist.desfazer,UI,,Desfazer,Desfazer,Undo
+hist.refazer,UI,,Refazer,Refazer,Redo
+hist.limpar,UI,,Limpar,Limpar,Clear
+hist.colar,UI,,Colar →,Colar →,Paste →
+conf.renascimento,UI,,"Confirmar renascimento?
+
+Dinheiro e upgrades do ciclo serão reiniciados. Recompensas e expansão permanecem.","Confirmar renascimento?
+
+Dinheiro e upgrades do ciclo serão reiniciados. Recompensas e expansão permanecem.","Confirm rebirth?
+
+Cash and cycle upgrades will reset. Rewards and plot expansion are kept."
+conf.ascensao_full,UI,,"Ascender agora?
+
+A plot, o inventário, os Blueprints e o restante do progresso voltam ao início. Transições e máquinas de Ascensão ficam com você. As novas máquinas chegam quando estiverem disponíveis.","Ascender agora?
+
+A plot, o inventário, os Blueprints e o restante do progresso voltam ao início. Transições e máquinas de Ascensão ficam com você. As novas máquinas chegam quando estiverem disponíveis.","Ascend now?
+
+Your plot, inventory, Blueprints, and other progress will reset. Transitions and Ascension machines stay with you. New machines arrive when available."
+config.nota,UI,,Arraste o topo das janelas para mover ou as bordas/cantos para redimensionar (duplo clique no topo restaura). Preferências salvas automaticamente.,Arraste o topo das janelas para mover ou as bordas/cantos para redimensionar (duplo clique no topo restaura). Preferências salvas automaticamente.,Drag window headers to move or edges/corners to resize (double-click header to reset). Preferences save automatically.
+config.tecla_reservada,UI,,Tecla reservada ou já utilizada. Escolha outra.,Tecla reservada ou já utilizada. Escolha outra.,Key reserved or already in use. Choose another.
+config.recompensas_beta,UI,,Recompensas do teste beta,Recompensas do teste beta,Beta Test Rewards
+beta.pioneiro,UI,,Pioneiro do Teste Beta,Pioneiro do Teste Beta,Beta Test Pioneer
+beta.pioneiro_e308,UI,,Pioneiro E308 do Teste Beta,Pioneiro E308 do Teste Beta,Beta Test E308 Pioneer
+beta.selo,UI,,TESTE BETA,TESTE BETA,BETA TEST
+beta.selo_e308,UI,,E308 • TESTE BETA,E308 • TESTE BETA,E308 • BETA TEST
+beta.emote1,UI,,Saudação do Teste Beta,Saudação do Teste Beta,Beta Test Salute
+beta.emote2,UI,,Celebração E308 do Teste Beta,Celebração E308 do Teste Beta,Beta Test E308 Celebration
+prestigio.vida_carregando,UI,,Vida: carregando...,Vida: carregando...,Life: loading...
+prestigio.trans_carregando,UI,,Transições: carregando…,Transições: carregando…,Transitions: loading…
+prestigio.prog_indisponivel,UI,,Progressão indisponível.,Progressão indisponível.,Progression unavailable.
+bp.rotulo_auto,UI,,Iniciar automaticamente por dinheiro:,Iniciar automaticamente por dinheiro:,Auto-start by cash amount:
+bp.rotulo_renomear,UI,,Novo nome para o blueprint:,Novo nome para o blueprint:,New blueprint name:
+bp.salvar_nome,UI,,Salvar nome,Salvar nome,Save name
+bp.rotulo_nome,UI,,Nome do blueprint:,Nome do blueprint:,Blueprint name:
+bp.substituir_plot,UI,,Substituir na plot,Substituir na plot,Replace on plot
+bp.colocar_plot,UI,,Colocar na plot →,Colocar na plot →,Place on plot →
+bp.ancora,UI,,Âncora,Âncora,Anchor
+bp.ancora_star,UI,,Âncora ★,Âncora ★,Anchor ★
+bp.remover,UI,,Remover,Remover,Remove
+bp.manter,UI,,Manter,Manter,Keep
+bp.off,UI,,Off,Off,Off
+coop.carregando,UI,,Carregando informações do modo Coop...,Carregando informações do modo Coop...,Loading Co-op mode info...
+coop.sub_jogadores,UI,,Jogadores no servidor (solicite para ajudar na plot deles):,Jogadores no servidor (solicite para ajudar na plot deles):,Players in server (request to help on their plot):
+coop.sem_jogadores,UI,,Nenhum outro jogador no servidor no momento.,Nenhum outro jogador no servidor no momento.,No other players in the server right now.
+coop.sub_sol,UI,,Pedidos para entrar no modo Coop da sua plot:,Pedidos para entrar no modo Coop da sua plot:,Requests to join your plot's Co-op:
+coop.sem_sol,UI,,Nenhuma solicitação pendente.,Nenhuma solicitação pendente.,No pending requests.
+coop.sub_membros,UI,,"Jogadores no Coop da sua plot (gerencie permissões, kick ou ban):","Jogadores no Coop da sua plot (gerencie permissões, kick ou ban):","Players in your plot's Co-op (manage permissions, kick, or ban):"
+coop.sem_membros,UI,,Nenhum visitante ativo na sua plot no momento.,Nenhum visitante ativo na sua plot no momento.,No active visitors on your plot right now.
+coop.voltar_membros,UI,,← Voltar para lista de membros,← Voltar para lista de membros,← Back to members list
+coop.sub_ban,UI,,Jogadores banidos do seu modo Coop:,Jogadores banidos do seu modo Coop:,Players banned from your Co-op:
+coop.sem_ban,UI,,Nenhum jogador banido do seu Coop.,Nenhum jogador banido do seu Coop.,No players banned from your Co-op.
+coop.indisponivel_sp,UI,, Indisponível, Indisponível,Unavailable
+coop.banido,UI,,Banido,Banido,Banned
+ctrl.confirmar,UI,,Confirmar,Confirmar,Confirm
+ctrl.fixar_entrada,UI,,Fixar entrada,Fixar entrada,Lock input
+ctrl.girar_y,UI,,Girar Y,Girar Y,Rotate Y
+ctrl.girar_x,UI,,Girar X,Girar X,Rotate X
+ctrl.girar_z,UI,,Girar Z,Girar Z,Rotate Z
+ctrl.girar_entrada,UI,,Girar entrada,Girar entrada,Rotate input
+ctrl.girar_saida,UI,,Girar saída,Girar saída,Rotate output
+ctrl.subir,UI,,Subir,Subir,Up
+ctrl.descer,UI,,Descer,Descer,Down
+ctrl.selecionar_area,UI,,Selecionar área,Selecionar área,Select area
+ctrl.concluir_area,UI,,Concluir área,Concluir área,Finish area
+ctrl.iniciar_linha,UI,,Iniciar linha,Iniciar linha,Start line
+ctrl.concluir_linha,UI,,Concluir linha,Concluir linha,Finish line
+ctrl.posicione_entrada,UI,,Posicione a entrada,Posicione a entrada,Position the input
+ctrl.escolha_saida,UI,,Escolha o nível da saída,Escolha o nível da saída,Choose the output height
+ctrl.aponte_canto,UI,,Aponte o outro canto e confirme,Aponte o outro canto e confirme,Aim at the opposite corner and confirm
+ctrl.toque_canto,UI,,Toque no outro canto e confirme,Toque no outro canto e confirme,Tap the opposite corner and confirm
+ctrl.menus,UI,,Y • Menus,Y • Menus,Y • Menus
+guia.titulo,TutorialGuia,,Monte sua primeira fábrica,Monte sua primeira fábrica,Build your first factory
+guia.intro,TutorialGuia,,"Aprenda a produzir, melhorar e vender minérios.","Aprenda a produzir, melhorar e vender minérios.","Learn how to mine, upgrade, and sell ores."
+guia.comecar,TutorialGuia,,Começar,Começar,Start
+guia.continuar,TutorialGuia,,Continuar,Continuar,Continue
+guia.retomar,TutorialGuia,,Retomar,Retomar,Resume
+guia.pular,TutorialGuia,,Pular tutorial,Pular tutorial,Skip tutorial
+guia.tente_novamente,TutorialGuia,,Tente novamente,Tente novamente,Try again
+guia.venda_primeiro,TutorialGuia,,Venda seu primeiro minério,Venda seu primeiro minério,Sell your first ore
+guia.coloque_mineradora,TutorialGuia,,Coloque a mineradora básica no piso.,Coloque a mineradora básica no piso.,Place the Basic Miner on the plot floor.
+guia.aumente_valor,TutorialGuia,,Aumente o valor do minério,Aumente o valor do minério,Increase ore value
+guia.faca_atravessar,TutorialGuia,,Faça um minério atravessar o modificador e chegar à fornalha.,Faça um minério atravessar o modificador e chegar à fornalha.,Send an ore through the upgrader and into the furnace.
+guia.abrir_inventario,TutorialGuia,,Abrir inventário,Abrir inventário,Open Inventory
+guia.abrir_loja,TutorialGuia,,Abrir loja,Abrir loja,Open Shop
+guia.ver_modificador,TutorialGuia,,Ver modificador,Ver modificador,View Upgrader
+guia.encerrar_colocacao,TutorialGuia,,Encerrar colocação,Encerrar colocação,Exit placement
+guia.libere_espaco,TutorialGuia,,Libere este espaço,Libere este espaço,Clear this space
+guia.minerio_perdido,TutorialGuia,,Minério perdido,Minério perdido,Dropped ore
+guia.esteira_sob_saida,TutorialGuia,,"Ponha a esteira sob o ponto de queda, na direção da seta turquesa.","Ponha a esteira sob o ponto de queda, na direção da seta turquesa.","Place the conveyor under the drop point, facing the cyan arrow."
+guia.encaixe_bandeja,TutorialGuia,,Encaixe a bandeja da fornalha na ponta da esteira.,Encaixe a bandeja da fornalha na ponta da esteira.,Align the furnace tray at the end of the conveyor.
+guia.acompanhe_minerio,TutorialGuia,,Acompanhe um minério até a bandeja da fornalha.,Acompanhe um minério até a bandeja da fornalha.,Watch an ore reach the furnace tray.
+guia.minerio_caiu,TutorialGuia,,"Um minério caiu ou parou. Confira a seta, a altura e o encaixe da bandeja.","Um minério caiu ou parou. Confira a seta, a altura e o encaixe da bandeja.","An ore dropped or got stuck. Check arrow direction, height, and furnace alignment."
+guia.seta_tras,TutorialGuia,,A seta aponta para trás. Abra o menu da peça marcada e escolha Mover.,A seta aponta para trás. Abra o menu da peça marcada e escolha Mover.,The arrow points backwards. Open the highlighted part's menu and choose Move.
+guia.fornalha_fora,TutorialGuia,,A fornalha está fora da rota. Abra o menu da peça marcada e escolha Mover.,A fornalha está fora da rota. Abra o menu da peça marcada e escolha Mover.,The furnace is off the path. Open the highlighted part's menu and choose Move.
+guia.encoste_bandeja,TutorialGuia,,Encoste a bandeja da fornalha na ponta da linha.,Encoste a bandeja da fornalha na ponta da linha.,Place the furnace tray at the end of the line.
+guia.menu_fornalha_mover,TutorialGuia,,Abra o menu da fornalha marcada e escolha Mover.,Abra o menu da fornalha marcada e escolha Mover.,Open the highlighted furnace's menu and choose Move.
+guia.menu_mod_mover,TutorialGuia,,Abra o menu do modificador marcado e escolha Mover.,Abra o menu do modificador marcado e escolha Mover.,Open the highlighted upgrader's menu and choose Move.
+guia.coloque_camara,TutorialGuia,,Coloque a Câmara de fissão no espaço liberado. Alinhe a seta com a saída do minério.,Coloque a Câmara de fissão no espaço liberado. Alinhe a seta com a saída do minério.,Place the Fission Chamber in the cleared space. Align the arrow with the ore drop point.
+guia.libere_frente,TutorialGuia,,"Libere espaço na frente da mineradora para a Câmara de fissão. Se a linha estiver junto à borda, mova a mineradora.","Libere espaço na frente da mineradora para a Câmara de fissão. Se a linha estiver junto à borda, mova a mineradora.","Clear space in front of the miner for the Fission Chamber. If the line is near the edge, move the miner."
+guia.usar_comprar,TutorialGuia,,Use Comprar para guardar a peça no inventário.,Use Comprar para guardar a peça no inventário.,Click Buy to store the part in your inventory.
+guia.usar_colocar,TutorialGuia,,Use Colocar nos detalhes da peça.,Use Colocar nos detalhes da peça.,Click Place in the part details.
+guia.pos_silhueta,TutorialGuia,,Posicione a peça sobre a silhueta turquesa na plot.,Posicione a peça sobre a silhueta turquesa na plot.,Position the part over the cyan silhouette on your plot.
+guia.pos_livre,TutorialGuia,,Posicione a peça num espaço livre da plot.,Posicione a peça num espaço livre da plot.,Position the part on an open space on your plot.
+guia.ponto_bloqueado,TutorialGuia,,Este ponto está bloqueado. Procure um espaço livre no mesmo nível da entrada.,Este ponto está bloqueado. Procure um espaço livre no mesmo nível da entrada.,This spot is blocked. Find an open space at the same level as the input.
+guia.clique_fixar,TutorialGuia,,Clique na plot para fixar a peça.,Clique na plot para fixar a peça.,Click on the plot to place the part.
+guia.toque_fixar,TutorialGuia,,Toque em Confirmar para fixar a peça.,Toque em Confirmar para fixar a peça.,Tap Confirm to place the part.
+guia.r2_fixar,TutorialGuia,,Pressione R2 para fixar a peça.,Pressione R2 para fixar a peça.,Press R2 to place the part.
+tut.intro,TutorialGuia,,Escolha um tema ou pesquise uma dúvida.,Escolha um tema ou pesquise uma dúvida.,Choose a topic or search for a question.
+tut.pesquisar_ph,TutorialGuia,,"Pesquisar: modificadores, área, renascimento…","Pesquisar: modificadores, área, renascimento…","Search: upgraders, area, rebirth…"
+tut.todos_capitulos,TutorialGuia,,← Todos os capítulos,← Todos os capítulos,← All chapters
+tut.anterior,TutorialGuia,,← Anterior,← Anterior,← Previous
+tut.proximo,TutorialGuia,,Próximo →,Próximo →,Next →
+tut.nenhum_cap,TutorialGuia,,Nenhum capítulo encontrado. Tente outro termo ou nível.,Nenhum capítulo encontrado. Tente outro termo ou nível.,No chapters found. Try another keyword or level.
+tut.sec.como_usar,TutorialGuia,,Como usar,Como usar,How to use
+tut.sec.lembrete,TutorialGuia,,Lembrete,Lembrete,Tip
+tut.sec.abrir_colocar,TutorialGuia,,Abrir e colocar,Abrir e colocar,Open and place
+tut.sec.estoque_compra,TutorialGuia,,Estoque e compra,Estoque e compra,Inventory and buying
+tut.sec.fixar_plot,TutorialGuia,,Fixar na plot,Fixar na plot,Placing on the plot
+tut.sec.sair_colocacao,TutorialGuia,,Sair da colocação,Sair da colocação,Exiting placement
+tut.sec.atalhos_mouse,TutorialGuia,,Atalhos do mouse,Atalhos do mouse,Mouse shortcuts
+tut.sec.celular,TutorialGuia,,Celular,Celular,Mobile
+tut.sec.controle,TutorialGuia,,Controle,Controle,Gamepad
+tut.sec.pc,TutorialGuia,,PC,PC,PC
+tut.sec.celular_controle,TutorialGuia,,Celular e controle,Celular e controle,Mobile & Gamepad
+tut.sec.entrada_saida,TutorialGuia,,Entrada e saída,Entrada e saída,Input and output
+tut.sec.ajustar_depois,TutorialGuia,,Ajustar depois,Ajustar depois,Adjusting later
+tut.sec.salvar_fabrica,TutorialGuia,,Salvar a fábrica,Salvar a fábrica,Saving your factory
+tut.sec.reutilizar,TutorialGuia,,Reutilizar,Reutilizar,Reusing
+tut.body.1,TutorialBody,,Leve minério da mineradora à fornalha usando esteiras. Modificadores aumentam seu valor no caminho.,Leve minério da mineradora à fornalha usando esteiras. Modificadores aumentam seu valor no caminho.,Carry ore from the miner to the furnace using conveyors. Upgraders boost its value along the way.
+tut.body.2,TutorialBody,,"Seu kit tem 10 esteiras, uma mineradora e uma fornalha. Abra o inventário com {E} e coloque as três peças.","Seu kit tem 10 esteiras, uma mineradora e uma fornalha. Abra o inventário com {E} e coloque as três peças.","Your starter kit has 10 conveyors, a miner, and a furnace. Open Inventory with {E} and place all three."
+tut.body.3,TutorialBody,,A plot começa em {PLOT_INICIAL}³ blocos e pode chegar a {PLOT_MAX}³. A caixa da prévia mostra o espaço ocupado.,A plot começa em {PLOT_INICIAL}³ blocos e pode chegar a {PLOT_MAX}³. A caixa da prévia mostra o espaço ocupado.,Your plot starts at {PLOT_INICIAL}³ blocks and can reach {PLOT_MAX}³. The preview box shows the occupied space.
+tut.body.4,TutorialBody,,Encaixe as peças na grade. Uma prévia vermelha indica uma posição bloqueada.,Encaixe as peças na grade. Uma prévia vermelha indica uma posição bloqueada.,Snap parts to the grid. A red preview means the spot is blocked.
+tut.body.5,TutorialBody,,"Abra o Inventário com {E} ou a Loja com {F}. Selecione o ícone para ver os detalhes. Nas duas abas, clique duas vezes no ícone para colocar a peça. Depois, confirme o local na plot.","Abra o Inventário com {E} ou a Loja com {F}. Selecione o ícone para ver os detalhes. Nas duas abas, clique duas vezes no ícone para colocar a peça. Depois, confirme o local na plot.","Open Inventory with {E} or Shop with {F}. Select an icon to view details. In both tabs, double-click an icon to place it, then confirm on your plot."
+tut.body.6,TutorialBody,,"Na Loja, Comprar guarda a peça no inventário. Se você colocar direto pela Loja, o jogo só compra a peça ao confirmar na plot e se faltar estoque. No Inventário, Na plot lista as peças colocadas e Não usadas mostra quais você ainda pode colocar ou comprar.","Na Loja, Comprar guarda a peça no inventário. Se você colocar direto pela Loja, o jogo só compra a peça ao confirmar na plot e se faltar estoque. No Inventário, Na plot lista as peças colocadas e Não usadas mostra quais você ainda pode colocar ou comprar.","In the Shop, Buy stores the part in your inventory. Placing directly from the Shop only charges you upon confirming if you lack stock. In Inventory, 'On plot' lists placed parts and 'Unused' shows what you can still place or buy."
+tut.body.7,TutorialBody,,"Coloque a mineradora, uma esteira sob a saída e a fornalha no fim do caminho. As setas devem levar até a bandeja.","Coloque a mineradora, uma esteira sob a saída e a fornalha no fim do caminho. As setas devem levar até a bandeja.","Place the miner, a conveyor under the drop point, and the furnace at the end. Arrows should lead into the tray."
+tut.body.8,TutorialBody,,"Observe um minério chegar à fornalha. Se cair, corrija a direção, altura ou espaço entre as peças.","Observe um minério chegar à fornalha. Se cair, corrija a direção, altura ou espaço entre as peças.","Watch an ore reach the furnace. If it drops, fix the direction, height, or gap between parts."
+tut.body.9,TutorialBody,,"Posicione a peça na plot. No PC, clique no local. No celular, toque no local e depois em Confirmar. No controle, aponte com a mira e pressione R2.","Posicione a peça na plot. No PC, clique no local. No celular, toque no local e depois em Confirmar. No controle, aponte com a mira e pressione R2.","Position the part on the plot. On PC, click to place. On mobile, tap the spot then Confirm. On gamepad, aim with the crosshair and press R2."
+tut.body.10,TutorialBody,,"No PC, pressione {Q}. No celular, toque em Voltar. No controle, pressione B. Se cancelar um movimento, a peça que você estava movendo volta ao inventário.","No PC, pressione {Q}. No celular, toque em Voltar. No controle, pressione B. Se cancelar um movimento, a peça que você estava movendo volta ao inventário.","On PC, press {Q}. On mobile, tap Back. On gamepad, press B. Canceling a move returns the part to your inventory."
+tut.body.11,TutorialBody,,A mineradora cria minério pelo valor e intervalo mostrados na ficha. Menor intervalo significa mais unidades.,A mineradora cria minério pelo valor e intervalo mostrados na ficha. Menor intervalo significa mais unidades.,Miners drop ore with the value and interval shown in details. Shorter intervals mean more ore per second.
+tut.body.12,TutorialBody,,"Coloque a correia sob a saída, que pode avançar além do corpo ou da ponta da broca.","Coloque a correia sob a saída, que pode avançar além do corpo ou da ponta da broca.","Place the belt under the drop point, which may extend past the body or drill tip."
+tut.body.13,TutorialBody,,Conecte correias na mesma altura e confira as setas durante a colocação. Gire o próximo trecho para fazer curvas.,Conecte correias na mesma altura e confira as setas durante a colocação. Gire o próximo trecho para fazer curvas.,Connect belts at the same height and check arrows while placing. Rotate the next piece to turn corners.
+tut.body.14,TutorialBody,,Centralizadoras aproximam o minério do centro. Use-as antes de passagens estreitas. Paredes podem conter ou bloquear a rota.,Centralizadoras aproximam o minério do centro. Use-as antes de passagens estreitas. Paredes podem conter ou bloquear a rota.,Centering conveyors align ore to the middle. Use them before narrow gaps. Walls can guide or block ore.
+tut.body.15,TutorialBody,,A bandeja recebe o minério e vende pelo efeito mostrado na ficha. Termine sua linha nela.,A bandeja recebe o minério e vende pelo efeito mostrado na ficha. Termine sua linha nela.,The tray collects ore and sells it with the multiplier shown in details. End your line here.
+tut.body.16,TutorialBody,,"Confira se o minério chega à bandeja, sem bater no corpo da fornalha ou cair antes.","Confira se o minério chega à bandeja, sem bater no corpo da fornalha ou cair antes.",Make sure ore reaches the tray without hitting the furnace body or falling short.
+tut.body.17,TutorialBody,,O saldo mostra seu dinheiro. Dinheiro/s é uma média recente: espere estabilizar após mudar a fábrica.,O saldo mostra seu dinheiro. Dinheiro/s é uma média recente: espere estabilizar após mudar a fábrica.,Your balance shows your cash. Cash/s is a recent average—wait for it to stabilize after layout changes.
+tut.body.18,TutorialBody,,"K = mil, M = milhão, B = bilhão. Passe o mouse nos números do saldo e da classificação para ler o nome completo.","K = mil, M = milhão, B = bilhão. Passe o mouse nos números do saldo e da classificação para ler o nome completo.","K = thousand, M = million, B = billion. Hover over cash or leaderboard numbers to see their full name."
+tut.body.19,TutorialBody,,Minério no chão ou parado por cinco segundos é vendido por apenas 1/10 do valor. Pequenas oscilações não evitam a venda.,Minério no chão ou parado por cinco segundos é vendido por apenas 1/10 do valor. Pequenas oscilações não evitam a venda.,Ore on the floor or stuck for 5 seconds auto-sells for only 1/10 value. Tiny jitters do not prevent this.
+tut.body.20,TutorialBody,,"Para ganhar mais, corrija o bloqueio e leve a produção à fornalha.","Para ganhar mais, corrija o bloqueio e leve a produção à fornalha.","To earn full value, fix the jam and route ore into a furnace."
+tut.body.21,TutorialBody,,"Clique numa peça da plot para abrir seu menu. Arraste no chão para selecionar uma área. Com o cursor sobre uma peça, clique com o botão do meio para copiar. Com esse mesmo clique, segure Shift para mover, Ctrl para recolher ou Alt para vender.","Clique numa peça da plot para abrir seu menu. Arraste no chão para selecionar uma área. Com o cursor sobre uma peça, clique com o botão do meio para copiar. Com esse mesmo clique, segure Shift para mover, Ctrl para recolher ou Alt para vender.","Click a part on your plot to open its menu. Drag on the floor to select an area. Middle-click a part to copy, or hold Shift (move), Ctrl (withdraw), or Alt (sell) while middle-clicking."
+tut.body.22,TutorialBody,,"Toque duas vezes no ícone do inventário para colocar a peça. Toque na plot para escolher o local e use Confirmar. Para selecionar uma área, marque o primeiro canto com Selecionar área e termine no canto oposto com Concluir área.","Toque duas vezes no ícone do inventário para colocar a peça. Toque na plot para escolher o local e use Confirmar. Para selecionar uma área, marque o primeiro canto com Selecionar área e termine no canto oposto com Concluir área.","Double-tap an inventory icon to place. Tap the plot to aim and press Confirm. To select an area, mark the first corner with Select area and finish at the opposite corner with Finish area."
+tut.body.23,TutorialBody,,"Y alterna entre os menus e a mira. A ativa o botão selecionado, R2 confirma na plot e B volta. L2 marca área ou linha, R1/L1/X giram e o direcional muda a altura.","Y alterna entre os menus e a mira. A ativa o botão selecionado, R2 confirma na plot e B volta. L2 marca área ou linha, R1/L1/X giram e o direcional muda a altura.","Y toggles between menus and crosshair. A clicks the focused button, R2 confirms on the plot, and B goes back. L2 marks an area or line, R1/L1/X rotate, and D-Pad adjusts height."
+tut.body.24,TutorialBody,,"A ficha e a borda do ícone mostram a raridade. Ela acompanha o preço na Loja, o lote no Renascimento e a receita no Craft.","A ficha e a borda do ícone mostram a raridade. Ela acompanha o preço na Loja, o lote no Renascimento e a receita no Craft.","The details panel and icon border display rarity, matching Shop price, Rebirth tier, or Craft recipe."
+tut.body.25,TutorialBody,,"Compare efeito, limites e tamanho antes de substituir uma peça.","Compare efeito, limites e tamanho antes de substituir uma peça.","Compare multiplier, usage limits, and size before replacing a part."
+tut.body.26,TutorialBody,,Passe o minério por um modificador antes da fornalha. Uma faixa ×2 dobra o valor. Atravesse todas as faixas para aplicar todos os fatores.,Passe o minério por um modificador antes da fornalha. Uma faixa ×2 dobra o valor. Atravesse todas as faixas para aplicar todos os fatores.,Send ore through an upgrader before the furnace. A ×2 stage doubles value. Pass through all stages to apply every multiplier.
+tut.body.27,TutorialBody,,"As frações são arredondadas no minério. A partir de 0,5, arredonda para cima.","As frações são arredondadas no minério. A partir de 0,5, arredonda para cima.",Fractions are rounded on the ore; 0.5 and above round up.
+tut.body.28,TutorialBody,,Cada faixa pode aplicar uma etapa. Duas faixas podem modificar duas vezes e contam como um uso da peça.,Cada faixa pode aplicar uma etapa. Duas faixas podem modificar duas vezes e contam como um uso da peça.,Each stage applies one step. Multi-stage upgraders count as a single use of that machine type.
+tut.body.29,TutorialBody,,Cópias do mesmo tipo compartilham o limite de usos de cada minério.,Cópias do mesmo tipo compartilham o limite de usos de cada minério.,Copies of the same upgrader type share the per-ore usage limit.
+tut.body.30,TutorialBody,,Um modificador sem esteira usa a correia de outra peça. Posicione-o para a emissão tocar o minério.,Um modificador sem esteira usa a correia de outra peça. Posicione-o para a emissão tocar o minério.,Conveyorless upgraders rely on another belt. Position them so their beam or field touches the ore.
+tut.body.31,TutorialBody,,"Em passagens estreitas, alinhe a chegada ou use uma centralizadora antes.","Em passagens estreitas, alinhe a chegada ou use uma centralizadora antes.","For narrow gaps, align the entry or place a centering conveyor beforehand."
+tut.body.32,TutorialBody,,"Selecione uma peça da plot para abrir seu menu. No PC, também dá para ativar um modo e depois clicar na peça. Use {Z} para recolher, {X} para mover, {C} para copiar ou {V} para vender.","Selecione uma peça da plot para abrir seu menu. No PC, também dá para ativar um modo e depois clicar na peça. Use {Z} para recolher, {X} para mover, {C} para copiar ou {V} para vender.","Click a part on your plot to open its menu. On PC, you can also toggle a mode then click: {Z} withdraw, {X} move, {C} copy, or {V} sell."
+tut.body.33,TutorialBody,,Recolher devolve a peça ao inventário. Copiar mantém a original e usa estoque ou dinheiro ao colocar a cópia. Confira a seleção antes de vender.,Recolher devolve a peça ao inventário. Copiar mantém a original e usa estoque ou dinheiro ao colocar a cópia. Confira a seleção antes de vender.,Withdrawing returns the part to inventory. Copying keeps the original and uses stock or cash. Check your selection before selling.
+tut.body.34,TutorialBody,,Arraste com o clique esquerdo para selecionar. A roda altera a altura; Shift + roda move a camada. Shift + clique ajusta a seleção.,Arraste com o clique esquerdo para selecionar. A roda altera a altura; Shift + roda move a camada. Shift + clique ajusta a seleção.,Left-drag to box-select. Scroll wheel changes height; Shift + scroll shifts the layer. Shift + click toggles individual parts.
+tut.body.35,TutorialBody,,"{Z}/{X}/{C}/{V} age diretamente no grupo. Máximo: {LIMITE_GRUPO} peças. Na movimentação parcial, peças bloqueadas voltam ao inventário.","{Z}/{X}/{C}/{V} age diretamente no grupo. Máximo: {LIMITE_GRUPO} peças. Na movimentação parcial, peças bloqueadas voltam ao inventário.","{Z}/{X}/{C}/{V} acts directly on the group (max {LIMITE_GRUPO} parts). In partial moves, blocked parts return to inventory."
+tut.body.36,TutorialBody,,"Com a peça em modo de colocação, segure o botão esquerdo no início da linha, arraste em linha reta e solte para colocar.","Com a peça em modo de colocação, segure o botão esquerdo no início da linha, arraste em linha reta e solte para colocar.","While placing a part, hold left-click at the start, drag in a straight line, and release to place multiple parts."
+tut.body.37,TutorialBody,,"Marque o início com Iniciar linha ou L2. Aponte o fim e use Concluir linha ou R2. Se houver obstáculos ou faltar saldo, só as peças possíveis são colocadas.","Marque o início com Iniciar linha ou L2. Aponte o fim e use Concluir linha ou R2. Se houver obstáculos ou faltar saldo, só as peças possíveis são colocadas.","Mark the start with Start line or L2, aim at the end, and press Finish line or R2. Only unobstructed and affordable parts are placed."
+tut.body.38,TutorialBody,,{R} gira horizontalmente. Segure {R} e arraste a prévia para girar em outros eixos. Esteiras permitem inclinação de 45°.,{R} gira horizontalmente. Segure {R} e arraste a prévia para girar em outros eixos. Esteiras permitem inclinação de 45°.,{R} rotates horizontally. Hold {R} and drag the preview to rotate on other axes. Conveyors can tilt at 45°.
+tut.body.39,TutorialBody,,"{T} trava ou libera a altura. No celular/controle, use Subir/Descer. Alinhe as pontas e prepare uma correia onde o minério cair.","{T} trava ou libera a altura. No celular/controle, use Subir/Descer. Alinhe as pontas e prepare uma correia onde o minério cair.","{T} locks or unlocks height. On mobile/gamepad, use Up/Down. Align ends and place a belt where ore drops."
+tut.body.40,TutorialBody,,"No PC, gire a entrada com {R} e clique na plot para fixá-la. Mova o mouse para escolher a altura da saída, gire a saída com {R} e clique de novo para colocar o elevador.","No PC, gire a entrada com {R} e clique na plot para fixá-la. Mova o mouse para escolher a altura da saída, gire a saída com {R} e clique de novo para colocar o elevador.","On PC, rotate the input with {R} and click to lock it. Move the mouse to set output height, rotate output with {R}, and click again to place."
+tut.body.41,TutorialBody,,Use Girar Y ou R1 para escolher o lado da entrada e da saída. Use Subir e Descer para ajustar a altura da saída. Confirme cada etapa com o botão na tela ou R2.,Use Girar Y ou R1 para escolher o lado da entrada e da saída. Use Subir e Descer para ajustar a altura da saída. Confirme cada etapa com o botão na tela ou R2.,"Use Rotate Y or R1 to choose input and output sides, and Up/Down for height. Confirm each step on screen or with R2."
+tut.body.42,TutorialBody,,"A seta âmbar marca a entrada, a turquesa marca a saída e a branca indica subida ou descida. Abra o menu da peça colocada e escolha Configurar elevador para ajustar.","A seta âmbar marca a entrada, a turquesa marca a saída e a branca indica subida ou descida. Abra o menu da peça colocada e escolha Configurar elevador para ajustar.","Amber arrow marks input, cyan marks output, and white shows up/down. Open the placed elevator's menu and pick Configure elevator to edit."
+tut.body.43,TutorialBody,,"Abra Blueprints e escolha Selecionar na plot. Marque dois cantos opostos ao redor da fábrica. No PC, arraste entre os cantos. No celular, use Selecionar área e Concluir área. No controle, marque com L2 e confirme com R2.","Abra Blueprints e escolha Selecionar na plot. Marque dois cantos opostos ao redor da fábrica. No PC, arraste entre os cantos. No celular, use Selecionar área e Concluir área. No controle, marque com L2 e confirme com R2.","Open Blueprints and click Select on plot. Mark two opposite corners around your factory (drag on PC, Select/Finish area on mobile, L2/R2 on gamepad)."
+tut.body.44,TutorialBody,,"O blueprint guarda as posições e rotações, inclusive após o renascimento. Use Colocar no conjunto salvo, escolha o local na plot e confirme a montagem. O jogo usa o estoque e cobra pelas peças compráveis que faltarem.","O blueprint guarda as posições e rotações, inclusive após o renascimento. Use Colocar no conjunto salvo, escolha o local na plot e confirme a montagem. O jogo usa o estoque e cobra pelas peças compráveis que faltarem.","Blueprints save positions and rotations even across rebirths. Click Place, pick a spot, and confirm—inventory is used first and missing shop parts are bought."
+tut.body.45,TutorialBody,,Abra Craft e escolha uma receita. Toque num ingrediente de craft para abrir a receita dele.,Abra Craft e escolha uma receita. Toque num ingrediente de craft para abrir a receita dele.,Open Craft and pick a recipe. Click any crafted ingredient to jump to its recipe.
+tut.body.46,TutorialBody,,Recolha os ingredientes para o inventário antes de fabricar. A confirmação consome as peças listadas e entrega uma máquina que permanece ao renascer.,Recolha os ingredientes para o inventário antes de fabricar. A confirmação consome as peças listadas e entrega uma máquina que permanece ao renascer.,Withdraw ingredients to your inventory before crafting. Crafting consumes the listed parts and gives a permanent machine kept across rebirths.
+tut.body.47,TutorialBody,,"Após o primeiro renascimento, compre melhorias de extração, fundição e motores em Upgrades ({U}).","Após o primeiro renascimento, compre melhorias de extração, fundição e motores em Upgrades ({U}).","After your first rebirth, buy Extraction, Smelting, and Motor upgrades in Upgrades ({U})."
+tut.body.48,TutorialBody,,"Cada nível dá +{PASSO_UPGRADE}%, até {MAX_BONUS}%. Extração melhora o minério inicial; fundição, a venda. Motores libera velocidades maiores.","Cada nível dá +{PASSO_UPGRADE}%, até {MAX_BONUS}%. Extração melhora o minério inicial; fundição, a venda. Motores libera velocidades maiores.","Each level gives +{PASSO_UPGRADE}%, up to {MAX_BONUS}%. Extraction boosts base ore; Smelting boosts payout; Motors unlock faster speeds."
+tut.body.49,TutorialBody,,"A partir de cinco renascimentos, cada nível de Calibração aumenta em 20% o limite base de usos dos modificadores. A ficha mostra o limite arredondado.","A partir de cinco renascimentos, cada nível de Calibração aumenta em 20% o limite base de usos dos modificadores. A ficha mostra o limite arredondado.","At 5 rebirths, each Calibration level increases upgrader base usage limits by 20% (rounded in details)."
+tut.body.50,TutorialBody,,Expansão aumenta a plot de 12³ até 32³ blocos e permanece após renascer. Todos os upgrades custam dinheiro.,Expansão aumenta a plot de 12³ até 32³ blocos e permanece após renascer. Todos os upgrades custam dinheiro.,Expansion grows your plot from 12³ up to 32³ blocks permanently across rebirths. All upgrades cost cash.
+tut.body.51,TutorialBody,,Abra Prestígio com {P}. O primeiro requisito é 1Sx; cada reencarnação aumenta o requisito em ×1.000. Cada marco adicional de vida também é ×1.000.,Abra Prestígio com {P}. O primeiro requisito é 1Sx; cada reencarnação aumenta o requisito em ×1.000. Cada marco adicional de vida também é ×1.000.,"Open Prestige with {P}. First rebirth requires 1Sx; each rebirth increases the requirement by ×1,000, and each skipped life adds another ×1,000."
+tut.body.52,TutorialBody,,"Renascer reinicia dinheiro, peças comuns e upgrades do ciclo. Conserva blueprints, expansão, recompensas e recordes. Confira as vidas oferecidas antes de confirmar.","Renascer reinicia dinheiro, peças comuns e upgrades do ciclo. Conserva blueprints, expansão, recompensas e recordes. Confira as vidas oferecidas antes de confirmar.","Rebirthing resets cash, normal shop parts, and cycle upgrades, while keeping blueprints, expansion, rewards, and records."
+tut.body.53,TutorialBody,,Cada renascimento entrega 1 ou 2 peças do conjunto atual. Complete cada conjunto em cinco ciclos. Cada vida extra sorteia mais uma peça entre os tipos já obtidos.,Cada renascimento entrega 1 ou 2 peças do conjunto atual. Complete cada conjunto em cinco ciclos. Cada vida extra sorteia mais uma peça entre os tipos já obtidos.,Each rebirth awards 1–2 parts from the current tier (completed in 5 cycles). Each extra skipped life rolls another part from unlocked types.
+tut.body.54,TutorialBody,,As recompensas permanecem e voltam ao inventário ao renascer. O limite de uso por minério não limita quantas cópias você pode guardar.,As recompensas permanecem e voltam ao inventário ao renascer. O limite de uso por minério não limita quantas cópias você pode guardar.,Rewards are permanent and return to inventory on rebirth. Usage limits do not cap how many copies you can own.
+tut.body.55,TutorialBody,,Reúna várias mineradoras numa linha comum. Atravesse modificadores em outros níveis e termine na fornalha.,Reúna várias mineradoras numa linha comum. Atravesse modificadores em outros níveis e termine na fornalha.,"Merge multiple miners onto a shared line, route through upgraders across multiple floors, and finish at a furnace."
+tut.body.56,TutorialBody,,"Para repetir um efeito, saia da peça ou emissão antes de retornar. Modificadores de renascimento usam uma unidade física diferente a cada aplicação.","Para repetir um efeito, saia da peça ou emissão antes de retornar. Modificadores de renascimento usam uma unidade física diferente a cada aplicação.","To reapply an effect, exit the machine before re-entering. Rebirth upgraders require a distinct physical unit per application."
+tut.body.57,TutorialBody,,"Ajuste minérios visíveis, valores, efeitos, escala da interface, prévia e grade em Configurações. Ocultar minérios não muda a produção.","Ajuste minérios visíveis, valores, efeitos, escala da interface, prévia e grade em Configurações. Ocultar minérios não muda a produção.","Adjust visible ores, labels, effects, UI scale, preview, and grid in Settings. Hiding ores does not affect income."
+tut.body.58,TutorialBody,,"Escolha confirmações de venda/renascimento, velocidade dos motores e teclas do PC. As preferências valem para a sessão.","Escolha confirmações de venda/renascimento, velocidade dos motores e teclas do PC. As preferências valem para a sessão.","Configure sell/rebirth confirmations, motor speeds, and PC keybinds. Preferences save automatically."
+tut.body.59,TutorialBody,,A estrada acelera o trajeto entre as oito plots. Você continua podendo andar livremente.,A estrada acelera o trajeto entre as oito plots. Você continua podendo andar livremente.,The road speeds up travel between all eight plots while still letting you walk freely.
+tut.body.60,TutorialBody,,"Classificação mostra recordes globais de vidas, dinheiro/s, minério e saldo. A atualização pode levar algum tempo.","Classificação mostra recordes globais de vidas, dinheiro/s, minério e saldo. A atualização pode levar algum tempo.","Leaderboard shows global records for lives, cash/s, ore value, and cash. Updates may take a moment."
+tut.body.61,TutorialBody,,"Confira saída da mineradora, setas, alturas, faixas, limites e bandeja da fornalha. Acompanhe um minério até a venda.","Confira saída da mineradora, setas, alturas, faixas, limites e bandeja da fornalha. Acompanhe um minério até a venda.","Check miner drop points, arrows, heights, stages, limits, and furnace trays by following an ore to the end."
+tut.body.62,TutorialBody,,Seu progresso e a plot são salvos automaticamente. Use blueprints para guardar montagens que queira repetir.,Seu progresso e a plot são salvos automaticamente. Use blueprints para guardar montagens que queira repetir.,Your progress and plot auto-save. Use blueprints to store layouts you want to reuse.
+msg.maquina_comprada_sa,MensagensServidor,,Maquina comprada.,Maquina comprada.,Machine purchased.
+msg.maquina_colocada_sa,MensagensServidor,,Maquina colocada.,Maquina colocada.,Machine placed.
+msg.maquina_comprada_colocada_sa,MensagensServidor,,Maquina comprada e colocada.,Maquina comprada e colocada.,Machine purchased and placed.
+msg.maquina_devolvida_sa,MensagensServidor,,Maquina devolvida ao inventario.,Maquina devolvida ao inventario.,Machine returned to inventory.
+msg.posicao_ocupada_sa,MensagensServidor,,Essa posicao esta ocupada ou fora da grade do seu terreno.,Essa posicao esta ocupada ou fora da grade do seu terreno.,That spot is occupied or outside your plot grid.
+msg.dados_nao_disp_sa,MensagensServidor,,Dados ainda nao estao disponiveis.,Dados ainda nao estao disponiveis.,Data is not available yet.
+msg.terreno_indisp_sa,MensagensServidor,,Terreno indisponivel.,Terreno indisponivel.,Plot unavailable.
+msg.muitos_pedidos_sa,MensagensServidor,,Muitos pedidos de construcao. Aguarde um instante.,Muitos pedidos de construcao. Aguarde um instante.,Too many build requests. Please wait a moment.
+msg.muitos_pedidos_curto,MensagensServidor,,Muitos pedidos de construcao.,Muitos pedidos de construcao.,Too many build requests.
+msg.peca_copiada,MensagensServidor,,Peca copiada para colocacao.,Peca copiada para colocacao.,Part copied for placement.
+msg.blueprint_renomeado,MensagensServidor,,Blueprint renomeado.,Blueprint renomeado.,Blueprint renamed.
+msg.blueprint_substituido,MensagensServidor,,Blueprint substituido com sucesso.,Blueprint substituido com sucesso.,Blueprint replaced successfully.
+msg.blueprint_pronto,MensagensServidor,,Blueprint pronto para colocar.,Blueprint pronto para colocar.,Blueprint ready to place.
+msg.sequencia_atualizada,MensagensServidor,,Sequencia atualizada.,Sequencia atualizada.,Order updated.
+msg.auto_bp_ativada,MensagensServidor,,Automação de blueprints ativada.,Automação de blueprints ativada.,Blueprint automation enabled.
+msg.auto_bp_pausada,MensagensServidor,,Automação de blueprints pausada.,Automação de blueprints pausada.,Blueprint automation paused.
+msg.auto_renasc_on,MensagensServidor,,Definido para iniciar automaticamente ao Renascer.,Definido para iniciar automaticamente ao Renascer.,Set to auto-start on Rebirth.
+msg.auto_renasc_off,MensagensServidor,,Início automático no Renascimento desativado.,Início automático no Renascimento desativado.,Auto-start on Rebirth disabled.
+msg.auto_din_off,MensagensServidor,,Meta de dinheiro automático desativada.,Meta de dinheiro automático desativada.,Auto-start cash target disabled.
+msg.auto_custo_salvo,MensagensServidor,,Meta definida pelo custo da blueprint (considerando dinheiro + venda das peças não usadas da plot)!,Meta definida pelo custo da blueprint (considerando dinheiro + venda das peças não usadas da plot)!,Target set to blueprint cost (counting cash + selling unused plot parts)!
+msg.auto_custo_prox,MensagensServidor,,"Meta pelo custo salva! Como seu dinheiro + plot atual já cobrem o valor, ela disparará no próximo ciclo.","Meta pelo custo salva! Como seu dinheiro + plot atual já cobrem o valor, ela disparará no próximo ciclo.","Cost target saved! Since your current cash + plot already cover it, it will trigger next cycle."
+msg.auto_val_salvo,MensagensServidor,,Meta salva! A blueprint iniciará assim que seu dinheiro + peças não usadas da plot atingirem esse valor.,Meta salva! A blueprint iniciará assim que seu dinheiro + peças não usadas da plot atingirem esse valor.,Target saved! The blueprint will auto-start once your cash + unused plot parts reach this amount.
+msg.auto_val_prox,MensagensServidor,,"Meta salva! Como seu patrimônio atual já atingiu esse valor, ela disparará no próximo ciclo.","Meta salva! Como seu patrimônio atual já atingiu esse valor, ela disparará no próximo ciclo.","Target saved! Since your current equity already reached this amount, it will trigger next cycle."
+msg.auto_sem_custo,MensagensServidor,,Esta blueprint não possui custo em dinheiro na loja. Digite um valor manual.,Esta blueprint não possui custo em dinheiro na loja. Digite um valor manual.,This blueprint has no shop cash cost. Enter a manual value.
+msg.recomp_permanente,MensagensServidor,,Recompensas de renascimento sao permanentes.,Recompensas de renascimento sao permanentes.,Rebirth rewards are permanent.
+msg.craft_permanente,MensagensServidor,,Peças de craft são permanentes.,Peças de craft são permanentes.,Crafted parts are permanent.
+msg.ascensao_permanente,MensagensServidor,,Máquinas de Ascensão são permanentes.,Máquinas de Ascensão são permanentes.,Ascension machines are permanent.
+msg.renasc_obtencao,MensagensServidor,,Esta peca e obtida no renascimento.,Esta peca e obtida no renascimento.,This part is obtained via Rebirth.
+msg.craft_obtencao,MensagensServidor,,Esta peça é obtida por craft.,Esta peça é obtida por craft.,This part is obtained via Craft.
+msg.ascensao_obtencao,MensagensServidor,,Esta peça é obtida por Ascensão.,Esta peça é obtida por Ascensão.,This part is obtained via Ascension.
+msg.nao_possui_inv,MensagensServidor,,Voce nao possui esta peca no inventario.,Voce nao possui esta peca no inventario.,You don't own this part in your inventory.
+msg.venda_desfeita,MensagensServidor,,Venda desfeita.,Venda desfeita.,Sale undone.
+msg.nada_desfazer,MensagensServidor,,Nada para desfazer.,Nada para desfazer.,Nothing to undo.
+msg.nada_refazer,MensagensServidor,,Nada para refazer.,Nada para refazer.,Nothing to redo.
+msg.coop_saiu,MensagensServidor,,Você saiu do modo Coop.,Você saiu do modo Coop.,You left Co-op mode.
+msg.coop_saiu_aviso,MensagensServidor,,Você saiu do modo Coop e voltou ao seu próprio progresso.,Você saiu do modo Coop e voltou ao seu próprio progresso.,You left Co-op mode and returned to your own progress.
+msg.coop_recusada,MensagensServidor,,Solicitação recusada.,Solicitação recusada.,Request declined.
+msg.coop_desbanido,MensagensServidor,,Banimento de Coop removido.,Banimento de Coop removido.,Co-op ban removed.
+msg.coop_banido_voce,MensagensServidor,,Você foi banido do modo Coop deste jogador.,Você foi banido do modo Coop deste jogador.,You are banned from this player's Co-op.

@@ -51,12 +51,14 @@ function T.Corresponde(licao,busca,nivel)
 	return T.Normalizar(table.concat(textos," ")):find(T.Normalizar(busca or ""),1,true)~=nil
 end
 function T.Formatar(texto,jogador)
-	local tokens={BLOCO=tostring(Bloco),PLOT_INICIAL=tostring(Upgrades.TamanhosPlot[1]),PLOT_MAX=tostring(Upgrades.TamanhosPlot[#Upgrades.TamanhosPlot]),
-		LIMITE_GRUPO=tostring(Limites.PecasPorGrupo),PASSO_UPGRADE=tostring(Upgrades.PercentualPorNivel),MAX_BONUS=tostring(Upgrades.PercentualPorNivel*#Upgrades.Itens[1].Precos)}
-	local teclas={}
-	for _,a in Config.Atalhos do table.insert(teclas,"["..Config.Tecla(jogador,a[1]).."]  "..a[2]) end
-	tokens.ATALHOS=table.concat(teclas,"\n")
-	local resultado=texto:gsub("{([A-Z_]+)}",function(t) return tokens[t] or Config.Tecla(jogador,t) end)
-	return resultado
+local Traducao = require(script.Parent.Traducao)
+texto = Traducao.TraduzirTexto(texto, jogador)
+local tokens={BLOCO=tostring(Bloco),PLOT_INICIAL=tostring(Upgrades.TamanhosPlot[1]),PLOT_MAX=tostring(Upgrades.TamanhosPlot[#Upgrades.TamanhosPlot]),
+LIMITE_GRUPO=tostring(Limites.PecasPorGrupo),PASSO_UPGRADE=tostring(Upgrades.PercentualPorNivel),MAX_BONUS=tostring(Upgrades.PercentualPorNivel*#Upgrades.Itens[1].Precos)}
+local teclas={}
+for _,a in Config.Atalhos do table.insert(teclas,"["..Config.Tecla(jogador,a[1]).."]  "..Traducao.T("atalho."..a[1], a[2], nil, jogador)) end
+tokens.ATALHOS=table.concat(teclas,"\n")
+local resultado=texto:gsub("{([A-Z_]+)}",function(t) return tokens[t] or Config.Tecla(jogador,t) end)
+return resultado
 end
 return T

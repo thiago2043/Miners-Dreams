@@ -1,3 +1,25 @@
+local LocalizationService = game:GetService("LocalizationService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local NomeNumeroEN = require(script.Parent.NomeNumeroEN)
+
+local function usarIngles(jogador)
+local locale = nil
+if RunService:IsClient() then
+local j = jogador or Players.LocalPlayer
+if j and type(j.LocaleId) == "string" and j.LocaleId ~= "" then
+locale = j.LocaleId
+else
+locale = LocalizationService.RobloxLocaleId
+end
+elseif jogador and type(jogador.LocaleId) == "string" and jogador.LocaleId ~= "" then
+locale = jogador.LocaleId
+end
+if type(locale) ~= "string" or locale == "" then
+return false
+end
+return string.lower(locale):match("^([a-z]+)") ~= "pt"
+end
 local pequenos = { "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "catorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove" }
 local dezenas = { "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa" }
 local centenas = { "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos" }
@@ -16,7 +38,8 @@ local function trecho(n)
 end
 
 -- Le grupos de tres digitos, preservando todos os algarismos do inteiro decimal.
-return function(valor)
+return function(valor, jogador)
+	if usarIngles(jogador) then return NomeNumeroEN(valor) end
 	if type(valor) ~= "string" or not valor:match("^%d+$") then return nil end
 	valor = valor:gsub("^0+", "")
 	if valor == "" then return "zero" end
